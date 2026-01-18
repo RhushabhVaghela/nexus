@@ -91,13 +91,22 @@ if TRAINING_MODE == "censored":
         "privacy_respect": 10_000_000,
         "over_refusal": 10_000_000,
         
-        # Fullstack Engineering Preferences (6 types)
+        # Fullstack Engineering Preferences (14 types)
         "fs_api_design_quality": 10_000_000,
         "fs_database_query_quality": 10_000_000,
         "fs_frontend_component_quality": 10_000_000,
         "fs_error_handling_preference": 10_000_000,
         "fs_deployment_quality": 10_000_000,
         "fs_test_quality": 10_000_000,
+        # New fullstack categories
+        "fs_architecture_quality": 10_000_000,
+        "fs_security_practices": 10_000_000,
+        "fs_performance_optimization": 10_000_000,
+        "fs_code_review_quality": 10_000_000,
+        "fs_documentation_quality": 10_000_000,
+        "fs_monitoring_quality": 10_000_000,
+        "fs_refactoring_quality": 10_000_000,
+        "fs_git_workflow_quality": 10_000_000,
     }
 else:  # UNCENSORED
     # UNCENSORED: Only capability-focused (15 categories)
@@ -123,13 +132,22 @@ else:  # UNCENSORED
         "evidence_quality": 13_333_333,
         "counter_argument": 13_333_335,
         
-        # Fullstack Engineering Preferences (6 types)
-        "fs_api_design_quality": 13_333_333,
-        "fs_database_query_quality": 13_333_333,
-        "fs_frontend_component_quality": 13_333_333,
-        "fs_error_handling_preference": 13_333_333,
-        "fs_deployment_quality": 13_333_333,
-        "fs_test_quality": 13_333_336,
+        # Fullstack Engineering Preferences (14 types)
+        "fs_api_design_quality": 10_000_000,
+        "fs_database_query_quality": 10_000_000,
+        "fs_frontend_component_quality": 10_000_000,
+        "fs_error_handling_preference": 10_000_000,
+        "fs_deployment_quality": 10_000_000,
+        "fs_test_quality": 10_000_000,
+        # New fullstack categories
+        "fs_architecture_quality": 10_000_000,
+        "fs_security_practices": 10_000_000,
+        "fs_performance_optimization": 10_000_000,
+        "fs_code_review_quality": 10_000_000,
+        "fs_documentation_quality": 10_000_000,
+        "fs_monitoring_quality": 10_000_000,
+        "fs_refactoring_quality": 10_000_000,
+        "fs_git_workflow_quality": 10_000_000,
     }
 
 # ═══════════════════════════════════════════════════════════════
@@ -708,6 +726,414 @@ def test_register():
 No isolation, no edge cases, weak assertions, no mock.'''
         return prompt, chosen, rejected
     
+    # --- NEW Fullstack Preference Generators ---
+    
+    def gen_fs_architecture_quality(self) -> Tuple[str, str, str]:
+        prompt = "Design the system architecture for a real-time collaborative document editor."
+        chosen = '''Architecture:
+**Components:**
+- WebSocket Gateway: Handles real-time connections (scales with sticky sessions)
+- CRDT Engine: Conflict-free replicated data types for concurrent edits
+- Document Service: REST API for CRUD, persistence
+- Presence Service: Tracks active users, cursors, selections
+- Event Bus: Redis Pub/Sub for cross-instance sync
+
+**Data Flow:**
+1. User edit → WebSocket → CRDT merge → Broadcast to peers
+2. Periodic snapshots to PostgreSQL (event sourcing)
+3. Document recovery from snapshot + replay events
+
+**Scalability:**
+- Horizontal scaling with Redis for cross-pod sync
+- Document partitioning by workspace
+- CDN for static assets'''
+        rejected = '''Use a simple REST API with polling every 2 seconds.
+Store document in MongoDB.
+When user saves, overwrite the whole document.
+Handle conflicts by "last write wins".'''
+        return prompt, chosen, rejected
+    
+    def gen_fs_security_practices(self) -> Tuple[str, str, str]:
+        prompt = "Implement authentication for a REST API with JWT tokens."
+        chosen = '''```python
+from datetime import datetime, timedelta
+from jose import jwt
+from passlib.context import CryptContext
+from fastapi import HTTPException, Depends
+from fastapi.security import HTTPBearer
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+security = HTTPBearer()
+
+SECRET_KEY = os.environ["JWT_SECRET"]  # Never hardcode!
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 15
+REFRESH_TOKEN_EXPIRE_DAYS = 7
+
+def create_tokens(user_id: str) -> dict:
+    access_payload = {
+        "sub": user_id,
+        "type": "access",
+        "exp": datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+        "iat": datetime.utcnow(),
+    }
+    refresh_payload = {
+        "sub": user_id,
+        "type": "refresh",
+        "exp": datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
+        "iat": datetime.utcnow(),
+    }
+    return {
+        "access_token": jwt.encode(access_payload, SECRET_KEY, ALGORITHM),
+        "refresh_token": jwt.encode(refresh_payload, SECRET_KEY, ALGORITHM),
+        "token_type": "bearer",
+    }
+
+async def get_current_user(credentials = Depends(security)):
+    try:
+        payload = jwt.decode(credentials.credentials, SECRET_KEY, [ALGORITHM])
+        if payload.get("type") != "access":
+            raise HTTPException(401, "Invalid token type")
+        return payload["sub"]
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(401, "Token expired")
+    except jwt.JWTError:
+        raise HTTPException(401, "Invalid token")
+```
+Short-lived access tokens, secure refresh flow, env-based secrets.'''
+        rejected = '''```python
+SECRET = "my-secret-key-123"
+
+def login(username, password):
+    token = base64.b64encode(f"{username}:{password}".encode())
+    return token  # Never expires
+
+def verify(token):
+    return base64.b64decode(token).decode().split(":")
+```
+Hardcoded secret, credentials in token, no expiry.'''
+        return prompt, chosen, rejected
+    
+    def gen_fs_performance_optimization(self) -> Tuple[str, str, str]:
+        prompt = "Optimize a slow database query that takes 5+ seconds."
+        chosen = '''**Analysis & Optimization Steps:**
+
+1. **EXPLAIN ANALYZE the query:**
+```sql
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) 
+SELECT * FROM orders o 
+JOIN customers c ON o.customer_id = c.id 
+WHERE o.created_at > '2024-01-01';
+```
+
+2. **Identified issues:**
+- Seq Scan on orders (500K rows) → Add index
+- No index on created_at → Create covering index
+- SELECT * fetching 50 columns → Select only needed
+
+3. **Solution:**
+```sql
+-- Add covering index for the query pattern
+CREATE INDEX CONCURRENTLY idx_orders_created_customer 
+ON orders (created_at DESC, customer_id) 
+INCLUDE (id, total, status);
+
+-- Optimized query
+SELECT o.id, o.total, o.status, c.name
+FROM orders o
+JOIN customers c ON o.customer_id = c.id
+WHERE o.created_at > '2024-01-01'
+ORDER BY o.created_at DESC
+LIMIT 100;
+```
+
+4. **Result:** 5s → 12ms (400x improvement)'''
+        rejected = '''Just add more RAM to the database server.
+Or cache everything in Redis.
+Maybe try adding LIMIT 1000.'''
+        return prompt, chosen, rejected
+    
+    def gen_fs_code_review_quality(self) -> Tuple[str, str, str]:
+        prompt = "Review this pull request for a user registration feature."
+        chosen = '''**Code Review Feedback:**
+
+✅ **Strengths:**
+- Good separation of concerns (service/repository layers)
+- Input validation with Pydantic
+- Proper password hashing with bcrypt
+
+⚠️ **Issues to address:**
+
+1. **Security (Critical):**
+```diff
+- if user.password == stored_hash:  # String comparison!
++ if pwd_context.verify(user.password, stored_hash):
+```
+
+2. **Error handling:**
+```diff
+- except Exception as e:
+-     return {"error": str(e)}
++ except DuplicateEmailError:
++     raise HTTPException(409, "Email already registered")
++ except ValidationError as e:
++     raise HTTPException(400, e.errors())
+```
+
+3. **Missing tests:**
+- Add test for duplicate email scenario
+- Add test for SQL injection in email field
+
+4. **Nit:** Consider using `EmailStr` type for validation
+
+**Verdict:** Request changes, address security issue first.'''
+        rejected = '''LGTM! Ship it!'''
+        return prompt, chosen, rejected
+    
+    def gen_fs_documentation_quality(self) -> Tuple[str, str, str]:
+        prompt = "Write API documentation for a user registration endpoint."
+        chosen = '''## POST /api/v1/users/register
+
+Register a new user account.
+
+### Request
+
+**Headers:**
+| Header | Required | Description |
+|--------|----------|-------------|
+| Content-Type | Yes | Must be `application/json` |
+
+**Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "SecurePass123!",
+  "name": "John Doe"
+}
+```
+
+| Field | Type | Required | Constraints |
+|-------|------|----------|-------------|
+| email | string | Yes | Valid email format, max 255 chars |
+| password | string | Yes | Min 8 chars, 1 uppercase, 1 number, 1 special |
+| name | string | Yes | 2-100 characters |
+
+### Response
+
+**201 Created:**
+```json
+{
+  "id": "usr_abc123",
+  "email": "user@example.com",
+  "name": "John Doe",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+**400 Bad Request:**
+```json
+{
+  "error": "validation_error",
+  "details": [{"field": "password", "message": "Password too weak"}]
+}
+```
+
+**409 Conflict:**
+```json
+{
+  "error": "email_exists",
+  "message": "Email already registered"
+}
+```
+
+### Example
+```bash
+curl -X POST https://api.example.com/api/v1/users/register \\
+  -H "Content-Type: application/json" \\
+  -d \'{"email": "user@example.com", "password": "SecurePass123!", "name": "John"}\'
+```'''
+        rejected = '''POST /register - creates user. Send email and password in body.'''
+        return prompt, chosen, rejected
+    
+    def gen_fs_monitoring_quality(self) -> Tuple[str, str, str]:
+        prompt = "Set up monitoring and alerting for a production API."
+        chosen = '''**Observability Stack:**
+
+**1. Metrics (Prometheus + Grafana):**
+```python
+from prometheus_client import Counter, Histogram, generate_latest
+
+REQUEST_COUNT = Counter(
+    "http_requests_total",
+    "Total HTTP requests",
+    ["method", "endpoint", "status"]
+)
+
+REQUEST_LATENCY = Histogram(
+    "http_request_duration_seconds",
+    "Request latency",
+    ["method", "endpoint"],
+    buckets=[0.01, 0.05, 0.1, 0.5, 1.0, 5.0]
+)
+
+@app.middleware("http")
+async def metrics_middleware(request, call_next):
+    start = time.time()
+    response = await call_next(request)
+    REQUEST_COUNT.labels(
+        request.method,
+        request.url.path,
+        response.status_code
+    ).inc()
+    REQUEST_LATENCY.labels(
+        request.method,
+        request.url.path
+    ).observe(time.time() - start)
+    return response
+```
+
+**2. Alerting Rules:**
+```yaml
+groups:
+  - name: api-alerts
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Error rate > 5%"
+      
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 10m
+        labels:
+          severity: warning
+```
+
+**3. Distributed Tracing (OpenTelemetry):**
+- Trace ID propagation across services
+- Span timing for each operation'''
+        rejected = '''Just check the logs when users complain.
+Maybe add print statements.'''
+        return prompt, chosen, rejected
+    
+    def gen_fs_refactoring_quality(self) -> Tuple[str, str, str]:
+        prompt = "Refactor this 500-line function into smaller, testable units."
+        chosen = '''**Refactoring Strategy:**
+
+**Before:** `process_order(order_data)` - 500 lines doing everything
+
+**After:** Single Responsibility Principle
+
+```python
+# 1. Extract validation
+class OrderValidator:
+    def validate(self, order_data: dict) -> ValidationResult:
+        self._validate_items(order_data["items"])
+        self._validate_shipping(order_data["shipping"])
+        self._validate_payment(order_data["payment"])
+        return ValidationResult(is_valid=True)
+
+# 2. Extract pricing calculation
+class PricingCalculator:
+    def __init__(self, tax_service: TaxService, discount_service: DiscountService):
+        self.tax_service = tax_service
+        self.discount_service = discount_service
+    
+    def calculate(self, items: list, coupon: Optional[str]) -> PricingBreakdown:
+        subtotal = sum(item.price * item.quantity for item in items)
+        discount = self.discount_service.apply(coupon, subtotal)
+        tax = self.tax_service.calculate(subtotal - discount)
+        return PricingBreakdown(subtotal, discount, tax)
+
+# 3. Extract inventory check
+class InventoryService:
+    async def reserve_items(self, items: list) -> ReservationResult:
+        ...
+
+# 4. Orchestrator (now 50 lines)
+class OrderProcessor:
+    def __init__(self, validator, pricing, inventory, payment, notification):
+        ...
+    
+    async def process(self, order_data: dict) -> Order:
+        self.validator.validate(order_data)
+        pricing = self.pricing.calculate(order_data["items"], order_data.get("coupon"))
+        await self.inventory.reserve_items(order_data["items"])
+        payment_result = await self.payment.charge(pricing.total)
+        order = await self.repository.create(order_data, pricing, payment_result)
+        await self.notification.send_confirmation(order)
+        return order
+```
+
+**Benefits:**
+- Each class testable in isolation
+- Dependencies injectable (mockable)
+- Clear responsibilities'''
+        rejected = '''Just add more comments and split into 5 functions in the same file.'''
+        return prompt, chosen, rejected
+    
+    def gen_fs_git_workflow_quality(self) -> Tuple[str, str, str]:
+        prompt = "Describe a Git workflow for a team of 5 developers."
+        chosen = '''**Git Flow for Small Team:**
+
+**Branches:**
+- `main`: Production-ready, protected, requires PR
+- `develop`: Integration branch for features
+- `feature/*`: Individual feature work
+- `hotfix/*`: Emergency production fixes
+
+**Workflow:**
+
+1. **Start feature:**
+```bash
+git checkout develop
+git pull origin develop
+git checkout -b feature/USER-123-add-login
+```
+
+2. **During development:**
+```bash
+# Commit often with conventional commits
+git commit -m "feat(auth): add JWT token generation"
+git commit -m "test(auth): add login endpoint tests"
+git push -u origin feature/USER-123-add-login
+```
+
+3. **Pull Request:**
+- Create PR to `develop`
+- Run CI: lint, test, build
+- Require 1 approval
+- Squash merge with descriptive message
+
+4. **Release:**
+```bash
+git checkout develop
+git pull
+git checkout -b release/v1.2.0
+# Bump version, update changelog
+git checkout main
+git merge release/v1.2.0 --no-ff
+git tag -a v1.2.0 -m "Release v1.2.0"
+git push origin main --tags
+```
+
+5. **Hotfix:**
+```bash
+git checkout main
+git checkout -b hotfix/fix-critical-bug
+# Fix, test, PR directly to main
+# Cherry-pick to develop
+```
+
+**Conventional Commits:** `feat:`, `fix:`, `docs:`, `refactor:`, `test:`'''
+        rejected = '''Everyone commits to main directly.
+Use "updated" or "fixed stuff" as commit messages.
+Force push when there are conflicts.'''
+        return prompt, chosen, rejected
+    
     def generate_preference_pair(self) -> Dict:
         """Generate a single preference pair (only from enabled categories)"""
         available_categories = [
@@ -756,6 +1182,15 @@ No isolation, no edge cases, weak assertions, no mock.'''
             "fs_error_handling_preference": self.gen_fs_error_handling_preference,
             "fs_deployment_quality": self.gen_fs_deployment_quality,
             "fs_test_quality": self.gen_fs_test_quality,
+            # New fullstack preference categories
+            "fs_architecture_quality": self.gen_fs_architecture_quality,
+            "fs_security_practices": self.gen_fs_security_practices,
+            "fs_performance_optimization": self.gen_fs_performance_optimization,
+            "fs_code_review_quality": self.gen_fs_code_review_quality,
+            "fs_documentation_quality": self.gen_fs_documentation_quality,
+            "fs_monitoring_quality": self.gen_fs_monitoring_quality,
+            "fs_refactoring_quality": self.gen_fs_refactoring_quality,
+            "fs_git_workflow_quality": self.gen_fs_git_workflow_quality,
         })
         
         generator_func = generator_map.get(category)
