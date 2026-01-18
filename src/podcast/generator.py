@@ -42,21 +42,45 @@ class PodcastScript:
 # LLM CALL ADAPTER
 # ═══════════════════════════════════════════════════════════════
 
+import requests
+
 def call_llm(messages: List[Dict[str, str]], *, model: str = "manus-podcast") -> str:
     """
-    Generic LLM call.
+    Call a chat-completions-compatible HTTP endpoint and return the raw assistant text.
 
-    Replace this with your real inference client:
-    - HTTP call to your Manus inference server
-    - OpenAI-compatible client
-    - Local pipeline
+    Expected server API (OpenAI-compatible):
+      POST /v1/chat/completions
+      {
+        "model": "manus-podcast",
+        "messages": [...],
+        "temperature": 0.7
+      }
 
-    For now this function raises if not implemented, so it is never silently wrong.
+    Adjust URL, headers, and JSON keys to your deployment.
     """
-    raise RuntimeError(
-        "call_llm() in podcast/generator.py must be wired to your actual LLM "
-        "(HTTP/gRPC/local). It should return a single string with the assistant reply."
-    )
+    url = os.getenv("MANUS_API_URL", "http://localhost:8000/v1/chat/completions")
+    api_key = os.getenv("MANUS_API_KEY", "")
+
+    headers = {
+        "Content-Type": "application/json",
+    }
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+
+    payload = {
+        "model": model,
+        "messages": messages,
+        "temperature": 0.7,
+    }
+
+    resp = requests.post(url, json=payload, headers=headers, timeout=120)
+    resp.raise_for_status()
+    data = resp.json()
+
+    # OpenAI-style response
+    content = data["choices"][0]["message"]["content"]
+    return content
+
 
 
 # ═══════════════════════════════════════════════════════════════
