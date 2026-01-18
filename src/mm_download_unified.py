@@ -149,18 +149,32 @@ DATASET_REGISTRY = {
             "hf_split": "validation",
             "hf_streaming": True,
             "description": "VATEX Video Captioning",
+        },
+        "fine_video": {
+            "kaggle_id": None,
+            "hf_id": "HuggingFaceFV/finevideo",
+            "hf_split": "train",
+            "hf_streaming": True,
+            "description": "FineVideo (High Quality)",
         }
     },
     
     "benchmarks": {
         "mmlu": {
             "kaggle_id": "lizhecheng/mmlu-dataset",
+            "hf_id": "cais/mmlu",  # Fixed from MMMU/MMMU
+            "hf_config": "all",
+            "hf_split": "test",
+            "description": "MMLU (Text)",
+            "file_pattern": "*.csv",
+            "text_field": "question",
+        },
+        "mmmu": {    # Added distinct MMMU entry
+            "kaggle_id": None,
             "hf_id": "MMMU/MMMU",
             "hf_config": "Math",
             "hf_split": "validation",
-            "description": "MMLU / MMMU",
-            "file_pattern": "*.csv",
-            "text_field": "question",
+            "description": "MMMU (Multimodal)",
         },
         "gsm8k": {
             "kaggle_id": "thedevastator/gsm8k-grade-school-math-word-problems",
@@ -187,6 +201,10 @@ DATASET_REGISTRY = {
         }
     },
 }
+
+# ... (Previous code) ...
+
+
 
 
 @dataclass
@@ -230,59 +248,38 @@ class DatasetManager:
         sample_limit: int
     ) -> int:
         """
-        Try Kaggle first, then HuggingFace.
-        Returns number of samples processed.
+        Orchestrate download: HF First -> Kaggle Second.
         """
+        logger.info(f"🚀 Processing {modality}/{name}...")
         count = 0
         
-        # 1. Try Kaggle
-        if self.kaggle_api and config.get("kaggle_id"):
-            logger.info(f"Trying Kaggle for {name} ({config['kaggle_id']})...")
-            try:
-                # Check if already downloaded
-                dataset_kaggle_path = self.kaggle_dir / name
-                if not dataset_kaggle_path.exists():
-                     self.kaggle_api.dataset_download_files(
-                        config["kaggle_id"],
-                        path=str(dataset_kaggle_path),
-                        unzip=True,
-                        quiet=False
-                    )
-                
-                # If download successful (or existed), process it
-                if dataset_kaggle_path.exists():
-                    count = self._process_local_files(
-                        dataset_kaggle_path, 
-                        self.output_dir / modality / name,
-                        modality,
-                        name,
-                        config,
-                        sample_limit
-                    )
-                    
-                if count > 0:
-                    logger.info(f"✅ Downloaded {count} samples from Kaggle for {name}")
-                    return count
-                    
-            except Exception as e:
-                logger.warning(f"❌ Kaggle download failed for {name}: {e}")
-                
-        
-        # 2. Try HuggingFace
+        # 1. Try HuggingFace First
         if HF_AVAILABLE and config.get("hf_id"):
-            logger.info(f"Falling back to HuggingFace for {name} ({config['hf_id']})...")
+            logger.info(f"Trying HuggingFace for {name} ({config['hf_id']})...")
             try:
-                count = self._fetch_hf_dataset(
-                    modality,
-                    name,
-                    config,
-                    sample_limit
-                )
+                count = self._fetch_hf_dataset(modality, name, config, sample_limit)
                 if count > 0:
                     logger.info(f"✅ Downloaded {count} samples from HuggingFace for {name}")
                     return count
             except Exception as e:
-                logger.error(f"❌ HuggingFace download failed for {name}: {e}")
+                logger.warning(f"⚠️ HuggingFace download failed for {name}: {e}")
+
+        # 2. Try Kaggle
+        if self.kaggle_api and config.get("kaggle_id"):
+            logger.info(f"Falling back to Kaggle for {name} ({config['kaggle_id']})...")
+            try:
+                dataset_kaggle_path = self.kaggle_dir / name
+                if not dataset_kaggle_path.exists():
+                     self.kaggle_api.dataset_download_files(config["kaggle_id"], path=str(dataset_kaggle_path), unzip=True, quiet=False)
+                
+                if dataset_kaggle_path.exists():
+                    count = self._process_local_files(dataset_kaggle_path, self.output_dir / modality / name, modality, name, config, sample_limit)
+                
+                if count > 0:
+                    logger.info(f"✅ Downloaded {count} samples from Kaggle for {name}")
+                    return count
+            except Exception as e:
+                logger.error(f"❌ Kaggle download failed for {name}: {e}")
         
         if count == 0:
             logger.error(f"❌ Failed to download {name} from both sources")

@@ -1,0 +1,8 @@
+.agent
+.pytest_cache
+.venv
+antigravity-skills-agents-kit
+conversation
+llm-dataset-resources
+logs
+base-model
