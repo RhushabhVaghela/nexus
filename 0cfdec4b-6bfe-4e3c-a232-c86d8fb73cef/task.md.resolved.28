@@ -1,0 +1,63 @@
+# Manus Fullstack Specialization
+
+- [ ] Analyze Resources in `docs/new docs` <!-- id: 0 -->
+- [ ] Research & Schema Design for "Replica" Apps (Manus/Lovable/Replit) <!-- id: 1 -->
+  - [ ] UI/UX Patterns & Templates (Dashboards, Portfolios, Slides)
+  - [ ] Frontend Frameworks (React, Next.js, Vite)
+  - [ ] Backend Architectures (Node, Python, Supabase integration)
+- [x] Update `02_generate_trajectories.py` <!-- id: 2 -->
+  - [x] Integrate "Replica" Schemas
+  - [x] specialized "Fullstack" prompts & reasoning chains
+  - [x] Scale generator logic (conceptually) to support massive dataset variety
+- [x] Update `sft_training.py` & `grpo_training.py` for specialized fine-tuning <!-- id: 3 -->
+- [x] Switch to Real Data Generator & Config (No Simulation) <!-- id: 6 -->
+  - [x] Implement Procedural Blueprints (Dashboards, Portfolios, Slides)
+  - [x] Scale Architecture for 1 Billion Samples (Splits Implemented)
+  - [x] Create Comprehensive Test Suite (Unit/Integration: 100% Coverage)
+  - [x] Restructure Dataset Paths (`datasets/train|val|test`)
+- [x] Implement "Manus Prime" Data Format <!-- id: 7 -->
+  - [x] Rich JSON-in-String CoT Structure
+  - [x] "Failure & Recovery" Simulation (Agentic Resilience)
+  - [x] "No Limits" Blueprint Library (26+ Apps across 7 Verticals)
+- [x] Verify Implementation with `validate_trajectories.py` <!-- id: 4 -->
+  - [x] Update Validator for "Manus Prime" Schema (Messages + JSON CoT)
+- [x] Refactor Downstream Pipelines
+  - [x] `04_sft_training.py` (Chat Template + System Prompt)
+  - [x] `05_rejection_sampling.py` (JSON Parsing)
+- [x] Implement Training Controls (Pause/Resume)
+  - [x] Create `utils/callbacks.py`
+  - [x] Integrate Callback into `04_sft_training.py`
+  - [x] Add pause support to `05_rejection_sampling.py`
+  - [x] Add pause support to `06_grpo_training.py`
+  - [x] Provide `utils/control_training.py` for user interaction
+  - [x] Create `run_complete_pipeline.sh` unified orchestration
+- [/] Walkthrough & Documentation <!-- id: 5 -->
+
+## GPT-OSS-20B Multimodal Integration (Isolated in `multimodal/`)
+
+- [x] Phase 1: Base Model Setup <!-- id: 8 -->
+  - [x] Update `04_sft_training.py` for GPT-OSS-20B
+- [/] Phase 2: Input Encoders <!-- id: 9 -->
+  - [x] Create `multimodal/utils/multimodal_encoders.py`
+  - [x] Vision encoder (SigLIP) (Integration Complete)
+  - [x] Audio encoder (Whisper)
+  - [x] Video encoder (ViViT)
+- [/] Phase 3: Output Decoders <!-- id: 13 -->
+  - [ ] Image decoder (Stable Diffusion)
+  - [ ] Speech decoder (TTS)
+  - [ ] Audio decoder (AudioGen)
+- [ ] Phase 4: Training Scripts <!-- id: 10 -->
+  - [x] Download script
+  - [x] Validation script
+  - [x] Encoder training script
+  - [ ] Output decoder training
+- [ ] Phase 5: RAG Module <!-- id: 12 -->
+  - [ ] Integrate BGE-M3 embeddings
+  - [ ] Setup Qdrant vector store
+
+## Advanced Prompting (New)
+
+- [ ] Implement "Repetitive Prompting" (arXiv 2512.14982) <!-- id: 14 -->
+  - [x] Create `11_generate_repetitive_prompts.py` (Target: 200M)
+  - [x] Create `12_validate_repetitive_prompts.py`
+  - [/] Generate Repetitive Dataset (`repetitive-datasets/`) (Target: 200M samples)

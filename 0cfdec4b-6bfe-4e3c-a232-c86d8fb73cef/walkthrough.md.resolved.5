@@ -1,0 +1,70 @@
+# Manus Prime: Data Pipeline Verification & Walkthrough
+
+> [!IMPORTANT]
+> The data generation pipeline has been enhanced to "Manus Prime" standards. It now produces rich, agentic trajectories with simulated resiliency (failure & recovery) across 26+ diverse verticals.
+
+## 1. System Architecture Upgrade
+
+The entire pipeline was refactored to support a strict **JSON-based Chain of Thought (CoT)** format, replicating the [manus_training_data.jsonl](file:///mnt/d/Research%20Experiments/manus_model/others-stuff-not-required/manus_training_data.jsonl) reference schema.
+
+| component | Status | Upgrade Details |
+| :--- | :--- | :--- |
+| **Generator** | ✅ Active | Implements "No Limits" blueprints (26+ types) + "Failure & Recovery" logic. |
+| **Validator** | ✅ Updated | Recursively validates `datasets/` for Schema compliance (Messages List + JSON CoT). |
+| **SFT Trainer** | ✅ Refactored | Uses `messages` format with Domain-Specific System Prompts. |
+| **Rejection Sampler** | ✅ Refactored | Prompts for JSON output and parses structured responses for scoring. |
+
+## 2. Capability Showcase
+
+### A. Agentic Resilience (Failure & Recovery)
+30% of generated samples now simulate a failure scenario to train the model in error recovery.
+```json
+// Example Step Sequence from Generator
+[
+  { "step": 1, "thought": "Initializing project..." },
+  { 
+    "step": 2, 
+    "action": "npm install legacy-lib", 
+    "failure": "Error: Dependency conflict detected..." 
+  },
+  { 
+    "step": 3, 
+    "recovery": "I will resolve by upgrading to v2.0...", 
+    "action": "npm install legacy-lib@2.0" 
+  }
+]
+```
+
+### B. "No Limits" Domain Coverage
+We are generating specialized trajectories for:
+- **FinTech**: Crypto Dashboards, Finance Trackers
+- **Health**: Bioinformatics, Telehealth
+- **Enterprise**: CRM, Legal Automation
+- **Creative**: Generative Art, Music Sequencers
+- **System Design**: Twitter Clones, Load Balancers
+
+## 3. Usage & Verification
+
+### Running the Pipeline
+The [run_full_pipeline.sh](file:///mnt/d/Research%20Experiments/manus_model/run_full_pipeline.sh) script currently orchestrates the old flow. You can run components individually for verification:
+
+1. **Check Generation Progress**:
+   ```bash
+   tail -f logs/gen_1B_manus_prime.log
+   ```
+
+2. **Validate New Data**:
+   ```bash
+   python3 03_validate_trajectories.py
+   ```
+   *Output: [datasets/train/part_000_validated.jsonl](file:///mnt/d/Research%20Experiments/manus_model/datasets/train/part_000_validated.jsonl)*
+
+3. **Start Training (SFT)**:
+   ```bash
+   python3 04_sft_training.py
+   ```
+   *Note: Ensure validation is run first.*
+
+## 4. Next Steps
+- Monitor the 1 Billion sample generation.
+- Launch SFT once sufficient data (~100k samples) is accumulated.

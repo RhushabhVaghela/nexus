@@ -1,0 +1,6 @@
+{
+  "artifactType": "ARTIFACT_TYPE_WALKTHROUGH",
+  "summary": "Complete project structure after reorganization. All source files in src/, single run_pipeline.sh for execution, clean directory layout.",
+  "updatedAt": "2026-01-17T14:14:12.733542354Z",
+  "version": "11"
+}

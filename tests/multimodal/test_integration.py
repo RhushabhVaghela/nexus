@@ -1,0 +1,30 @@
+
+import unittest
+from unittest.mock import MagicMock, patch
+import sys
+from pathlib import Path
+
+# Add src to path
+sys.path.append(str(Path(__file__).parents[2] / "src"))
+
+# Mock modules BEFORE importing src
+sys.modules["torch"] = MagicMock()
+sys.modules["torch.nn"] = MagicMock()
+sys.modules["transformers"] = MagicMock()
+
+from multimodal.decoders import ImageDecoder, AudioDecoder
+
+class TestOmniIntegration(unittest.TestCase):
+    
+    def test_decoders_sota_format(self):
+        """Test proper SOTA processor IDs"""
+        img_decoder = ImageDecoder()
+        res = img_decoder.decode("test.png")
+        self.assertEqual(res["processor_id"], "google/siglip-so400m-patch14-512")
+        
+        aud_decoder = AudioDecoder()
+        res = aud_decoder.decode("test.mp3")
+        self.assertEqual(res["processor_id"], "openai/whisper-large-v3-turbo")
+
+if __name__ == '__main__':
+    unittest.main()

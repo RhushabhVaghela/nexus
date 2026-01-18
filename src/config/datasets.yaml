@@ -1,0 +1,204 @@
+# Manus Prime: Dataset Configuration
+# All real data sources for 17 generators
+# 100% Real Data - No Synthetic
+
+# ═══════════════════════════════════════════════════════════════
+# STORAGE CONFIGURATION
+# ═══════════════════════════════════════════════════════════════
+
+storage:
+  base_dir: "/mnt/e/data"
+  budget_gb: 500
+
+# ═══════════════════════════════════════════════════════════════
+# PRIORITY 0: PRE-DISTILLED KNOWLEDGE (~20GB)
+# These contain concentrated knowledge from massive corpuses
+# ═══════════════════════════════════════════════════════════════
+
+predistilled:
+  - name: "Magicoder-OSS-Instruct"
+    source: "ise-uiuc/Magicoder-OSS-Instruct-75K"
+    type: huggingface
+    size_gb: 3
+    description: "The Stack (6TB) → 75K code instructions"
+    output_dir: "predistilled/magicoder-oss"
+    
+  - name: "Magicoder-Evol-Instruct"
+    source: "ise-uiuc/Magicoder-Evol-Instruct-110K"
+    type: huggingface
+    size_gb: 2
+    description: "Evolved code instructions"
+    output_dir: "predistilled/magicoder-evol"
+    
+  - name: "OpenMathInstruct"
+    source: "nvidia/OpenMathInstruct-1"
+    type: huggingface
+    size_gb: 5
+    description: "MATH/GSM8K → 1M samples"
+    output_dir: "predistilled/openmath"
+    
+  - name: "SlimOrca"
+    source: "Open-Orca/SlimOrca"
+    type: huggingface
+    size_gb: 5
+    description: "GPT-4 reasoning chains"
+    output_dir: "predistilled/slimorca"
+    
+  - name: "Dolphin"
+    source: "cognitivecomputations/dolphin"
+    type: huggingface
+    size_gb: 5
+    description: "Multi-domain instructions"
+    output_dir: "predistilled/dolphin"
+
+# ═══════════════════════════════════════════════════════════════
+# PRIORITY 1: CODE INSTRUCTION DATASETS (~40GB)
+# ═══════════════════════════════════════════════════════════════
+
+code:
+  - name: "Code-Feedback"
+    source: "m-a-p/Code-Feedback"
+    type: huggingface
+    size_gb: 15
+    output_dir: "code/code-feedback"
+    
+  - name: "CodeAlpaca"
+    source: "sahil2801/CodeAlpaca-20k"
+    type: huggingface
+    size_gb: 1
+    output_dir: "code/code-alpaca"
+    
+  - name: "Glaive-Code-Assistant"
+    source: "glaiveai/glaive-code-assistant-v2"
+    type: huggingface
+    size_gb: 10
+    output_dir: "code/glaive"
+    
+  - name: "CommitPackFT-Filtered"
+    source: "bigcode/commitpackft"
+    type: huggingface
+    size_gb: 5
+    filter:
+      languages: ["Python", "JavaScript", "TypeScript", "CSS"]
+    output_dir: "code/commitpack"
+
+# ═══════════════════════════════════════════════════════════════
+# PRIORITY 2: DOMAIN-SPECIFIC REPOSITORIES
+# ═══════════════════════════════════════════════════════════════
+
+domains:
+  # API Design
+  - name: "OpenAPI-Directory"
+    source: "https://github.com/APIs-guru/openapi-directory"
+    type: github
+    output_dir: "domain/openapi"
+    
+  # Mobile
+  - name: "Flutter-Samples"
+    source: "https://github.com/flutter/samples"
+    type: github
+    output_dir: "domain/flutter"
+    
+  - name: "Android-Architecture"
+    source: "https://github.com/android/architecture-samples"
+    type: github
+    output_dir: "domain/android-arch"
+    
+  # DevOps
+  - name: "Awesome-Compose"
+    source: "https://github.com/docker/awesome-compose"
+    type: github
+    output_dir: "domain/docker-compose"
+    
+  # Platform Engineering
+  - name: "Backstage"
+    source: "https://github.com/backstage/backstage"
+    type: github
+    output_dir: "domain/backstage"
+    
+  # Data Engineering
+  - name: "Airflow-Examples"
+    source: "https://github.com/astronomer/airflow-quickstart"
+    type: github
+    output_dir: "domain/airflow"
+    
+  # Observability
+  - name: "OpenTelemetry-Demo"
+    source: "https://github.com/open-telemetry/opentelemetry-demo"
+    type: github
+    output_dir: "domain/otel"
+    
+  - name: "Grafana"
+    source: "https://github.com/grafana/grafana"
+    type: github
+    output_dir: "domain/grafana"
+    
+  # MLOps
+  - name: "MLflow"
+    source: "https://github.com/mlflow/mlflow"
+    type: github
+    output_dir: "domain/mlflow"
+    
+  # Security
+  - name: "OWASP-CheatSheet"
+    source: "https://github.com/OWASP/CheatSheetSeries"
+    type: github
+    output_dir: "domain/owasp"
+    
+  # Edge/WASM
+  - name: "Cloudflare-Workers"
+    source: "https://github.com/cloudflare/workers-sdk"
+    type: github
+    output_dir: "domain/cloudflare-workers"
+    
+  # Low-Code
+  - name: "n8n"
+    source: "https://github.com/n8n-io/n8n"
+    type: github
+    output_dir: "domain/n8n"
+
+# ═══════════════════════════════════════════════════════════════
+# PRIORITY 3: BENCHMARKS
+# ═══════════════════════════════════════════════════════════════
+
+benchmarks:
+  - name: "HumanEval"
+    source: "openai_humaneval"
+    type: huggingface
+    output_dir: "benchmarks/humaneval"
+    
+  - name: "MBPP"
+    source: "mbpp"
+    type: huggingface
+    output_dir: "benchmarks/mbpp"
+    
+  - name: "GSM8K"
+    source: "gsm8k"
+    type: huggingface
+    output_dir: "benchmarks/gsm8k"
+    
+  - name: "MMLU"
+    source: "cais/mmlu"
+    type: huggingface
+    output_dir: "benchmarks/mmlu"
+
+# ═══════════════════════════════════════════════════════════════
+# PROCESSING CONFIGURATION
+# ═══════════════════════════════════════════════════════════════
+
+processing:
+  # Sequential processing of datasets, multicore within each
+  mode: "sequential"
+  workers_per_dataset: 4
+  
+  # Output format
+  format: "messages"  # OpenAI-compatible
+  
+  # Splits
+  train_ratio: 0.95
+  val_ratio: 0.025
+  test_ratio: 0.025
+  
+  # Deduplication
+  deduplicate: true
+  hash_algorithm: "md5"

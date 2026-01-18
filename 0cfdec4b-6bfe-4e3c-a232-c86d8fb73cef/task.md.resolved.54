@@ -1,0 +1,43 @@
+# Manus Prime: Implementation Tasks
+
+## ✅ Completed
+
+### Utilities
+- [x] [utils/quality_metrics.py](file:///mnt/d/Research%20Experiments/manus_model/utils/quality_metrics.py) - Quality scoring pipeline
+- [x] [utils/diversity_enforcement.py](file:///mnt/d/Research%20Experiments/manus_model/utils/diversity_enforcement.py) - Zipfian sampling
+- [x] [utils/data_mixer.py](file:///mnt/d/Research%20Experiments/manus_model/utils/data_mixer.py) - Real/synthetic mixing
+- [x] [config/datasets.yaml](file:///mnt/d/Research%20Experiments/manus_model/config/datasets.yaml) - All dataset sources
+- [x] [config/model_config.yaml](file:///mnt/d/Research%20Experiments/manus_model/config/model_config.yaml) - Universal model config
+
+### Scripts
+- [x] [download_and_normalize.py](file:///mnt/d/Research%20Experiments/manus_model/download_and_normalize.py) - Dataset downloader
+- [x] [14_sft_training.py](file:///mnt/d/Research%20Experiments/manus_model/14_sft_training.py) - Architecture-agnostic SFT
+- [x] [15_continued_pretraining.py](file:///mnt/d/Research%20Experiments/manus_model/15_continued_pretraining.py) - Optional CPT
+
+### New Generators (3/10)
+- [x] [25_generate_data_engineering_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/25_generate_data_engineering_dataset.py)
+- [x] [27_generate_mobile_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/27_generate_mobile_dataset.py)
+- [x] [29_generate_api_design_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/29_generate_api_design_dataset.py)
+
+---
+
+## 🔄 In Progress
+
+- [ ] Running [download_and_normalize.py](file:///mnt/d/Research%20Experiments/manus_model/download_and_normalize.py) for real datasets
+
+---
+
+## ⏳ Pending
+
+### Generators (7 remaining)
+- [ ] `23_generate_platform_dataset.py`
+- [ ] `31_generate_observability_dataset.py`
+- [ ] `33_generate_mlops_dataset.py`
+- [ ] `35_generate_compliance_dataset.py`
+- [ ] `37_generate_wasm_edge_dataset.py`
+- [ ] `39_generate_lowcode_dataset.py`
+- [ ] `41_generate_dba_dataset.py`
+
+---
+
+**Last Updated**: 2026-01-17T13:35:00Z

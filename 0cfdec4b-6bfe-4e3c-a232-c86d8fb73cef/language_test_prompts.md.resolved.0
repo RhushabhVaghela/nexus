@@ -1,0 +1,407 @@
+# GPT-OSS-20B Language Capability Test Prompts
+## For LM Studio Testing
+
+Copy each prompt into LM Studio to test the model's native capabilities.
+
+---
+
+## 🌐 Frontend / Web
+
+### 1. TypeScript + React + Tailwind
+```
+Create a complex React dashboard component in TypeScript that includes:
+1. A responsive sidebar with collapsible navigation
+2. A main content area with a data grid (sortable, filterable)
+3. Real-time notifications using WebSocket connection
+4. Dark/light theme toggle using Context API
+5. Custom hooks for data fetching with caching
+
+Use Tailwind CSS, proper TypeScript interfaces, and React 18 patterns.
+Include error boundaries and Suspense for loading states.
+```
+
+### 2. Vue 3 + Composition API + Pinia
+```
+Build a Vue 3 e-commerce cart system with:
+1. Product listing with infinite scroll
+2. Shopping cart with persistent state (Pinia + localStorage)
+3. Checkout form with Vuelidate validation
+4. Real-time stock updates using SSE
+5. Optimistic UI updates for add-to-cart
+
+Use <script setup>, TypeScript, and Vue Router 4.
+Implement proper error handling and loading skeletons.
+```
+
+### 3. Svelte + SvelteKit
+```
+Create a SvelteKit blog application with:
+1. MDX content rendering with syntax highlighting
+2. Server-side rendering with streaming
+3. API routes for comments (CRUD)
+4. Authentication using cookies + JWT
+5. SEO optimization with dynamic meta tags
+
+Use TypeScript, implement load functions, and handle form actions.
+```
+
+### 4. D3.js Advanced Visualization
+```
+Create an interactive D3.js force-directed graph that:
+1. Visualizes a social network with 1000+ nodes
+2. Implements WebGL rendering for performance
+3. Has zoom, pan, and node dragging
+4. Shows tooltips with user details on hover
+5. Allows filtering by node type with smooth transitions
+6. Exports as SVG or PNG
+
+Use D3 v7, implement quadtree for collision detection,
+and add a minimap for navigation.
+```
+
+### 5. Angular 17 + RxJS
+```
+Build an Angular 17 real-time trading dashboard with:
+1. Standalone components with signals
+2. WebSocket service with RxJS operators (debounce, switchMap, retry)
+3. Virtual scrolling for 10,000+ rows
+4. Custom directive for price change animations
+5. NgRx for state management with effects
+
+Use strict TypeScript, implement OnPush change detection,
+and add unit tests with Jest.
+```
+
+---
+
+## 📱 Mobile Development
+
+### 6. Swift / SwiftUI (iOS)
+```
+Create a SwiftUI fitness tracking app with:
+1. Custom charts using Swift Charts (heart rate, steps)
+2. HealthKit integration for data sync
+3. Core Data persistence with CloudKit sync
+4. Combine publishers for reactive UI
+5. Custom animations with matched geometry effect
+6. Widget extension for home screen
+
+Use iOS 17 APIs, implement proper MVVM architecture,
+and add accessibility support with VoiceOver.
+```
+
+### 7. Kotlin / Jetpack Compose (Android)
+```
+Build a Kotlin Compose music player with:
+1. ExoPlayer integration for audio playback
+2. Background service with MediaSession
+3. Room database for offline playlists
+4. Compose Navigation with deep links
+5. Material 3 dynamic theming
+6. Notification controls with custom layout
+
+Use Hilt for DI, Coroutines with Flow,
+and implement proper lifecycle management.
+```
+
+### 8. Flutter / Dart
+```
+Create a Flutter fintech app with:
+1. Riverpod for state management
+2. Dio with interceptors for API calls
+3. Biometric authentication (fingerprint, face)
+4. Custom charts with fl_chart
+5. Push notifications with FCM
+6. Offline-first with Isar database
+
+Use go_router, implement proper error handling,
+and add platform-specific code for iOS/Android.
+```
+
+### 9. React Native + Expo
+```
+Build a React Native social media app with:
+1. Infinite scroll feed with FlashList
+2. Camera integration with Expo Camera
+3. Real-time chat using Socket.io
+4. Gesture animations with Reanimated 3
+5. Deep linking and universal links
+6. Push notifications with Expo Notifications
+
+Use TypeScript, React Navigation 6, and Zustand.
+Implement proper image caching and offline support.
+```
+
+---
+
+## ⚡ Systems Programming
+
+### 10. CUDA C++ (GPU Computing)
+```
+Implement a CUDA kernel for transformer attention mechanism:
+1. Multi-head attention with FlashAttention optimization
+2. Shared memory tiling for Q, K, V matrices
+3. Warp-level primitives for reduction
+4. Mixed precision (FP16/BF16) with tensor cores
+5. Kernel fusion for softmax + matmul
+6. Dynamic parallelism for variable sequence lengths
+
+Include host code with cuBLAS fallback,
+proper error handling, and performance profiling.
+```
+
+### 11. Rust (Systems)
+```
+Create a Rust async web crawler with:
+1. Tokio runtime with bounded concurrency
+2. Custom HTTP client with connection pooling
+3. Robots.txt parsing and respect
+4. SQLite storage with sqlx
+5. Rate limiting per domain
+6. Graceful shutdown handling
+
+Use proper error handling with thiserror,
+implement tracing for logging, and add CLI with clap.
+```
+
+### 12. C++ 20 (Modern)
+```
+Implement a C++20 lock-free concurrent queue with:
+1. Memory ordering with std::atomic
+2. Hazard pointers for safe memory reclamation
+3. Concepts for type constraints
+4. Coroutines for async pop operation
+5. SIMD optimization for batch operations
+6. Cache-line padding to prevent false sharing
+
+Include comprehensive unit tests with Catch2,
+and benchmark against std::queue with mutex.
+```
+
+### 13. Go (Golang)
+```
+Build a Go distributed key-value store with:
+1. Raft consensus for replication
+2. gRPC for inter-node communication
+3. Consistent hashing for data partitioning
+4. WAL (Write-Ahead Log) for durability
+5. Bloom filters for fast key lookup
+6. Graceful cluster membership changes
+
+Use proper error handling, context propagation,
+and implement comprehensive integration tests.
+```
+
+### 14. Zig
+```
+Create a Zig HTTP server with:
+1. io_uring for async I/O (Linux)
+2. Custom memory allocator with arena pattern
+3. Zero-copy request parsing
+4. Connection pooling and keep-alive
+5. TLS support with embedded certificates
+6. Graceful shutdown with signal handling
+
+Use comptime for route compilation,
+implement proper error handling, and add benchmarks.
+```
+
+---
+
+## 🧮 Data Science / ML
+
+### 15. Python + PyTorch
+```
+Implement a Vision Transformer (ViT) from scratch:
+1. Patch embedding with learnable position encoding
+2. Multi-head self-attention with FlashAttention
+3. MLP with GELU and dropout
+4. Layer normalization (pre-norm variant)
+5. Classification head with label smoothing
+6. Mixed precision training with GradScaler
+
+Include data augmentation pipeline, learning rate scheduler,
+and distributed training with FSDP.
+```
+
+### 16. Julia (Scientific Computing)
+```
+Create a Julia ODE solver package with:
+1. Runge-Kutta methods (RK4, Dormand-Prince)
+2. Adaptive step size control
+3. Event detection and handling
+4. Sensitivity analysis with AD
+5. GPU acceleration with CUDA.jl
+6. Stiff solver with BDF methods
+
+Use multiple dispatch, implement proper type stability,
+and add documentation with Documenter.jl.
+```
+
+### 17. R + tidyverse
+```
+Build an R Shiny dashboard for genomics analysis:
+1. Interactive volcano plot with plotly
+2. Gene ontology enrichment with clusterProfiler
+3. Heatmap with hierarchical clustering
+4. Pathway visualization with pathview
+5. File upload for DESeq2 results
+6. PDF report generation with RMarkdown
+
+Use shinydashboard, implement caching,
+and add proper error handling with tryCatch.
+```
+
+---
+
+## 🔧 Backend / Infrastructure
+
+### 18. Java 21 + Spring Boot 3
+```
+Create a Spring Boot 3 microservice with:
+1. Virtual threads for high concurrency
+2. GraalVM native image compilation
+3. R2DBC for reactive database access
+4. GraphQL API with DataFetcher
+5. Distributed tracing with Micrometer
+6. Kubernetes health probes and graceful shutdown
+
+Use records, sealed classes, and pattern matching.
+Include Testcontainers for integration tests.
+```
+
+### 19. C# / .NET 8
+```
+Build a .NET 8 event sourcing system with:
+1. EventStoreDB integration
+2. CQRS with MediatR
+3. Saga pattern for distributed transactions
+4. SignalR for real-time projections
+5. OpenTelemetry instrumentation
+6. AOT compilation for minimal API
+
+Use records, primary constructors, and source generators.
+Include comprehensive unit tests with xUnit.
+```
+
+### 20. Elixir + Phoenix
+```
+Create an Elixir Phoenix LiveView application with:
+1. Real-time collaborative document editing
+2. CRDT for conflict resolution
+3. PubSub for multi-node sync
+4. Presence tracking for online users
+5. Binary WebSocket protocol for efficiency
+6. Fly.io deployment with global distribution
+
+Use OTP supervisors, implement proper error handling,
+and add comprehensive test coverage.
+```
+
+---
+
+## 🔐 Security / Low-Level
+
+### 21. Assembly (x86-64)
+```
+Write x86-64 assembly for AES-256 encryption:
+1. Use AES-NI instructions (AESENC, AESDEC)
+2. Implement CBC mode with proper IV handling
+3. PKCS7 padding implementation
+4. Key schedule generation
+5. Constant-time comparison for authentication
+6. Proper register usage and stack alignment
+
+Include NASM syntax, calling convention compliance,
+and integration with C via extern.
+```
+
+### 22. WebAssembly (WAT)
+```
+Create a WebAssembly text format module for:
+1. Image convolution filter (3x3 kernel)
+2. SIMD operations for parallel processing
+3. Linear memory management for image buffer
+4. Exported functions callable from JavaScript
+5. Table for indirect function calls
+6. Bulk memory operations for memcpy
+
+Include JavaScript glue code and benchmark
+against pure JavaScript implementation.
+```
+
+---
+
+## 🗄️ Database / Query
+
+### 23. SQL (PostgreSQL)
+```
+Write PostgreSQL queries and functions for:
+1. Recursive CTE for org chart traversal
+2. Window functions for running totals
+3. JSONB operations with GIN indexes
+4. Full-text search with ts_rank
+5. Materialized view with refresh concurrently
+6. Row-level security policies
+
+Include proper indexing strategy, EXPLAIN ANALYZE,
+and partitioning for time-series data.
+```
+
+### 24. GraphQL Schema + Resolvers
+```
+Design a GraphQL schema for a project management system:
+1. Complex types with interfaces and unions
+2. N+1 prevention with DataLoader
+3. Subscriptions for real-time updates
+4. Custom scalars (DateTime, JSON)
+5. Input validation with directives
+6. Pagination with cursor-based approach
+
+Include TypeScript resolvers with proper typing,
+authentication middleware, and rate limiting.
+```
+
+---
+
+## 🎮 Graphics / Game Dev
+
+### 25. GLSL (Shaders)
+```
+Write GLSL shaders for PBR rendering:
+1. Cook-Torrance BRDF implementation
+2. Image-based lighting with HDR cubemap
+3. Screen-space ambient occlusion
+4. Cascaded shadow maps
+5. Volumetric fog with ray marching
+6. Temporal anti-aliasing (TAA)
+
+Include both vertex and fragment shaders,
+with proper uniform handling and optimization notes.
+```
+
+### 26. Unity C#
+```
+Create a Unity procedural dungeon generator:
+1. BSP tree for room placement
+2. A* pathfinding for enemy AI
+3. Object pooling for performance
+4. Scriptable Objects for item data
+5. Custom editor tools for level design
+6. Save system with binary serialization
+
+Use proper ECS patterns, UniTask for async,
+and include comprehensive unit tests.
+```
+
+---
+
+## 📊 Scoring Guide
+
+| Score | Criteria |
+|-------|----------|
+| ✅ **Pass** | Correct syntax, modern patterns, production-ready |
+| ⚠️ **Partial** | Works but has minor issues or old patterns |
+| ❌ **Fail** | Syntax errors, doesn't compile, fundamentally wrong |
+
+Test each language and record results to identify gaps before fine-tuning!

@@ -1,0 +1,138 @@
+# Comprehensive Data Generation Strategy: "No Limits" Expansion
+
+## Executive Summary
+
+To achieve a production-ready model capable of competing with Manus, Lovable, and Replit, we are expanding the dataset generation to cover **40+ distinct application blueprints** across 8 major verticals. This strategy moves beyond standard "To-Do Apps" into high-complexity, domain-specific, and creative territories.
+
+The goal is to train the model not just on *how to code*, but *what to code* for specific industries (domain knowledge representation).
+
+---
+
+## 1. The Strategy: "Vertical & Horizontal Depth"
+
+We will structure the generator into **8 Vertical Tiers**, each containing specific blueprints.
+
+### Tier 1: Core Fullstack (The "Bread and Butter")
+
+*Focus: Modern Web App Standards (React, Next.js, Node, Supabase)*
+
+1. **SaaS Starter Kit**: Auth, Stripe, Dashboard, Landing Page.
+2. **E-Commerce Store**: Cart, Checkout, Product Grid, Admin Panel.
+3. **Modern Blog/CMS**: MDX, SEO-optimized, ISR (Incremental Static Regeneration).
+4. **Social Network**: Feeds, Likes, Real-time Chat, Profiles.
+5. **Task/Project Management**: Drag-and-drop Kanban, Ticket details (Jira-lite).
+
+### Tier 2: Specialized FinTech (High Performance & Security)
+
+*Focus: Real-time data, Charts, Precision*
+6.  **Crypto Trading Dashboard**: WebSocket streams, Candlestick charts (Recharts/TradingView), Order forms.
+7.  **Personal Finance Tracker**: Plaid integration patterns, Budgeting visualizations, CSV imports.
+8.  **Invoicing & Payroll System**: PDF generation, Tax calculation logic, Recurring billing patterns.
+9.  **Stock Analysis Platform**: Fundamental data filtering, Technical indicators.
+
+### Tier 3: Scientific & HealthTech (Data Intensive)
+
+*Focus: Visualization, Big Data, Python Integration*
+10. **Bioinformatics Dashboard**: CRISPR sequence visualization, DNA data parsing (BioPython patterns).
+11. **Telehealth Platform**: WebRTC video calls, Scheduling, HIPAA-compliant forms.
+12. **Molecular Visualization**: 3D protein rendering using Three.js/WebGL.
+
+### Tier 4: Enterprise & B2B (Complex Architectures)
+
+*Focus: Scalability, Microservices, Workflow Automation*
+13. **CRM (Salesforce Lite)**: Lead pipelines, Contact management, huge data tables.
+14. **HR/Recruiting ATS**: Resume parsing pipeline, Candidate tracking workflows.
+15. **Legal Document Automation**: Conditional logic forms to generate PDF contracts.
+16. **Inventory/ERP System**: Barcode scanning patterns, Supply chain tracking, Multi-warehouse logic.
+17. **Real Estate Property Management**: Tenant portals, Maintenance request tracking, Lease management.
+
+### Tier 5: Creative & Generative (Canvas & WebGL)
+
+*Focus: Interactive UI, Graphics, Audio*
+18. **Generative Art Creator**: p5.js integration, Parameter sliders, Canvas manipulation.
+19. **Music/Audio Sequencer**: Web Audio API, Step sequencer grid, Synth controls.
+20. **Interactive 3D Portfolio**: R3F (React Three Fiber) scenes, Physics-based interactions.
+21. **Video/Image Editor**: Filter pipelines (Canvas API), Cropping, Layer management.
+
+### Tier 6: Developer Tools (The "Replit/Manus" Replica)
+
+*Focus: System Internals, Emulation*
+22. **Web-based IDE**: Monaco Editor integration, File tree virtualization (CRDTs).
+23. **API Testing Client**: Postman clone, HTTP request builders, Response parsing.
+24. **SQL Query Runner**: Database schema visualization, Result grids.
+25. **RegEx Tester & Visualizer**: String matching logic, visual highlighting.
+
+### Tier 7: Deep Reasoning & System Design (O1 Style)
+
+*Focus: Pure Logic, Architecture, Math*
+26. **System Design Architect**: Designing a "Twitter Clone" (Sharding, Load Balancers, Caching strategies).
+27. **Algorithmic Challenge**: Solving Hard LeetCode/CP problems with O(n) constraints.
+28. **Mathematical Proof Engine**: Step-by-step logic derivations (LaTeX rendering).
+29. **Code Refactoring Expert**: Taking "Bad Code" and transforming it to "Clean Code" with explanation.
+
+### Tier 8: Multimodal (Vision & Video)
+
+*Focus: Input Processing*
+30. **Vision-to-Code**: Screenshot -> React Component (Pixel perfect).
+31. **Video-to-Flow**: Screen recording -> Test Script (Cypress/Playwright).
+
+---
+
+## 3. The "Manus Prime" Data Format (Crucial Upgrade)
+
+The reference data ([manus_training_data.jsonl](file:///mnt/d/Research%20Experiments/manus_model/others-stuff-not-required/manus_training_data.jsonl)) reveals a specific **Agentic Resilience** pattern that we must replicate. The model is not just trained on success; it is trained on **Failure & Recovery**.
+
+### The "Failure Loop" Pattern
+Approximately **30%** of generated trajectories in Tiers 2, 4, and 6 will include a simulated failure step:
+
+1.  **Step N**: Tool Action (e.g., `requests.get(url)`)
+2.  **Observation**: "Error: 404 Not Found" or "ImportError: No module named 'pandas'"
+3.  **Step N+1 (Evaluation)**: "Failure: Simply retrying won't work. The URL structure might be wrong."
+4.  **Step N+2 (Recovery)**: "Recovery: I will use the search tool to find the correct endpoint."
+5.  **Step N+3 (Success)**: "Action: `requests.get(correct_url)` -> 200 OK"
+
+### JSON Structure Target
+We will move from the simple `type: think` list to the rich `manus_training` schema:
+```json
+[
+  {
+    "step": 1,
+    "thought": "I need to fetch data...",
+    "action": "run_python(...)",
+    "observation": "Success..."
+  },
+  {
+    "step": 2,
+    "failure": "API returned 403 Forbidden...",
+    "recovery": "I need to add User-Agent headers..."
+  }
+]
+```
+
+---
+
+## 4. Implementation Plan
+
+### Step 1: Update BlueprintLibrary
+
+Refactor [BlueprintLibrary](file:///mnt/d/Research%20Experiments/manus_model/02_generate_trajectories.py#41-338) in [02_generate_trajectories.py](file:///mnt/d/Research%20Experiments/manus_model/02_generate_trajectories.py) to support dynamic loading of these 31+ types. We might group them into a dictionary for better management.
+
+### Step 2: Specialized "File Packs"
+
+For each blueprint, we will procedurally generate not just one file, but a *believable file structure*:
+
+* **FinTech**: Needs `utils/currency.ts`, `components/StockChart.tsx`.
+* **Health**: Needs `utils/hipaaHeaders.ts`, `components/DnaViewer.tsx`.
+* **Enterprise**: Needs `docker-compose.yml`, `lib/db.ts` (Prisma).
+
+### Step 3: Domain-Specific Reasoning
+
+The "Think" step in the generator will be customized.
+
+* *Normal*: "I need to build a navbar."
+* *FinTech*: "I must ensure the price WebSocket connection handles reconnections gracefully and the UI shows a loading state/stale data indicator."
+* *Enterprise*: "I should normalize the database schema for the Inventory items to avoid redundancy."
+
+## 3. Conclusion
+
+By training on this spectrum, the model will graduate from a "Coding Assistant" to a **"Domain-Aware Software Architect."** It won't just know syntax; it will know *context*.

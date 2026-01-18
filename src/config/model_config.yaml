@@ -1,0 +1,152 @@
+# ═══════════════════════════════════════════════════════════════
+# Manus Prime: Universal Model Configuration
+# ═══════════════════════════════════════════════════════════════
+# 
+# This config is ARCHITECTURE-AGNOSTIC. Change base_model.name
+# to switch to any HuggingFace model without code changes.
+#
+# ═══════════════════════════════════════════════════════════════
+
+# ─────────────────────────────────────────────────────────────────
+# BASE MODEL SELECTION
+# ─────────────────────────────────────────────────────────────────
+
+base_model:
+  # Current selection - easily swappable
+  name: "openai/gpt-oss-20b"
+  
+  # Alternative options (uncomment to use):
+  # name: "deepseek-ai/deepseek-coder-v2-instruct"
+  # name: "Qwen/Qwen2.5-Coder-32B-Instruct"
+  # name: "meta-llama/Llama-3.1-70B-Instruct"
+  # name: "mistralai/Mixtral-8x22B-Instruct-v0.1"
+  # name: "codellama/CodeLlama-34b-Instruct-hf"
+  # name: "bigcode/starcoder2-15b"
+  
+  # Model loading settings
+  torch_dtype: "auto"  # or "float16", "bfloat16"
+  device_map: "auto"
+  trust_remote_code: true
+  
+  # Optional: Custom tokenizer (if different from model)
+  # tokenizer: null  # Uses model's tokenizer by default
+
+# ─────────────────────────────────────────────────────────────────
+# LoRA CONFIGURATION
+# ─────────────────────────────────────────────────────────────────
+
+lora:
+  enabled: true
+  rank: 64
+  alpha: 128
+  dropout: 0.05
+  bias: "none"
+  
+  # Target modules (works with most transformer architectures)
+  target_modules:
+    - "q_proj"
+    - "k_proj" 
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+  
+  # Modules to save (in addition to LoRA)
+  modules_to_save: null
+
+# ─────────────────────────────────────────────────────────────────
+# TRAINING CONFIGURATION
+# ─────────────────────────────────────────────────────────────────
+
+training:
+  # Core training params
+  num_epochs: 3
+  per_device_train_batch_size: 2
+  per_device_eval_batch_size: 2
+  gradient_accumulation_steps: 8
+  
+  # Optimizer
+  learning_rate: 2.0e-4
+  weight_decay: 0.01
+  warmup_ratio: 0.03
+  lr_scheduler_type: "cosine"
+  
+  # Sequence length
+  max_seq_length: 4096
+  
+  # Mixed precision
+  fp16: false
+  bf16: true
+  
+  # Gradient checkpointing (saves memory)
+  gradient_checkpointing: true
+  
+  # Logging
+  logging_steps: 10
+  save_steps: 1000
+  eval_steps: 500
+  
+  # Evaluation
+  evaluation_strategy: "steps"
+  load_best_model_at_end: true
+  metric_for_best_model: "eval_loss"
+  greater_is_better: false
+
+# ─────────────────────────────────────────────────────────────────
+# DATA CONFIGURATION
+# ─────────────────────────────────────────────────────────────────
+
+data:
+  # Data mixing ratio (prevents model collapse)
+  real_ratio: 0.30      # 30% real data
+  synthetic_ratio: 0.70  # 70% synthetic data
+  
+  # Paths
+  real_data_dir: "/mnt/e/data/real-datasets"
+  synthetic_data_dir: "/mnt/e/data"
+  mixed_data_dir: "/mnt/e/data/mixed-training"
+  
+  # Processing
+  shuffle: true
+  seed: 42
+  
+  # Format (OpenAI-compatible, works with all models)
+  format: "messages"
+  
+  # Splits
+  train_ratio: 0.95
+  val_ratio: 0.025
+  test_ratio: 0.025
+
+# ─────────────────────────────────────────────────────────────────
+# OUTPUT CONFIGURATION
+# ─────────────────────────────────────────────────────────────────
+
+output:
+  dir: "/mnt/e/models/manus-prime"
+  
+  # Checkpointing
+  save_total_limit: 3
+  
+  # Final model
+  push_to_hub: false
+  hub_model_id: null
+
+# ─────────────────────────────────────────────────────────────────
+# WANDB CONFIGURATION (Optional)
+# ─────────────────────────────────────────────────────────────────
+
+wandb:
+  enabled: false
+  project: "manus-prime"
+  entity: null
+  run_name: null
+
+# ─────────────────────────────────────────────────────────────────
+# DEEPSPEED CONFIGURATION (Optional, for large models)
+# ─────────────────────────────────────────────────────────────────
+
+deepspeed:
+  enabled: false
+  config_file: "config/ds_config.json"

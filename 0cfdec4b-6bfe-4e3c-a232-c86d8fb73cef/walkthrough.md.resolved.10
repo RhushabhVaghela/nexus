@@ -1,0 +1,89 @@
+# Manus Prime: File Organization
+
+## New Logical Structure
+
+### Phase 1: Downloads (01-02)
+```
+01_download_real_datasets.py    # HuggingFace + GitHub datasets
+02_download_benchmarks.py       # HumanEval, MBPP, GSM8K, MMLU
+```
+
+### Phase 2: Data Generation (03-19)
+```
+03_generate_finetuned_dataset.py     # Core instruction data
+04_generate_repetitive_dataset.py    # Code patterns
+05_generate_architecture_dataset.py  # System design
+06_generate_qa_dataset.py            # Q&A pairs
+07_generate_uiux_dataset.py          # UI/UX design
+08_generate_devops_dataset.py        # DevOps/IaC
+09_generate_platform_dataset.py      # Backstage/Crossplane
+10_generate_data_engineering_dataset.py  # Airflow/dbt
+11_generate_mobile_dataset.py        # Flutter/Swift/Kotlin
+12_generate_api_design_dataset.py    # OpenAPI/GraphQL
+13_generate_observability_dataset.py # Prometheus/Grafana
+14_generate_mlops_dataset.py         # MLflow/Kubeflow
+15_generate_compliance_dataset.py    # OWASP/GDPR
+16_generate_wasm_edge_dataset.py     # Cloudflare Workers
+17_generate_lowcode_dataset.py       # n8n/React Flow
+18_generate_dba_dataset.py           # PostgreSQL/MySQL
+19_generate_preference_dataset.py    # RLHF pairs (censored/uncensored)
+```
+
+### Phase 3: Validation (20-27)
+```
+20_validate_finetuned_dataset.py
+21_validate_repetitive_dataset.py
+22_validate_architecture_dataset.py
+23_validate_qa_dataset.py
+24_validate_uiux_dataset.py
+25_validate_devops_dataset.py
+26_validate_all_datasets.py    # Universal validator
+27_validate_benchmarks.py      # Benchmark-specific
+```
+
+### Phase 4: Training (28-33)
+```
+28_sft_training.py              # Supervised fine-tuning
+29_continued_pretraining.py     # Optional pre-training
+30_grpo_training.py             # RLHF/DPO training
+31_safety_finetuning.py         # Censored only
+32_anti_refusal_training.py     # Uncensored only
+33_rejection_sampling.py        # Quality-based rejection
+```
+
+### Phase 5: Tools & Deployment (34-39)
+```
+34_tool_integration.py
+35_comprehensive_eval.py
+36_run_benchmarks.py
+37_replica_benchmarks.py
+38_multi_agent_orchestration.py
+39_deployment_configs.py
+```
+
+---
+
+## Execution Order
+
+```bash
+# 1. Download data
+python 01_download_real_datasets.py
+python 02_download_benchmarks.py
+
+# 2. Generate datasets
+python 03_generate_finetuned_dataset.py
+# ... (run any generators you need)
+
+# 3. Validate
+python 26_validate_all_datasets.py
+python 27_validate_benchmarks.py
+
+# 4. Train (choose mode)
+python 28_sft_training.py --mode=censored  # or --mode=uncensored
+python 30_grpo_training.py --mode=censored
+
+# 5. Safety/Anti-refusal (mode-specific)
+python 31_safety_finetuning.py      # censored only
+# OR
+python 32_anti_refusal_training.py  # uncensored only
+```
