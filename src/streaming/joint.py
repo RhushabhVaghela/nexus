@@ -1,112 +1,301 @@
+#!/usr/bin/env python3
 """
-Gemini-Style Joint Streaming (Triple Modality)
-Handles:
-1. Vision Stream (Live Camera/Video)
-2. Ambient Audio Stream (Game/Environment Audio)
-3. User Interaction (Voice/Text Commands)
+Joint streaming orchestrator for triple modality:
+
+- Vision stream (frames / screenshots).
+- Ambient audio stream.
+- User interaction (text or ASR transcript).
+
+The goal:
+- Maintain rolling buffers for each modality.
+- Periodically build a unified context and call the LLM.
+- Support interactive usage similar to Gemini / NotebookLM live.
+
+This is designed to sit on top of:
+- src/streaming/vision.py   (VisionStreamBuffer)
+- src/streaming/audio.py    (AudioStreamBuffer / ASR)
+- src/streaming/tts.py      (optional TTS for responses)
 """
+
 import time
 import threading
-import sys
-from pathlib import Path
+from dataclasses import dataclass
+from typing import List, Optional, Callable, Dict, Any
 
-# Add src to path
-sys.path.append(str(Path(__file__).parents[2] / "src"))
+# You would import your actual buffers here
+# from streaming.vision import VisionStreamBuffer
+# from streaming.audio import AudioStreamBuffer
+# from streaming.tts import TTSStreamer
 
-from streaming.memory import StreamingMemory
-from streaming.vision import VisionStreamBuffer
-from streaming.tts import TTSStreamer
+# For now, define small protocols (interfaces) that your real classes can satisfy.
 
-class JointStreamOrchestrator:
-    def __init__(self):
-        # 1. Vision (Eyes)
-        self.vision = VisionStreamBuffer(max_frames=16)
-        
-        # 2. Ambient Audio (Ears - Environment)
-        # Using a specialized buffer for continuous environmental audio
-        self.ambient_audio_buffer = [] 
-        
-        # 3. Output (Voice)
-        self.tts = TTSStreamer()
-        
-        # 4. Memory (Brain)
-        self.memory = StreamingMemory()
-        
-        self.is_active = False
-        
-    def start_session(self):
-        self.is_active = True
-        print("\n🚀 Starting Triple-Modality Joint Stream...")
-        print("   [1] 👁️  Vision Stream (Active)")
-        print("   [2] 👂 Ambient Audio (Listening)")
-        print("   [3] 🗣️  User Interaction (Ready)")
-        
-        # Start Threads
-        t_vision = threading.Thread(target=self._vision_loop)
-        t_ambient = threading.Thread(target=self._ambient_audio_loop)
-        t_user = threading.Thread(target=self._user_input_loop)
-        
-        t_vision.start()
-        t_ambient.start()
-        t_user.start()
-        
-        try:
-            while self.is_active:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            self.stop_session()
-            
-    def stop_session(self):
-        self.is_active = False
-        print("\n🛑 Session Stopped.")
-        
-    def _vision_loop(self):
-        """Capture Live Video (1-2 FPS)"""
-        while self.is_active:
-            # Capture frame logic
-            # self.vision.add_frame(...)
-            time.sleep(0.5)
-            
-    def _ambient_audio_loop(self):
-        """Capture Environment/Game Audio continuously"""
-        while self.is_active:
-            # Capture 30s chunks of ambient audio (e.g. from app/game)
-            # chunks = capture_system_audio()
-            # self.ambient_audio_buffer.append(chunks)
-            time.sleep(1.0)
-            
-    def _user_input_loop(self):
-        """Listen for User Commands (Interruptible)"""
-        while self.is_active:
-            # VAD check -> STT
-            # if vad.detect(mic): ...
-            # self._process_turn(user_text)
-            time.sleep(0.1)
-            
-    def _process_turn(self, user_text):
+
+@dataclass
+class VisionFrame:
+    timestamp: float
+    description: str  # e.g., "screenshot of game HUD" or caption from vision model
+    path: Optional[str] = None  # optional image path
+
+
+@dataclass
+class AudioChunk:
+    timestamp: float
+    transcript: Optional[str]  # ASR transcript or None if not speech
+    summary: Optional[str] = None  # optional short description
+
+
+@dataclass
+class UserEvent:
+    timestamp: float
+    text: str  # user chat text or ASR from mic
+
+
+class VisionStreamBuffer:
+    """Example interface; replace with your actual implementation."""
+
+    def __init__(self, max_seconds: float = 30.0):
+        self.max_seconds = max_seconds
+        self._frames: List[VisionFrame] = []
+        self._lock = threading.Lock()
+
+    def add_frame(self, frame: VisionFrame):
+        with self._lock:
+            self._frames.append(frame)
+            cutoff = time.time() - self.max_seconds
+            self._frames = [f for f in self._frames if f.timestamp >= cutoff]
+
+    def get_recent_frames(self) -> List[VisionFrame]:
+        with self._lock:
+            return list(self._frames)
+
+
+class AudioStreamBuffer:
+    """Example interface; replace with your actual implementation."""
+
+    def __init__(self, max_seconds: float = 30.0):
+        self.max_seconds = max_seconds
+        self._chunks: List[AudioChunk] = []
+        self._lock = threading.Lock()
+
+    def add_chunk(self, chunk: AudioChunk):
+        with self._lock:
+            self._chunks.append(chunk)
+            cutoff = time.time() - self.max_seconds
+            self._chunks = [c for c in self._chunks if c.timestamp >= cutoff]
+
+    def get_recent_chunks(self) -> List[AudioChunk]:
+        with self._lock:
+            return list(self._chunks)
+
+
+class UserEventBuffer:
+    """Buffer for user text/ASR events."""
+
+    def __init__(self, max_events: int = 50):
+        self.max_events = max_events
+        self._events: List[UserEvent] = []
+        self._lock = threading.Lock()
+
+    def add_event(self, event: UserEvent):
+        with self._lock:
+            self._events.append(event)
+            if len(self._events) > self.max_events:
+                self._events = self._events[-self.max_events :]
+
+    def get_recent_events(self) -> List[UserEvent]:
+        with self._lock:
+            return list(self._events)
+
+
+# LLM call adapter; wire to OmniMultimodalLM or HTTP endpoint.
+LLMFn = Callable[[List[Dict[str, str]]], str]
+
+
+def call_llm(messages: List[Dict[str, str]]) -> str:
+    raise RuntimeError("Replace call_llm in streaming/joint.py with your real client.")
+
+
+class JointStreamingOrchestrator:
+    """
+    Orchestrates triple-modality streaming:
+
+    - Maintains rolling buffers for vision, audio, user events.
+    - Periodically builds a textual summary + passes raw modalities if needed.
+    - Calls the LLM and yields responses.
+
+    You can:
+    - Connect this to a UI (VR, mobile app).
+    - Attach TTS to read responses aloud.
+    """
+
+    def __init__(
+        self,
+        vision_buffer: VisionStreamBuffer,
+        audio_buffer: AudioStreamBuffer,
+        user_buffer: UserEventBuffer,
+        llm_fn: LLMFn = call_llm,
+        interval_sec: float = 5.0,
+    ) -> None:
+        self.vision_buffer = vision_buffer
+        self.audio_buffer = audio_buffer
+        self.user_buffer = user_buffer
+        self.llm_fn = llm_fn
+        self.interval_sec = interval_sec
+
+        self._stop_event = threading.Event()
+        self._loop_thread: Optional[threading.Thread] = None
+
+        # Callbacks
+        self.on_llm_response: Optional[Callable[[str], None]] = None
+
+    def start(self):
+        if self._loop_thread is not None and self._loop_thread.is_alive():
+            return
+        self._stop_event.clear()
+        self._loop_thread = threading.Thread(target=self._run_loop, daemon=True)
+        self._loop_thread.start()
+
+    def stop(self):
+        self._stop_event.set()
+        if self._loop_thread is not None:
+            self._loop_thread.join(timeout=5)
+
+    def _build_context_text(self) -> str:
         """
-        Handle a conversation turn with TRIPLE context.
+        Build a textual context summary from the three streams.
+
+        This version uses descriptive text, which is easiest to debug.
+        Later, you can switch to feeding raw tensors via your multimodal model.
         """
-        print(f"\n👤 User: {user_text}")
-        
-        # 1. Gather Contexts
-        vis_ctx = self.vision.get_context()     # What model Sees
-        aud_ctx = self.ambient_audio_buffer[-1] if self.ambient_audio_buffer else None # What model Hears (Environment)
-        
-        # 2. Interruption Logic
-        self.tts.audio_queue.queue.clear() # Hard Stop output
-        
-        # 3. LLM Inference (Unified Embedding)
-        # response = llm.generate(
-        #    text=user_text, 
-        #    vision=vis_ctx, 
-        #    audio=aud_ctx
-        # )
-        
-        # 4. Stream Response
-        # self.tts.synthesize_stream(response)
+        frames = self.vision_buffer.get_recent_frames()
+        audio_chunks = self.audio_buffer.get_recent_chunks()
+        events = self.user_buffer.get_recent_events()
+
+        lines: List[str] = []
+
+        # Vision summary
+        if frames:
+            lines.append("Recent visual context:")
+            for f in frames[-5:]:
+                lines.append(f"- [Vision @ {f.timestamp:.0f}] {f.description}")
+        else:
+            lines.append("No recent visual context.")
+
+        # Audio summary
+        if audio_chunks:
+            lines.append("\nRecent ambient audio context:")
+            for c in audio_chunks[-5:]:
+                if c.transcript:
+                    lines.append(f"- [Audio @ {c.timestamp:.0f}] transcript: {c.transcript}")
+                elif c.summary:
+                    lines.append(f"- [Audio @ {c.timestamp:.0f}] summary: {c.summary}")
+                else:
+                    lines.append(f"- [Audio @ {c.timestamp:.0f}] (non-speech audio)")
+        else:
+            lines.append("\nNo recent audio context.")
+
+        # User events
+        if events:
+            lines.append("\nRecent user interactions:")
+            for e in events[-5:]:
+                lines.append(f"- [User @ {e.timestamp:.0f}] {e.text}")
+        else:
+            lines.append("\nNo recent user interactions.")
+
+        return "\n".join(lines)
+
+    def _run_loop(self):
+        while not self._stop_event.is_set():
+            time.sleep(self.interval_sec)
+
+            context_text = self._build_context_text()
+
+            messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are an always-on assistant observing a live session.\n"
+                        "You receive summaries of recent visual, audio, and user interaction context.\n"
+                        "Respond concisely to what is happening now and to any user questions."
+                    ),
+                },
+                {"role": "user", "content": context_text},
+            ]
+
+            try:
+                reply = self.llm_fn(messages)
+            except Exception as e:
+                print(f"[JointStreaming] LLM error: {e}", file=sys.stderr)
+                continue
+
+            if self.on_llm_response:
+                self.on_llm_response(reply)
+
+    # Exposed helpers to push data into buffers
+
+    def add_vision_frame(self, description: str, path: Optional[str] = None):
+        ts = time.time()
+        self.vision_buffer.add_frame(VisionFrame(timestamp=ts, description=description, path=path))
+
+    def add_audio_chunk(
+        self,
+        transcript: Optional[str] = None,
+        summary: Optional[str] = None,
+    ):
+        ts = time.time()
+        self.audio_buffer.add_chunk(AudioChunk(timestamp=ts, transcript=transcript, summary=summary))
+
+    def add_user_event(self, text: str):
+        ts = time.time()
+        self.user_buffer.add_event(UserEvent(timestamp=ts, text=text))
+
+
+# Simple CLI demo (logs LLM replies to stdout)
+def main():
+    import sys
+
+    vision_buf = VisionStreamBuffer(max_seconds=30.0)
+    audio_buf = AudioStreamBuffer(max_seconds=30.0)
+    user_buf = UserEventBuffer(max_events=50)
+
+    def dummy_llm(messages: List[Dict[str, str]]) -> str:
+        # Minimal echo for testing wiring
+        return "I received the context and I'm ready to assist."
+
+    orchestrator = JointStreamingOrchestrator(
+        vision_buffer=vision_buf,
+        audio_buffer=audio_buf,
+        user_buffer=user_buf,
+        llm_fn=dummy_llm,
+        interval_sec=5.0,
+    )
+
+    orchestrator.on_llm_response = lambda r: print(f"\n[LLM] {r}\n")
+
+    orchestrator.start()
+    print("Joint streaming demo. Type text to simulate user events; Ctrl+C to exit.")
+
+    try:
+        while True:
+            line = sys.stdin.readline()
+            if not line:
+                break
+            text = line.strip()
+            if not text:
+                continue
+            if text.lower() in {"quit", "exit", "q"}:
+                break
+
+            # For demo: every user text also updates vision/audio summaries
+            orchestrator.add_user_event(text)
+            orchestrator.add_vision_frame(description=f"User typed: {text}")
+            orchestrator.add_audio_chunk(summary="Ambient game audio present.")
+
+    except KeyboardInterrupt:
         pass
+    finally:
+        orchestrator.stop()
+
 
 if __name__ == "__main__":
-    stream = JointStreamOrchestrator()
-    stream.start_session()
+    main()

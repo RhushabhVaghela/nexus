@@ -161,6 +161,73 @@ class DatasetValidator:
             "rejection_reasons": {k: v for k, v in self.stats.items() if k != "valid"},
             "domains": dict(self.domain_counts),
         }
+    
+    def validate_modalities(self, sample: Dict) -> bool:
+        """
+        Optional multimodal validation.
+
+        - If no 'modalities' key: accept (text-only sample).
+        - If present: check that listed files exist on disk.
+        """
+        mods = sample.get("modalities")
+        if not mods:
+            return True  # text-only is fine
+
+        ok = True
+
+        # Helper to check list of objects with "path"
+        def _check_paths(items: List[Dict], key: str):
+            nonlocal ok
+            for obj in items:
+                path = obj.get("path")
+                if not path:
+                    self.stats[f"missing_{key}_path"] += 1
+                    ok = False
+                    continue
+                p = Path(path)
+                if not p.exists():
+                    self.stats[f"missing_{key}_file"] += 1
+                    ok = False
+
+        if isinstance(mods, dict):
+            images = mods.get("image", [])
+            audio = mods.get("audio", [])
+            video = mods.get("video", [])
+
+            if isinstance(images, list):
+                _check_paths(images, "image")
+            if isinstance(audio, list):
+                _check_paths(audio, "audio")
+            if isinstance(video, list):
+                _check_paths(video, "video")
+
+        return ok
+
+    def validate_sample(self, sample: Dict) -> Optional[Dict]:
+        """Validate a single sample. Returns sample if valid, None otherwise."""
+
+        # Schema validation
+        if not self.validate_schema(sample):
+            return None
+
+        # Content validation
+        if not self.validate_content(sample):
+            return None
+
+        # Multimodal validation (optional)
+        if not self.validate_modalities(sample):
+            return None
+
+        # Deduplication
+        if self.check_duplicate(sample):
+            return None
+
+        # Track domain
+        domain = sample.get("domain", sample.get("source", "unknown"))
+        self.domain_counts[domain] += 1
+
+        self.stats["valid"] += 1
+        return sample
 
 
 # ═══════════════════════════════════════════════════════════════
