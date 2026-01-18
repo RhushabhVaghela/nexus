@@ -58,43 +58,77 @@ DEFAULT_CONFIG = {
             "split": "train",
             "sample": 250000,
             "streaming": True,
-        }
-    },
-    "audio": {
-        "Common_Voice_EN": {
-            "source": "mozilla-foundation/common_voice_17_0",
-            "language": "en",
+        },
+        "LLaVA_Instruct": {
+            "source": "liuhaotian/LLaVA-Instruct-150K",
             "split": "train",
-            "sample": 250000,
+            "sample": 150000,
             "streaming": True,
         },
-        "Common_Voice_ES": {
-            "source": "mozilla-foundation/common_voice_17_0",
-            "language": "es",
+    },
+    "audio": {
+        # Public alternatives (no gated access required)
+        "LibriSpeech_Clean": {
+            "source": "openslr/librispeech_asr",
+            "config": "clean",
+            "split": "train.100",  # 100 hours clean
+            "sample": 100000,
+            "streaming": True,
+        },
+        "LibriSpeech_Other": {
+            "source": "openslr/librispeech_asr",
+            "config": "other",
+            "split": "train.360",  # 360 hours
+            "sample": 150000,
+            "streaming": True,
+        },
+        "GigaSpeech": {
+            "source": "speechcolab/gigaspeech",
             "split": "train",
             "sample": 100000,
             "streaming": True,
         },
     },
     "video": {
-        "FineVideo": {
-            "source": "HuggingFaceFV/finevideo",
+        # Public video datasets (no authentication needed)
+        "VATEX": {
+            "source": "lmms-lab/VATEX",
+            "split": "validation",
+            "sample": 10000,
+            "streaming": True,
+            "extract_frames": 8,
+        },
+        "MSR_VTT": {
+            "source": "AlexZigma/msr-vtt",
             "split": "train",
             "sample": 10000,
             "streaming": True,
             "extract_frames": 8,
-        }
+        },
+        "ActivityNet_Caps": {
+            "source": "HuggingFaceM4/ActivityNet-Captions",
+            "split": "train",
+            "sample": 10000,
+            "streaming": True,
+            "extract_frames": 8,
+        },
     },
     "benchmarks": {
         "MMMU": {
             "source": "MMMU/MMMU",
+            "config": "Math",  # Specify a config to avoid error
             "split": "validation",
-            "sample": 9500,
+            "sample": 1000,
         },
         "MathVista": {
             "source": "AI4Math/MathVista",
             "split": "testmini",
             "sample": 6141,
+        },
+        "ScienceQA": {
+            "source": "derek-thomas/ScienceQA",
+            "split": "test",
+            "sample": 5000,
         },
     }
 }
@@ -251,7 +285,7 @@ def fetch_audio_dataset(
     config: Dict,
     output_dir: Path,
     sample_limit: int,
-    dataset_name: str = "Common_Voice"
+    dataset_name: str = "LibriSpeech"
 ) -> int:
     """
     Fetch audio dataset with sample parameter.
@@ -266,7 +300,8 @@ def fetch_audio_dataset(
         Number of samples fetched
     """
     language = config.get("language", "en")
-    logger.info(f"🎤 Fetching {dataset_name} ({language}) with sample={sample_limit}...")
+    ds_config = config.get("config")  # For datasets like LibriSpeech that use configs
+    logger.info(f"🎤 Fetching {dataset_name} with sample={sample_limit}...")
     
     output_dir.mkdir(parents=True, exist_ok=True)
     audio_dir = output_dir / "audio"
@@ -277,13 +312,24 @@ def fetch_audio_dataset(
         return _generate_mock_audio_samples(output_dir, sample_limit, language)
     
     try:
-        ds = load_dataset(
-            config["source"],
-            language,
-            split=config.get("split", "train"),
-            streaming=config.get("streaming", True),
-            trust_remote_code=True,
-        )
+        # Use config if specified (e.g., LibriSpeech clean/other)
+        if ds_config:
+            ds = load_dataset(
+                config["source"],
+                ds_config,
+                split=config.get("split", "train"),
+                streaming=config.get("streaming", True),
+                trust_remote_code=True,
+            )
+        else:
+            # Fall back to language-based loading (e.g., Common Voice)
+            ds = load_dataset(
+                config["source"],
+                language,
+                split=config.get("split", "train"),
+                streaming=config.get("streaming", True),
+                trust_remote_code=True,
+            )
     except Exception as e:
         logger.error(f"Failed to load dataset {config['source']}: {e}")
         logger.info("Falling back to mock mode")

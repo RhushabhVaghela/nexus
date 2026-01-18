@@ -18,8 +18,9 @@ from pathlib import Path
 import json
 
 sys.path.insert(0, str(Path(__file__).parent))
-from multimodal import download_vision_data, download_audio_data, download_video_data, get_test_prompts
+from multimodal import get_test_prompts
 from utils.logging_config import setup_logger, log_header, log_completion
+from mm_download_unified import DatasetManager, DATASET_REGISTRY
 
 CONFIG = {
     "output_dir": "/mnt/e/data/multimodal",
@@ -29,16 +30,26 @@ CONFIG = {
 logger = setup_logger(__name__, "logs/multimodal.log")
 
 def run_download(limit: int):
-    """Download all multimodal datasets"""
-    log_header(logger, "MULTIMODAL DATA DOWNLOAD", {**CONFIG, "Limit": limit})
+    """Download all multimodal datasets using Unified Strategy (Kaggle -> HF)"""
+    log_header(logger, "MULTIMODAL DATA DOWNLOAD (UNIFIED)", {**CONFIG, "Limit": limit})
     
     Path(CONFIG["output_dir"]).mkdir(parents=True, exist_ok=True)
     
-    download_vision_data(CONFIG["output_dir"], limit=limit)
-    download_audio_data(CONFIG["output_dir"], limit=limit)
-    download_video_data(CONFIG["output_dir"], limit=limit)
+    manager = DatasetManager(Path(CONFIG["output_dir"]))
+    total_samples = 0
     
-    log_completion(logger, "Multimodal Download", {"Output": CONFIG["output_dir"]})
+    # Process all modalities defined in registry
+    for modality, datasets in DATASET_REGISTRY.items():
+        logger.info(f"\n📲 Processing Modality: {modality.upper()}")
+        for name, config in datasets.items():
+            count = manager.download_and_process(modality, name, config, limit)
+            total_samples += count
+            
+    logger.info("="*60)
+    logger.info("✅ UNIFIED DOWNLOAD COMPLETE")
+    logger.info(f"   Output: {CONFIG['output_dir']}")
+    logger.info(f"   Total Samples: {total_samples}")
+    logger.info("="*60)
 
 def run_test_setup():
     """Setup test prompts and assets"""

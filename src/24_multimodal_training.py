@@ -102,34 +102,45 @@ class OmniDataset(Dataset):
     def __getitem__(self, idx):
         sample = self.data[idx]
         messages = sample.get("messages", [])
+        modalities = sample.get("modalities", {})
         
         # Parse content
         user_msg = next((m for m in messages if m["role"] == "user"), None)
         assistant_msg = next((m for m in messages if m["role"] == "assistant"), None)
         
         if not user_msg or not assistant_msg:
-            # We return empty placeholder to avoid crash, simplifiying
+            # We return empty placeholder
             return {"input_ids": [-100], "labels": [-100], "pixel_values": None, "audio_features": None}
             
         content_items = user_msg["content"]
-        if isinstance(content_items, str):
-            # Text only (fallback)
-            return {"text": content_items, "label": assistant_msg["content"]}
-            
         image_path = None
         audio_path = None
         text_prompt = ""
         
-        # Handle list of content items
-        if isinstance(content_items, list):
+        # 1. Try to get media from 'modalities' field (Unified Schema Priority)
+        if modalities:
+            if "image" in modalities and modalities["image"]:
+                image_path = modalities["image"][0].get("path")
+            if "audio" in modalities and modalities["audio"]:
+                audio_path = modalities["audio"][0].get("path")
+                
+        # 2. If valid string content, use it
+        if isinstance(content_items, str):
+            text_prompt = content_items
+            
+        # 3. Handle list of content items (OpenAI Schema) -> Can override if present
+        elif isinstance(content_items, list):
             for item in content_items:
                 if isinstance(item, dict):
                     if item.get("type") == "text":
                         text_prompt += item.get("text", "")
                     elif item.get("type") == "image":
-                        image_path = item.get("image")
+                        # Only override if we didn't get it from modalities
+                        if not image_path:
+                            image_path = item.get("image")
                     elif item.get("type") == "audio":
-                        audio_path = item.get("audio")
+                        if not audio_path:
+                            audio_path = item.get("audio")
                 else:
                     text_prompt += str(item)
                     
@@ -228,7 +239,7 @@ def main():
     output_path.mkdir(parents=True, exist_ok=True)
     model.save_pretrained(str(output_path))
     
-    log_completion(logger, "Multimodal Training", 0, 0, 0, 0, 0, 0.0)
+    log_completion(logger, 0, 0, 0, 0, 0, 0.0)
 
 if __name__ == "__main__":
     main()
