@@ -37,11 +37,14 @@ CONFIG = {
     "synthetic_data_dirs": [
         "/mnt/e/data/finetuned-fullstack-dataset",
         "/mnt/e/data/repetitive-query-dataset",
+        "/mnt/e/data/repetitive-prompt-dataset",         # current file's output
         "/mnt/e/data/architecture-reasoning-dataset",
         "/mnt/e/data/qa-engineering-dataset",
         "/mnt/e/data/uiux-design-dataset",
         "/mnt/e/data/devops-engineering-dataset",
+        "/mnt/e/data/repetitive-fullstack-dataset",      # NEW if you split fullstack out
     ],
+
     
     "output_dir": "/mnt/e/data/mixed-training",
     "samples_per_file": 100_000,
