@@ -178,6 +178,24 @@ GENERATOR_WEIGHTS.update({
     "fs_proj_coding_guidelines": 4_000_000,
     "fs_proj_onboarding_docs": 4_000_000,
     "fs_proj_release_process": 4_000_000,
+
+    # TIER 1: HIGH PRIORITY NEW CATEGORIES
+    "fs_api_websockets": 4_000_000,
+    "fs_error_handling_patterns": 4_000_000,
+    "fs_tracing_observability": 4_000_000,
+    "fs_caching_strategies": 4_000_000,
+    "fs_message_queues": 4_000_000,
+
+    # TIER 2: MEDIUM PRIORITY NEW CATEGORIES
+    "fs_search_indexing": 4_000_000,
+    "fs_data_validation_pipelines": 4_000_000,
+    "fs_rate_limiting_throttling": 4_000_000,
+    "fs_monitoring_alerting": 4_000_000,
+    "fs_feature_flags_ab_testing": 4_000_000,
+
+    # TIER 3: ADDITIONAL CATEGORIES
+    "fs_backwards_compatibility": 4_000_000,
+    "fs_capacity_planning": 4_000_000,
 })
 
 
@@ -1215,6 +1233,214 @@ class PromptRepetitionEngine:
         )
         return q, ctx, a
 
+    # ═══════════════════════════════════════════════════════════════
+    # FULLSTACK: TIER 1 - HIGH PRIORITY NEW CATEGORIES
+    # ═══════════════════════════════════════════════════════════════
+
+    def gen_fs_api_websockets(self) -> Tuple[str, str, str]:
+        q = "Design a WebSocket-based real-time notification system."
+        ctx = "Cover connection handling, message formats, and reconnection."
+        a = (
+            "Key components:\n"
+            "- Connection manager: Track active connections per user with heartbeat/ping.\n"
+            "- Message format: JSON with {type, payload, timestamp, id}.\n"
+            "- Channels/rooms: Allow subscribing to topics (e.g., order:123).\n"
+            "- Reconnection: Client auto-reconnects with exponential backoff.\n"
+            "- Server sends missed events since last seen ID on reconnect.\n"
+            "Use Redis pub/sub for horizontal scaling across server instances."
+        )
+        return q, ctx, a
+
+    def gen_fs_error_handling_patterns(self) -> Tuple[str, str, str]:
+        q = "Design a layered error handling strategy for a web application."
+        ctx = "Cover domain errors, HTTP errors, and logging."
+        a = (
+            "Error hierarchy:\n"
+            "- DomainError: Base class for app-specific errors (NotFound, Unauthorized).\n"
+            "- Map domain errors to HTTP status in middleware.\n"
+            "- Catch unexpected exceptions at top level, log with context, return 500.\n"
+            "- Include correlation IDs in logs and responses for debugging.\n"
+            "- Avoid leaking stack traces in production responses.\n"
+            "- Use structured logging (JSON) with error codes for alerting."
+        )
+        return q, ctx, a
+
+    def gen_fs_tracing_observability(self) -> Tuple[str, str, str]:
+        q = "How would you implement distributed tracing in a microservices architecture?"
+        ctx = "Use OpenTelemetry as an example."
+        a = (
+            "Distributed tracing flow:\n"
+            "1) Generate trace_id at entry point (API gateway or first service).\n"
+            "2) Propagate trace_id and span_id in headers (e.g., traceparent).\n"
+            "3) Each service creates child spans for its operations.\n"
+            "4) Export spans to collector (Jaeger, Zipkin, Tempo).\n"
+            "5) Correlate logs using trace_id for unified debugging.\n"
+            "OpenTelemetry SDKs handle most of this with auto-instrumentation."
+        )
+        return q, ctx, a
+
+    def gen_fs_caching_strategies(self) -> Tuple[str, str, str]:
+        q = "Compare cache-aside, write-through, and write-behind caching patterns."
+        ctx = "Use Redis and a product catalog as an example."
+        a = (
+            "Cache-aside (lazy loading):\n"
+            "- App checks cache first, on miss reads from DB and populates cache.\n"
+            "- Pros: Simple, only caches accessed data. Cons: First request slow.\n\n"
+            "Write-through:\n"
+            "- Writes go to cache AND DB synchronously.\n"
+            "- Pros: Cache always consistent. Cons: Write latency.\n\n"
+            "Write-behind (write-back):\n"
+            "- Writes go to cache, async batch to DB.\n"
+            "- Pros: Fast writes. Cons: Risk of data loss if cache fails.\n"
+            "Use cache-aside for read-heavy catalogs with TTL for freshness."
+        )
+        return q, ctx, a
+
+    def gen_fs_message_queues(self) -> Tuple[str, str, str]:
+        q = "When would you choose RabbitMQ vs Kafka vs SQS?"
+        ctx = "Compare for different use cases."
+        a = (
+            "RabbitMQ:\n"
+            "- Best for: Task queues, RPC, complex routing (exchanges).\n"
+            "- Push-based, message acknowledgment.\n\n"
+            "Kafka:\n"
+            "- Best for: Event streaming, high throughput, replay capability.\n"
+            "- Append-only log, consumer groups, data retention.\n\n"
+            "SQS:\n"
+            "- Best for: Serverless, managed service, simple FIFO queues.\n"
+            "- No infrastructure to manage, pay-per-message.\n\n"
+            "Use RabbitMQ for task distribution, Kafka for event sourcing, SQS for Lambda triggers."
+        )
+        return q, ctx, a
+
+    # ═══════════════════════════════════════════════════════════════
+    # FULLSTACK: TIER 2 - MEDIUM PRIORITY NEW CATEGORIES
+    # ═══════════════════════════════════════════════════════════════
+
+    def gen_fs_search_indexing(self) -> Tuple[str, str, str]:
+        q = "Design a product search feature with Elasticsearch."
+        ctx = "Cover indexing, querying, and relevance tuning."
+        a = (
+            "Indexing:\n"
+            "- Map product fields: title (text), description (text), price (float), category (keyword).\n"
+            "- Use analyzers for stemming, synonyms (sneakers → shoes).\n\n"
+            "Querying:\n"
+            "- Multi-match on title^3, description^1 for relevance weighting.\n"
+            "- Filters for category, price range (cached, doesn't affect score).\n\n"
+            "Sync:\n"
+            "- Use CDC (change data capture) or batch jobs to keep index fresh.\n"
+            "- Alias-based zero-downtime reindexing for schema changes."
+        )
+        return q, ctx, a
+
+    def gen_fs_data_validation_pipelines(self) -> Tuple[str, str, str]:
+        q = "How would you build a data validation pipeline for CSV imports?"
+        ctx = "Cover schema validation, error reporting, and partial success."
+        a = (
+            "Pipeline stages:\n"
+            "1) Schema validation: Check required columns, data types per field.\n"
+            "2) Row-level validation: Business rules (email format, date ranges).\n"
+            "3) Cross-row validation: Uniqueness, referential integrity.\n\n"
+            "Error handling:\n"
+            "- Collect all errors per row, continue validation.\n"
+            "- Return detailed error report (row number, column, message).\n\n"
+            "Partial success: Allow importing valid rows, skip invalid.\n"
+            "Use streaming for large files to avoid memory issues."
+        )
+        return q, ctx, a
+
+    def gen_fs_rate_limiting_throttling(self) -> Tuple[str, str, str]:
+        q = "Design an advanced rate limiting system with multiple tiers."
+        ctx = "Cover per-user, per-IP, and global limits."
+        a = (
+            "Multi-tier limiting:\n"
+            "1) Global: Protect entire system (e.g., 10K req/sec total).\n"
+            "2) Per-API-key: Different limits for free/paid tiers.\n"
+            "3) Per-endpoint: Expensive operations get lower limits.\n"
+            "4) Per-IP: Block abuse from anonymous users.\n\n"
+            "Implementation:\n"
+            "- Use Redis with Lua scripts for atomic operations.\n"
+            "- Sliding window or token bucket algorithms.\n"
+            "- Return 429 with Retry-After header and rate limit headers.\n"
+            "- Consider graceful degradation vs hard blocking."
+        )
+        return q, ctx, a
+
+    def gen_fs_monitoring_alerting(self) -> Tuple[str, str, str]:
+        q = "Design a monitoring and alerting strategy for a production service."
+        ctx = "Cover metrics, SLOs, and alert routing."
+        a = (
+            "Key metrics (RED method):\n"
+            "- Rate: Requests per second.\n"
+            "- Errors: 4xx/5xx rate.\n"
+            "- Duration: Latency percentiles (p50, p95, p99).\n\n"
+            "SLOs and alerting:\n"
+            "- Define SLOs: 99.9% availability, p95 latency < 200ms.\n"
+            "- Alert on error budget burn rate, not raw thresholds.\n"
+            "- Page on-call for critical SLO breaches.\n\n"
+            "Tools: Prometheus for metrics, Grafana for dashboards, PagerDuty for alerts.\n"
+            "Runbooks for each alert with actionable steps."
+        )
+        return q, ctx, a
+
+    def gen_fs_feature_flags_ab_testing(self) -> Tuple[str, str, str]:
+        q = "Design a feature flag system with A/B testing support."
+        ctx = "Cover flag types, assignment, and analytics."
+        a = (
+            "Flag types:\n"
+            "- Boolean: On/off for all users.\n"
+            "- Percentage rollout: Gradually enable for N% of users.\n"
+            "- User targeting: Enable for specific user segments.\n\n"
+            "A/B testing:\n"
+            "- Assign users to variants deterministically (hash(user_id + experiment_id)).\n"
+            "- Track exposure events and conversion metrics.\n"
+            "- Use statistical significance testing before declaring winners.\n\n"
+            "Implementation: LaunchDarkly, Flagsmith, or custom with Redis + DB.\n"
+            "Always have kill switches for fast rollback."
+        )
+        return q, ctx, a
+
+    # ═══════════════════════════════════════════════════════════════
+    # FULLSTACK: TIER 3 - ADDITIONAL CATEGORIES
+    # ═══════════════════════════════════════════════════════════════
+
+    def gen_fs_backwards_compatibility(self) -> Tuple[str, str, str]:
+        q = "How do you maintain backwards compatibility when evolving an API?"
+        ctx = "Cover versioning, deprecation, and migration strategies."
+        a = (
+            "Versioning strategies:\n"
+            "- URL versioning: /api/v1/, /api/v2/\n"
+            "- Header versioning: Accept: application/vnd.api.v2+json\n"
+            "- Query parameter: ?version=2\n\n"
+            "Backwards compatible changes:\n"
+            "- Add optional fields (don't remove or rename existing).\n"
+            "- Add new endpoints alongside old ones.\n\n"
+            "Deprecation process:\n"
+            "1) Announce deprecation with sunset date.\n"
+            "2) Add Deprecation header to responses.\n"
+            "3) Log usage to track migration progress.\n"
+            "4) Remove after sufficient migration period."
+        )
+        return q, ctx, a
+
+    def gen_fs_capacity_planning(self) -> Tuple[str, str, str]:
+        q = "How would you approach capacity planning for a growing service?"
+        ctx = "Cover current analysis, growth projections, and scaling decisions."
+        a = (
+            "Current state analysis:\n"
+            "- Measure: RPS, CPU, memory, DB connections, queue depth.\n"
+            "- Identify bottlenecks under load testing.\n\n"
+            "Growth projection:\n"
+            "- Historical growth rate (users, requests).\n"
+            "- Planned features that affect load.\n\n"
+            "Scaling calculations:\n"
+            "- If current pod handles 100 RPS at 70% CPU, need X pods for Y RPS.\n"
+            "- DB: Read replicas, connection pooling, sharding thresholds.\n"
+            "- Cache: Size based on working set, hit rate targets.\n\n"
+            "Plan for 2-3x headroom above projected peak."
+        )
+        return q, ctx, a
+
 
     def generate_trajectory(self) -> Dict:
         """Generate a single trajectory with prompt repetition."""
@@ -1324,6 +1550,24 @@ class PromptRepetitionEngine:
             "fs_proj_coding_guidelines": self.gen_fs_proj_coding_guidelines,
             "fs_proj_onboarding_docs": self.gen_fs_proj_onboarding_docs,
             "fs_proj_release_process": self.gen_fs_proj_release_process,
+
+            # Fullstack TIER 1 - High Priority
+            "fs_api_websockets": self.gen_fs_api_websockets,
+            "fs_error_handling_patterns": self.gen_fs_error_handling_patterns,
+            "fs_tracing_observability": self.gen_fs_tracing_observability,
+            "fs_caching_strategies": self.gen_fs_caching_strategies,
+            "fs_message_queues": self.gen_fs_message_queues,
+
+            # Fullstack TIER 2 - Medium Priority
+            "fs_search_indexing": self.gen_fs_search_indexing,
+            "fs_data_validation_pipelines": self.gen_fs_data_validation_pipelines,
+            "fs_rate_limiting_throttling": self.gen_fs_rate_limiting_throttling,
+            "fs_monitoring_alerting": self.gen_fs_monitoring_alerting,
+            "fs_feature_flags_ab_testing": self.gen_fs_feature_flags_ab_testing,
+
+            # Fullstack TIER 3 - Additional
+            "fs_backwards_compatibility": self.gen_fs_backwards_compatibility,
+            "fs_capacity_planning": self.gen_fs_capacity_planning,
             }
         
         query, context, answer = gen_map[category]()

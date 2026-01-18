@@ -1,0 +1,290 @@
+# ═══════════════════════════════════════════════════════════════
+# Manus Prime: Multimodal Dataset Configuration
+# Balanced mix of vision, audio, and video datasets for omni-modal training
+# ═══════════════════════════════════════════════════════════════
+
+storage:
+  base_dir: "/mnt/e/data/multimodal"
+  budget_gb: 200
+
+# ═══════════════════════════════════════════════════════════════
+# PRIORITY 0: SCREENSHOT + CODE (HIGHEST IMPACT FOR FULLSTACK)
+# ═══════════════════════════════════════════════════════════════
+vision_code_pairs:
+  - name: "GitHub-Issue-Screenshots"
+    source: "GitHub Issues API + linked code"
+    type: "screenshot_code"
+    size_gb: 30
+    target_samples: 50000
+    description: "IDE errors, UI bugs + fixes"
+    output_dir: "vision/github-issues"
+    
+  - name: "StackOverflow-Error-Screenshots"
+    source: "Stack Overflow API + accepted answers"
+    type: "screenshot_code"
+    size_gb: 20
+    target_samples: 30000
+    description: "Error messages, solutions"
+    output_dir: "vision/stackoverflow-errors"
+    
+  - name: "Figma-to-React"
+    source: "Figma design files + React implementations"
+    type: "ui_design_code"
+    size_gb: 15
+    target_samples: 20000
+    description: "UI mocks → production code"
+    output_dir: "vision/figma-react"
+
+# ═══════════════════════════════════════════════════════════════
+# PRIORITY 1: DIAGRAMS + ARCHITECTURE EXPLANATIONS
+# ═══════════════════════════════════════════════════════════════
+vision_diagrams:
+  - name: "ArXiv-Architecture-Diagrams"
+    source: "ArXiv papers PDFs → extracted diagrams"
+    type: "diagram_explanation"
+    size_gb: 10
+    target_samples: 10000
+    description: "System designs, ML architectures"
+    output_dir: "vision/arxiv-diagrams"
+    
+  - name: "GitHub-Architecture-README"
+    source: "Large repos with ASCII/PNG architecture"
+    type: "diagram_explanation"
+    size_gb: 8
+    target_samples: 8000
+    description: "Component diagrams, data flows"
+    output_dir: "vision/github-architecture"
+
+# ═══════════════════════════════════════════════════════════════
+# PRIORITY 2: AUDIO DATASETS (PODCAST + MEETINGS)
+# ═══════════════════════════════════════════════════════════════
+audio_datasets:
+  - name: "Podcast-Transcripts"
+    source: "Major tech podcasts (30-60min episodes)"
+    type: "audio_transcript"
+    size_gb: 25
+    target_samples: 500  # Full episodes
+    description: "DevOps, SRE, architecture discussions"
+    output_dir: "audio/podcasts"
+    sample_rate: 16000
+    duration_range: "1800-3600"
+    
+  - name: "Conference-Talk-Transcripts"
+    source: "YouTube Tech Talks + Conferences"
+    type: "audio_transcript"
+    size_gb: 15
+    target_samples: 300
+    description: "Technical talks, demos"
+    output_dir: "audio/conference-talks"
+    sample_rate: 16000
+    
+  - name: "Code-Review-Audio"
+    source: "Recorded pair programming sessions"
+    type: "audio_code_review"
+    size_gb: 10
+    target_samples: 200
+    description: "Live code review discussions"
+    output_dir: "audio/code-reviews"
+    sample_rate: 16000
+
+# ═══════════════════════════════════════════════════════════════
+# PRIORITY 3: VIDEO DATASETS (SCREEN RECORDINGS)
+# ═══════════════════════════════════════════════════════════════
+video_datasets:
+  - name: "VS-Code-Coding-Sessions"
+    source: "YouTube coding streams, Twitch VODs"
+    type: "video_coding"
+    size_gb: 40
+    target_samples: 100  # Full sessions (keyframed)
+    description: "Full coding sessions (1-2 hour clips)"
+    output_dir: "video/coding-sessions"
+    fps: 2  # Keyframes only
+    
+  - name: "Bug-Debugging-Sessions"
+    source: "Recorded debugging walkthroughs"
+    type: "video_debugging"
+    size_gb: 20
+    target_samples: 50
+    description: "IDE debugging, breakpoint analysis"
+    output_dir: "video/debugging"
+    fps: 2
+
+# ═══════════════════════════════════════════════════════════════
+# PRIORITY 4: MIXED MULTIMODAL (RARE BUT HIGH VALUE)
+# ═══════════════════════════════════════════════════════════════
+mixed_multimodal:
+  - name: "GitHub-PR-Review"
+    source: "GitHub PRs with diff videos + audio commentary"
+    type: "video_audio_code"
+    size_gb: 15
+    target_samples: 50
+    description: "Code review walkthroughs"
+    output_dir: "mixed/pr-reviews"
+    
+  - name: "Deployment-Demo"
+    source: "Deploy walkthroughs with screenshots + audio"
+    type: "video_audio_DevOps"
+    size_gb: 10
+    target_samples: 30
+    description: "K8s deploy, monitoring, debugging"
+    output_dir: "mixed/deployment-demos"
+
+# ═══════════════════════════════════════════════════════════════
+# HUGGINGFACE STREAMING DATASETS
+# ═══════════════════════════════════════════════════════════════
+huggingface_datasets:
+  vision:
+    - name: "WebSight"
+      source: "HuggingFaceM4/WebSight"
+      split: "train"
+      sample: 250000
+      streaming: true
+      output_dir: "vision/websight"
+      description: "Web UI screenshots and descriptions"
+      
+  audio:
+    - name: "Common_Voice_EN"
+      source: "mozilla-foundation/common_voice_17_0"
+      language: "en"
+      split: "train"
+      sample: 250000
+      streaming: true
+      output_dir: "audio/common-voice/en"
+      
+    - name: "Common_Voice_ES"
+      source: "mozilla-foundation/common_voice_17_0"
+      language: "es"
+      split: "train"
+      sample: 100000
+      streaming: true
+      output_dir: "audio/common-voice/es"
+      
+    - name: "Common_Voice_FR"
+      source: "mozilla-foundation/common_voice_17_0"
+      language: "fr"
+      split: "train"
+      sample: 100000
+      streaming: true
+      output_dir: "audio/common-voice/fr"
+      
+    - name: "Common_Voice_HI"
+      source: "mozilla-foundation/common_voice_17_0"
+      language: "hi"
+      split: "train"
+      sample: 50000
+      streaming: true
+      output_dir: "audio/common-voice/hi"
+      
+  video:
+    - name: "FineVideo"
+      source: "HuggingFaceFV/finevideo"
+      split: "train"
+      sample: 10000
+      streaming: true
+      output_dir: "video/finevideo"
+      extract_frames: 8
+      description: "High-quality video clips with descriptions"
+
+# ═══════════════════════════════════════════════════════════════
+# BENCHMARK DATASETS (EVALUATION)
+# ═══════════════════════════════════════════════════════════════
+benchmarks:
+  - name: "MMMU"
+    source: "MMMU/MMMU"
+    split: "validation"
+    sample: 9500
+    sample_by: "all_configs"
+    output_dir: "benchmarks/mmmu"
+    type: "vision_benchmark"
+    description: "Multimodal understanding benchmark"
+    
+  - name: "MathVista"
+    source: "AI4Math/MathVista"
+    split: "testmini"
+    sample: 6141
+    sample_by: "complete"
+    output_dir: "benchmarks/mathvista"
+    type: "vision_benchmark"
+    description: "Mathematical reasoning with visual context"
+    
+  - name: "MMMU_Pro"
+    source: "MMMU/MMMU"
+    split: "validation"
+    sample: 11500
+    sample_by: "complete"
+    output_dir: "benchmarks/mmmu_pro"
+    type: "vision_benchmark"
+    description: "Enhanced MMMU with robustness"
+    
+  - name: "Screenshot-Understanding"
+    source: "Custom curated + MMLU-style"
+    type: "vision_benchmark"
+    target_samples: 500
+    output_dir: "benchmarks/screenshots"
+    description: "IDE and application screenshot understanding"
+    
+  - name: "Diagram-Interpretation"
+    source: "ArXiv papers + expert annotations"
+    type: "vision_benchmark"
+    target_samples: 300
+    output_dir: "benchmarks/diagrams"
+    description: "Architecture and system diagram interpretation"
+    
+  - name: "Podcast-Summarization"
+    source: "Tech podcasts + manual summaries"
+    type: "audio_benchmark"
+    target_samples: 100
+    output_dir: "benchmarks/podcast-summarization"
+    description: "Audio content summarization and extraction"
+
+# ═══════════════════════════════════════════════════════════════
+# PROCESSING CONFIGURATION
+# ═══════════════════════════════════════════════════════════════
+processing:
+  mode: "streaming_with_local_cache"
+  workers: 8
+  
+  # Image processing
+  image:
+    resize_to: 512  # SigLIP input
+    format: "png"
+    quality: 95
+    
+  # Audio processing
+  audio:
+    sample_rate: 16000  # Whisper standard
+    duration_limit: 3600  # 1 hour max
+    normalize: true
+    
+  # Video processing
+  video:
+    fps: 2  # Keyframes only
+    resolution: "1280x720"
+    codec: "h264"
+    
+  # Output format
+  output_schema: "multimodal_messages"  # Extended messages with modalities field
+  splits:
+    train: 0.85
+    val: 0.10
+    test: 0.05
+
+# ═══════════════════════════════════════════════════════════════
+# NORMALIZATION SCHEMA
+# ═══════════════════════════════════════════════════════════════
+# All multimodal samples are normalized to this schema:
+#
+# {
+#   "id": "unique_identifier",
+#   "messages": [
+#     {"role": "user", "content": "..."},
+#     {"role": "assistant", "content": "..."}
+#   ],
+#   "domain": "multimodal_fullstack",
+#   "category": "screenshot_error_analysis",
+#   "modalities": {
+#     "image": [{"path": "/path/to/image.png", "type": "screenshot"}],
+#     "audio": [{"path": "/path/to/audio.wav", "type": "speech"}],
+#     "video": [{"path": "/path/to/video.mp4", "fps": 2}]
+#   }
+# }
