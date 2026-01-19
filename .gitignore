@@ -1,7 +1,6 @@
 .pytest_cache/
+.venv/
 __pycache__/
-antigravity-skills-agents-kit/
-.agent/
 base-model/
 logs/
 offload-cache/
