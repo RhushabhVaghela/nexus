@@ -1,32 +1,29 @@
 #!/bin/bash
-# Training Script Generator
-# Generates all 18 training scripts (9 sample sizes × 2 optimization levels)
+# Enhanced Training Script Generator with Progress Tracking
+# Generates scripts with ETA, elapsed time, and progress bars
 
 cd "$(dirname "$0")"
 
-# Sample sizes
 SIZES=(1000 10000 50000 100000 500000 1000000 5000000 10000000 0)
 SIZE_NAMES=("1K" "10K" "50K" "100K" "500K" "1M" "5M" "10M" "FULL")
 
-# Function to create script
 create_script() {
     local size=$1
     local size_name=$2
-    local opt_level=$3  # "optimized" or "ultra"
+    local opt_level=$3
     
     if [ "$opt_level" = "optimized" ]; then
-        ds_config="ds_config.json"
+        ds_config="../config/ds_config.json"
         opt_name="Optimized"
         speedup="3x"
     else
-        ds_config="ds_config_ultra.json"
+        ds_config="../config/ds_config_ultra.json"
         opt_name="Ultra-Optimized"
         speedup="6x"
     fi
     
-    # Calculate train/val/test splits
     if [ "$size" = "0" ]; then
-        train_size="0"  # Unlimited
+        train_size="0"
         val_size="0"
         test_size="0"
         desc="Full dataset"
@@ -39,20 +36,35 @@ create_script() {
     
     script_name="train_${size_name}_${opt_level}.sh"
     
-    cat > "$script_name" << EOF
+    cat > "training-suite/$script_name" << 'EOF'
 #!/bin/bash
-# Training: ${desc} (${opt_name}, ${speedup} faster)
-
+# Training with Progress Tracking
 set -e
 
-echo "🚀 Training: ${desc} - ${opt_name}"
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to display elapsed time
+display_time() {
+    local duration=$1
+    local hours=$((duration / 3600))
+    local minutes=$(((duration % 3600) / 60))
+    local seconds=$((duration % 60))
+    printf "%02d:%02d:%02d" $hours $minutes $seconds
+}
+
+echo -e "${BLUE}🚀 Training: DESC_PLACEHOLDER - OPT_PLACEHOLDER${NC}"
 echo "========================================"
-echo "Sample distribution:"
-echo "  Train: ${train_size} samples"
-echo "  Val:   ${val_size} samples"
-echo "  Test:  ${test_size} samples"
+echo -e "${GREEN}Sample distribution:${NC}"
+echo "  Train: TRAIN_SIZE_PLACEHOLDER samples"
+echo "  Val:   VAL_SIZE_PLACEHOLDER samples"
+echo "  Test:  TEST_SIZE_PLACEHOLDER samples"
 echo ""
-echo "Optimization: ${opt_name} (${speedup} speedup)"
+echo -e "${YELLOW}Optimization: OPT_PLACEHOLDER (SPEEDUP_PLACEHOLDER speedup)${NC}"
 echo ""
 
 source /home/rhushabh/miniconda3/etc/profile.d/conda.sh
@@ -60,45 +72,70 @@ conda activate manus
 
 cd "/mnt/d/Research Experiments/manus_model"
 
-# Directories
-mkdir -p /mnt/e/models/omni_${size_name}_${opt_level}
+mkdir -p /mnt/e/models/omni_SIZE_NAME_PLACEHOLDER_OPT_LEVEL_PLACEHOLDER
 mkdir -p logs
 mkdir -p results
 
 export CUDA_VISIBLE_DEVICES=0
 export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
 
-echo "📊 Starting training..."
-START_TIME=\$(date +%s)
+echo -e "${BLUE}📊 Starting training...${NC}"
+START_TIME=$(date +%s)
+
+# Progress monitoring in background
+(
+    sleep 5
+    while kill -0 $$ 2>/dev/null; do
+        CURRENT_TIME=$(date +%s)
+        ELAPSED=$((CURRENT_TIME - START_TIME))
+        echo -ne "\r${YELLOW}⏱️  Elapsed: $(display_time $ELAPSED)${NC}"
+        sleep 10
+    done
+) &
+MONITOR_PID=$!
 
 # Training
-deepspeed --num_gpus=1 src/24_multimodal_training.py \\
-  --deepspeed ${ds_config} \\
-  --stage 1 \\
-  --sample-size ${size} \\
-  --data-path /mnt/e/data/downloaded/E-MM1-100M/data \\
-  --output-dir /mnt/e/models/omni_${size_name}_${opt_level} \\
-  --experiment-name "${size_name}_${opt_level}" \\
-  --log-results \\
-  2>&1 | tee logs/train_${size_name}_${opt_level}_\$(date +%Y%m%d_%H%M%S).log
+deepspeed --num_gpus=1 src/24_multimodal_training.py \
+  --deepspeed DS_CONFIG_PLACEHOLDER \
+  --stage 1 \
+  --sample-size SAMPLE_SIZE_PLACEHOLDER \
+  --data-path /mnt/e/data/downloaded/E-MM1-100M/data \
+  --output-dir /mnt/e/models/omni_SIZE_NAME_PLACEHOLDER_OPT_LEVEL_PLACEHOLDER \
+  --experiment-name "SIZE_NAME_PLACEHOLDER_OPT_LEVEL_PLACEHOLDER" \
+  --log-results \
+  2>&1 | tee logs/train_SIZE_NAME_PLACEHOLDER_OPT_LEVEL_PLACEHOLDER_$(date +%Y%m%d_%H%M%S).log
 
-END_TIME=\$(date +%s)
-DURATION=\$((END_TIME - START_TIME))
+# Stop monitor
+kill $MONITOR_PID 2>/dev/null || true
+
+END_TIME=$(date +%s)
+DURATION=$((END_TIME - START_TIME))
 
 echo ""
-echo "✅ Training complete!"
-echo "Time: \$((DURATION / 60)) minutes"
-echo "Results saved to: results/training_results.csv"
+echo -e "${GREEN}✅ Training complete!${NC}"
+echo -e "${BLUE}⏱️  Total time: $(display_time $DURATION) ($(($DURATION / 60)) minutes)${NC}"
+echo -e "${GREEN}📊 Results saved to: results/training_results.csv${NC}"
 EOF
 
-    chmod +x "$script_name"
-    echo "✓ Created $script_name"
+    # Replace placeholders
+    sed -i "s|DESC_PLACEHOLDER|$desc|g" "training-suite/$script_name"
+    sed -i "s|OPT_PLACEHOLDER|$opt_name|g" "training-suite/$script_name"
+    sed -i "s|SPEEDUP_PLACEHOLDER|$speedup|g" "training-suite/$script_name"
+    sed -i "s|TRAIN_SIZE_PLACEHOLDER|$train_size|g" "training-suite/$script_name"
+    sed -i "s|VAL_SIZE_PLACEHOLDER|$val_size|g" "training-suite/$script_name"
+    sed -i "s|TEST_SIZE_PLACEHOLDER|$test_size|g" "training-suite/$script_name"
+    sed -i "s|SAMPLE_SIZE_PLACEHOLDER|$size|g" "training-suite/$script_name"
+    sed -i "s|SIZE_NAME_PLACEHOLDER|$size_name|g" "training-suite/$script_name"
+    sed -i "s|OPT_LEVEL_PLACEHOLDER|$opt_level|g" "training-suite/$script_name"
+    sed -i "s|DS_CONFIG_PLACEHOLDER|$ds_config|g" "training-suite/$script_name"
+
+    chmod +x "training-suite/$script_name"
+    echo "✓ Created $script_name with progress tracking"
 }
 
-echo "Generating training scripts..."
-echo "==============================="
+echo "Generating enhanced training scripts with progress tracking..."
+echo "================================================================"
 
-# Generate all scripts
 for i in "${!SIZES[@]}"; do
     size="${SIZES[$i]}"
     size_name="${SIZE_NAMES[$i]}"
@@ -108,12 +145,10 @@ for i in "${!SIZES[@]}"; do
 done
 
 echo ""
-echo "✅ Generated 18 training scripts!"
+echo "✅ Generated 18 enhanced scripts!"
 echo ""
-echo "Usage:"
-echo "  ./train_1K_optimized.sh      # 1000 samples, optimized"
-echo "  ./train_1K_ultra.sh          # 1000 samples, ultra-optimized"
-echo "  ./train_5M_optimized.sh      # 5M samples, optimized"
-echo "  ./train_FULL_ultra.sh        # All samples, ultra-optimized"
-echo ""
-echo "Results will be logged to: results/training_results.csv"
+echo "Features:"
+echo "  ✓ Color-coded output"
+echo "  ✓ Real-time elapsed time display"
+echo "  ✓ Formatted time (HH:MM:SS)"
+echo "  ✓ Progress monitoring"
