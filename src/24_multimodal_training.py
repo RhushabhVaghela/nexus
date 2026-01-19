@@ -71,9 +71,9 @@ from utils.logging_config import setup_logger, log_header, log_completion
 logger = setup_logger(__name__, "logs/multimodal_training.log")
 
 CONFIG = {
-    "base_model": "/mnt/d/Research Experiments/manus_model/base-model/Qwen2.5-Omni-7B-GPTQ-Int4",
-    "vision_model": "/mnt/d/Research Experiments/manus_model/base-model/siglip2-so400m-patch16-512",
-    "audio_model": "/mnt/d/Research Experiments/manus_model/base-model/whisper-large-v3-turbo",
+    "base_model": "/mnt/e/data/base-model/Qwen2.5-Omni-7B-GPTQ-Int4",
+    "vision_model": "/mnt/e/data/base-model/siglip2-so400m-patch16-512",
+    "audio_model": "/mnt/e/data/base-model/whisper-large-v3-turbo",
     "output_dir": "/mnt/e/models/omnimodal_any2any",
     "use_emm1": False, 
     "emm1_shards": [], 

@@ -81,7 +81,7 @@ run_distill() {
 # 3. TRAIN
 run_train() {
     # Determine data path based on modality default
-    DATA_PATH="/mnt/e/data/downloaded"
+    DATA_PATH="/mnt/e/data/datasets"
     
     log_info "Phase 3: Train Omni-Modal Model (Stage: ${STAGE})..."
     python "${SRC_DIR}/24_multimodal_training.py" \

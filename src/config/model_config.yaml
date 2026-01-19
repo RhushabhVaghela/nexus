@@ -103,9 +103,9 @@ data:
   synthetic_ratio: 0.70  # 70% synthetic data
   
   # Paths
-  real_data_dir: "/mnt/e/data/real-datasets"
-  synthetic_data_dir: "/mnt/e/data"
-  mixed_data_dir: "/mnt/e/data/mixed-training"
+  real_data_dir: "/mnt/e/data/datasets/real-datasets"
+  synthetic_data_dir: "/mnt/e/data/datasets"
+  mixed_data_dir: "/mnt/e/data/datasets/mixed-training"
   
   # Processing
   shuffle: true

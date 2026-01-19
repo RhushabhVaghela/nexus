@@ -60,7 +60,7 @@ deepspeed --num_gpus=1 src/24_multimodal_training.py \
   --deepspeed ../config/ds_config_ultra.json \
   --stage 1 \
   --sample-size 0 \
-  --data-path /mnt/e/data/downloaded/E-MM1-100M/data \
+  --data-path /mnt/e/data/datasets/E-MM1-100M/data \
   --output-dir /mnt/e/models/omni_FULL_ultra \
   --experiment-name "FULL_ultra" \
   --log-results \
