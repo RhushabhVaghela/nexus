@@ -238,56 +238,69 @@ def handle_user_interrupt(
 
 
 # ═══════════════════════════════════════════════════════════════
-# SIMPLE CLI ENTRYPOINT
+# OMNI-ADAPTER
 # ═══════════════════════════════════════════════════════════════
 
-def _dummy_llm(messages: List[Dict[str, str]]) -> str:
-    """
-    A tiny offline stub for quick smoke-tests.
+import torch
+from transformers import AutoTokenizer
+from multiprocessing import Process, Queue
 
-    Replace with `call_llm` when wiring to an actual model.
-    """
-    # Extremely small deterministic response for debugging the pipeline.
-    # This is intentionally trivial, just to test end-to-end wiring.
-    return json.dumps(
-        {
-            "turns": [
-                {"speaker": "Host A", "text": "This is a dummy podcast intro."},
-                {"speaker": "Host B", "text": "And this is a dummy reply."},
-            ]
-        }
-    )
+# Global model cache (only used if running as script)
+_MODEL_CACHE = None
+_TOKENIZER_CACHE = None
 
+def get_omni_model(model_path: str):
+    global _MODEL_CACHE, _TOKENIZER_CACHE
+    if _MODEL_CACHE is None:
+        from multimodal.model import OmniMultimodalLM
+        print(f"Loading OmniModel from {model_path}...")
+        _TOKENIZER_CACHE = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+        _MODEL_CACHE = OmniMultimodalLM(model_path)
+    return _MODEL_CACHE, _TOKENIZER_CACHE
+
+def call_omni_llm(messages: List[Dict[str, str]], model_path: str = "/mnt/e/data/base-model/Qwen2.5-Omni-7B-GPTQ-Int4") -> str:
+    """
+    Adapter that calls the actual OmniMultimodalLM logic.
+    """
+    model, tokenizer = get_omni_model(model_path)
+    
+    # 1. Apply Template
+    text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    
+    # 2. Tokenize
+    inputs = tokenizer(text, return_tensors="pt").to(model.wrapper.llm.device)
+    
+    # 3. Generate
+    with torch.no_grad():
+        outputs = model.generate(
+            **inputs, 
+            max_new_tokens=2048,
+            temperature=0.7,
+            do_sample=True
+        )
+        
+    # 4. Decode
+    # Skip input tokens
+    generated_ids = outputs[0][inputs.input_ids.shape[1]:]
+    return tokenizer.decode(generated_ids, skip_special_tokens=True)
+
+# ═══════════════════════════════════════════════════════════════
+# CLI ENTRYPOINT
+# ═══════════════════════════════════════════════════════════════
 
 def main():
     import argparse
     import sys
+    from pathlib import Path
+    
+    # Add src to path if needed
+    sys.path.append(str(Path(__file__).parent.parent))
 
     parser = argparse.ArgumentParser(description="Generate a 2-speaker podcast script.")
-    parser.add_argument(
-        "--docs",
-        type=str,
-        nargs="+",
-        required=True,
-        help="Paths to text/markdown documents to base the podcast on.",
-    )
-    parser.add_argument(
-        "--topic",
-        type=str,
-        default=None,
-        help="Optional short topic hint.",
-    )
-    parser.add_argument(
-        "--out",
-        type=str,
-        default="-",
-        help="Output path for JSON script (or '-' for stdout).",
-    )
-    parser.add_argument(
-        "--use-dummy-llm",
-        action="store_true",
-        help="Use built-in dummy LLM instead of real call_llm.",
-    )
+    parser.add_argument("--docs", type=str, nargs="+", required=True)
+    parser.add_argument("--topic", type=str, default=None)
+    parser.add_argument("--out", type=str, default="-")
+    parser.add_argument("--model", type=str, default="/mnt/e/data/base-model/Qwen2.5-Omni-7B-GPTQ-Int4")
 
     args = parser.parse_args()
 
@@ -295,19 +308,25 @@ def main():
     for path in args.docs:
         with open(path, "r", encoding="utf-8") as f:
             docs_content.append(f.read())
+            
+    # Bind the model path to the callable
+    def bound_llm(msgs):
+        return call_omni_llm(msgs, model_path=args.model)
 
-    llm_fn = _dummy_llm if args.use_dummy_llm else call_llm
+    try:
+        script = generate_podcast_script(docs_content, topic_hint=args.topic, llm=bound_llm)
+        out_data = script.to_dict()
+        out_json = json.dumps(out_data, ensure_ascii=False, indent=2)
 
-    script = generate_podcast_script(docs_content, topic_hint=args.topic, llm=llm_fn)
+        if args.out == "-":
+            sys.stdout.write(out_json + "\n")
+        else:
+            with open(args.out, "w", encoding="utf-8") as f:
+                f.write(out_json + "\n")
+                
+    except Exception as e:
+        print(f"❌ Error generating podcast: {e}", file=sys.stderr)
 
-    out_data = script.to_dict()
-    out_json = json.dumps(out_data, ensure_ascii=False, indent=2)
-
-    if args.out == "-":
-        sys.stdout.write(out_json + "\n")
-    else:
-        with open(args.out, "w", encoding="utf-8") as f:
-            f.write(out_json + "\n")
 
 
 if __name__ == "__main__":

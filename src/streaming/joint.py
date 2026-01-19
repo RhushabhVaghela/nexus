@@ -250,25 +250,78 @@ class JointStreamingOrchestrator:
         self.user_buffer.add_event(UserEvent(timestamp=ts, text=text))
 
 
-# Simple CLI demo (logs LLM replies to stdout)
+# ═══════════════════════════════════════════════════════════════
+# LIVE OMNI-MODEL ADAPTER
+# ═══════════════════════════════════════════════════════════════
+
+def get_live_model(model_path: str):
+    # Re-use the factory logic from podcast generator or import directly
+    # Ideally should be a shared utility, but duplicating for standalone script stability
+    from multimodal.model import OmniMultimodalLM
+    from transformers import AutoTokenizer
+    
+    print(f"⚡ Loading Live OmniModel: {model_path}...")
+    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+    model = OmniMultimodalLM(model_path)
+    return model, tokenizer
+
+def run_live_inference(messages: List[Dict[str, str]], model, tokenizer) -> str:
+    import torch
+    
+    text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    inputs = tokenizer(text, return_tensors="pt").to(model.wrapper.llm.device)
+    
+    with torch.no_grad():
+        outputs = model.generate(
+            **inputs, 
+            max_new_tokens=256, # Short responses for streaming
+            temperature=0.7,
+            do_sample=True
+        )
+        
+    generated_ids = outputs[0][inputs.input_ids.shape[1]:]
+    return tokenizer.decode(generated_ids, skip_special_tokens=True)
+
+# ═══════════════════════════════════════════════════════════════
+# CLI ENTRYPOINT
+# ═══════════════════════════════════════════════════════════════
+
 def main():
     import sys
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Tri-Streaming Orchestrator")
+    parser.add_argument("--model", type=str, default="/mnt/e/data/base-model/Qwen2.5-Omni-7B-GPTQ-Int4")
+    parser.add_argument("--interval", type=float, default=5.0)
+    args = parser.parse_args()
 
     vision_buf = VisionStreamBuffer(max_seconds=30.0)
     audio_buf = AudioStreamBuffer(max_seconds=30.0)
     user_buf = UserEventBuffer(max_events=50)
 
-    def dummy_llm(messages: List[Dict[str, str]]) -> str:
-        # Minimal echo for testing wiring
-        return "I received the context and I'm ready to assist."
+    # Load Model ONCE
+    try:
+        model, tokenizer = get_live_model(args.model)
+    except Exception as e:
+        print(f"❌ Failed to load model: {e}")
+        return
+
+    def live_llm_adapter(messages: List[Dict[str, str]]) -> str:
+        return run_live_inference(messages, model, tokenizer)
 
     orchestrator = JointStreamingOrchestrator(
         vision_buffer=vision_buf,
         audio_buffer=audio_buf,
         user_buffer=user_buf,
-        llm_fn=dummy_llm,
-        interval_sec=5.0,
+        llm_fn=live_llm_adapter,
+        interval_sec=args.interval,
     )
+
+    orchestrator.on_llm_response = lambda r: print(f"\n🤖 [Omni]: {r}\n")
+
+    orchestrator.start()
+    print("🚀 Joint Streaming Active. Type to interact (simulates User Event). Ctrl+C to stop.")
+
 
     orchestrator.on_llm_response = lambda r: print(f"\n[LLM] {r}\n")
 
