@@ -23,7 +23,7 @@ from utils.logging_config import setup_logger, log_header, log_completion
 from mm_download_unified import DatasetManager, DATASET_REGISTRY
 
 CONFIG = {
-    "output_dir": "/mnt/e/data/multimodal",
+    "output_dir": "/mnt/e/data/datasets",
     "test_dir": "tests/multimodal_assets"
 }
 

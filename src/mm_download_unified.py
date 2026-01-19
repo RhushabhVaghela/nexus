@@ -94,10 +94,11 @@ DATASET_REGISTRY = {
         "websight": {
             "kaggle_id": "mehmetalicantoglu/figma-ui-design-images",
             "hf_id": "HuggingFaceM4/WebSight",
+            "local_path": "/mnt/e/data/datasets/mrm8488_WebSight_70k",
             "hf_split": "train",
             "hf_streaming": True,
             "description": "WebSight / UI Designs",
-            "file_pattern": "*.jpg",
+            "file_pattern": "*.parquet", # Found parquet files locally
             "text_field": None,
         },
         "llava_instruct": {
@@ -124,6 +125,7 @@ DATASET_REGISTRY = {
         "common_voice": {
             "kaggle_id": "mozillaorg/common-voice",
             "hf_id": "mozilla-foundation/common_voice_17_0",
+            "local_path": "/mnt/e/data/datasets/Mozilla_Common-Voice",
             "hf_config": "en", 
             "hf_split": "train",
             "hf_streaming": True,
@@ -137,6 +139,7 @@ DATASET_REGISTRY = {
         "msr_vtt": {
             "kaggle_id": "evgeniy987/msr-vtt",
             "hf_id": "AlexZigma/msr-vtt",
+            "local_path": "/mnt/e/data/datasets/VLM2Vec_MSR-VTT",
             "hf_split": "train",
             "hf_streaming": True,
             "description": "MSR-VTT Video Captioning",
@@ -146,6 +149,7 @@ DATASET_REGISTRY = {
         "vatex": {
             "kaggle_id": None,
             "hf_id": "lmms-lab/VATEX",
+            "local_path": "/mnt/e/data/datasets/qingy2024_VaTeX",
             "hf_split": "validation",
             "hf_streaming": True,
             "description": "VATEX Video Captioning",
@@ -163,6 +167,7 @@ DATASET_REGISTRY = {
         "mmlu": {
             "kaggle_id": "lizhecheng/mmlu-dataset",
             "hf_id": "cais/mmlu",  # Fixed from MMMU/MMMU
+            "local_path": "/mnt/e/data/datasets/cais_mmlu",
             "hf_config": "all",
             "hf_split": "test",
             "description": "MMLU (Text)",
@@ -196,16 +201,15 @@ DATASET_REGISTRY = {
         "mathvista": {
             "kaggle_id": None,
             "hf_id": "AI4Math/MathVista",
+            "local_path": "/mnt/e/data/datasets/AI4Math_MathVista",
             "hf_split": "testmini",
             "description": "MathVista",
         }
     },
 }
 
-# ... (Previous code) ...
-
-
-
+# Values for WebSight are updated further up in the structure (requires separate replacement if needed)
+# ...
 
 @dataclass
 class MultimodalSample:
@@ -248,11 +252,24 @@ class DatasetManager:
         sample_limit: int
     ) -> int:
         """
-        Orchestrate download: HF First -> Kaggle Second.
+        Orchestrate download: Local -> HF -> Kaggle.
         """
         logger.info(f"🚀 Processing {modality}/{name}...")
         count = 0
         
+        # 0. Try Local Path (User Provided / Configured)
+        if config.get("local_path"):
+            local_p = Path(config["local_path"])
+            if local_p.exists():
+                logger.info(f"📂 Using local dataset for {name}: {local_p}")
+                try:
+                    count = self._process_local_files(local_p, self.output_dir / modality / name, modality, name, config, sample_limit)
+                    if count > 0:
+                        logger.info(f"✅ Loaded {count} samples from local: {local_p}")
+                        return count
+                except Exception as e:
+                    logger.warning(f"⚠️ Error loading local dataset {name}: {e}")
+
         # 1. Try HuggingFace First
         if HF_AVAILABLE and config.get("hf_id"):
             logger.info(f"Trying HuggingFace for {name} ({config['hf_id']})...")

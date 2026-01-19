@@ -195,102 +195,76 @@ class SpeechDecoder(nn.Module):
 # OMNI MODEL
 # ═══════════════════════════════════════════════════════════════
 
-class OmniMultimodalLM(nn.Module):
+from transformers import AutoConfig
+
+# ═══════════════════════════════════════════════════════════════
+# MODULAR WRAPPER (The "Frankenstein" Builder)
+# ═══════════════════════════════════════════════════════════════
+
+class ModularMultimodalWrapper(nn.Module):
+    """
+    Wraps a Base LLM and injects ONLY the missing modality encoders.
+    """
     def __init__(
         self,
-        llm_name: str,
-        llm_dim: int = 4096,
-        num_latents: int = 64,
+        base_model,
+        inject_vision: bool = False,
+        inject_audio: bool = False,
         vision_name: str = "google/siglip-so400m-patch14-512",
         audio_name: str = "openai/whisper-large-v3-turbo",
-        enable_decoders: bool = True,
+        llm_dim: int = 4096,
+        num_latents: int = 64,
         use_dfm: bool = True,
-        device_map: str = "auto",  # Kept for compatibility (ignored)
-        load_in_8bit: bool = True   # Kept for compatibility (ignored)
+        enable_decoders: bool = True
     ):
         super().__init__()
-        
-        # LLM loading - Standard Efficient Loading
-        # We rely on 'device_map="auto"' to handle offloading and 'trust_remote_code=True'
-        # to handle the custom Qwen2.5-Omni architecture correctly.
-        print(f"Loading Base LLM: {llm_name}")
-        print("  Strategy: specific device_map='auto' for efficiency")
-        
-        # Determine device map based on available memory
-        # This will automatically use CPU offload if GPU is full
-        
-        # Try to use specific Qwen2.5 Omni class to bypass AutoModel registry issues
-        try:
-            from transformers import Qwen2_5OmniForConditionalGeneration
-            ModelClass = Qwen2_5OmniForConditionalGeneration
-            print("  ✓ Dectected Qwen2.5 Omni: Using native class (bypassing AutoModel registry)")
-        except ImportError:
-            ModelClass = AutoModelForCausalLM
-            print("  Using AutoModelForCausalLM (Standard)")
-        
-        self.llm = ModelClass.from_pretrained(
-            llm_name,
-            device_map="auto",
-            trust_remote_code=True,
-            dtype=torch.float16,
-            low_cpu_mem_usage=True
-        )
-
-        
-        # Enable gradient checkpointing for memory efficiency during training
-        if hasattr(self.llm, "gradient_checkpointing_enable"):
-            self.llm.gradient_checkpointing_enable()
-            
-        self.llm_dim = self.llm.config.hidden_size
-        
-        print(f"  ✓ LLM loaded: {sum(p.numel() for p in self.llm.parameters())/1e9:.2f}B parameters")
-        if hasattr(self.llm, 'hf_device_map'):
-            gpu_layers = sum(1 for v in self.llm.hf_device_map.values() if v == 0)
-            cpu_layers = sum(1 for v in self.llm.hf_device_map.values() if v == 'cpu')
-            print(f"  ✓ Device map: {gpu_layers} layers GPU, {cpu_layers} layers CPU")
-        if torch.cuda.is_available():
-            print(f"  ✓ GPU memory: {torch.cuda.memory_allocated(0)/1e9:.2f}GB")
-        
-        
-        # Encoders - Load in 8-bit to save GPU memory
-        print("  Loading encoders in 8-bit...")
-        self.vision_encoder = VisionEncoder(model_name=vision_name, load_in_8bit=True)
-        self.audio_encoder = AudioEncoder(model_name=audio_name, load_in_8bit=True)
-        
-        print(f"  ✓ Encoders loaded (8-bit quantized)")
-        if torch.cuda.is_available():
-            print(f"  ✓ Total GPU memory: {torch.cuda.memory_allocated(0)/1e9:.2f}GB")
-        
-        # Input Projections (encoder → LLM) - Force GPU
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.vision_proj = nn.Linear(self.vision_encoder.output_dim, self.llm_dim).to(device)
-        self.audio_proj = nn.Linear(self.audio_encoder.output_dim, self.llm_dim).to(device)
-        
-        # Connectors (DFM for SOTA or Perceiver for fallback) - Force GPU
+        self.llm = base_model
+        self.llm_dim = llm_dim
+        self.inject_vision = inject_vision
+        self.inject_audio = inject_audio
         self.use_dfm = use_dfm and DFM_AVAILABLE
-        if self.use_dfm:
-            print(f"Using DFM Connectors (SOTA) with {num_latents} latents on GPU...")
-            from .connectors.dfm import DFMConnector
-            self.vision_connector = DFMConnector(dim=self.llm_dim, num_latents=num_latents).to(device)
-            self.audio_connector = DFMConnector(dim=self.llm_dim, num_latents=num_latents).to(device)
-        else:
-            print(f"Using Perceiver Resamplers with {num_latents} latents on GPU...")
-            self.vision_connector = PerceiverResampler(dim=self.llm_dim, num_latents=num_latents).to(device)
-            self.audio_connector = PerceiverResampler(dim=self.llm_dim, num_latents=num_latents).to(device)
-        
-        # Decoders (for any-to-any)
         self.enable_decoders = enable_decoders
-        if enable_decoders:
-            self.video_decoder = VideoDecoder()
-            self.speech_decoder = SpeechDecoder()
-            
-            # Output Projections (LLM → decoder) - Force GPU
-            self.video_proj_out = nn.Linear(self.llm_dim, self.video_decoder.hidden_dim).to(device)
-            self.speech_proj_out = nn.Linear(self.llm_dim, self.speech_decoder.hidden_dim).to(device)
         
-        print(f"✅ Model loaded! GPU usage: {torch.cuda.memory_allocated(0)/1e9:.2f}GB / {torch.cuda.get_device_properties(0).total_memory/1e9:.2f}GB")
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+        # 1. Vision Injection
+        if self.inject_vision:
+            print(f"  👁️  Injecting Vision Module ({vision_name})...")
+            self.vision_encoder = VisionEncoder(model_name=vision_name, load_in_8bit=True)
+            self.vision_proj = nn.Linear(self.vision_encoder.output_dim, self.llm_dim).to(device)
+            
+            if self.use_dfm:
+                self.vision_connector = DFMConnector(dim=self.llm_dim, num_latents=num_latents).to(device)
+            else:
+                self.vision_connector = PerceiverResampler(dim=self.llm_dim, num_latents=num_latents).to(device)
+        else:
+            print("  ✅ Base model handles Vision natively. Skipping injection.")
+
+        # 2. Audio Injection
+        if self.inject_audio:
+            print(f"  👂  Injecting Audio Module ({audio_name})...")
+            self.audio_encoder = AudioEncoder(model_name=audio_name, load_in_8bit=True)
+            self.audio_proj = nn.Linear(self.audio_encoder.output_dim, self.llm_dim).to(device)
+            
+            if self.use_dfm:
+                self.audio_connector = DFMConnector(dim=self.llm_dim, num_latents=num_latents).to(device)
+            else:
+                self.audio_connector = PerceiverResampler(dim=self.llm_dim, num_latents=num_latents).to(device)
+        else:
+            print("  ✅ Base model handles Audio natively. Skipping injection.")
+
+        # 3. Output Decoders (Optional / Any-to-Any)
+        # Assuming if we inject encoders, we probably need decoders, OR if user explicitly asks.
+        # But if base model is Omni, it might have talker heads?
+        # For safety/consistency with user request, we inject these if enabled.
+        if self.enable_decoders:
+             self.video_decoder = VideoDecoder()
+             self.speech_decoder = SpeechDecoder()
+             self.video_proj_out = nn.Linear(self.llm_dim, self.video_decoder.hidden_dim).to(device)
+             self.speech_proj_out = nn.Linear(self.llm_dim, self.speech_decoder.hidden_dim).to(device)
 
     def encode_vision(self, images):
+        if not self.inject_vision: return None
         features = self.vision_encoder(images)
         features = self.vision_proj(features)
         if self.use_dfm:
@@ -300,6 +274,7 @@ class OmniMultimodalLM(nn.Module):
         return tokens
 
     def encode_audio(self, audio_features):
+        if not self.inject_audio: return None
         features = self.audio_encoder(audio_features)
         features = self.audio_proj(features)
         if self.use_dfm:
@@ -309,44 +284,187 @@ class OmniMultimodalLM(nn.Module):
         return tokens
 
     def forward(self, input_ids, pixel_values=None, audio_features=None, output_modality="text", **kwargs):
-        """Forward pass with any-to-any support.
-        
-        Args:
-            output_modality: "text" | "video" | "speech" - target output modality
-        """
         text_embeds = self.llm.get_input_embeddings()(input_ids)
         multimodal_embeds = []
         
-        if pixel_values is not None:
+        # Only encode if injected AND provided
+        if self.inject_vision and pixel_values is not None:
             multimodal_embeds.append(self.encode_vision(pixel_values))
         
-        if audio_features is not None:
+        if self.inject_audio and audio_features is not None:
             multimodal_embeds.append(self.encode_audio(audio_features))
             
         if multimodal_embeds:
-            # Concatenate [Vision, Audio, Text]
             all_embeds = torch.cat(multimodal_embeds + [text_embeds], dim=1)
         else:
             all_embeds = text_embeds
         
-        # Get LLM outputs
+        # For Native models (not injected), inputs like 'pixel_values' might need to be passed kwargs?
+        # But here we assume if NOT injected, the Base LLM handles it via its own forward() logic?
+        # Actually, if we wrap it, we usually control the embedding concatenation.
+        # If Base is Native, we shouldn't be doing embedding concat here manually unless we are MIXING native + custom.
+        # For now, simplistic concat logic for injected modalities.
+        
         llm_outputs = self.llm(inputs_embeds=all_embeds, **kwargs)
         
-        # Route to appropriate decoder
         if output_modality == "text":
             return llm_outputs
         elif output_modality == "video" and self.enable_decoders:
-            # Project LLM hidden states to video decoder
             video_embeds = self.video_proj_out(llm_outputs.last_hidden_state)
             return self.video_decoder(video_embeds)
         elif output_modality == "speech" and self.enable_decoders:
-            # Project LLM hidden states to speech decoder
             speech_embeds = self.speech_proj_out(llm_outputs.last_hidden_state)
             return self.speech_decoder(speech_embeds)
         else:
             return llm_outputs
+            
+    def save_pretrained(self, path):
+         self.llm.save_pretrained(f"{path}/llm")
+         if self.inject_vision:
+             torch.save(self.vision_connector.state_dict(), f"{path}/vision_adapter.pt")
+         if self.inject_audio:
+             torch.save(self.audio_connector.state_dict(), f"{path}/audio_adapter.pt")
+
+# ═══════════════════════════════════════════════════════════════
+# SMART DETECTING FACTORY
+# ═══════════════════════════════════════════════════════════════
+
+from transformers import Qwen2Config
+
+class OmniMultimodalLM(nn.Module):
+    def __init__(self, llm_name: str, **kwargs):
+        super().__init__()
+        print(f"\n🧠 INTELLIGENT MODEL LOAD: {llm_name}")
+        
+        # 1. Analyze Config for Capabilities
+        self.capabilities = {"vision": False, "audio": False}
+        self.native_input_keys = {"vision": "images", "audio": "audios"} # Defaults for Qwen
+        
+        try:
+            config = AutoConfig.from_pretrained(llm_name, trust_remote_code=True)
+            self.capabilities["vision"] = hasattr(config, "vision_config") or "vision" in str(config).lower()
+            self.capabilities["audio"] = hasattr(config, "audio_config") or "audio" in str(config).lower()
+            
+            # Special check for Qwen-Omni series
+            if config.architectures and "Omni" in config.architectures[0]:
+                 self.capabilities["vision"] = True
+                 self.capabilities["audio"] = True
+                 
+            print(f"  🔍 Detected Native Capabilities: {self.capabilities}")
+            
+        except Exception:
+            print("  ⚠️ Only Basic Config Detected.")
+
+        # 2. Attempt Native Load
+        base_model = None
+        native_success = False
+        
+        try:
+            # Try loading as is (Native)
+            base_model = AutoModelForCausalLM.from_pretrained(
+                llm_name, 
+                device_map="auto", 
+                trust_remote_code=True,
+                low_cpu_mem_usage=True
+            )
+            native_success = True
+            print("  ✅ Base Model Loaded Successfully (Native/Text).")
+            
+        except Exception as e:
+            print(f"  ❌ Native Load Failed: {e}")
+            print("  ⚠️ Fallback: Performing Architecture Transplantation (Omni -> Qwen2 Native)...")
+            
+            try:
+                # TRANSPLANTATION: Create a healthy Qwen2 body for the weights
+                original_config = AutoConfig.from_pretrained(llm_name, trust_remote_code=True)
+                
+                # Helper to dig for config attributes in nested Omni structure
+                def get_cfg_attr(cfg, attr, default=None):
+                    # Check root
+                    val = getattr(cfg, attr, None)
+                    if val is not None: return val
+                    # Check thinker_config.text_config (Omni standard)
+                    if hasattr(cfg, "thinker_config") and hasattr(cfg.thinker_config, "text_config"):
+                         val = getattr(cfg.thinker_config.text_config, attr, None)
+                         if val is not None: return val
+                    return default
+
+                # Copy critical architectural genes
+                vocab_size = get_cfg_attr(original_config, "vocab_size", 152064)
+                hidden_size = get_cfg_attr(original_config, "hidden_size", 3584)
+                
+                compatible_config = Qwen2Config(
+                    vocab_size=vocab_size,
+                    hidden_size=hidden_size,
+                    intermediate_size=get_cfg_attr(original_config, "intermediate_size", 18944),
+                    num_hidden_layers=get_cfg_attr(original_config, "num_hidden_layers", 28),
+                    num_attention_heads=get_cfg_attr(original_config, "num_attention_heads", 28),
+                    num_key_value_heads=get_cfg_attr(original_config, "num_key_value_heads", 4),
+                    max_position_embeddings=get_cfg_attr(original_config, "max_position_embeddings", 32768),
+                    rms_norm_eps=get_cfg_attr(original_config, "rms_norm_eps", 1e-6),
+                    tie_word_embeddings=False, 
+                    torch_dtype="float16"
+                )
+                
+                # CRITICAL: Preserve Quantization Config to avoid blowing up RAM (loading Int4 as FP16)
+                if hasattr(original_config, "quantization_config"):
+                    compatible_config.quantization_config = original_config.quantization_config
+                    print(f"  💾 Preserved Quantization Config: {compatible_config.quantization_config.get('quant_method', 'unknown')}")
+                
+                print(f"  🧬 Synthesized Compatible Config: Qwen2Config (Vocab={vocab_size}, L={compatible_config.num_hidden_layers}, H={compatible_config.hidden_size})")
+                
+                # Load weights into the compatible shell
+                # We rely on default permissive loading to ignore the extra "thinker/talker" keys
+                base_model = AutoModelForCausalLM.from_pretrained(
+                    llm_name, 
+                    config=compatible_config,
+                    device_map="auto", 
+                    trust_remote_code=True,
+                    low_cpu_mem_usage=True
+                )
+                
+                # Since we transplanted, we effectively stripped native capabilities
+                self.capabilities["vision"] = False
+                self.capabilities["audio"] = False
+                print("  ✅ Transplantation Successful! Loaded as Text-Only Qwen2 Backbone.")
+                
+            except Exception as e2:
+                print(f"  ❌ Transplantation Failed: {e2}")
+                raise e2
+
+        # 3. Determine Injections
+        inject_vision = not self.capabilities["vision"]
+        inject_audio = not self.capabilities["audio"]
+        
+        print(f"  🛠️  Final Architecture Plan:")
+        print(f"      - Vision: Native={self.capabilities['vision']} -> Inject={inject_vision}")
+        print(f"      - Audio:  Native={self.capabilities['audio']}  -> Inject={inject_audio}")
+
+        # 4. Wrap
+        self.wrapper = ModularMultimodalWrapper(
+            base_model=base_model,
+            inject_vision=inject_vision,
+            inject_audio=inject_audio,
+            llm_dim=base_model.config.hidden_size,
+            **kwargs
+        )
+        
+    def forward(self, *args, **kwargs):
+        return self.wrapper(*args, **kwargs)
 
     def save_pretrained(self, path):
-        self.llm.save_pretrained(f"{path}/llm")
-        torch.save(self.vision_resampler.state_dict(), f"{path}/vision_adapter.pt")
-        torch.save(self.audio_resampler.state_dict(), f"{path}/audio_adapter.pt")
+        self.wrapper.save_pretrained(path)
+        
+    def get_input_schema(self):
+        """
+        Returns the data schema required by this specific model instance.
+        Used by the Trainer to prepare batches dynamically.
+        """
+        schema = {
+            "requires_vision_input": True, # We always want vision data available
+            "requires_audio_input": True,  # We always want audio data available
+            "vision_key": "pixel_values" if getattr(self.wrapper, "inject_vision", False) else self.native_input_keys["vision"],
+            "audio_key": "audio_features" if getattr(self.wrapper, "inject_audio", False) else self.native_input_keys["audio"],
+            "text_key": "input_ids"
+        }
+        return schema
