@@ -4,6 +4,5 @@ antigravity-skills-agents-kit/
 .agent/
 base-model/
 conversation/
-llm-dataset-resources/
 logs/
 offload-cache/
