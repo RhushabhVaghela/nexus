@@ -179,6 +179,8 @@ def main():
     parser.add_argument("--stage", type=int, choices=[1, 2], default=1, help="1=Projectors Only, 2=Full Model")
     parser.add_argument("--data-path", required=True)
     parser.add_argument("--output-dir", default=CONFIG["output_dir"])
+    parser.add_argument("--deepspeed", type=str, default=None, help="DeepSpeed config path")
+    parser.add_argument("--local_rank", type=int, default=-1, help="Local rank for distributed training")
     args = parser.parse_args()
     
     # Enforce 'manus' conda environment
@@ -191,25 +193,31 @@ def main():
         "Schema": "Unified Messages (Native)"
     })
     
-    # 1. Dataset
+    # 1. Dataset - Use unified loader for maximum training data
     if CONFIG.get("use_emm1", False):
-        logger.info("Using E-MM1-100M dataset")
-        from multimodal.datasets.emm1_loader import EMM1Dataset
-        dataset = EMM1Dataset(
-            data_dir="/mnt/e/data/downloaded/E-MM1-100M/data",
-            shard_indices=CONFIG.get("emm1_shards", [1]),
-            sample_limit=1000  # Start with 1k samples for testing
+        logger.info("Using Unified Multi-Dataset Loader (E-MM1 + Manual Datasets)")
+        from multimodal.datasets.unified_loader import UnifiedMultiDatasetLoader
+        dataset = UnifiedMultiDatasetLoader(
+            sample_limit_per_dataset=0  # No limit - use all available data
         )
+        logger.info(f"Loaded {len(dataset):,} total samples from all datasets")
     else:
         logger.info(f"Using custom JSONL dataset: {args.data_path}")
         dataset = OmniDataset(args.data_path)
     
-    # 2. Initialize Omni Model
+    # 2. Initialize Omni Model with CPU offloading for 16GB VRAM
+    logger.info("Initializing model with memory optimization (16GB VRAM + 32GB RAM)...")
     model = OmniMultimodalLM(
         llm_name=CONFIG["base_model"],
         vision_name=CONFIG["vision_model"],
-        audio_name=CONFIG["audio_model"]
+        audio_name=CONFIG["audio_model"],
+        device_map="auto",  # Hybrid CPU/GPU
+        load_in_8bit=True    # Quantize frozen models
     )
+    
+    logger.info("Memory allocation:")
+    logger.info("  GPU: DFM connectors + decoders (~14GB)")
+    logger.info("  CPU: Frozen LLM + encoders (~18GB)")
     
     # 3. Training Config (Rolling Checkpoints)
     training_args = TrainingArguments(

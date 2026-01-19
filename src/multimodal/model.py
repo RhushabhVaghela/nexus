@@ -176,13 +176,36 @@ class OmniMultimodalLM(nn.Module):
         vision_name: str = "google/siglip-so400m-patch14-512",
         audio_name: str = "openai/whisper-large-v3-turbo",
         enable_decoders: bool = True,
-        use_dfm: bool = True  # NEW: Use DFM connector for SOTA performance
+        use_dfm: bool = True,
+        device_map: str = "auto",  # NEW: CPU/GPU hybrid
+        load_in_8bit: bool = True   # NEW: Quantization for memory
     ):
         super().__init__()
         
-        # LLM
+        # LLM with CPU offloading + quantization
         print(f"Loading Base LLM: {llm_name}")
-        self.llm = AutoModelForCausalLM.from_pretrained(llm_name, torch_dtype=torch.float16, trust_remote_code=True)
+        if load_in_8bit:
+            print("  Using 4-bit quantization for ultra speed (QLoRA)")
+            from transformers import BitsAndBytesConfig
+            quantization_config = BitsAndBytesConfig(
+                load_in_4bit=True,  # 4-bit instead of 8-bit
+                bnb_4bit_compute_dtype=torch.float16,
+                bnb_4bit_quant_type="nf4",  # NormalFloat4
+                bnb_4bit_use_double_quant=True  # Double quantization
+            )
+            self.llm = AutoModelForCausalLM.from_pretrained(
+                llm_name, 
+                device_map="cpu",
+                quantization_config=quantization_config,
+                trust_remote_code=True
+            )
+        else:
+            self.llm = AutoModelForCausalLM.from_pretrained(
+                llm_name, 
+                dtype=torch.float16, 
+                device_map=device_map,
+                trust_remote_code=True
+            )
         self.llm_dim = self.llm.config.hidden_size
         
         # Encoders
