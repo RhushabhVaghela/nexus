@@ -43,6 +43,7 @@ MODALITY="vision"
 STAGE=1
 TEACHER="mock-teacher"
 LIMIT=1000
+SAMPLE_SIZE=0
 
 for arg in "$@"; do
     case $arg in
@@ -50,6 +51,7 @@ for arg in "$@"; do
         --stage=*) STAGE="${arg#*=}" ;;
         --teacher=*) TEACHER="${arg#*=}" ;;
         --limit=*) LIMIT="${arg#*=}" ;;
+        --sample-size=*) SAMPLE_SIZE="${arg#*=}" ;;
     esac
 done
 
@@ -64,13 +66,13 @@ log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 # 1. DOWNLOAD
 run_download() {
     log_info "Phase 1: Download Multimodal Data (Limit: ${LIMIT})..."
-    python3 "${SRC_DIR}/22_multimodal_pipeline.py" --phase download --limit "${LIMIT}" 2>&1 | tee "${LOG_DIR}/22_multimodal_dl.log"
+    python "${SRC_DIR}/22_multimodal_pipeline.py" --phase download --limit "${LIMIT}" 2>&1 | tee "${LOG_DIR}/22_multimodal_dl.log"
 }
 
 # 2. DISTILL
 run_distill() {
     log_info "Phase 2: Distill Data (Teacher: ${TEACHER}, Modality: ${MODALITY})..."
-    python3 "${SRC_DIR}/23_multimodal_distillation.py" \
+    python "${SRC_DIR}/23_multimodal_distillation.py" \
         --modality "${MODALITY}" \
         --teacher "${TEACHER}" \
         2>&1 | tee "${LOG_DIR}/23_distill_${MODALITY}.log"
@@ -79,12 +81,13 @@ run_distill() {
 # 3. TRAIN
 run_train() {
     # Determine data path based on modality default
-    DATA_PATH="/mnt/e/data/distilled_multimodal/${MODALITY}_distilled.jsonl"
+    DATA_PATH="/mnt/e/data/downloaded"
     
     log_info "Phase 3: Train Omni-Modal Model (Stage: ${STAGE})..."
-    python3 "${SRC_DIR}/24_multimodal_training.py" \
+    python "${SRC_DIR}/24_multimodal_training.py" \
         --stage "${STAGE}" \
         --data-path "${DATA_PATH}" \
+        --sample-size "${SAMPLE_SIZE}" \
         2>&1 | tee "${LOG_DIR}/24_train_stage${STAGE}.log"
 }
 

@@ -64,14 +64,59 @@ manus_model/
 - **Memory Efficient**: Fits 16GB VRAM + 32GB RAM
 - **Auto Train/Val/Test**: 80/10/10 splits automatic
 
-## 📊 Training Scripts
+## � Pipeline Usage
 
-| Script | Samples | Time | Accuracy |
-|:-------|:--------|:-----|:---------|
-| `train_1K_ultra.sh` | 1K | 10 min | ~70% |
-| `train_100K_ultra.sh` | 100K | 3 hours | ~88% |
-| `train_5M_ultra.sh` ⭐ | 5M | 6 days | ~94% |
-| `train_FULL_ultra.sh` | 100M+ | 116 days | ~97.5% |
+The project uses two master shell scripts to handle the entire lifecycle.
+
+### 1. Multimodal Pipeline (Vision/Audio/Video)
+
+Use this for training the Omni-Modal model (Connectors, Projectors, Full Fine-tuning).
+
+```bash
+./run_multimodal_pipeline.sh [PHASE] [OPTIONS]
+```
+
+**Phases:**
+
+- `download`: Download raw datasets (Script 22).
+- `distill`: Run teacher distillation (Script 23).
+- `train`: Run training loop (Script 24).
+- `all`: Run full sequence (**Default**).
+
+**Options (Flags)**
+
+| Flag | Description | Valid Values | Default |
+| :--- | :--- | :--- | :--- |
+| `--modality` | Data type to process | `vision`, `audio`, `video` | `vision` |
+| `--stage` | Training configuration | `1` (Projectors), `2` (Full Model) | `1` |
+| `--sample-size` | **Limit samples per dataset** | Any Integer (e.g. `50`) | `0` (All) |
+| `--limit` | Download limit (HuggingFace) | Any Integer | `1000` |
+| `--teacher` | Teacher model for labelling | `mock-teacher`, `gpt-4v` | `mock-teacher` |
+
+**Example:**
+
+```bash
+# Train Stage 1 with only 50 samples per dataset (Fast Test)
+./run_multimodal_pipeline.sh train --stage=1 --sample-size=50
+```
+
+### 2. Text/Code Pipeline (SFT/RLHF)
+
+Use this for standard LLM fine-tuning (Text, Code, Reasoning).
+
+```bash
+./run_pipeline.sh [PHASE] [OPTIONS]
+```
+
+**Phases:** `download`, `process`, `validate`, `train`, `all`.
+
+**Options (Flags)**
+
+| Flag | Description | Valid Values | Default |
+| :--- | :--- | :--- | :--- |
+| `--mode` | Safety alignment mode | `censored`, `uncensored` | `censored` |
+| `--sample-size` | Download limit | Any Integer | `200000` |
+| `--target-samples` | Premium data limit | Any Integer | `100000` |
 
 ## 🛠 Setup
 

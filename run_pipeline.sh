@@ -45,11 +45,13 @@ LOG_DIR="${PROJECT_DIR}/logs"
 PHASE="${1:-all}"
 MODE="censored"
 TARGET_SAMPLES=100000
+SAMPLE_SIZE=200000 # Default limit from python script
 
 for arg in "$@"; do
     case $arg in
         --mode=*) MODE="${arg#*=}" ;;
         --target-samples=*) TARGET_SAMPLES="${arg#*=}" ;;
+        --sample-size=*) SAMPLE_SIZE="${arg#*=}" ;;
     esac
 done
 
@@ -68,7 +70,7 @@ log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 run_download() {
     log_info "Phase 1: Downloading text datasets..."
     
-    python "${SRC_DIR}/01_download_real_datasets.py" 2>&1 | tee "${LOG_DIR}/01_download.log"
+    python "${SRC_DIR}/01_download_real_datasets.py" --limit="${SAMPLE_SIZE}" 2>&1 | tee "${LOG_DIR}/01_download.log"
     python "${SRC_DIR}/02_download_benchmarks.py" 2>&1 | tee "${LOG_DIR}/02_benchmarks.log"
     python "${SRC_DIR}/03_load_premium_datasets.py" --mode="${MODE}" --target-samples="${TARGET_SAMPLES}" 2>&1 | tee "${LOG_DIR}/03_premium.log"
     

@@ -37,8 +37,8 @@ mkdir -p /mnt/e/models/omni_500K_ultra
 mkdir -p logs
 mkdir -p results
 
-export CUDA_VISIBLE_DEVICES=0
-export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
+# DeepSpeed manages GPU allocation, no need to set CUDA_VISIBLE_DEVICES
+export PYTORCH_ALLOC_CONF=max_split_size_mb:512
 
 echo -e "${BLUE}📊 Starting training...${NC}"
 START_TIME=$(date +%s)

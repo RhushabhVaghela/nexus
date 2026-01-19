@@ -107,10 +107,20 @@ class FeedForward(nn.Module):
 
 class VisionEncoder(nn.Module):
     """SigLIP 2 Vision Encoder (Feb 2025)"""
-    def __init__(self, model_name="google/siglip-so400m-patch14-512", output_dim=1152):
+    def __init__(self, model_name="google/siglip-so400m-patch14-512", output_dim=1152, load_in_8bit=False):
         super().__init__()
         print(f"Loading Vision Encoder: {model_name}")
-        self.encoder = AutoModel.from_pretrained(model_name, trust_remote_code=True)
+        if load_in_8bit:
+            from transformers import BitsAndBytesConfig
+            bnb_config = BitsAndBytesConfig(load_in_8bit=True)
+            self.encoder = AutoModel.from_pretrained(
+                model_name, 
+                quantization_config=bnb_config,
+                device_map="auto",
+                trust_remote_code=True
+            )
+        else:
+            self.encoder = AutoModel.from_pretrained(model_name, trust_remote_code=True)
         self.output_dim = output_dim
         for param in self.encoder.parameters():
             param.requires_grad = False
@@ -121,10 +131,20 @@ class VisionEncoder(nn.Module):
 
 class AudioEncoder(nn.Module):
     """Whisper Large V3 Turbo Audio Encoder"""
-    def __init__(self, model_name="openai/whisper-large-v3-turbo", output_dim=1280):
+    def __init__(self, model_name="openai/whisper-large-v3-turbo", output_dim=1280, load_in_8bit=False):
         super().__init__()
         print(f"Loading Audio Encoder: {model_name}")
-        self.encoder = WhisperModel.from_pretrained(model_name).encoder
+        if load_in_8bit:
+            from transformers import BitsAndBytesConfig
+            bnb_config = BitsAndBytesConfig(load_in_8bit=True)
+            whisper_model = WhisperModel.from_pretrained(
+                model_name,
+                quantization_config=bnb_config,
+                device_map="auto"
+            )
+            self.encoder = whisper_model.encoder
+        else:
+            self.encoder = WhisperModel.from_pretrained(model_name).encoder
         self.output_dim = output_dim
         for param in self.encoder.parameters():
             param.requires_grad = False
@@ -177,56 +197,77 @@ class OmniMultimodalLM(nn.Module):
         audio_name: str = "openai/whisper-large-v3-turbo",
         enable_decoders: bool = True,
         use_dfm: bool = True,
-        device_map: str = "auto",  # NEW: CPU/GPU hybrid
-        load_in_8bit: bool = True   # NEW: Quantization for memory
+        device_map: str = "auto",  # Kept for compatibility (ignored)
+        load_in_8bit: bool = True   # Kept for compatibility (ignored)
     ):
         super().__init__()
         
-        # LLM with CPU offloading + quantization
+        # LLM loading - Standard Efficient Loading
+        # We rely on 'device_map="auto"' to handle offloading and 'trust_remote_code=True'
+        # to handle the custom Qwen2.5-Omni architecture correctly.
         print(f"Loading Base LLM: {llm_name}")
-        if load_in_8bit:
-            print("  Using 4-bit quantization for ultra speed (QLoRA)")
-            from transformers import BitsAndBytesConfig
-            quantization_config = BitsAndBytesConfig(
-                load_in_4bit=True,  # 4-bit instead of 8-bit
-                bnb_4bit_compute_dtype=torch.float16,
-                bnb_4bit_quant_type="nf4",  # NormalFloat4
-                bnb_4bit_use_double_quant=True  # Double quantization
-            )
-            self.llm = AutoModelForCausalLM.from_pretrained(
-                llm_name, 
-                device_map="cpu",
-                quantization_config=quantization_config,
-                trust_remote_code=True
-            )
-        else:
-            self.llm = AutoModelForCausalLM.from_pretrained(
-                llm_name, 
-                dtype=torch.float16, 
-                device_map=device_map,
-                trust_remote_code=True
-            )
+        print("  Strategy: specific device_map='auto' for efficiency")
+        
+        # Determine device map based on available memory
+        # This will automatically use CPU offload if GPU is full
+        
+        # Try to use specific Qwen2.5 Omni class to bypass AutoModel registry issues
+        try:
+            from transformers import Qwen2_5OmniForConditionalGeneration
+            ModelClass = Qwen2_5OmniForConditionalGeneration
+            print("  ✓ Dectected Qwen2.5 Omni: Using native class (bypassing AutoModel registry)")
+        except ImportError:
+            ModelClass = AutoModelForCausalLM
+            print("  Using AutoModelForCausalLM (Standard)")
+        
+        self.llm = ModelClass.from_pretrained(
+            llm_name,
+            device_map="auto",
+            trust_remote_code=True,
+            torch_dtype=torch.float16,
+            low_cpu_mem_usage=True
+        )
+        
+        # Enable gradient checkpointing for memory efficiency during training
+        if hasattr(self.llm, "gradient_checkpointing_enable"):
+            self.llm.gradient_checkpointing_enable()
+            
         self.llm_dim = self.llm.config.hidden_size
         
-        # Encoders
-        self.vision_encoder = VisionEncoder(model_name=vision_name)
-        self.audio_encoder = AudioEncoder(model_name=audio_name)
+        print(f"  ✓ LLM loaded: {sum(p.numel() for p in self.llm.parameters())/1e9:.2f}B parameters")
+        if hasattr(self.llm, 'hf_device_map'):
+            gpu_layers = sum(1 for v in self.llm.hf_device_map.values() if v == 0)
+            cpu_layers = sum(1 for v in self.llm.hf_device_map.values() if v == 'cpu')
+            print(f"  ✓ Device map: {gpu_layers} layers GPU, {cpu_layers} layers CPU")
+        if torch.cuda.is_available():
+            print(f"  ✓ GPU memory: {torch.cuda.memory_allocated(0)/1e9:.2f}GB")
         
-        # Input Projections (encoder → LLM)
-        self.vision_proj = nn.Linear(self.vision_encoder.output_dim, self.llm_dim)
-        self.audio_proj = nn.Linear(self.audio_encoder.output_dim, self.llm_dim)
         
-        # Connectors (DFM for SOTA or Perceiver for fallback)
+        # Encoders - Load in 8-bit to save GPU memory
+        print("  Loading encoders in 8-bit...")
+        self.vision_encoder = VisionEncoder(model_name=vision_name, load_in_8bit=True)
+        self.audio_encoder = AudioEncoder(model_name=audio_name, load_in_8bit=True)
+        
+        print(f"  ✓ Encoders loaded (8-bit quantized)")
+        if torch.cuda.is_available():
+            print(f"  ✓ Total GPU memory: {torch.cuda.memory_allocated(0)/1e9:.2f}GB")
+        
+        # Input Projections (encoder → LLM) - Force GPU
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.vision_proj = nn.Linear(self.vision_encoder.output_dim, self.llm_dim).to(device)
+        self.audio_proj = nn.Linear(self.audio_encoder.output_dim, self.llm_dim).to(device)
+        
+        # Connectors (DFM for SOTA or Perceiver for fallback) - Force GPU
         self.use_dfm = use_dfm and DFM_AVAILABLE
         if self.use_dfm:
-            print(f"Using DFM Connectors (SOTA) with {num_latents} latents...")
+            print(f"Using DFM Connectors (SOTA) with {num_latents} latents on GPU...")
             from .connectors.dfm import DFMConnector
-            self.vision_connector = DFMConnector(dim=self.llm_dim, num_latents=num_latents)
-            self.audio_connector = DFMConnector(dim=self.llm_dim, num_latents=num_latents)
+            self.vision_connector = DFMConnector(dim=self.llm_dim, num_latents=num_latents).to(device)
+            self.audio_connector = DFMConnector(dim=self.llm_dim, num_latents=num_latents).to(device)
         else:
-            print(f"Using Perceiver Resamplers with {num_latents} latents...")
-            self.vision_connector = PerceiverResampler(dim=self.llm_dim, num_latents=num_latents)
-            self.audio_connector = PerceiverResampler(dim=self.llm_dim, num_latents=num_latents)
+            print(f"Using Perceiver Resamplers with {num_latents} latents on GPU...")
+            self.vision_connector = PerceiverResampler(dim=self.llm_dim, num_latents=num_latents).to(device)
+            self.audio_connector = PerceiverResampler(dim=self.llm_dim, num_latents=num_latents).to(device)
         
         # Decoders (for any-to-any)
         self.enable_decoders = enable_decoders
@@ -234,9 +275,11 @@ class OmniMultimodalLM(nn.Module):
             self.video_decoder = VideoDecoder()
             self.speech_decoder = SpeechDecoder()
             
-            # Output Projections (LLM → decoder)
-            self.video_proj_out = nn.Linear(self.llm_dim, self.video_decoder.hidden_dim)
-            self.speech_proj_out = nn.Linear(self.llm_dim, self.speech_decoder.hidden_dim)
+            # Output Projections (LLM → decoder) - Force GPU
+            self.video_proj_out = nn.Linear(self.llm_dim, self.video_decoder.hidden_dim).to(device)
+            self.speech_proj_out = nn.Linear(self.llm_dim, self.speech_decoder.hidden_dim).to(device)
+        
+        print(f"✅ Model loaded! GPU usage: {torch.cuda.memory_allocated(0)/1e9:.2f}GB / {torch.cuda.get_device_properties(0).total_memory/1e9:.2f}GB")
 
     def encode_vision(self, images):
         features = self.vision_encoder(images)
