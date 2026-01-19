@@ -181,6 +181,9 @@ def main():
     parser.add_argument("--output-dir", default=CONFIG["output_dir"])
     parser.add_argument("--deepspeed", type=str, default=None, help="DeepSpeed config path")
     parser.add_argument("--local_rank", type=int, default=-1, help="Local rank for distributed training")
+    parser.add_argument("--sample-size", type=int, default=0, help="Total samples to use (0=all)")
+    parser.add_argument("--experiment-name", type=str, default="", help="Experiment name for logs")
+    parser.add_argument("--log-results", action="store_true", help="Log results to CSV")
     args = parser.parse_args()
     
     # Enforce 'manus' conda environment
@@ -193,17 +196,26 @@ def main():
         "Schema": "Unified Messages (Native)"
     })
     
-    # 1. Dataset - Use unified loader for maximum training data
-    if CONFIG.get("use_emm1", False):
-        logger.info("Using Unified Multi-Dataset Loader (E-MM1 + Manual Datasets)")
-        from multimodal.datasets.unified_loader import UnifiedMultiDatasetLoader
-        dataset = UnifiedMultiDatasetLoader(
-            sample_limit_per_dataset=0  # No limit - use all available data
-        )
-        logger.info(f"Loaded {len(dataset):,} total samples from all datasets")
-    else:
-        logger.info(f"Using custom JSONL dataset: {args.data_path}")
-        dataset = OmniDataset(args.data_path)
+    # 1. Dataset - Load with train/val/test splits
+    logger.info("Loading datasets with train/val/test splits...")
+    from multimodal.datasets.split_loader import SplitDatasetLoader
+    
+    train_dataset = SplitDatasetLoader(
+        split="train",
+        total_samples=args.sample_size if args.sample_size > 0 else 0
+    )
+    val_dataset = SplitDatasetLoader(
+        split="val",
+        total_samples=int(args.sample_size * 0.1) if args.sample_size > 0 else 0
+    )
+    test_dataset = SplitDatasetLoader(
+        split="test",
+        total_samples=int(args.sample_size * 0.1) if args.sample_size > 0 else 0
+    )
+    
+    logger.info(f"Train: {len(train_dataset):,} samples")
+    logger.info(f"Val: {len(val_dataset):,} samples")
+    logger.info(f"Test: {len(test_dataset):,} samples")
     
     # 2. Initialize Omni Model with CPU offloading for 16GB VRAM
     logger.info("Initializing model with memory optimization (16GB VRAM + 32GB RAM)...")
