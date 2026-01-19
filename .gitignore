@@ -6,7 +6,4 @@ base-model/
 conversation/
 llm-dataset-resources/
 logs/
-manus-documents/
 offload-cache/
-research-papers/
-
