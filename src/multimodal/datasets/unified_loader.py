@@ -42,11 +42,16 @@ class UnifiedMultiDatasetLoader:
             print(f"\n  Loading {name}...")
             try:
                 dataset = self._load_dataset(name, config, sample_limit_per_dataset)
-                if dataset and len(dataset) > 0:
+                if dataset:
                     self.datasets.append(dataset)
                     self.dataset_names.append(name)
-                    self.total_samples += len(dataset)
-                    print(f"    ✓ Loaded {len(dataset):,} samples")
+                    # Try to get length if possible, else just log
+                    try:
+                        d_len = len(dataset)
+                        self.total_samples += d_len
+                        print(f"    ✓ Loaded {d_len:,} samples (Estimated/Exact)")
+                    except (TypeError, NotImplementedError):
+                        print(f"    ✓ Loaded (Streaming Mode)")
             except Exception as e:
                 print(f"    ✗ Failed: {e}")
         

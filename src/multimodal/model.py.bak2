@@ -153,14 +153,6 @@ class AudioEncoder(nn.Module):
         outputs = self.encoder(audio_features)
         return outputs.last_hidden_state
 
-import warnings
-import logging
-# Suppress specific warnings
-warnings.filterwarnings("ignore", message=".*CUDA extension not installed.*")
-warnings.filterwarnings("ignore", message=".*Unrecognized keys in `rope_scaling`.*")
-warnings.filterwarnings("ignore", category=FutureWarning, module="auto_gptq")
-logging.getLogger("auto_gptq").setLevel(logging.ERROR)
-
 class VideoDecoder(nn.Module):
     """PaDT OVD 3B Video Decoder"""
     def __init__(self, model_name="/mnt/e/data/base-model/PaDT_OVD_3B"):
@@ -232,10 +224,9 @@ class OmniMultimodalLM(nn.Module):
             llm_name,
             device_map="auto",
             trust_remote_code=True,
-            dtype=torch.float16,
+            torch_dtype=torch.float16,
             low_cpu_mem_usage=True
         )
-
         
         # Enable gradient checkpointing for memory efficiency during training
         if hasattr(self.llm, "gradient_checkpointing_enable"):
