@@ -1,6 +1,5 @@
 .pytest_cache/
 .venv/
 __pycache__/
-base-model/
 logs/
 offload-cache/
