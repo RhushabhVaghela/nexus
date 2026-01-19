@@ -1,0 +1,74 @@
+# Training Configuration
+# Updated: 2026-01-18
+
+## Model Configuration
+model:
+  # Base model path (HuggingFace format, local)
+  base_model_path: "/mnt/d/Research Experiments/manus_model/base-model/gpt-oss-20b"
+  model_type: "huggingface"
+  model_size: "20b"
+  safetensors: true
+  
+## Data Paths
+data:
+  # Automated downloads (HF streaming via mm_download_unified.py)
+  automated_data_dir: "/mnt/d/Research Experiments/manus_model/data"
+  
+  # Manual downloads (raw datasets)
+  manual_data_dir: "/mnt/e/data/downloaded"
+  
+  # Unified output (processed manual datasets)
+  unified_output_dir: "/mnt/e/data/unified_multimodal"
+  
+  # Combined dataset paths for training
+  training_data_sources:
+    - "/mnt/d/Research Experiments/manus_model/data"  # Automated (HF)
+    - "/mnt/e/data/unified_multimodal"  # Manual processed
+
+## Dataset Registry
+
+### Automated Datasets (HF Streaming)
+automated_datasets:
+  premium_text:
+    - fineweb-edu
+    - cosmopedia
+    - code_alpaca
+  vision:
+    - websight
+  audio:
+    - librispeech
+  benchmarks:
+    - mmlu
+    - mmmu
+    - gsm8k
+    - scienceqa
+
+### Manual Datasets (Processed)
+manual_datasets:
+  benchmarks:
+    - mathvista  # AI4Math_MathVista
+  audio:
+    - common_voice  # Mozilla_Common-Voice
+  video:
+    - msr_vtt  # VLM2Vec_MSR-VTT
+    - vatex  # qingy2024_VaTeX
+
+## Training Parameters
+training:
+  batch_size: 8
+  learning_rate: 2e-5
+  num_epochs: 3
+  warmup_steps: 500
+  gradient_accumulation_steps: 4
+  
+  # Multimodal settings
+  vision_encoder: "siglip-2"
+  audio_encoder: "whisper-v3-turbo"
+  max_image_tokens: 256
+  max_audio_tokens: 512
+  
+## Output
+output:
+  model_save_dir: "/mnt/e/models/manus-omni"
+  checkpoint_dir: "/mnt/e/checkpoints/manus-omni"
+  logs_dir: "/mnt/d/Research Experiments/manus_model/logs"

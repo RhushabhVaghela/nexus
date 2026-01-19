@@ -14,6 +14,13 @@ from transformers import (
     AutoModelForCausalLM
 )
 
+try:
+    from .connectors.dfm import DFMConnector
+    DFM_AVAILABLE = True
+except ImportError:
+    DFM_AVAILABLE = False
+    print("⚠️  DFM connector not available, using Perceiver Resampler")
+
 # ═══════════════════════════════════════════════════════════════
 # PERCEIVER RESAMPLER
 # ═══════════════════════════════════════════════════════════════
@@ -126,6 +133,36 @@ class AudioEncoder(nn.Module):
         outputs = self.encoder(audio_features)
         return outputs.last_hidden_state
 
+class VideoDecoder(nn.Module):
+    """PaDT OVD 3B Video Decoder"""
+    def __init__(self, model_name="/mnt/d/Research Experiments/manus_model/base-model/PaDT_OVD_3B"):
+        super().__init__()
+        print(f"Loading Video Decoder: {model_name}")
+        self.decoder = AutoModel.from_pretrained(model_name, trust_remote_code=True)
+        self.hidden_dim = self.decoder.config.hidden_size
+        # Freeze initially, will unfreeze in training
+        for param in self.decoder.parameters():
+            param.requires_grad = False
+    
+    def forward(self, embeddings):
+        """Convert LLM embeddings to video frames"""
+        return self.decoder.generate(embeddings)
+
+class SpeechDecoder(nn.Module):
+    """Parakeet TDT Speech Decoder"""
+    def __init__(self, model_name="/mnt/d/Research Experiments/manus_model/base-model/parakeet-tdt-0.6b-v3"):
+        super().__init__()
+        print(f"Loading Speech Decoder: {model_name}")
+        self.decoder = AutoModel.from_pretrained(model_name, trust_remote_code=True)
+        self.hidden_dim = self.decoder.config.hidden_size if hasattr(self.decoder.config, 'hidden_size') else 768
+        # Freeze initially
+        for param in self.decoder.parameters():
+            param.requires_grad = False
+    
+    def forward(self, embeddings):
+        """Convert LLM embeddings to speech audio"""
+        return self.decoder.generate(embeddings)
+
 # ═══════════════════════════════════════════════════════════════
 # OMNI MODEL
 # ═══════════════════════════════════════════════════════════════
@@ -137,7 +174,9 @@ class OmniMultimodalLM(nn.Module):
         llm_dim: int = 4096,
         num_latents: int = 64,
         vision_name: str = "google/siglip-so400m-patch14-512",
-        audio_name: str = "openai/whisper-large-v3-turbo"
+        audio_name: str = "openai/whisper-large-v3-turbo",
+        enable_decoders: bool = True,
+        use_dfm: bool = True  # NEW: Use DFM connector for SOTA performance
     ):
         super().__init__()
         
@@ -150,28 +189,56 @@ class OmniMultimodalLM(nn.Module):
         self.vision_encoder = VisionEncoder(model_name=vision_name)
         self.audio_encoder = AudioEncoder(model_name=audio_name)
         
-        # Projections
+        # Input Projections (encoder → LLM)
         self.vision_proj = nn.Linear(self.vision_encoder.output_dim, self.llm_dim)
         self.audio_proj = nn.Linear(self.audio_encoder.output_dim, self.llm_dim)
         
-        # Resamplers
-        print(f"Initializing Perceiver Resamplers ({num_latents} latents)...")
-        self.vision_resampler = PerceiverResampler(dim=self.llm_dim, num_latents=num_latents)
-        self.audio_resampler = PerceiverResampler(dim=self.llm_dim, num_latents=num_latents)
+        # Connectors (DFM for SOTA or Perceiver for fallback)
+        self.use_dfm = use_dfm and DFM_AVAILABLE
+        if self.use_dfm:
+            print(f"Using DFM Connectors (SOTA) with {num_latents} latents...")
+            from .connectors.dfm import DFMConnector
+            self.vision_connector = DFMConnector(dim=self.llm_dim, num_latents=num_latents)
+            self.audio_connector = DFMConnector(dim=self.llm_dim, num_latents=num_latents)
+        else:
+            print(f"Using Perceiver Resamplers with {num_latents} latents...")
+            self.vision_connector = PerceiverResampler(dim=self.llm_dim, num_latents=num_latents)
+            self.audio_connector = PerceiverResampler(dim=self.llm_dim, num_latents=num_latents)
+        
+        # Decoders (for any-to-any)
+        self.enable_decoders = enable_decoders
+        if enable_decoders:
+            self.video_decoder = VideoDecoder()
+            self.speech_decoder = SpeechDecoder()
+            
+            # Output Projections (LLM → decoder)
+            self.video_proj_out = nn.Linear(self.llm_dim, self.video_decoder.hidden_dim)
+            self.speech_proj_out = nn.Linear(self.llm_dim, self.speech_decoder.hidden_dim)
 
     def encode_vision(self, images):
         features = self.vision_encoder(images)
         features = self.vision_proj(features)
-        tokens = self.vision_resampler(features)
+        if self.use_dfm:
+            tokens, _ = self.vision_connector(features)
+        else:
+            tokens = self.vision_connector(features)
         return tokens
 
     def encode_audio(self, audio_features):
         features = self.audio_encoder(audio_features)
         features = self.audio_proj(features)
-        tokens = self.audio_resampler(features)
+        if self.use_dfm:
+            tokens, _ = self.audio_connector(features)
+        else:
+            tokens = self.audio_connector(features)
         return tokens
 
-    def forward(self, input_ids, pixel_values=None, audio_features=None, **kwargs):
+    def forward(self, input_ids, pixel_values=None, audio_features=None, output_modality="text", **kwargs):
+        """Forward pass with any-to-any support.
+        
+        Args:
+            output_modality: "text" | "video" | "speech" - target output modality
+        """
         text_embeds = self.llm.get_input_embeddings()(input_ids)
         multimodal_embeds = []
         
@@ -186,8 +253,23 @@ class OmniMultimodalLM(nn.Module):
             all_embeds = torch.cat(multimodal_embeds + [text_embeds], dim=1)
         else:
             all_embeds = text_embeds
-            
-        return self.llm(inputs_embeds=all_embeds, **kwargs)
+        
+        # Get LLM outputs
+        llm_outputs = self.llm(inputs_embeds=all_embeds, **kwargs)
+        
+        # Route to appropriate decoder
+        if output_modality == "text":
+            return llm_outputs
+        elif output_modality == "video" and self.enable_decoders:
+            # Project LLM hidden states to video decoder
+            video_embeds = self.video_proj_out(llm_outputs.last_hidden_state)
+            return self.video_decoder(video_embeds)
+        elif output_modality == "speech" and self.enable_decoders:
+            # Project LLM hidden states to speech decoder
+            speech_embeds = self.speech_proj_out(llm_outputs.last_hidden_state)
+            return self.speech_decoder(speech_embeds)
+        else:
+            return llm_outputs
 
     def save_pretrained(self, path):
         self.llm.save_pretrained(f"{path}/llm")

@@ -1,8 +1,11 @@
-.agent
 .pytest_cache
 .venv
+.agent
+logs
 antigravity-skills-agents-kit
 conversation
 llm-dataset-resources
-logs
 base-model
+checkpoints
+research-papers
+__pycache__

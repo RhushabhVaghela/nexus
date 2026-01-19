@@ -70,10 +70,12 @@ from utils.logging_config import setup_logger, log_header, log_completion
 logger = setup_logger(__name__, "logs/multimodal_training.log")
 
 CONFIG = {
-    "base_model": "openai/gpt-oss-20b",
-    "vision_model": "google/siglip-so400m-patch14-384",
-    "audio_model": "openai/whisper-large-v3-turbo",
-    "output_dir": "/mnt/e/models/omnimodal_v1"
+    "base_model": "/mnt/d/Research Experiments/manus_model/base-model/gpt-oss-20b",
+    "vision_model": "/mnt/d/Research Experiments/manus_model/base-model/siglip2-so400m-patch16-512",
+    "audio_model": "/mnt/d/Research Experiments/ manus_model/base-model/whisper-large-v3-turbo",
+    "output_dir": "/mnt/e/models/omnimodal_any2any",
+    "use_emm1": True,  # NEW: Use E-MM1 dataset
+    "emm1_shards": [1, 2, 3],  # Use first 3 shards for faster training
 }
 
 class OmniDataset(Dataset):
@@ -190,7 +192,17 @@ def main():
     })
     
     # 1. Dataset
-    dataset = OmniDataset(args.data_path)
+    if CONFIG.get("use_emm1", False):
+        logger.info("Using E-MM1-100M dataset")
+        from multimodal.datasets.emm1_loader import EMM1Dataset
+        dataset = EMM1Dataset(
+            data_dir="/mnt/e/data/downloaded/E-MM1-100M/data",
+            shard_indices=CONFIG.get("emm1_shards", [1]),
+            sample_limit=1000  # Start with 1k samples for testing
+        )
+    else:
+        logger.info(f"Using custom JSONL dataset: {args.data_path}")
+        dataset = OmniDataset(args.data_path)
     
     # 2. Initialize Omni Model
     model = OmniMultimodalLM(
