@@ -1,0 +1,46 @@
+# Manus Model Training Pipeline - Task Tracker
+
+## Phase 1: Script Renaming & Path Restructuring
+- [x] Rename scripts to new logical order
+  - [x] [02_generate_trajectories.py](file:///mnt/d/Research%20Experiments/manus_model/02_generate_trajectories.py) → [01_generate_finetuned_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/01_generate_finetuned_dataset.py)
+  - [x] [03_validate_trajectories.py](file:///mnt/d/Research%20Experiments/manus_model/03_validate_trajectories.py) → [02_validate_finetuned_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/02_validate_finetuned_dataset.py)
+  - [x] [11_generate_repetitive_prompts.py](file:///mnt/d/Research%20Experiments/manus_model/11_generate_repetitive_prompts.py) → [03_generate_repetitive_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/03_generate_repetitive_dataset.py)
+  - [x] [12_validate_repetitive_prompts.py](file:///mnt/d/Research%20Experiments/manus_model/12_validate_repetitive_prompts.py) → [04_validate_repetitive_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/04_validate_repetitive_dataset.py)
+  - [x] [01_download_benchmarks.py](file:///mnt/d/Research%20Experiments/manus_model/01_download_benchmarks.py) → `05_download_benchmarks.py`
+  - [x] [04_sft_training.py](file:///mnt/d/Research%20Experiments/manus_model/04_sft_training.py) → [06_sft_training.py](file:///mnt/d/Research%20Experiments/manus_model/06_sft_training.py)
+  - [x] [05_rejection_sampling.py](file:///mnt/d/Research%20Experiments/manus_model/05_rejection_sampling.py) → `07_rejection_sampling.py`
+  - [x] [06_grpo_training.py](file:///mnt/d/Research%20Experiments/manus_model/06_grpo_training.py) → `08_grpo_training.py`
+  - [x] [07_tool_integration.py](file:///mnt/d/Research%20Experiments/manus_model/07_tool_integration.py) → `09_tool_integration.py`
+  - [x] [08_comprehensive_eval.py](file:///mnt/d/Research%20Experiments/manus_model/08_comprehensive_eval.py) → `10_comprehensive_eval.py`
+  - [x] [09_multi_agent_orchestration.py](file:///mnt/d/Research%20Experiments/manus_model/09_multi_agent_orchestration.py) → `11_multi_agent_orchestration.py`
+  - [x] [10_deployment_configs.py](file:///mnt/d/Research%20Experiments/manus_model/10_deployment_configs.py) → `12_deployment_configs.py`
+  - [x] Create `13_run_benchmarks.py`
+
+- [x] Update dataset paths to E: drive
+  - [x] Move `E:/datasets/` → `E:/finetuned-fullstack-dataset/`
+  - [x] Create `E:/repetitive-query-dataset/` structure
+  - [x] Update [01_generate_finetuned_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/01_generate_finetuned_dataset.py) paths
+  - [x] Update [02_validate_finetuned_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/02_validate_finetuned_dataset.py) paths
+  - [x] Update [03_generate_repetitive_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/03_generate_repetitive_dataset.py) paths
+  - [x] Update [04_validate_repetitive_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/04_validate_repetitive_dataset.py) paths
+  - [x] Update [06_sft_training.py](file:///mnt/d/Research%20Experiments/manus_model/06_sft_training.py) paths
+  - [x] Update [run_complete_pipeline.sh](file:///mnt/d/Research%20Experiments/manus_model/run_complete_pipeline.sh)
+
+## Phase 2: Core Module for Universal Model Support
+- [x] Create [core/__init__.py](file:///mnt/d/Research%20Experiments/manus_model/core/__init__.py)
+- [x] Create [core/model_config.py](file:///mnt/d/Research%20Experiments/manus_model/core/model_config.py) - Auto-detect hidden_size, vocab_size, etc.
+- [x] Create [core/chat_templates.py](file:///mnt/d/Research%20Experiments/manus_model/core/chat_templates.py) - Chat template registry
+- [x] Create [core/lora_targets.py](file:///mnt/d/Research%20Experiments/manus_model/core/lora_targets.py) - LoRA module detection
+- [x] Create [core/tool_schemas.py](file:///mnt/d/Research%20Experiments/manus_model/core/tool_schemas.py) - Legacy ↔ Native format converter
+
+## Phase 3: Dataset Status
+- [x] Finetuned dataset: 1B samples complete (228GB in E:/finetuned-fullstack-dataset/)
+- [/] Repetitive dataset: ~51M+ samples generated, still running (target 200M)
+  - **Note**: Current process outputs to OLD path `repetitive-datasets/`
+  - After completion: Move to `E:/repetitive-query-dataset/`
+
+## Phase 4: Pending Actions
+- [ ] Wait for repetitive dataset generation to complete (~6h remaining)
+- [ ] Move completed repetitive data to `E:/repetitive-query-dataset/`
+- [ ] Delete old `repetitive-datasets/` directory
+- [ ] (Optional) Convert finetuned dataset to native tool-calling format using [core/tool_schemas.py](file:///mnt/d/Research%20Experiments/manus_model/core/tool_schemas.py)

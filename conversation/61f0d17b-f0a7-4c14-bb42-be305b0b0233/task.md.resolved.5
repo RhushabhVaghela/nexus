@@ -1,0 +1,104 @@
+# Manus Model Implementation Tasks
+
+## Phase 1: Critical Gaps & Fixes (Priority 1)
+
+- [x] **1.1 Create Multimodal Dataset Configuration**
+  - [x] Create [src/config/multimodal_datasets.yaml](file:///mnt/d/Research%20Experiments/manus_model/src/config/multimodal_datasets.yaml)
+  - [x] Define vision-code pairs configuration
+  - [x] Define vision diagrams configuration
+  - [x] Define audio datasets configuration
+  - [x] Define video datasets configuration
+  - [x] Define benchmark datasets configuration
+
+- [x] **1.2 Create Multimodal Dataset Download Script**
+  - [x] Create [src/mm_download_multimodal_datasets.py](file:///mnt/d/Research%20Experiments/manus_model/src/mm_download_multimodal_datasets.py)
+  - [x] Implement vision fetcher (WebSight)
+  - [x] Implement audio fetcher (Common Voice)
+  - [x] Implement video fetcher (FineVideo)
+  - [x] Implement benchmark fetcher (MMMU, MathVista)
+  - [x] Add `--sample` parameter support
+
+- [x] **1.3 Create Encoder/Decoder Shape Tests**
+  - [x] Create [src/multimodal/tests/test_encoder_decoder_shapes.py](file:///mnt/d/Research%20Experiments/manus_model/src/multimodal/tests/test_encoder_decoder_shapes.py)
+  - [x] Implement `test_vision_pipeline()`
+  - [x] Implement `test_audio_pipeline()`
+  - [x] Implement `test_combined_forward()`
+
+- [x] **1.4 Verify Multimodal Validation**
+  - [x] Review [src/07_validate_all_datasets.py](file:///mnt/d/Research%20Experiments/manus_model/src/07_validate_all_datasets.py)
+  - [x] Verify image path validation works
+  - [x] Verify audio path validation works
+  - [x] Verify video path validation works
+
+---
+
+## Phase 2: Dataset Expansion (Priority 2)
+
+- [x] **2.1 Add 12 Fullstack Categories to Repetitive Generator**
+  - [x] Add [fs_api_websockets](file:///mnt/d/Research%20Experiments/manus_model/src/05_generate_repetitive_dataset.py#1240-1253) category
+  - [x] Add [fs_error_handling_patterns](file:///mnt/d/Research%20Experiments/manus_model/src/05_generate_repetitive_dataset.py#1254-1267) category
+  - [x] Add [fs_tracing_observability](file:///mnt/d/Research%20Experiments/manus_model/src/05_generate_repetitive_dataset.py#1268-1281) category
+  - [x] Add [fs_caching_strategies](file:///mnt/d/Research%20Experiments/manus_model/src/05_generate_repetitive_dataset.py#1282-1298) category
+  - [x] Add [fs_message_queues](file:///mnt/d/Research%20Experiments/manus_model/src/05_generate_repetitive_dataset.py#1299-1315) category
+  - [x] Add [fs_search_indexing](file:///mnt/d/Research%20Experiments/manus_model/src/05_generate_repetitive_dataset.py#1320-1335) category
+  - [x] Add [fs_data_validation_pipelines](file:///mnt/d/Research%20Experiments/manus_model/src/05_generate_repetitive_dataset.py#1336-1351) category
+  - [x] Add [fs_rate_limiting_throttling](file:///mnt/d/Research%20Experiments/manus_model/src/05_generate_repetitive_dataset.py#1352-1368) category
+  - [x] Add [fs_monitoring_alerting](file:///mnt/d/Research%20Experiments/manus_model/src/05_generate_repetitive_dataset.py#1369-1385) category
+  - [x] Add [fs_feature_flags_ab_testing](file:///mnt/d/Research%20Experiments/manus_model/src/05_generate_repetitive_dataset.py#1386-1402) category
+  - [x] Add [fs_backwards_compatibility](file:///mnt/d/Research%20Experiments/manus_model/src/05_generate_repetitive_dataset.py#1407-1425) category
+  - [x] Add [fs_capacity_planning](file:///mnt/d/Research%20Experiments/manus_model/src/05_generate_repetitive_dataset.py#1426-1443) category
+  - [x] Update GENERATOR_WEIGHTS
+  - [x] Update gen_map
+
+- [x] **2.2 Add Fullstack Preference Categories**
+  - [x] Update [src/06_generate_preference_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/src/06_generate_preference_dataset.py)
+  - [x] Add corresponding preference generators
+  - [x] Update category weights
+
+---
+
+## Phase 3: Benchmark Additions (Priority 3)
+
+- [x] **3.1 Create FullstackEval Benchmark**
+  - [x] Create `src/benchmarks/` directory
+  - [x] Create `src/benchmarks/fullstack_eval.py`
+  - [x] Implement REST API design tests
+  - [x] Implement SQL schema tests
+  - [x] Implement React accessibility tests
+  - [x] Implement K8s manifest tests
+  - [x] Implement Terraform tests
+  - [x] Implement CI/CD tests
+
+- [x] **3.2 Create Lovable-Style Benchmark**
+  - [x] Create `src/benchmarks/lovable_benchmark.py`
+  - [x] Implement UI code generation tests
+  - [x] Implement multi-file generation tests
+
+---
+
+## Phase 4: Advanced Features (Priority 4)
+
+- [ ] **4.1 Verify/Enhance Streaming Module**
+  - [ ] Review `src/streaming/joint.py`
+  - [ ] Verify rolling buffer implementation
+  - [ ] Verify LLM context fusion
+  - [ ] Test with mock inputs
+
+- [ ] **4.2 Verify/Enhance Podcast Module**
+  - [ ] Review `src/podcast/synthesizer.py`
+  - [ ] Verify queue-based playback
+  - [ ] Verify user interruption handling
+  - [ ] Test with sample documents
+
+---
+
+## Phase 5: Pipeline Integration (Priority 5)
+
+- [ ] **5.1 Update Shell Scripts**
+  - [ ] Update `run_pipeline.sh`
+  - [ ] Update `run_multimodal_pipeline.sh`
+
+- [ ] **5.2 Create Walkthrough Documentation**
+  - [ ] Document all changes made
+  - [ ] Document testing results
+  - [ ] Create usage examples

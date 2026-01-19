@@ -1,0 +1,44 @@
+# Dataset Status & Verification Audit
+
+## 1. Unified Pipeline (Verified)
+
+| Dataset | Type | Modality | Downloadable | Strict Sample Verified | Data Verified | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **fineweb-edu** | Dataset | Premium Text | Yes (HF) | Skipped (Size) | No | Kaggle download hangs due to massive file size; HF Streaming recommended. |
+| **cosmopedia** | Dataset | Premium Text | Yes (HF) | Skipped (Size) | No | Kaggle download hangs due to massive file size; HF Streaming recommended. |
+| **code_alpaca** | Dataset | Premium Text | Yes (HF) | **Yes** (5 samples) | **Yes** | Kaggle 403; HF Success. |
+| **websight** | Dataset | Vision | Yes (HF) | **Yes** (5 samples) | **Yes** | Verified. |
+| **llava_instruct** | Dataset | Vision | Yes (HF) | Pending | No | Configured. |
+| **librispeech** | Dataset | Audio | Yes (HF) | **Yes** (5 samples) | **Yes** | Verified. |
+| **common_voice** | Dataset | Audio | **No** (Blocked) | Failed | No | Kaggle: Structure blocks granular access. HF: Empty. MDC: Blocked by ID. |
+| **msr_vtt** | Dataset | Video | Yes (HF) | Pending | No | Configured. |
+| **vatex** | Dataset | Video | Yes (HF) | Pending | No | Configured. |
+| **mmlu** | Benchmark | Benchmark | Yes (Kaggle) | **Yes** (5 samples) | **Yes** | **Warning**: Unified HF ID maps to `MMMU/MMMU` (likely error). Kaggle source `lizhecheng/mmlu-dataset` is correct MMLU. |
+| **gsm8k** | Benchmark | Benchmark | Yes (HF) | Pending | No | Configured. |
+| **scienceqa** | Benchmark | Benchmark | Yes (HF) | Pending | No | Configured. |
+| **mathvista** | Benchmark | Benchmark | Yes (HF) | Pending | No | Configured. |
+
+## 2. Codebase-Wide Inventory & Comparison
+
+| Dataset / Source | Found In | Status | Discrepancy / Note |
+| :--- | :--- | :--- | :--- |
+| **MMLU** (`cais/mmlu`) | `src/02_download_benchmarks.py` | Legacy Config | **Pipeline Discrepancy**: Unified Downloader uses `MMMU/MMMU` for `mmlu` key. |
+| **MMMU** (`MMMU/MMMU`) | `src/02_download_benchmarks.py`, `config/multimodal_datasets.yaml` | Active | Correctly identified as MMMU. |
+| **HumanEval** (`openai_humaneval`) | `src/02_download_benchmarks.py` | Legacy Config | Missing from Unified Downloader. |
+| **FineVideo** (`HuggingFaceFV/finevideo`) | `config/multimodal_datasets.yaml` | active Config | Missing from Unified Downloader Registry (listed as `msr_vtt`/`vatex` only). |
+| **GitHub-Issue-Screenshots** | `config/multimodal_datasets.yaml` | Planned | Custom/Scraped. No downloader yet. |
+| **StackOverflow-Error-Screenshots** | `config/multimodal_datasets.yaml` | Planned | Custom/Scraped. No downloader yet. |
+| **Figma-to-React** | `config/multimodal_datasets.yaml` | Planned | Custom/Scraped. No downloader yet. |
+| **ArXiv-Architecture-Diagrams** | `config/multimodal_datasets.yaml` | Planned | Custom/Scraped. No downloader yet. |
+| **Podcast-Transcripts** | `config/multimodal_datasets.yaml` | Planned | Custom/Scraped. No downloader yet. (Related to Podcast Generator). |
+| **VS-Code-Coding-Sessions** | `config/multimodal_datasets.yaml` | Planned | Custom/Scraped. No downloader yet. |
+| **Alpaca** | `src/01_download_real_datasets.py` | Legacy | Generalized normalizer exists. |
+| **ShareGPT** | `src/01_download_real_datasets.py` | Legacy | Generalized normalizer exists. |
+| **CommitPackFT** | `src/01_download_real_datasets.py` | Legacy | Generalized normalizer exists. |
+| **The Stack** | `src/01_download_real_datasets.py` | Legacy | Generalized normalizer exists. |
+
+## 3. Discrepancy Action Items
+
+1. **Fix MMLU Mapping in Unified**: Change `mmlu` HF ID from `MMMU/MMMU` to `cais/mmlu`.
+2. **Add HumanEval to Unified**: Port from `02_download_benchmarks.py`.
+3. **Add FineVideo to Unified**: It is in `yaml` config but not in `DataRegistry` of unified script.

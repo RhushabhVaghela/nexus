@@ -1,0 +1,45 @@
+# Global Skills Installation Plan
+
+## Goal
+
+Install the following skill packages globally for Antigravity IDE:
+
+1. `antigravity-kit`
+2. `antigravity-awesome-skills`
+3. `ui-ux-pro-max-skill`
+
+## Proposed Changes
+
+I will create and populate the `~/.agent` directory, which acts as the global registry for Antigravity agents, skills, and workflows.
+
+### Directory Structure
+
+Target: `/home/rhushabh/.agent/`
+
+### Installation Steps
+
+#### 1. Antigravity Awesome Skills
+
+- **Source**: `.../antigravity-awesome-skills-main/skills`
+- **Destination**: `~/.agent/skills`
+- **Action**: Copy all skill folders.
+
+#### 2. Antigravity Kit
+
+- **Source**: `.../antigravity-kit-main/.agent/`
+- **Destination**: `~/.agent/`
+- **Action**: Merge contents (`agents`, `skills`, `workflows`, `rules`, `.shared`).
+
+#### 3. UI/UX Pro Max Skill
+
+- **Source**: `.../ui-ux-pro-max-skill-2.0.0`
+- **Action**:
+  - Copy `.shared/ui-ux-pro-max` to `~/.agent/.shared/ui-ux-pro-max` (Note: `antigravity-kit` uses `.shared` inside `.agent`, but standard is usually project root `.shared`. I will verify if `antigravity-kit` puts `.shared` inside `.agent` or if it was a listing artifact. Based on `list_dir` of `.agent`, `.shared` IS inside `.agent`. So I will put it there).
+  - Copy `.agent/workflows/ui-ux-pro-max.md` to `~/.agent/workflows/ui-ux-pro-max.md`.
+
+## Verification Plan
+
+1. **List Installed Skills**:
+   - Run `ls -R ~/.agent/skills | head -n 20` to verify skills presence.
+   - Run `ls ~/.agent/workflows` to verify workflows.
+   - Run `ls ~/.agent/.shared` to verify shared resources.

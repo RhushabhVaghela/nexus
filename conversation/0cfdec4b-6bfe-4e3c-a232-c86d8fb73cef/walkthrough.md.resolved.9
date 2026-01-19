@@ -1,0 +1,61 @@
+# Manus Prime: Implementation Walkthrough
+
+## Created Files Summary
+
+### Validation Scripts
+| File | Purpose |
+|------|---------|
+| [18_validate_all_datasets.py](file:///mnt/d/Research%20Experiments/manus_model/18_validate_all_datasets.py) | Universal validator for all datasets |
+| [21_validate_benchmarks.py](file:///mnt/d/Research%20Experiments/manus_model/21_validate_benchmarks.py) | Benchmark-specific (HumanEval, MBPP, GSM8K, MMLU) |
+
+### Censored/Uncensored Pipeline
+| File | Mode | Purpose |
+|------|------|---------|
+| [17_generate_preference_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/17_generate_preference_dataset.py) | Both | RLHF preference pairs (20 categories) |
+| [19_safety_finetuning.py](file:///mnt/d/Research%20Experiments/manus_model/19_safety_finetuning.py) | Censored | Safety alignment stage |
+| [20_anti_refusal_training.py](file:///mnt/d/Research%20Experiments/manus_model/20_anti_refusal_training.py) | Uncensored | Reduces over-refusals |
+
+### New Domain Generators (10)
+| File | Domain |
+|------|--------|
+| [23_generate_platform_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/23_generate_platform_dataset.py) | Backstage, Crossplane |
+| [25_generate_data_engineering_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/25_generate_data_engineering_dataset.py) | Airflow, dbt, Spark |
+| [27_generate_mobile_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/27_generate_mobile_dataset.py) | Flutter, Swift, Kotlin |
+| [29_generate_api_design_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/29_generate_api_design_dataset.py) | OpenAPI, GraphQL, gRPC |
+| [31_generate_observability_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/31_generate_observability_dataset.py) | Prometheus, Grafana, OTel |
+| [33_generate_mlops_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/33_generate_mlops_dataset.py) | MLflow, Kubeflow |
+| [35_generate_compliance_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/35_generate_compliance_dataset.py) | OWASP, GDPR |
+| [37_generate_wasm_edge_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/37_generate_wasm_edge_dataset.py) | Cloudflare Workers, WASM |
+| [39_generate_lowcode_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/39_generate_lowcode_dataset.py) | n8n, React Flow |
+| [41_generate_dba_dataset.py](file:///mnt/d/Research%20Experiments/manus_model/41_generate_dba_dataset.py) | PostgreSQL, MySQL |
+
+### Utilities
+| File | Purpose |
+|------|---------|
+| [utils/quality_metrics.py](file:///mnt/d/Research%20Experiments/manus_model/utils/quality_metrics.py) | Quality scoring, syntax validation |
+| [utils/diversity_enforcement.py](file:///mnt/d/Research%20Experiments/manus_model/utils/diversity_enforcement.py) | Zipfian sampling, entropy tracking |
+| [config/datasets.yaml](file:///mnt/d/Research%20Experiments/manus_model/config/datasets.yaml) | 25 real dataset sources |
+
+---
+
+## Dual Training Pipeline
+
+### Censored (Production)
+```bash
+python 17_generate_preference_dataset.py --mode=censored
+python 14_sft_training.py --mode=censored
+python 16_grpo_training.py --mode=censored
+python 19_safety_finetuning.py  # Only runs for censored
+```
+
+### Uncensored (Research)
+```bash
+python 17_generate_preference_dataset.py --mode=uncensored
+python 14_sft_training.py --mode=uncensored
+python 16_grpo_training.py --mode=uncensored
+python 20_anti_refusal_training.py  # Only runs for uncensored
+```
+
+---
+
+**Total: 39 Python files in project**

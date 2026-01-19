@@ -1,0 +1,6 @@
+{
+  "artifactType": "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary": "Plan for refactoring generators to real-data-only mode, identifying which categories need synthetic data for RLHF.",
+  "updatedAt": "2026-01-17T14:19:47.561476458Z",
+  "version": "6"
+}

@@ -1,0 +1,14 @@
+# Manus Fullstack Specialization
+
+- [ ] Analyze Resources in `docs/new docs` <!-- id: 0 -->
+- [ ] Research & Schema Design for "Replica" Apps (Manus/Lovable/Replit) <!-- id: 1 -->
+    - [ ] UI/UX Patterns & Templates (Dashboards, Portfolios, Slides)
+    - [ ] Frontend Frameworks (React, Next.js, Vite)
+    - [ ] Backend Architectures (Node, Python, Supabase integration)
+- [ ] Update `02_generate_trajectories.py` <!-- id: 2 -->
+    - [ ] Integrate "Replica" Schemas
+    - [ ] specialized "Fullstack" prompts & reasoning chains
+    - [ ] Scale generator logic (conceptually) to support massive dataset variety
+- [ ] Update `sft_training.py` & `grpo_training.py` for specialized fine-tuning <!-- id: 3 -->
+- [ ] Verify Implementation with `validate_trajectories.py` <!-- id: 4 -->
+- [ ] Walkthrough & Documentation <!-- id: 5 -->

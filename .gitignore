@@ -3,6 +3,5 @@ __pycache__/
 antigravity-skills-agents-kit/
 .agent/
 base-model/
-conversation/
 logs/
 offload-cache/

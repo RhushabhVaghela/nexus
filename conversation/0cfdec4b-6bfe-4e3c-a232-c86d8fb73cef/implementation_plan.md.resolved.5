@@ -1,0 +1,89 @@
+# Manus Prime: Real Data Only Implementation Plan
+
+> **Strategy**: 100% Real Data (No Synthetic)  
+> **Generators**: 17 total (7 existing + 10 new)  
+> **Processing**: Sequential with multicore  
+> **Base Model**: `openai/gpt-oss-20b`
+
+---
+
+## Complete Generator-to-Dataset Mapping
+
+### Existing Generators (7)
+
+| # | Generator | Real Dataset Sources | HuggingFace/GitHub |
+|---|-----------|---------------------|-------------------|
+| 01 | Fullstack | The Stack + OpenCodeInstruct | `bigcode/the-stack` + `m-a-p/Code-Feedback` |
+| 03 | Repetitive | FineWeb-Edu + Wikipedia | `HuggingFaceFW/fineweb-edu` + `wikimedia/wikipedia` |
+| 05 | Architecture | The Vault + Awesome Lists | `BAAI/the-vault` + GitHub awesome lists |
+| 07 | QA Engineering | CodeSearchNet + Stack Overflow | `code_search_net` + StackExchange dump |
+| 09 | UI/UX | The Stack (CSS/Tailwind) + shadcn | `bigcode/the-stack` filtered + `shadcn-ui/ui` |
+| 11 | DevOps | The Stack (Docker/K8s) | `bigcode/the-stack` filtered |
+| 13 | Benchmarks | Standard benchmarks | HumanEval, MBPP, GSM8K, MMLU |
+
+### New Generators (10)
+
+| # | Generator | Real Dataset Sources | HuggingFace/GitHub |
+|---|-----------|---------------------|-------------------|
+| 23 | Platform Engineering | Backstage + Crossplane + Port.io | GitHub repos |
+| 25 | Data Engineering | dbt + Airflow + Great Expectations | GitHub repos |
+| 27 | Mobile | Flutter Samples + Android Arch + The Stack | `bigcode/the-stack` (Dart/Kotlin/Swift) |
+| 29 | API Design | OpenAPI Directory + GraphQL spec + gRPC | `APIs-guru/openapi-directory` |
+| 31 | Observability | Prometheus + Grafana + OpenTelemetry | GitHub repos |
+| 33 | MLOps | MLflow + Kubeflow + Feast + Ray | GitHub repos |
+| 35 | Compliance | OWASP + Terraform HIPAA | GitHub repos |
+| 37 | WASM/Edge | wasm-by-example + Cloudflare Workers | GitHub repos |
+| 39 | Low-Code | n8n + React Flow + Budibase | GitHub repos |
+| 41 | DBA | pganalyze + MySQL + MongoDB docs | GitHub repos |
+
+---
+
+## Processing Strategy
+
+```
+For each generator:
+  1. Download real dataset (HuggingFace or GitHub)
+  2. Normalize to OpenAI messages format
+  3. Deduplicate
+  4. Split into train/val/test
+  5. Save to /mnt/e/data/{domain}/
+  
+Processing: Sequential (one generator at a time)
+Per-generator: Multicore (parallel download + processing)
+```
+
+---
+
+## Pre-Distilled Knowledge Datasets (Priority)
+
+These datasets contain pre-processed knowledge from massive corpuses:
+
+| Dataset | Size | What It Contains |
+|---------|------|------------------|
+| Magicoder-OSS-Instruct | 3GB | The Stack → 75K code instructions |
+| OpenMathInstruct | 5GB | MATH → 1M samples |
+| SlimOrca | 5GB | GPT-4 reasoning chains |
+| Dolphin | 5GB | Multi-domain instructions |
+
+---
+
+## Execution Order
+
+1. **Pre-distilled datasets** (immediate value, 20GB)
+2. **Code datasets** (Fullstack, API, Mobile)
+3. **Infrastructure datasets** (DevOps, Platform, Observability)
+4. **Specialized datasets** (MLOps, DBA, Compliance)
+5. **Benchmarks** (evaluation)
+
+---
+
+## Scripts Needed
+
+1. `download_and_normalize.py` - Downloads + converts to messages format
+2. `config/datasets.yaml` - All dataset sources centralized
+3. Sequential runner with multicore processing per dataset
+
+---
+
+**Status**: Ready for implementation  
+**Approach**: Real data only, no synthetic generation

@@ -1,0 +1,22 @@
+# Dataset Status & Verification Audit
+
+| Dataset | Type | Modality | Downloadable | Strict Sample Verified | Data Verified | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **fineweb-edu** | Dataset | Premium Text | Yes (HF) | Skipped (Size) | No | Kaggle download hangs due to massive file size; HF Streaming recommended. |
+| **cosmopedia** | Dataset | Premium Text | Yes (HF) | Skipped (Size) | No | Kaggle download hangs due to massive file size; HF Streaming recommended. |
+| **code_alpaca** | Dataset | Premium Text | Yes (HF) | **Yes** (5 samples) | **Yes** | Kaggle API returned 403; Auto-fallback to HF succeeded. |
+| **websight** | Dataset | Vision | Yes (HF) | **Yes** (5 samples) | **Yes** | Kaggle API returned 403; Auto-fallback to HF succeeded. |
+| **llava_instruct** | Dataset | Vision | Yes (HF) | Pending | No | Configuration exists; not included in manual verification batch. |
+| **librispeech** | Dataset | Audio | Yes (HF) | **Yes** (5 samples) | **Yes** | Kaggle API returned 403; Auto-fallback to HF succeeded. |
+| **common_voice** | Dataset | Audio | **No** (Blocked) | Failed | No | Kaggle structure prevents sampling (requires 80GB download); HF empty; MDC blocked by missing ID. |
+| **msr_vtt** | Dataset | Video | Yes (HF) | Pending | No | Configuration exists; not included in manual verification batch. |
+| **vatex** | Dataset | Video | Yes (HF) | Pending | No | Configuration exists; not included in manual verification batch. |
+| **mmlu** | Benchmark | Benchmark | Yes (Kaggle) | **Yes** (5 samples) | **Yes** | Downloaded successfully from Kaggle (Small dataset). |
+| **gsm8k** | Benchmark | Benchmark | Yes (HF) | Pending | No | Configuration exists; not included in manual verification batch. |
+| **scienceqa** | Benchmark | Benchmark | Yes (HF) | Pending | No | Configuration exists; not included in manual verification batch. |
+| **mathvista** | Benchmark | Benchmark | Yes (HF) | Pending | No | Configuration exists; not included in manual verification batch. |
+
+## Legend
+- **Strict Sample Verified**: Confirmed that the `--sample 5` argument correctly limits the download/processing.
+- **Data Verified**: Confirmed the output `data.jsonl` contains valid [modalities](file:///mnt/d/Research%20Experiments/manus_model/src/07_validate_all_datasets.py#165-205) structure and absolute paths.
+- **Blocked**: Currently inaccessible due to API deprecations or technical limitations (e.g. Common Voice).

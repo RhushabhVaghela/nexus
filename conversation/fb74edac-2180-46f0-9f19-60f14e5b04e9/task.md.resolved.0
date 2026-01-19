@@ -1,0 +1,7 @@
+- [ ] Explore source directories for install instructions
+  - [ ] `antigravity-kit-main`
+  - [ ] `antigravity-awesome-skills-main`
+  - [ ] `ui-ux-pro-max-skill-2.0.0`
+- [ ] Locate global skills directory (e.g. `~/.antigravity/skills`)
+- [ ] Install skills (copy or link)
+- [ ] Verify installation
