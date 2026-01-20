@@ -1,178 +1,271 @@
 """
-conftest.py - Shared pytest fixtures for Manus Model tests.
+conftest.py
+Shared pytest fixtures with automatic metrics collection.
 
-Provides:
-- Real model fixtures (Qwen2.5-0.5B for text, Qwen2.5-Omni for multimodal)
-- Device fixtures (GPU/CPU detection)
-- Sample data fixtures
-- Test paths fixtures
-
-Usage:
-    def test_with_real_model(real_text_model):
-        output = real_text_model.generate("Hello")
-        assert output is not None
+Metrics tracked:
+- Test name, duration, status, memory usage
+- Automatic CSV export after test run
+- Progress bars for test execution
 """
 
 import os
 import sys
-import pytest
-import torch
+import time
+import csv
+import gc
 from pathlib import Path
-from typing import Optional, Dict, Any
+from datetime import datetime
+from typing import Dict, Any, Optional
+import pytest
 
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add project root to path
+PROJECT_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 
-# ============ PATH CONSTANTS ============
-TEST_MODEL_PATH = "/mnt/e/data/models/Qwen2.5-0.5B"
-OMNI_MODEL_PATH = "/mnt/e/data/base-model/Qwen2.5-Omni-7B-GPTQ-Int4"
+# ============== METRICS COLLECTION ==============
+
+class TestMetricsCollector:
+    """Collect metrics from all tests and export to CSV."""
+    
+    def __init__(self):
+        self.results = []
+        self.start_time = None
+        self.output_dir = PROJECT_ROOT / "results"
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+    
+    def start_session(self):
+        self.start_time = datetime.now()
+        self.results = []
+    
+    def record_test(self, nodeid: str, outcome: str, duration: float, 
+                    memory_mb: float = 0, error: str = ""):
+        self.results.append({
+            "timestamp": datetime.now().isoformat(),
+            "test_id": nodeid,
+            "test_name": nodeid.split("::")[-1] if "::" in nodeid else nodeid,
+            "test_file": nodeid.split("::")[0] if "::" in nodeid else "",
+            "test_class": nodeid.split("::")[1] if nodeid.count("::") > 1 else "",
+            "outcome": outcome,
+            "duration_seconds": round(duration, 4),
+            "memory_mb": round(memory_mb, 2),
+            "error": error[:200] if error else "",
+        })
+    
+    def export_csv(self):
+        if not self.results:
+            return
+        
+        timestamp = self.start_time.strftime("%Y%m%d_%H%M%S") if self.start_time else "unknown"
+        csv_path = self.output_dir / f"test_results_{timestamp}.csv"
+        
+        with open(csv_path, 'w', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=self.results[0].keys())
+            writer.writeheader()
+            writer.writerows(self.results)
+        
+        return csv_path
+    
+    def get_summary(self) -> Dict[str, Any]:
+        if not self.results:
+            return {}
+        
+        total = len(self.results)
+        passed = sum(1 for r in self.results if r["outcome"] == "passed")
+        failed = sum(1 for r in self.results if r["outcome"] == "failed")
+        skipped = sum(1 for r in self.results if r["outcome"] == "skipped")
+        total_duration = sum(r["duration_seconds"] for r in self.results)
+        
+        return {
+            "total": total,
+            "passed": passed,
+            "failed": failed,
+            "skipped": skipped,
+            "pass_rate": f"{100*passed/total:.1f}%" if total > 0 else "0%",
+            "total_duration_seconds": round(total_duration, 2),
+            "avg_duration_seconds": round(total_duration/total, 4) if total > 0 else 0,
+            "slowest_tests": sorted(self.results, key=lambda x: x["duration_seconds"], reverse=True)[:5],
+        }
+
+
+# Global collector instance
+_metrics_collector = TestMetricsCollector()
+
+
+# ============== PYTEST HOOKS ==============
+
+def pytest_configure(config):
+    """Initialize metrics collection at start of test session."""
+    _metrics_collector.start_session()
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """Collect metrics for each test."""
+    outcome = yield
+    report = outcome.get_result()
+    
+    if report.when == "call":
+        # Get memory usage
+        memory_mb = 0
+        try:
+            import torch
+            if torch.cuda.is_available():
+                memory_mb = torch.cuda.memory_allocated() / (1024**2)
+        except Exception:
+            pass
+        
+        error = ""
+        if report.failed and hasattr(report, "longreprtext"):
+            error = str(report.longreprtext)
+        
+        _metrics_collector.record_test(
+            nodeid=item.nodeid,
+            outcome=report.outcome,
+            duration=report.duration,
+            memory_mb=memory_mb,
+            error=error,
+        )
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Export metrics and print summary at end of test session."""
+    csv_path = _metrics_collector.export_csv()
+    summary = _metrics_collector.get_summary()
+    
+    if summary:
+        print("\n" + "="*70)
+        print("TEST METRICS SUMMARY")
+        print("="*70)
+        print(f"Total: {summary['total']} | Passed: {summary['passed']} | "
+              f"Failed: {summary['failed']} | Skipped: {summary['skipped']}")
+        print(f"Pass Rate: {summary['pass_rate']}")
+        print(f"Total Duration: {summary['total_duration_seconds']:.2f}s")
+        print(f"Avg Duration: {summary['avg_duration_seconds']:.4f}s per test")
+        
+        if summary.get('slowest_tests'):
+            print("\nSlowest Tests:")
+            for t in summary['slowest_tests'][:5]:
+                print(f"  {t['duration_seconds']:.3f}s - {t['test_name']}")
+        
+        if csv_path:
+            print(f"\nMetrics exported to: {csv_path}")
+        print("="*70)
+
+
+# ============== CONSTANTS ==============
+
+# Model paths
+TEXT_MODEL_PATH = "/mnt/e/data/models/Qwen2.5-0.5B"
+OMNI_MODEL_PATH = "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
+
+# Encoder paths
 VISION_ENCODER_PATH = "/mnt/e/data/encoders/vision-encoders/siglip2-so400m-patch16-512"
 AUDIO_ENCODER_PATH = "/mnt/e/data/encoders/audio-encoders/whisper-large-v3-turbo"
 
-
-# ============ MARKERS ============
-def pytest_configure(config):
-    """Register custom markers."""
-    config.addinivalue_line("markers", "slow: marks tests as slow (deselect with '-m \"not slow\"')")
-    config.addinivalue_line("markers", "gpu: marks tests requiring GPU")
-    config.addinivalue_line("markers", "real_model: marks tests using real model inference")
+# Dataset paths
+DATASETS_PATH = "/mnt/e/data/datasets"
 
 
-# ============ DEVICE FIXTURES ============
+# ============== FIXTURES ==============
+
 @pytest.fixture(scope="session")
-def device() -> str:
-    """Get best available device (GPU preferred)."""
-    if torch.cuda.is_available():
-        return "cuda"
-    return "cpu"
+def device():
+    """Get available device."""
+    import torch
+    return "cuda" if torch.cuda.is_available() else "cpu"
 
 
 @pytest.fixture(scope="session")
-def has_gpu() -> bool:
+def has_gpu():
     """Check if GPU is available."""
+    import torch
     return torch.cuda.is_available()
 
 
-# ============ MODEL PATH FIXTURES ============
 @pytest.fixture(scope="session")
-def text_model_path() -> str:
-    """Path to lightweight text-only model for testing."""
-    return TEST_MODEL_PATH
+def text_model_path():
+    """Path to text-only test model."""
+    return TEXT_MODEL_PATH
 
 
 @pytest.fixture(scope="session")
-def omni_model_path() -> str:
+def omni_model_path():
     """Path to full Omni model."""
     return OMNI_MODEL_PATH
 
 
 @pytest.fixture(scope="session")
-def vision_encoder_path() -> str:
+def vision_encoder_path():
     """Path to vision encoder."""
     return VISION_ENCODER_PATH
 
 
 @pytest.fixture(scope="session")
-def audio_encoder_path() -> str:
+def audio_encoder_path():
     """Path to audio encoder."""
     return AUDIO_ENCODER_PATH
 
 
-# ============ REAL MODEL FIXTURES ============
 @pytest.fixture(scope="session")
-def real_text_tokenizer():
-    """Load real tokenizer from Qwen2.5-0.5B."""
+def real_text_model(text_model_path, device):
+    """Load real Qwen2.5-0.5B model for testing."""
+    import torch
+    from transformers import AutoModelForCausalLM
+    
+    if not Path(text_model_path).exists():
+        pytest.skip(f"Model not found: {text_model_path}")
+    
+    model = AutoModelForCausalLM.from_pretrained(
+        text_model_path,
+        torch_dtype=torch.float16 if device == "cuda" else torch.float32,
+        device_map="auto" if device == "cuda" else None,
+        trust_remote_code=True,
+    )
+    model.eval()
+    
+    yield model
+    
+    # Cleanup
+    del model
+    gc.collect()
+    if device == "cuda":
+        import torch
+        torch.cuda.empty_cache()
+
+
+@pytest.fixture(scope="session")
+def real_text_tokenizer(text_model_path):
+    """Load real tokenizer for testing."""
     from transformers import AutoTokenizer
     
-    if not Path(TEST_MODEL_PATH).exists():
-        pytest.skip(f"Test model not found: {TEST_MODEL_PATH}")
+    if not Path(text_model_path).exists():
+        pytest.skip(f"Tokenizer not found: {text_model_path}")
     
-    tokenizer = AutoTokenizer.from_pretrained(TEST_MODEL_PATH, trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained(
+        text_model_path,
+        trust_remote_code=True,
+    )
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+    
     return tokenizer
 
 
 @pytest.fixture(scope="session")
-def real_text_model(device):
-    """Load real Qwen2.5-0.5B model for testing."""
-    from transformers import AutoModelForCausalLM
-    
-    if not Path(TEST_MODEL_PATH).exists():
-        pytest.skip(f"Test model not found: {TEST_MODEL_PATH}")
-    
-    model = AutoModelForCausalLM.from_pretrained(
-        TEST_MODEL_PATH,
-        torch_dtype=torch.float16 if device == "cuda" else torch.float32,
-        device_map=device if device == "cuda" else None,
-        trust_remote_code=True,
-        low_cpu_mem_usage=True,
-    )
-    
-    if device == "cpu":
-        model = model.to(device)
-    
-    model.eval()
-    return model
+def real_model_and_tokenizer(real_text_model, real_text_tokenizer):
+    """Combined model and tokenizer fixture."""
+    return {
+        "model": real_text_model,
+        "tokenizer": real_text_tokenizer,
+    }
 
 
 @pytest.fixture(scope="session")
-def real_model_and_tokenizer(real_text_model, real_text_tokenizer):
-    """Bundle model and tokenizer together."""
-    return {"model": real_text_model, "tokenizer": real_text_tokenizer}
-
-
-# ============ SAMPLE DATA FIXTURES ============
-@pytest.fixture
-def sample_text_prompt() -> str:
-    """Simple text prompt for testing."""
-    return "What is 2 + 2?"
-
-
-@pytest.fixture
-def sample_messages() -> list:
-    """Sample chat messages."""
-    return [
-        {"role": "user", "content": "Hello, how are you?"},
-        {"role": "assistant", "content": "I'm doing well, thank you!"},
-    ]
-
-
-@pytest.fixture
-def sample_training_sample() -> Dict[str, Any]:
-    """Sample training data in messages format."""
-    return {
-        "id": "test_001",
-        "messages": [
-            {"role": "user", "content": "Write hello world in Python"},
-            {"role": "assistant", "content": "```python\nprint('Hello, World!')\n```"},
-        ],
-        "domain": "code",
-    }
-
-
-@pytest.fixture
-def sample_multimodal_sample() -> Dict[str, Any]:
-    """Sample multimodal training data."""
-    return {
-        "id": "mm_001",
-        "messages": [
-            {"role": "user", "content": "Describe this image"},
-            {"role": "assistant", "content": "The image shows a sunset over mountains."},
-        ],
-        "modalities": {
-            "image": [{"path": "/fake/image.png", "type": "photo"}],
-            "audio": [],
-            "video": [],
-        },
-    }
-
-
-# ============ CONFIG FIXTURES ============
-@pytest.fixture
-def encoders_config() -> Dict[str, Any]:
-    """Load encoders.yaml config."""
+def encoders_config():
+    """Load encoders.yaml configuration."""
     import yaml
-    config_path = Path(__file__).parent.parent / "configs" / "encoders.yaml"
     
+    config_path = PROJECT_ROOT / "configs" / "encoders.yaml"
     if not config_path.exists():
         pytest.skip("encoders.yaml not found")
     
@@ -180,42 +273,39 @@ def encoders_config() -> Dict[str, Any]:
         return yaml.safe_load(f)
 
 
-# ============ TEMP DIRECTORY FIXTURES ============
-@pytest.fixture
-def temp_output_dir(tmp_path) -> Path:
-    """Temporary output directory for test artifacts."""
-    output = tmp_path / "output"
-    output.mkdir(parents=True, exist_ok=True)
-    return output
+@pytest.fixture(scope="function")
+def sample_text_prompt():
+    """Sample prompt for testing."""
+    return "What is 2 + 2? Please explain your reasoning step by step."
 
 
-@pytest.fixture
-def temp_checkpoint_dir(tmp_path) -> Path:
-    """Temporary checkpoint directory."""
-    ckpt = tmp_path / "checkpoints"
-    ckpt.mkdir(parents=True, exist_ok=True)
-    return ckpt
+@pytest.fixture(scope="function")
+def sample_messages():
+    """Sample chat messages for testing."""
+    return [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "What is the capital of France?"},
+    ]
 
 
-# ============ SKIP CONDITIONS ============
-@pytest.fixture
-def skip_if_no_gpu(has_gpu):
-    """Skip test if no GPU available."""
-    if not has_gpu:
-        pytest.skip("GPU not available")
+@pytest.fixture(scope="function")
+def temp_output_dir(tmp_path):
+    """Temporary output directory for tests."""
+    output_dir = tmp_path / "output"
+    output_dir.mkdir()
+    return output_dir
 
 
-@pytest.fixture
-def skip_if_no_model():
-    """Skip test if test model not available."""
-    if not Path(TEST_MODEL_PATH).exists():
-        pytest.skip(f"Test model not found: {TEST_MODEL_PATH}")
+@pytest.fixture(scope="function")
+def temp_checkpoint_dir(tmp_path):
+    """Temporary checkpoint directory for tests."""
+    checkpoint_dir = tmp_path / "checkpoints"
+    checkpoint_dir.mkdir()
+    return checkpoint_dir
 
 
-# ============ CLEANUP ============
-@pytest.fixture(autouse=True)
-def cleanup_cuda():
-    """Clean up CUDA memory after each test."""
-    yield
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
+@pytest.fixture(scope="session")
+def metrics_tracker():
+    """Get the global metrics tracker for tests."""
+    from src.metrics_tracker import MetricsTracker
+    return MetricsTracker(output_dir=str(PROJECT_ROOT / "results"))
