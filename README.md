@@ -1,121 +1,368 @@
-# Manus Universal Omni Model
+# Manus Model - Universal Multimodal Training Pipeline
 
-**Production-ready Any-to-Any Multimodal Model with Full Capability Training Pipeline**
-
-> 🎯 **Goal**: Train a single model that can understand and generate Text, Images, Audio, and Video.
+A comprehensive pipeline for training and extending language models with multimodal capabilities including vision, audio, video understanding, and generation.
 
 ---
 
-## 🆕 Latest Updates (January 2026)
-
-### New Pipeline Architecture
-
-- **Modality Detection**: Auto-detect model capabilities from config
-- **Capability Registry**: 12 trainable capabilities with modality gates
-- **Decoder Support**: Image generation (SD3) and Video generation (SVD)
-- **Training Controller**: Pause/resume, emergency checkpoints, cooldown intervals
-- **Universal Orchestrator**: Single script to train any combination of capabilities
-
----
-
-## 🚀 Quick Start
-
-### 1. Detect Model Capabilities
+## Quick Start
 
 ```bash
-python src/detect_modalities.py /mnt/e/data/base-model/Qwen2.5-Omni-7B-GPTQ-Int4
+# Activate environment
+conda activate manus
+
+# Run tests (109 tests, ~90s)
+pytest tests/unit/ tests/integration/ tests/e2e/ -v
+
+# Train with dry-run (preview stages)
+./run_universal_pipeline.sh \
+    --base-model=/mnt/e/data/models/Qwen2.5-0.5B \
+    --enable-cot \
+    --dry-run
+
+# Real training
+./run_universal_pipeline.sh \
+    --base-model=/mnt/e/data/models/Qwen2.5-0.5B \
+    --enable-all-text \
+    --sample-size=1000
 ```
 
-### 2. View Available Capabilities
+---
+
+## Features
+
+### 12 Trainable Capabilities
+
+| Capability | Description | Required Modalities |
+|------------|-------------|---------------------|
+| **cot** | Chain-of-Thought reasoning | text |
+| **reasoning** | Multi-level mathematical reasoning | text |
+| **thinking** | Extended thinking/reflection | text |
+| **tools** | Function/tool calling | text |
+| **streaming** | Token streaming output | text |
+| **omni** | Convert text → full Omni model | text |
+| **podcast** | NotebookLM-style podcast generation | text, audio |
+| **vision-qa** | Image understanding | text, vision |
+| **video-understanding** | Video comprehension | text, vision, video |
+| **tri-streaming** | Real-time multimodal streaming | ALL |
+| **image-generation** | Text-to-image (SD3 projector) | text, vision_output |
+| **video-generation** | Text-to-video (SVD projector) | text, video_output |
+
+### Training Safety Features
+
+- **Pause/Resume** - Signal-based training control
+- **Automatic Cooldown** - Every 500 steps
+- **GPU Temperature Protection** - Auto-pause at 83°C
+- **Emergency Checkpoints** - SIGUSR2 for instant save
+
+---
+
+## Project Structure
+
+```
+manus_model/
+├── run_universal_pipeline.sh    # Main orchestrator
+├── src/
+│   ├── detect_modalities.py     # Model capability detection
+│   ├── capability_registry.py   # Capability definitions
+│   ├── training_controller.py   # Pause/resume/cooldown
+│   ├── stages/                  # Training stage scripts
+│   │   ├── base.py              # BaseStage class
+│   │   ├── stage_cot.py
+│   │   ├── stage_reasoning.py
+│   │   ├── stage_thinking.py
+│   │   ├── stage_tools.py
+│   │   ├── stage_streaming.py
+│   │   ├── stage_image_gen.py
+│   │   └── stage_video_gen.py
+│   └── multimodal/              # Encoder/decoder modules
+├── configs/
+│   └── encoders.yaml            # Encoder/decoder paths
+├── tests/                       # 109 tests
+│   ├── unit/                    # 48 tests
+│   ├── integration/             # 40 tests
+│   └── e2e/                     # 21 tests
+└── docs/
+    ├── TEST_SUITE.md            # Test documentation
+    ├── SHELL_SCRIPTS.md         # Script reference
+    └── GUIDE.md                 # User guide
+```
+
+---
+
+## Usage
+
+### Basic Training
 
 ```bash
-python src/capability_registry.py
+# Chain-of-Thought only
+./run_universal_pipeline.sh --base-model=/path/to/model --enable-cot
+
+# Multiple capabilities
+./run_universal_pipeline.sh --base-model=/path/to/model \
+    --enable-cot --enable-reasoning --enable-tools
+
+# All text capabilities
+./run_universal_pipeline.sh --base-model=/path/to/model --enable-all-text
+
+# Convert to Omni + podcast
+./run_universal_pipeline.sh --base-model=/path/to/model \
+    --enable-omni --enable-podcast
 ```
 
-### 3. Run Training with Universal Orchestrator
+### Training Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--base-model` | required | Path to base model |
+| `--output-dir` | `/mnt/e/data/models/trained` | Output directory |
+| `--sample-size` | 0 (all) | Limit samples per dataset |
+| `--batch-size` | 1 | Training batch size |
+| `--epochs` | 3 | Number of epochs |
+| `--dry-run` | false | Preview without training |
+
+### Dry-Run Mode
+
+Preview the training pipeline without executing:
 
 ```bash
-# Text-only capabilities (any model)
-./run_universal_pipeline.sh --enable-cot --enable-tools
-
-# Full Omni with podcast
-./run_universal_pipeline.sh --enable-full-omni
-
-# Image generation (requires SD3 decoder)
-./run_universal_pipeline.sh --enable-image-generation
+./run_universal_pipeline.sh \
+    --base-model=/mnt/e/data/models/Qwen2.5-0.5B \
+    --enable-all-text \
+    --dry-run
 ```
 
-### 4. Available Capability Flags
-
-| Flag | Description |
-|------|-------------|
-| `--enable-omni` | Convert text→Omni |
-| `--enable-cot` | Chain-of-Thought |
-| `--enable-reasoning` | Multi-level reasoning |
-| `--enable-tools` | Function calling |
-| `--enable-podcast` | NotebookLM-style |
-| `--enable-vision-qa` | Image understanding |
-| `--enable-tri-streaming` | Gemini Live-style |
-| `--enable-image-generation` | Text→Image (SD3) |
-| `--enable-video-generation` | Text→Video (SVD) |
-| `--enable-all-text` | All text capabilities |
-| `--enable-full-omni` | Everything |
-
----
-
-## 🏗️ Architecture
+Output:
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  Base LLM: Qwen2.5-Omni-7B-GPTQ-Int4                           │
-├─────────────────────────────────────────────────────────────────┤
-│  ENCODERS (Input)                │  DECODERS (Output)           │
-│  ├─ SigLIP2 (Vision) 512x512     │  ├─ SD3 Medium (Images)      │
-│  ├─ Whisper V3 Turbo (Audio)     │  ├─ SVD 1.1 (Video)          │
-│  └─ Parakeet TDT (ASR)           │  └─ Built-in TTS (Audio)     │
-└─────────────────────────────────────────────────────────────────┘
+╔═══════════════════════════════════════════════════════════════╗
+║         MANUS UNIVERSAL CAPABILITY PIPELINE                   ║
+╚═══════════════════════════════════════════════════════════════╝
+
+  Base Model:  Qwen2.5-0.5B
+  Output:      /mnt/e/data/models/trained
+  Mode:        DRY-RUN (no actual training)
+
+[STAGE] Stage 0: Detecting Model Modalities
+  Detected: text=✓ vision=false audio_in=false audio_out=false
+
+[STAGE] Stage 2: Training Queue (5 stages)
+  1. cot
+  2. reasoning
+  3. thinking
+  4. tools
+  5. streaming
 ```
 
 ---
 
-## 📁 Key Files
+## Pause/Resume Training
 
-| File | Purpose |
-|------|---------|
-| `run_universal_pipeline.sh` | ⭐ Main orchestrator |
-| `src/detect_modalities.py` | Probe model capabilities |
-| `src/capability_registry.py` | 12 capability definitions |
-| `src/training_controller.py` | Pause/checkpoint/cooldown |
-| `configs/encoders.yaml` | All encoder/decoder paths |
+### Signal-Based Control
 
----
-
-## 📚 Documentation
-
-- **[Complete Guide](docs/GUIDE.md)** - Full documentation
-- **[Training Suite](training-suite/README.md)** - Sample-based training
-- **[Dataset Catalog](docs/multimodal/datasets.md)** - All 42 datasets
-
----
-
-## 💾 Hardware Requirements
-
-| Component | Minimum | Recommended |
-|-----------|---------|-------------|
-| GPU | RTX 3080 16GB | RTX 4090 24GB |
-| RAM | 32GB | 64GB |
-| Storage | 500GB SSD | 1TB NVMe |
-
----
-
-## 🛡️ Training Safety
+All training integrates with the training controller for runtime control:
 
 ```bash
-# Pause/Resume: kill -USR1 <PID>
-# Emergency Checkpoint: kill -USR2 <PID>
-# Auto-cooldown every 500 steps
+# Find training PID
+ps aux | grep stage_cot.py
+# Output: user 12345 ... python stage_cot.py
+
+# PAUSE training (toggle)
+kill -USR1 12345
+
+# RESUME training (same signal)
+kill -USR1 12345
+
+# Emergency CHECKPOINT (saves immediately)
+kill -USR2 12345
+```
+
+### What Happens When Paused
+
+- Training loop stops at next step boundary
+- GPU memory is cleared
+- Status shows: `⏸️ Paused at step 1234... (SIGUSR1 to resume)`
+- Model state is preserved in memory
+- Send SIGUSR1 again to resume
+
+### Automatic Protections
+
+| Feature | Trigger | Action |
+|---------|---------|--------|
+| **Cooldown** | Every 500 steps | 60s pause, clear cache |
+| **Temperature** | GPU > 83°C | Pause until cooled |
+| **Checkpoint** | SIGUSR2 signal | Immediate save |
+
+### Monitoring Training
+
+```bash
+# Watch logs
+tail -f logs/train_cot.log
+
+# Monitor GPU
+watch -n 1 nvidia-smi
+
+# Check if paused
+grep -i "paused" logs/train_cot.log
 ```
 
 ---
 
-*For archived legacy documentation, see `docs/archive/`*
+## Testing
+
+### Run All Tests
+
+```bash
+# Full test suite (109 tests)
+pytest tests/unit/ tests/integration/ tests/e2e/ -v
+
+# With coverage report
+pytest tests/ --cov=src --cov-report=html
+```
+
+### Test Categories
+
+| Category | Tests | Duration | Description |
+|----------|-------|----------|-------------|
+| Unit | 48 | ~5s | Fast, isolated module tests |
+| Integration | 40 | ~30s | Real model loading tests |
+| E2E | 21 | ~60s | Full pipeline tests |
+
+### Run Specific Tests
+
+```bash
+# Unit tests only
+pytest tests/unit/ -v
+
+# Integration tests only
+pytest tests/integration/ -v
+
+# E2E tests only
+pytest tests/e2e/ -v
+
+# Skip slow tests
+pytest tests/ -v -m "not slow"
+
+# Run specific test
+pytest tests/unit/test_detect_modalities.py::TestDetectModalities::test_detect_text_only_model -v
+```
+
+---
+
+## Configuration
+
+### Encoder Paths (`configs/encoders.yaml`)
+
+```yaml
+encoders:
+  vision:
+    default: /mnt/e/data/encoders/vision-encoders/siglip2-so400m-patch16-512
+  audio_input:
+    default: /mnt/e/data/encoders/audio-encoders/whisper-large-v3-turbo
+  audio_output:
+    default: /mnt/e/data/encoders/audio-encoders/parakeet-tdt-0.6b-v3
+
+decoders:
+  vision_output:
+    default: stabilityai/stable-diffusion-3.5-large
+  video_output:
+    default: stabilityai/stable-video-diffusion-img2vid-xt
+```
+
+### Environment Variables
+
+```bash
+# Optional overrides
+export MANUS_OUTPUT_DIR=/custom/output/path
+export MANUS_CHECKPOINT_DIR=/custom/checkpoints
+export CUDA_VISIBLE_DEVICES=0
+```
+
+---
+
+## Stage Scripts
+
+Individual training stages in `src/stages/`:
+
+| Stage | Script | Datasets |
+|-------|--------|----------|
+| cot | `stage_cot.py` | OpenThoughts-114k |
+| reasoning | `stage_reasoning.py` | NuminaMath-CoT |
+| thinking | `stage_thinking.py` | s1K-1.1 |
+| tools | `stage_tools.py` | xlam-function-calling-60k |
+| streaming | `stage_streaming.py` | (runtime feature) |
+| image-gen | `stage_image_gen.py` | naruto-blip-captions |
+| video-gen | `stage_video_gen.py` | webvid |
+
+### Run Individual Stage
+
+```bash
+python src/stages/stage_cot.py \
+    --base-model /mnt/e/data/models/Qwen2.5-0.5B \
+    --output-dir /mnt/e/data/models/trained/cot \
+    --epochs 3 \
+    --sample-size 1000
+```
+
+---
+
+## Hardware Requirements
+
+| Training Type | VRAM | Notes |
+|---------------|------|-------|
+| Text capabilities | 8GB | CoT, reasoning, tools |
+| Omni conversion | 14GB | Adds encoders |
+| Image generation | 14GB | SD3 projector |
+| Video generation | 14GB+ | SVD projector |
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+**GPU Out of Memory**
+
+```bash
+# Reduce batch size
+./run_universal_pipeline.sh --batch-size=1 --enable-cot
+
+# Use 8-bit quantization
+# (configure in stage script)
+```
+
+**Training Paused Unexpectedly**
+
+```bash
+# Check GPU temperature
+nvidia-smi --query-gpu=temperature.gpu --format=csv
+
+# Check if paused
+grep "Paused" logs/train_*.log
+```
+
+**Modality Validation Failed**
+
+```bash
+# Run modality detection
+python src/detect_modalities.py /path/to/model
+
+# Add --enable-omni to convert text model
+./run_universal_pipeline.sh --enable-omni --enable-podcast
+```
+
+---
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [TEST_SUITE.md](docs/TEST_SUITE.md) | Complete test documentation |
+| [SHELL_SCRIPTS.md](docs/SHELL_SCRIPTS.md) | Script reference |
+| [GUIDE.md](docs/GUIDE.md) | User guide |
+| [datasets.md](docs/multimodal/datasets.md) | Dataset catalog |
+
+---
+
+## License
+
+MIT License - See LICENSE file for details.
