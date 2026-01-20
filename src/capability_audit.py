@@ -23,7 +23,8 @@ def audit_capabilities():
     try:
         # We need the tokenizer separately for chat templates
         tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
-        model = OmniMultimodalLM(model_path)
+        # Disable injection AND decoders to avoid extra downloads/loading during IQ audit
+        model = OmniMultimodalLM(model_path, inject_vision=False, inject_audio=False, enable_decoders=False)
     except Exception as e:
         print(f"❌ FATAL: Model load failed: {e}")
         return

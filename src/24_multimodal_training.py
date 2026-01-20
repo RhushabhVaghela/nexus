@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import sys
 import random
+import itertools
 from typing import Dict, Any, List
 # Mock imports for standalone execution if modules missing
 try:
@@ -82,13 +83,18 @@ CONFIG = {
 class OmniDataset(torch.utils.data.IterableDataset):
     """
     Streamable Dataset loader for Omni-Modal Unified Schema.
-    Uses O(1) RAM by streaming files on-demand.
-    Handles splitting via deterministic file hashing.
+    Supports JSONL (stream) and JSON (list) formats.
+    Auto-normalizes:
+      - Alpaca (instruction/input/output)
+      - CoT (prompt/response)
+      - XLAM/Tool (query/answers)
+      - Native (messages)
     """
     def __init__(self, data_path: str, split: str = "train", samples_per_dataset: int = 0):
         self.split = split
         self.limit = samples_per_dataset
         self.base_path = Path(data_path)
+        self.dataset_counts = {} # Tracks count per dataset identifier
         
         if not self.base_path.exists():
             logger.error(f"❌ Data path not found: {self.base_path}")
@@ -101,27 +107,58 @@ class OmniDataset(torch.utils.data.IterableDataset):
 
     def _get_files_for_split(self):
         """Generator to yield relevant files for this split."""
+        
+        # Define Aliases
+        ALIASES = {
+            "train": ["train", "training", "train_data"],
+            "val": ["val", "validation", "eval", "evaluation", "dev"],
+            "test": ["test", "testing"]
+        }
+        
+        # flattened list of all known folder names to check for structure
+        ALL_KNOWN_FOLDERS = set([name for sublist in ALIASES.values() for name in sublist])
+        
         for ds_dir in self.dataset_dirs:
-            # 1. Look for explicit split folder
-            explicit_split_dir = ds_dir / self.split
-            if self.split == "val" and not explicit_split_dir.exists():
-                if (ds_dir / "validation").exists(): explicit_split_dir = ds_dir / "validation"
+            # 1. Detect if this dataset has ANY explicit structure
+            try:
+                # Scan immediate subdirectories
+                subdirs = {d.name.lower() for d in ds_dir.iterdir() if d.is_dir()}
+            except Exception:
+                subdirs = set()
                 
-            files = []
-            if explicit_split_dir.exists():
-                # Explicit split found - stream all files in it
-                # We use scan_dir/iterdir which is lazier than rglob
-                files = explicit_split_dir.rglob("*.jsonl")
+            has_explicit_structure = not subdirs.isdisjoint(ALL_KNOWN_FOLDERS)
+            target_folders = []
+            
+            # 2. Strategy Selection
+            if has_explicit_structure:
+                # STRICT MODE: Use only explicit folders matching the requested split aliases
+                # PREVENTS LEAKAGE: Do not fall back to scanning root if 'val' is missing but 'train' exists.
+                
+                possible_names = ALIASES.get(self.split, [])
+                for name in possible_names:
+                    # Check against detected subdirs to handle casing if needed, or just path check
+                    candidate = ds_dir / name
+                    if candidate.exists():
+                        target_folders.append(candidate)
+                        
+                # Yield files from matched folders (if any)
+                if target_folders:
+                    for folder in target_folders:
+                         # Lazy iterator for efficiency
+                         files_gen = itertools.chain(folder.rglob("*.jsonl"), folder.rglob("*.json"))
+                         for p in files_gen: 
+                             yield p
+                             
             else:
-                # No explicit split - use Hash-based Splitting on ALL files
-                # We interpret the filename hash to decide if it belongs to this split
-                all_files = ds_dir.rglob("*.jsonl")
+                 # AUTO SPLIT MODE: No standard folders found.
+                 # Apply Hash-based 90/5/5 splitting on the root
+                 
+                all_files_gen = itertools.chain(ds_dir.rglob("*.jsonl"), ds_dir.rglob("*.json"))
                 
-                for p in all_files:
+                for p in all_files_gen:
                     # Deterministic hash of relative path
                     h = hash(p.name) % 100 # 0-99
                     
-                    # 90/5/5 split
                     is_train = h < 90
                     is_val = 90 <= h < 95
                     is_test = h >= 95
@@ -132,59 +169,115 @@ class OmniDataset(torch.utils.data.IterableDataset):
                         yield p
                     elif self.split == "test" and is_test:
                         yield p
-                continue # Handled this dir via hash split
 
-            # Yield explicit files
-            for p in files:
-                yield p
+
 
     def __iter__(self):
         worker_info = torch.utils.data.get_worker_info()
-        
-        # Generator of files
         file_iterator = self._get_files_for_split()
         
-        # If multi-worker, checking sharding (optional, simple round-robin for now)
-        # Note: robust sharding for IterableDataset usually requires more complex logic
-        # keeping it simple: all workers race for files or we rely on single-process for now
-        
-        current_dataset_count = 0
-        current_dataset_path = None
-        
         for file_path in file_iterator:
-            # Reset count if we moved to a new dataset folder (heuristic: parent dir changed)
-            if current_dataset_path != file_path.parent:
-                current_dataset_count = 0
-                current_dataset_path = file_path.parent
+            # Identify dataset name for limit tracking (e.g. "Salesforce_xlam...")
+            try:
+                # Find which dataset_dir this file belongs to
+                dataset_name = next((d.name for d in self.dataset_dirs if d in file_path.parents), file_path.parent.name)
+            except:
+                dataset_name = file_path.parent.name
+            
+            # Check Global Dataset Limit
+            current_count = self.dataset_counts.get(dataset_name, 0)
+            if self.limit > 0 and current_count >= self.limit:
+                continue
                 
             try:
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    for line in f:
-                        if not line.strip(): continue
-                        
-                        # Per-dataset limiting
-                        if self.limit > 0 and current_dataset_count >= self.limit:
-                            break # Skip rest of file and rest of this folder? 
-                                  # Ideally we break file, but loop continues to next file.
-                                  # Current logic: breaks this file. 
+                if file_path.suffix == ".jsonl":
+                    # Stream line-by-line
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        for line in f:
+                            if not line.strip(): continue
+                            try:
+                                sample = json.loads(line)
+                                if self._yield_sample(sample, dataset_name):
+                                    yield self._process_sample(sample)
+                                else:
+                                    break # Limit hit for this dataset
+                            except json.JSONDecodeError: continue
                             
-                        try:
-                            sample = json.loads(line)
-                            processed = self._process_sample(sample)
-                            if processed:
-                                yield processed
-                                current_dataset_count += 1
-                                
-                                # Optimization: If we hit limit, we technically should skip 
-                                # other files in this dataset folder.
-                        except json.JSONDecodeError:
-                            continue
+                elif file_path.suffix == ".json":
+                    # Hybrid Strategy: Try valid JSON list first. If "Extra data", assume JSONL.
+                    # This handles "the-stack-smol" which names JSONL files as .json
+                    is_jsonl = False
+                    
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            data = json.load(f)
+                            if isinstance(data, list):
+                                for sample in data:
+                                    if self._yield_sample(sample, dataset_name):
+                                        yield self._process_sample(sample)
+                                    else:
+                                        break # Limit hit
+                    except json.JSONDecodeError as e:
+                        if "Extra data" in str(e):
+                            is_jsonl = True
+                        else:
+                            logger.warning(f"Error reading {file_path}: {e}")
+                            
+                    if is_jsonl:
+                         with open(file_path, 'r', encoding='utf-8') as f:
+                            for line in f:
+                                if not line.strip(): continue
+                                try:
+                                    sample = json.loads(line)
+                                    if self._yield_sample(sample, dataset_name):
+                                        yield self._process_sample(sample)
+                                    else:
+                                        break # Limit hit
+                                except json.JSONDecodeError: continue
             except Exception as e:
                 logger.warning(f"Error reading {file_path}: {e}")
 
+    def _yield_sample(self, sample, dataset_name):
+        """Returns True if sample should be yielded (updates count), False if limit reached."""
+        if self.limit > 0 and self.dataset_counts.get(dataset_name, 0) >= self.limit:
+            return False
+        self.dataset_counts[dataset_name] = self.dataset_counts.get(dataset_name, 0) + 1
+        return True
+
     def _process_sample(self, sample):
-        """Parse raw JSON into model input format"""
-        messages = sample.get("messages", [])
+        """Parse raw JSON into normalized model input format"""
+        # 1. Normalize Schema
+        messages = []
+        
+        # A. Native Messages
+        if "messages" in sample:
+            messages = sample["messages"]
+            
+        # B. CoT (prompt/response) or Alpaca (instruction/output)
+        elif "prompt" in sample and "response" in sample:
+            messages = [
+                {"role": "user", "content": sample["prompt"]},
+                {"role": "assistant", "content": sample["response"]}
+            ]
+        elif "instruction" in sample and "output" in sample:
+             # Handle Alpaca 'input' field if present
+            content = sample["instruction"]
+            if sample.get("input"): content += f"\nInput: {sample['input']}"
+            messages = [
+                {"role": "user", "content": content},
+                {"role": "assistant", "content": sample["output"]}
+            ]
+            
+        # C. XLAM (query/answers)
+        elif "query" in sample and "answers" in sample:
+            messages = [
+                {"role": "user", "content": sample["query"]},
+                {"role": "assistant", "content": sample["answers"]} # Typically JSON string
+            ]
+            
+        if not messages: return None # Unmatched schema
+        
+        # 2. Extract Modalities (Native only for now)
         modalities = sample.get("modalities", {})
         
         user_msg = next((m for m in messages if m["role"] == "user"), None)
@@ -224,26 +317,42 @@ class OmniDataset(torch.utils.data.IterableDataset):
             "label": assistant_msg["content"]
         }
 
-def collate_fn(batch):
+class DynamicDataCollator:
     """
-    Custom collator to handle multimodal batching.
+    Collator that adapts to the model's specific schema requirements.
+    (e.g., 'pixel_values' vs 'images', 'audio_features' vs 'audios')
     """
-    batch = [b for b in batch if b is not None and b.get("input_ids") != [-100]]
-    if not batch:
-        return {}
+    def __init__(self, schema):
+        self.schema = schema
+        self.vision_key = schema["vision_key"]
+        self.audio_key = schema["audio_key"]
+        self.text_key = schema["text_key"]
         
-    # In real pipeline, we would tokenize text and load images here.
-    # For simulation, we create dummy tensors.
-    
-    bs = len(batch)
-    return {
-        "input_ids": torch.randint(0, 1000, (bs, 10)), # Dummy tokens
-        # 3 channels, 384x384 standard for SigLIP
-        "pixel_values": torch.randn(bs, 3, 384, 384), 
-        # 128 features, 3000 frames standard for Whisper
-        "audio_features": torch.randn(bs, 128, 3000), 
-        "labels": torch.randint(0, 1000, (bs, 10))
-    }
+    def __call__(self, batch):
+        batch = [b for b in batch if b is not None]
+        if not batch: return {}
+        
+        # In a real scenario, this would handle tokenization and stacking.
+        # For simulation, we map the keys dynamically.
+        
+        bs = len(batch)
+        
+        # Base generic output
+        out = {
+            self.text_key: torch.randint(0, 1000, (bs, 10)),
+            "labels": torch.randint(0, 1000, (bs, 10))
+        }
+        
+        # Dynamic Modality keys
+        if self.schema["requires_vision_input"]:
+            # standard SigLIP shape or Native shape
+            out[self.vision_key] = torch.randn(bs, 3, 384, 384)
+            
+        if self.schema["requires_audio_input"]:
+            # standard Whisper shape or Native shape
+            out[self.audio_key] = torch.randn(bs, 128, 3000)
+            
+        return out
 
 def main():
     parser = argparse.ArgumentParser()
@@ -321,13 +430,19 @@ def main():
         logger.info("Stage 2: Training Full Model")
         for p in model.parameters(): p.requires_grad = True
             
+    # 4.5. Detect Schema & Initialize Dynamic Collator
+    schema = model.get_input_schema()
+    logger.info(f"📋 Detected Model Schema: {json.dumps(schema, indent=2)}")
+    
+    data_collator = DynamicDataCollator(schema)
+            
     # 5. Trainer
     trainer = Trainer(
         model=model,
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=val_dataset,
-        data_collator=collate_fn
+        data_collator=data_collator
     )
     
     logger.info("🚀 Starting Rolling Checkpoint Training...")

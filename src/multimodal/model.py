@@ -332,9 +332,9 @@ class ModularMultimodalWrapper(nn.Module):
 from transformers import Qwen2Config
 
 class OmniMultimodalLM(nn.Module):
-    def __init__(self, llm_name: str, **kwargs):
+    def __init__(self, llm_name: str, inject_vision: bool = None, inject_audio: bool = None, **kwargs):
         super().__init__()
-        print(f"\n🧠 INTELLIGENT MODEL LOAD: {llm_name}")
+        print(f"\\n🧠 INTELLIGENT MODEL LOAD: {llm_name}")
         
         # 1. Analyze Config for Capabilities
         self.capabilities = {"vision": False, "audio": False}
@@ -403,7 +403,7 @@ class OmniMultimodalLM(nn.Module):
                     max_position_embeddings=get_cfg_attr(original_config, "max_position_embeddings", 32768),
                     rms_norm_eps=get_cfg_attr(original_config, "rms_norm_eps", 1e-6),
                     tie_word_embeddings=False, 
-                    torch_dtype="float16"
+                    torch_dtype=get_cfg_attr(original_config, "torch_dtype", "float16")
                 )
                 
                 # CRITICAL: Preserve Quantization Config to avoid blowing up RAM (loading Int4 as FP16)
@@ -433,18 +433,19 @@ class OmniMultimodalLM(nn.Module):
                 raise e2
 
         # 3. Determine Injections
-        inject_vision = not self.capabilities["vision"]
-        inject_audio = not self.capabilities["audio"]
+        # Logic: If user passed explicit True/False, use it. Else, inject if capability is missing.
+        final_inject_vision = inject_vision if inject_vision is not None else (not self.capabilities["vision"])
+        final_inject_audio = inject_audio if inject_audio is not None else (not self.capabilities["audio"])
         
         print(f"  🛠️  Final Architecture Plan:")
-        print(f"      - Vision: Native={self.capabilities['vision']} -> Inject={inject_vision}")
-        print(f"      - Audio:  Native={self.capabilities['audio']}  -> Inject={inject_audio}")
+        print(f"      - Vision: Native={self.capabilities['vision']} -> Inject={final_inject_vision}")
+        print(f"      - Audio:  Native={self.capabilities['audio']}  -> Inject={final_inject_audio}")
 
         # 4. Wrap
         self.wrapper = ModularMultimodalWrapper(
             base_model=base_model,
-            inject_vision=inject_vision,
-            inject_audio=inject_audio,
+            inject_vision=final_inject_vision,
+            inject_audio=final_inject_audio,
             llm_dim=base_model.config.hidden_size,
             **kwargs
         )
