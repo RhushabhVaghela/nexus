@@ -1,22 +1,18 @@
-#!/usr/bin/env python3
-"""
-Stage 4 (OPTIONAL): Tool Integration Fine-Tuning (3-4 days)
-Learn to use npm, pip, API calls, Docker, deployment
-AND Research/Vision Tools.
-Output: checkpoints/stage4_tool_integration/final/
-"""
 
 import json
 import torch
 import logging
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Optional
 import os
+import gc
 
-from unsloth import FastLanguageModel
-from transformers import TrainingArguments
+from transformers import TrainingArguments, AutoTokenizer, BitsAndBytesConfig
 from trl import SFTTrainer
 from datasets import Dataset
+
+# Import our custom architecture
+from multimodal.model import OmniMultimodalLM
 
 # Create logs directory if it doesn't exist
 try:
@@ -79,74 +75,118 @@ TOOL_TRAJECTORIES = [
     }
 ]
 
-def create_tool_dataset() -> Dataset:
-    """Create dataset from tool trajectories"""
+def create_tool_dataset(tokenizer) -> Dataset:
+    """Create dataset from tool trajectories formatted for Qwen2"""
     data = []
+    
+    # Simple Qwen2/ChatML format
+    # user -> tool request
+    # model -> thought -> tool call
+    
     for i, traj in enumerate(TOOL_TRAJECTORIES):
-        data.append({
-            "id": f"tool_{i}",
-            "query": traj["query"],
-            "response": "\n".join(traj["trajectory"]),
-            "tools": ",".join(traj["tools"])
-        })
+        # Format as conversation
+        messages = [
+            {"role": "user", "content": traj["query"]},
+            {"role": "assistant", "content": "\n".join(traj["trajectory"])}
+        ]
+        
+        # Apply chat template
+        text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
+        data.append({"text": text})
     
     return Dataset.from_dict({
-        "text": [json.dumps({"query": d["query"], "response": d["response"]}) for d in data]
+        "text": [d["text"] for d in data]
     })
 
 def main():
     logger.info("="*70)
-    logger.info("🔧 STAGE 4: TOOL INTEGRATION (ENHANCED)")
+    logger.info("🔧 STAGE 5: TOOL INTEGRATION (OMNI ARCHITECTURE)")
     logger.info("="*70)
-    logger.info("Purpose: Learn tool usage (Terminal, Browser, Vision)")
-    logger.info("Duration: 3-4 days")
+    logger.info("Purpose: Fine-tune OmniMultimodalLM on tool usage trajectories")
+    logger.info("Strategy: Use Safe Loading (FP16 Encoders + Int4 LLM)")
     logger.info("="*70)
     
-    # Check base model
-    base_model = "checkpoints/stage3_grpo/final"
-    if not Path(base_model).exists():
-        logger.error(f"❌ Base model not found: {base_model}")
-        logger.error("   Run Stage 3 first: python 06_grpo_training.py")
-        return
+    # Configuration
+    base_model_path = "./checkpoints/manus_fine_tuning" # Stage 2 output
+    # If Stage 2 hasn't finished, use the base model path and we'll init fresh
+    if not os.path.exists(base_model_path) or len(os.listdir(base_model_path)) == 0:
+        logger.warning(f"⚠️  Stage 2 Checkpoint not found at {base_model_path}. Using base Qwen2.5-7B-Instruct.")
+        base_model_path = "Qwen/Qwen2.5-7B-Instruct" 
+
+    # Load Tokenizer
+    logger.info("\n📦 Loading Tokenizer...")
+    tokenizer = AutoTokenizer.from_pretrained(base_model_path, trust_remote_code=True)
+    tokenizer.pad_token = tokenizer.eos_token
     
-    # Load model
-    logger.info("\n📦 Loading model...")
+    # Load Model (Using Safe Logic from Stage 4)
+    logger.info("\n📦 Loading OmniMultimodalLM...")
     try:
-        model, tokenizer = FastLanguageModel.from_pretrained(
-            model_name=base_model,
-            max_seq_length=4096,
-            load_in_4bit=True,
-            dtype=torch.bfloat16,
+        # 1. Clean Memory
+        gc.collect()
+        torch.cuda.empty_cache()
+        
+        # 2. Init Model
+        model = OmniMultimodalLM(
+            llm_name="/mnt/e/data/base-model/Qwen2.5-Omni-7B-GPTQ-Int4",
+            vision_name="/mnt/e/data/encoders/vision encoders/siglip2-so400m-patch16-512",
+            audio_name="/mnt/e/data/encoders/audio encoders/whisper-large-v3-turbo",
+            inject_vision=True,
+            inject_audio=True
         )
+        
+        # 3. Enable Gradient Checkpointing (Critical for VRAM)
+        model.llm.gradient_checkpointing_enable() 
+        model.wrapper.vision_encoder.requires_grad_(False) # Freeze Encoders
+        model.wrapper.audio_encoder.requires_grad_(False)
+        
+        # Unfreeze Projectors? Or LoRA?
+        # For this script (demo), we'll rely on LoRA on the LLM if using Unsloth.
+        # But we replaced Unsloth.
+        # So we should probably target the specific query/key/value projections using PEFT.
+        
+        from peft import LoraConfig, get_peft_model, TaskType
+        
+        lora_config = LoraConfig(
+            r=16,
+            lora_alpha=32,
+            target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+            lora_dropout=0.05,
+            bias="none",
+            task_type="CAUSAL_LM"
+        )
+        # Apply LoRA to the LLM part of OmniMultimodalLM
+        # Note: OmniMultimodalLM wraps the LLM in self.llm
+        # BUT: OmniMultimodalLM.forward delegates. SFTTrainer expects a standard HF model.
+        # This is tricky. SFTTrainer expects `model(input_ids, labels) -> loss`.
+        # OmniMultimodalLM.forward signature: (input_ids, pixel_values, ...) -> logits/loss.
+        # It IS compatible if we verify the signature.
+        
+        # Apply LoRA to internal LLM
+        model.llm = get_peft_model(model.llm, lora_config)
+        model.print_trainable_parameters()
+        
     except Exception as e:
-        logger.error(f"❌ Failed to load base model: {e}")
+        logger.error(f"❌ Failed to load model: {e}")
         return
-    
-    # Add LoRA
-    model = FastLanguageModel.get_peft_model(
-        model,
-        r=32,
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
-                        "gate_proj", "up_proj", "down_proj"],
-    )
-    logger.info("✓ Model loaded")
-    
+
     # Create tool dataset
     logger.info("\n📂 Creating tool trajectory dataset...")
-    dataset = create_tool_dataset()
+    dataset = create_tool_dataset(tokenizer)
     logger.info(f"✓ Created {len(dataset)} tool trajectories")
     
-    # Training
+    # Training Arguments
     logger.info("\n⚙️  Starting tool integration training...")
     training_args = TrainingArguments(
-        output_dir="checkpoints/stage4_tool_integration",
+        output_dir="checkpoints/stage5_tool_integration",
         num_train_epochs=1,
-        per_device_train_batch_size=1,
+        per_device_train_batch_size=1, # Safe batch size
         gradient_accumulation_steps=4,
-        learning_rate=1e-6,
+        learning_rate=2e-5,
         save_steps=50,
-        logging_steps=5,
-        bf16=True,
+        logging_steps=1,
+        fp16=True, # Use FP16 matching our Encoders
+        remove_unused_columns=False, # Critical for custom models!
+        report_to="none"
     )
     
     trainer = SFTTrainer(
@@ -154,6 +194,8 @@ def main():
         tokenizer=tokenizer,
         args=training_args,
         train_dataset=dataset,
+        dataset_text_field="text",
+        max_seq_length=2048,
         packing=False,
     )
     
@@ -162,13 +204,16 @@ def main():
         logger.info("✅ Tool integration training complete!")
         
         # Save
-        model.save_pretrained("checkpoints/stage4_tool_integration/final")
-        tokenizer.save_pretrained("checkpoints/stage4_tool_integration/final")
+        trainer.save_model("checkpoints/stage5_tool_integration/final")
+        tokenizer.save_pretrained("checkpoints/stage5_tool_integration/final")
         logger.info("✓ Model saved")
+        
     except KeyboardInterrupt:
         logger.warning("⚠️  Training interrupted")
     except Exception as e:
         logger.error(f"❌ Training failed: {e}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
     main()

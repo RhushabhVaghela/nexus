@@ -1,156 +1,204 @@
-# Manus Any-to-Any Omni Model
+# Manus Universal Omni Model
 
-Production-ready any-to-any multimodal model with DFM connectors, optimized training suite, and comprehensive dataset support.
+**Production-ready Any-to-Any Multimodal Model with Full Capability Training Pipeline**
+
+> 🎯 **Goal**: Train a single model that can understand and generate Text, Images, Audio, and Video.
+
+---
+
+## 🆕 Latest Updates (January 2026)
+
+### New Pipeline Architecture
+
+- **Modality Detection**: Auto-detect model capabilities from config
+- **Capability Registry**: 12 trainable capabilities with modality gates
+- **Decoder Support**: Image generation (SD3) and Video generation (SVD)
+- **Training Controller**: Pause/resume, emergency checkpoints, cooldown intervals
+
+### Supported Capabilities
+
+| Category | Capability | Required Modalities |
+|----------|------------|---------------------|
+| **Text** | tool-calling, cot, reasoning, thinking, streaming | text |
+| **Audio** | podcast | text + audio_in + audio_out |
+| **Vision** | vision-qa, video-understanding | text + vision + video |
+| **Omni** | tri-streaming | ALL modalities |
+| **Generation** | image-generation, video-generation | text + vision_output/video_output |
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Base LLM: Qwen2.5-Omni-7B-GPTQ-Int4                           │
+├─────────────────────────────────────────────────────────────────┤
+│  ENCODERS (Input)                │  DECODERS (Output)           │
+│  ├─ SigLIP2 (Vision) 512x512     │  ├─ SD3 Medium (Images)      │
+│  ├─ Whisper V3 Turbo (Audio)     │  ├─ SVD 1.1 (Video)          │
+│  └─ Parakeet TDT (ASR)           │  └─ Built-in TTS (Audio)     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📁 Folder Structure
+
+```
+E:/data/
+├── base-model/
+│   └── Qwen2.5-Omni-7B-GPTQ-Int4/
+├── encoders/
+│   ├── vision encoders/siglip2-so400m-patch16-512/
+│   └── audio encoders/whisper-large-v3-turbo/
+├── decoders/
+│   ├── vision-decoders/stabilityai_stable-diffusion-3-medium-diffusers/
+│   └── audio-decoders/stabilityai_stable-video-diffusion-img2vid-xt-1-1/
+└── datasets/
+    ├── JourneyDB-GoT/          # Image generation
+    ├── Laion-Aesthetics-GoT/   # Image generation
+    ├── OmniEdit-GoT/           # Image editing
+    ├── VideoCoF-50k/           # Video generation
+    ├── olewave_OleSpeech-IV/   # Podcast
+    ├── O1-OPEN_OpenO1-SFT-Ultra/ # Reasoning
+    └── ... (42 total datasets)
+```
+
+---
 
 ## 🚀 Quick Start
 
-### 1. Test Setup (10 min)
+### 1. Detect Model Capabilities
 
 ```bash
-cd training-suite
-./train_1K_ultra.sh
+python src/detect_modalities.py /mnt/e/data/base-model/Qwen2.5-Omni-7B-GPTQ-Int4
 ```
 
-### 2. Development (3 hours)
+### 2. View Available Capabilities
 
 ```bash
-cd training-suite
-./train_100K_ultra.sh
+python src/capability_registry.py
 ```
 
-### 3. Production (6 days)
+### 3. Run Training
 
 ```bash
-cd training-suite
-./train_5M_ultra.sh
+# Text capabilities (safe, low VRAM)
+./run_pipeline.sh --enable-cot --enable-tools
+
+# Full Omni with image generation
+./run_pipeline.sh --enable-omni --enable-image-generation
 ```
 
-## 📁 Project Structure
+---
 
-```
-manus_model/
-├── src/                          # Source code
-│   ├── multimodal/              # Multimodal components
-│   │   ├── model.py             # OmniMultimodalLM (DFM-powered)
-│   │   ├── connectors/          # DFM & Perceiver connectors
-│   │   └── datasets/            # Dataset loaders
-│   ├── utils/                   # Utilities
-│   ├── 24_multimodal_training.py # Main training script
-│   └── process_manual_datasets.py
-├── training-suite/              # 18 training scripts
-│   ├── README.md
-│   ├── train_1K_ultra.sh       # Fast test
-│   ├── train_5M_ultra.sh       # Production (recommended)
-│   └── train_FULL_ultra.sh     # Complete dataset
-├── config/                      # Training configurations
-│   ├── training_config.yaml
-│   ├── ds_config.json          # DeepSpeed ZeRO-2
-│   └── ds_config_ultra.json    # DeepSpeed ZeRO-3
-├── base-model/                 # Model weights
-│   ├── gpt-oss-20b/
-│   ├── siglip2-so400m-patch16-512/
-│   ├── whisper-large-v3-turbo/
-│   ├── PaDT_OVD_3B/
-│   └── parakeet-tdt-0.6b-v3/
-├── results/                    # Training results CSV
-└── logs/                       # Training logs
+## ⚙️ Training Features
 
-## 🎯 Features
-
-- **True Any-to-Any**: Image → Video, Audio → Text, etc.
-- **DFM Connectors**: SOTA discrete flow matching (5-10% gains)
-- **Ultra-Optimized**: 6x faster training (4-bit, ZeRO-3)
-- **100M+ Samples**: E-MM1 + 10 manual datasets
-- **Memory Efficient**: Fits 16GB VRAM + 32GB RAM
-- **Auto Train/Val/Test**: 80/10/10 splits automatic
-
-## � Pipeline Usage
-
-The project uses two master shell scripts to handle the entire lifecycle.
-
-### 1. Multimodal Pipeline (Vision/Audio/Video)
-
-Use this for training the Omni-Modal model (Connectors, Projectors, Full Fine-tuning).
+### Pause/Resume Training
 
 ```bash
-./run_multimodal_pipeline.sh [PHASE] [OPTIONS]
+# Get training PID
+ps aux | grep python
+
+# Pause training
+kill -USR1 <PID>
+
+# Resume training
+kill -USR1 <PID>
 ```
 
-**Phases:**
-
-- `download`: Download raw datasets (Script 22).
-- `distill`: Run teacher distillation (Script 23).
-- `train`: Run training loop (Script 24).
-- `all`: Run full sequence (**Default**).
-
-**Options (Flags)**
-
-| Flag | Description | Valid Values | Default |
-| :--- | :--- | :--- | :--- |
-| `--modality` | Data type to process | `vision`, `audio`, `video` | `vision` |
-| `--stage` | Training configuration | `1` (Projectors), `2` (Full Model) | `1` |
-| `--sample-size` | **Limit samples per dataset** | Any Integer (e.g. `50`) | `0` (All) |
-| `--limit` | Download limit (HuggingFace) | Any Integer | `1000` |
-| `--teacher` | Teacher model for labelling | `mock-teacher`, `gpt-4v` | `mock-teacher` |
-
-**Example:**
+### Emergency Checkpoint
 
 ```bash
-# Train Stage 1 with only 50 samples per dataset (Fast Test)
-./run_multimodal_pipeline.sh train --stage=1 --sample-size=50
+# Force immediate checkpoint save
+kill -USR2 <PID>
 ```
 
-### 2. Text/Code Pipeline (SFT/RLHF)
+### Automatic Cooldown
 
-Use this for standard LLM fine-tuning (Text, Code, Reasoning).
+- Every 500 steps: 1 minute cooldown
+- GPU temp > 83°C: Auto cooldown
+- Configurable in `src/training_controller.py`
 
-```bash
-./run_pipeline.sh [PHASE] [OPTIONS]
-```
+---
 
-**Phases:** `download`, `process`, `validate`, `train`, `all`.
+## 💾 Hardware Requirements
 
-**Options (Flags)**
+| Component | Minimum | Recommended |
+|-----------|---------|-------------|
+| GPU | RTX 3080 16GB | RTX 4090 24GB |
+| RAM | 32GB | 64GB |
+| Storage | 500GB SSD | 1TB NVMe |
+| VRAM (Training) | 14GB | 20GB |
 
-| Flag | Description | Valid Values | Default |
-| :--- | :--- | :--- | :--- |
-| `--mode` | Safety alignment mode | `censored`, `uncensored` | `censored` |
-| `--sample-size` | Download limit | Any Integer | `200000` |
-| `--target-samples` | Premium data limit | Any Integer | `100000` |
+### Your Setup (RTX 5080 16GB)
 
-## 🛠 Setup
+- ✅ Text capabilities: Full speed
+- ✅ Podcast, Vision-QA: Full speed
+- ⚠️ Image/Video generation: Use gradient checkpointing
+- ⚠️ Tri-streaming: Reduce batch size to 1
 
-```bash
-conda activate manus
-pip install -r requirements.txt
-```
+---
 
-## 📈 Results
+## 📊 Dataset Summary
 
-All experiments logged to `results/training_results.csv`:
+| Category | Datasets | Total Samples |
+|----------|----------|---------------|
+| Reasoning | CoT-Collection, O1-SFT-Pro/Ultra | ~500K |
+| Tool-Calling | Gorilla, XLAM, Hermes | ~150K |
+| Podcast | OleSpeech-IV, SPoRC, Cornell | ~200K |
+| Image Gen | JourneyDB-GoT, Laion-GoT, OmniEdit-GoT | ~220K |
+| Video Gen | VideoCoF-50k, MSR-VTT, VaTeX | ~100K |
 
-- Training/val/test losses
-- VRAM/RAM usage
-- Training time
-- Throughput
+---
 
-View results:
+## 🔧 Configuration
 
-```bash
-cat results/training_results.csv
-```
+### `configs/encoders.yaml`
 
-## 🏗 Architecture
+Central configuration for all encoder/decoder paths and dataset mappings.
 
-- **LLM**: GPT-OSS-20B (13GB, 4-bit quantized)
-- **Vision**: SigLIP2 → DFM Connector
-- **Audio**: Whisper V3 → DFM Connector
-- **Video Decoder**: PaDT_OVD_3B
-- **Speech Decoder**: Parakeet-TDT
-- **Optimization**: DeepSpeed ZeRO-3, 4-bit QLoRA
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `src/detect_modalities.py` | Probe model for native capabilities |
+| `src/capability_registry.py` | Define capability requirements |
+| `src/training_controller.py` | Pause/resume/checkpoint/cooldown |
+| `src/24_multimodal_training.py` | Main Omni training script |
+
+---
+
+## 📈 Expected Results (Hypothetical)
+
+After training on all datasets with proper hyperparameters:
+
+| Benchmark | Expected Score | Comparison |
+|-----------|----------------|------------|
+| MMLU | ~75-78% | Above Llama-3.1-8B |
+| HellaSwag | ~82-85% | Competitive with GPT-4o-mini |
+| Function Calling | ~85-88% | Near Gorilla-Openfunctions |
+| Vision QA | ~70-72% | Below GPT-4V, above LLaVA |
+| Audio Understanding | ~65-70% | Competitive tier |
+
+**Positioning**: Upper-mid tier open-source multimodal model.
+
+---
+
+## ✅ Checklist
+
+- [x] Modality detection system
+- [x] Capability registry with gates
+- [x] Encoder/decoder path configuration
+- [x] Training controller with safety features
+- [ ] Orchestrator script rewrite
+- [ ] Image/Video generation projector training
+- [ ] Full benchmark evaluation
+
+---
 
 ## 📚 Documentation
 
-See `training-suite/README.md` for detailed usage.
-
-## ✅ Ready to Train
+- [Pipeline Architecture](./docs/pipeline_architecture_plan.md)
+- [Dataset Catalog](./dataset%20and%20performance%20suggestions.md)
+- [Training Suite](./training-suite/README.md)

@@ -37,15 +37,18 @@ class OptimalTransport(nn.Module):
         # Convert cost to similarity
         K = torch.exp(-cost_matrix / self.epsilon)
         
-        # Initialize marginals
-        u = torch.ones(B, N, device=cost_matrix.device) / N
-        v = torch.ones(B, M, device=cost_matrix.device) / M
+        # Initialize marginals with correct dtype
+        u = torch.ones(B, N, device=cost_matrix.device, dtype=cost_matrix.dtype) / N
+        v = torch.ones(B, M, device=cost_matrix.device, dtype=cost_matrix.dtype) / M
         
         # Sinkhorn iterations
+        # EPSILON: Use 1e-4 for FP16 stability (1e-8 is zero in half precision)
+        eps = 1e-4 if cost_matrix.dtype == torch.float16 else 1e-8
+        
         for _ in range(self.num_iters):
             # u: (B, N), v: (B, M), K: (B, N, M)
-            u = 1.0 / (torch.bmm(K, v.unsqueeze(-1)).squeeze(-1) + 1e-8)
-            v = 1.0 / (torch.bmm(K.transpose(-2, -1), u.unsqueeze(-1)).squeeze(-1) + 1e-8)
+            u = 1.0 / (torch.bmm(K, v.unsqueeze(-1)).squeeze(-1) + eps)
+            v = 1.0 / (torch.bmm(K.transpose(-2, -1), u.unsqueeze(-1)).squeeze(-1) + eps)
         
         # Compute transport plan: u[i] * K[i,j] * v[j]
         transport_plan = u.unsqueeze(-1) * K * v.unsqueeze(-2)

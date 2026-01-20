@@ -73,9 +73,9 @@ logger = setup_logger(__name__, "logs/multimodal_training.log")
 
 CONFIG = {
     "base_model": "/mnt/e/data/base-model/Qwen2.5-Omni-7B-GPTQ-Int4",
-    "vision_model": "/mnt/e/data/base-model/siglip2-so400m-patch16-512",
-    "audio_model": "/mnt/e/data/base-model/whisper-large-v3-turbo",
-    "output_dir": "/mnt/e/models/omnimodal_any2any",
+    "vision_model": "/mnt/e/data/encoders/vision encoders/siglip2-so400m-patch16-512",
+    "audio_model": "/mnt/e/data/encoders/audio encoders/whisper-large-v3-turbo",
+    "output_dir": "/mnt/e/data/models/omnimodal_any2any",
     "use_emm1": False, 
     "emm1_shards": [], 
 }
@@ -275,6 +275,15 @@ class OmniDataset(torch.utils.data.IterableDataset):
                 {"role": "assistant", "content": sample["answers"]} # Typically JSON string
             ]
             
+        # D. Math (problem/answer or question/answer)
+        elif ("problem" in sample or "question" in sample) and ("answer" in sample or "solution" in sample):
+            q = sample.get("problem") or sample.get("question")
+            a = sample.get("answer") or sample.get("solution")
+            messages = [
+                {"role": "user", "content": q},
+                {"role": "assistant", "content": a}
+            ]
+            
         if not messages: return None # Unmatched schema
         
         # 2. Extract Modalities (Native only for now)
@@ -345,8 +354,8 @@ class DynamicDataCollator:
         
         # Dynamic Modality keys
         if self.schema["requires_vision_input"]:
-            # standard SigLIP shape or Native shape
-            out[self.vision_key] = torch.randn(bs, 3, 384, 384)
+            # standard SigLIP shape (SigLIP2-512 uses 512x512)
+            out[self.vision_key] = torch.randn(bs, 3, 512, 512)
             
         if self.schema["requires_audio_input"]:
             # standard Whisper shape or Native shape

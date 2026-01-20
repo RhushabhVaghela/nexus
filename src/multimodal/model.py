@@ -107,7 +107,7 @@ class FeedForward(nn.Module):
 
 class VisionEncoder(nn.Module):
     """SigLIP 2 Vision Encoder (Feb 2025)"""
-    def __init__(self, model_name="google/siglip-so400m-patch14-512", output_dim=1152, load_in_8bit=False):
+    def __init__(self, model_name="google/siglip-so400m-patch14-512", output_dim=1152, load_in_8bit=False, device_map=None):
         super().__init__()
         print(f"Loading Vision Encoder: {model_name}")
         if load_in_8bit:
@@ -116,7 +116,7 @@ class VisionEncoder(nn.Module):
             self.encoder = AutoModel.from_pretrained(
                 model_name, 
                 quantization_config=bnb_config,
-                device_map="auto",
+                device_map=device_map,
                 trust_remote_code=True
             )
         else:
@@ -125,7 +125,7 @@ class VisionEncoder(nn.Module):
                 trust_remote_code=True,
                 torch_dtype=torch.float16,
                 low_cpu_mem_usage=True,
-                device_map={'': 'cpu'}
+                device_map=device_map
             )
         self.output_dim = output_dim
         for param in self.encoder.parameters():
@@ -139,7 +139,7 @@ class AudioEncoder(nn.Module):
     """Whisper Large V3 Turbo Audio Encoder"""
 class AudioEncoder(nn.Module):
     """Whisper Large V3 Turbo Audio Encoder"""
-    def __init__(self, model_name="openai/whisper-large-v3-turbo", output_dim=1280, load_in_8bit=False):
+    def __init__(self, model_name="openai/whisper-large-v3-turbo", output_dim=1280, load_in_8bit=False, device_map=None):
         super().__init__()
         print(f"Loading Audio Encoder: {model_name}")
         if load_in_8bit:
@@ -148,7 +148,7 @@ class AudioEncoder(nn.Module):
             whisper_model = WhisperModel.from_pretrained(
                 model_name,
                 quantization_config=bnb_config,
-                device_map="auto"
+                device_map=device_map
             )
             self.encoder = whisper_model.encoder
         else:
@@ -156,7 +156,7 @@ class AudioEncoder(nn.Module):
                 model_name,
                 torch_dtype=torch.float16,
                 low_cpu_mem_usage=True,
-                device_map={'': 'cpu'}
+                device_map=device_map
             ).encoder
         self.output_dim = output_dim
         for param in self.encoder.parameters():
@@ -246,26 +246,44 @@ class ModularMultimodalWrapper(nn.Module):
             gc.collect()
             torch.cuda.empty_cache()
             print(f"  👁️  Injecting Vision Module ({vision_name})...")
-            self.vision_encoder = VisionEncoder(model_name=vision_name, load_in_8bit=True)
-            self.vision_proj = nn.Linear(self.vision_encoder.output_dim, self.llm_dim).to(device)
+            # Load config to get hidden size if needed, but we trust defaults or config
+            # MANUAL CPU LOAD -> GPU MOVE to avoid Accelerate VRAM fragmentation
+            self.vision_encoder = VisionEncoder(
+                model_name=vision_name, 
+                load_in_8bit=False, 
+                device_map={'': 'cpu'}
+            )
+            # Move to GPU explicitly
+            print(f"  ➡️  Moving Vision to {device}...")
+            self.vision_encoder.to(device)
+            
+            self.vision_proj = nn.Linear(self.vision_encoder.output_dim, self.llm_dim).to(device, dtype=torch.float16)
             
             if self.use_dfm:
-                self.vision_connector = DFMConnector(dim=self.llm_dim, num_latents=num_latents).to(device)
+                self.vision_connector = DFMConnector(dim=self.llm_dim, num_latents=num_latents).to(device, dtype=torch.float16)
             else:
-                self.vision_connector = PerceiverResampler(dim=self.llm_dim, num_latents=num_latents).to(device)
+                self.vision_connector = PerceiverResampler(dim=self.llm_dim, num_latents=num_latents).to(device, dtype=torch.float16)
         else:
             print("  ✅ Base model handles Vision natively. Skipping injection.")
 
         # 2. Audio Injection
         if self.inject_audio:
             print(f"  👂  Injecting Audio Module ({audio_name})...")
-            self.audio_encoder = AudioEncoder(model_name=audio_name, load_in_8bit=True)
-            self.audio_proj = nn.Linear(self.audio_encoder.output_dim, self.llm_dim).to(device)
+            # Load on CPU first
+            self.audio_encoder = AudioEncoder(
+                model_name=audio_name, 
+                load_in_8bit=False, 
+                device_map={'': 'cpu'}
+            )
+            print(f"  ➡️  Moving Audio to {device}...")
+            self.audio_encoder.to(device)
+            
+            self.audio_proj = nn.Linear(self.audio_encoder.output_dim, self.llm_dim).to(device, dtype=torch.float16)
             
             if self.use_dfm:
-                self.audio_connector = DFMConnector(dim=self.llm_dim, num_latents=num_latents).to(device)
+                self.audio_connector = DFMConnector(dim=self.llm_dim, num_latents=num_latents).to(device, dtype=torch.float16)
             else:
-                self.audio_connector = PerceiverResampler(dim=self.llm_dim, num_latents=num_latents).to(device)
+                self.audio_connector = PerceiverResampler(dim=self.llm_dim, num_latents=num_latents).to(device, dtype=torch.float16)
         else:
             print("  ✅ Base model handles Audio natively. Skipping injection.")
 
@@ -276,11 +294,13 @@ class ModularMultimodalWrapper(nn.Module):
         if self.enable_decoders:
              self.video_decoder = VideoDecoder()
              self.speech_decoder = SpeechDecoder()
-             self.video_proj_out = nn.Linear(self.llm_dim, self.video_decoder.hidden_dim).to(device)
-             self.speech_proj_out = nn.Linear(self.llm_dim, self.speech_decoder.hidden_dim).to(device)
+             self.video_proj_out = nn.Linear(self.llm_dim, self.video_decoder.hidden_dim).to(device, dtype=torch.float16)
+             self.speech_proj_out = nn.Linear(self.llm_dim, self.speech_decoder.hidden_dim).to(device, dtype=torch.float16)
 
     def encode_vision(self, images):
         if not self.inject_vision: return None
+        # FORCE FP16 INPUT
+        images = images.to(dtype=torch.float16)
         features = self.vision_encoder(images)
         features = self.vision_proj(features)
         if self.use_dfm:
@@ -291,6 +311,8 @@ class ModularMultimodalWrapper(nn.Module):
 
     def encode_audio(self, audio_features):
         if not self.inject_audio: return None
+        # FORCE FP16 INPUT
+        audio_features = audio_features.to(dtype=torch.float16)
         features = self.audio_encoder(audio_features)
         features = self.audio_proj(features)
         if self.use_dfm:
@@ -356,9 +378,9 @@ class OmniMultimodalLM(nn.Module):
         self.capabilities = {"vision": False, "audio": False}
         self.native_input_keys = {"vision": "images", "audio": "audios"} # Defaults for Qwen
         
-        # Extract names for Wrapper but remove from kwargs for Base Model
-        vision_name = kwargs.pop("vision_name", "google/siglip-so400m-patch14-512")
-        audio_name = kwargs.pop("audio_name", "openai/whisper-large-v3-turbo")
+        # Default to local encoder paths (user's refactored folder structure)
+        vision_name = kwargs.pop("vision_name", "/mnt/e/data/encoders/vision encoders/siglip2-so400m-patch16-512")
+        audio_name = kwargs.pop("audio_name", "/mnt/e/data/encoders/audio encoders/whisper-large-v3-turbo")
         
         # Extract wrapper-specific flags to prevent pollution of Base Model init
         wrapper_enable_decoders = kwargs.pop("enable_decoders", True)
@@ -367,14 +389,18 @@ class OmniMultimodalLM(nn.Module):
         
         try:
             config = AutoConfig.from_pretrained(llm_name, trust_remote_code=True)
-            self.capabilities["vision"] = hasattr(config, "vision_config") or "vision" in str(config).lower()
-            self.capabilities["audio"] = hasattr(config, "audio_config") or "audio" in str(config).lower()
+            has_vision_config = hasattr(config, "vision_config") or getattr(config, "model_type", "") in ["qwen2_5_omni", "qwen2_vl"]
+            has_audio_config = hasattr(config, "audio_config") or getattr(config, "model_type", "") in ["qwen2_5_omni", "qwen2_audio"] or hasattr(config, "token2wav_config")
             
-            # Special check for Qwen-Omni series
-            if config.architectures and "Omni" in config.architectures[0]:
-                 self.capabilities["vision"] = True
-                 self.capabilities["audio"] = True
-                 
+            self.capabilities["vision"] = has_vision_config
+            self.capabilities["audio"] = has_audio_config
+            
+            if has_vision_config and has_audio_config:
+                print(f"  ✨ Detected Native Omni Model! Disabling external injection.")
+                # Force disabling injection if model is natively Omni
+                inject_vision = False
+                inject_audio = False
+            
             print(f"  🔍 Detected Native Capabilities: {self.capabilities}")
             
         except Exception:
@@ -396,9 +422,33 @@ class OmniMultimodalLM(nn.Module):
             print("  ✅ Base Model Loaded Successfully (Native/Text).")
             
         except Exception as e:
-            print(f"  ❌ Native Load Failed: {e}")
+            print(f"  ❌ Native AutoModelForCausalLM Failed: {e}")
+            
+            # Retry with generic AutoModel (sometimes needed for custom architectures like Omni)
+            try:
+                base_model = AutoModel.from_pretrained(
+                    llm_name, 
+                    device_map="auto", 
+                    trust_remote_code=True,
+                    low_cpu_mem_usage=True
+                )
+                native_success = True
+                print("  ✅ Base Model Loaded Successfully (Native/Generic).")
+            except Exception as e_generic:
+                print(f"  ❌ Native AutoModel Failed: {e_generic}")
+
+        if not native_success:
             print("  ⚠️ Fallback: Performing Architecture Transplantation (Omni -> Qwen2 Native)...")
             
+            # CRITICAL: If native load failed, we are stripping vision/audio caps.
+            # We MUST re-enable injection unless the user explicitly said NO.
+            if has_vision_config:
+                 print("  🔄 Re-enabling Vision Injection (Native module unavailable).")
+                 inject_vision = True
+            if has_audio_config:
+                 print("  🔄 Re-enabling Audio Injection (Native module unavailable).")
+                 inject_audio = True
+
             try:
                 # TRANSPLANTATION: Create a healthy Qwen2 body for the weights
                 original_config = AutoConfig.from_pretrained(llm_name, trust_remote_code=True)
@@ -468,6 +518,39 @@ class OmniMultimodalLM(nn.Module):
             except Exception as e2:
                 print(f"  ❌ Transplantation Failed: {e2}")
                 raise e2
+
+        # 2.5 CRITICAL GPTQ FIX: Ensure qzeros are Int32 (Fix for "rshift not implemented for Half")
+        # Applies to BOTH Native and Transplanted models
+        print("  🔧 Verifying GPTQ module dtypes (qzeros/qweight/scales)...")
+        count = 0
+        fixed_qweight = 0
+        fixed_scales = 0
+        
+        for name, module in base_model.named_modules():
+            # Check for AutoGPTQ QuantLinear attributes
+            if hasattr(module, "qzeros"):
+                # qzeros MUST be int32
+                if module.qzeros.dtype != torch.int32:
+                    module.qzeros = module.qzeros.to(torch.int32)
+                    count += 1
+            
+            if hasattr(module, "qweight"):
+                # qweight MUST be int32
+                if module.qweight.dtype != torch.int32:
+                    # Very rare, usually Int32, but check anyway
+                    print(f"    ⚠️ Fixing qweight for {name} (was {module.qweight.dtype})")
+                    module.qweight = module.qweight.to(torch.int32)
+                    fixed_qweight += 1
+            
+            if hasattr(module, "scales"):
+                # scales MUST include float16 (match model dtype)
+                if module.scales.dtype == torch.float32:
+                     # This is usually fine, but let's be consistent if the model is float16
+                     pass
+
+        if count > 0 or fixed_qweight > 0:
+            print(f"     -> GPTQ Fix Summary: qzeros={count}, qweight={fixed_qweight}")
+                
 
         # 3. Determine Injections
         # Logic: If user passed explicit True/False, use it. Else, inject if capability is missing.
