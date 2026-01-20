@@ -120,7 +120,13 @@ class VisionEncoder(nn.Module):
                 trust_remote_code=True
             )
         else:
-            self.encoder = AutoModel.from_pretrained(model_name, trust_remote_code=True)
+            self.encoder = AutoModel.from_pretrained(
+                model_name, 
+                trust_remote_code=True,
+                torch_dtype=torch.float16,
+                low_cpu_mem_usage=True,
+                device_map={'': 'cpu'}
+            )
         self.output_dim = output_dim
         for param in self.encoder.parameters():
             param.requires_grad = False
@@ -129,6 +135,8 @@ class VisionEncoder(nn.Module):
         outputs = self.encoder.vision_model(pixel_values=images)
         return outputs.last_hidden_state
 
+class AudioEncoder(nn.Module):
+    """Whisper Large V3 Turbo Audio Encoder"""
 class AudioEncoder(nn.Module):
     """Whisper Large V3 Turbo Audio Encoder"""
     def __init__(self, model_name="openai/whisper-large-v3-turbo", output_dim=1280, load_in_8bit=False):
@@ -144,7 +152,12 @@ class AudioEncoder(nn.Module):
             )
             self.encoder = whisper_model.encoder
         else:
-            self.encoder = WhisperModel.from_pretrained(model_name).encoder
+            self.encoder = WhisperModel.from_pretrained(
+                model_name,
+                torch_dtype=torch.float16,
+                low_cpu_mem_usage=True,
+                device_map={'': 'cpu'}
+            ).encoder
         self.output_dim = output_dim
         for param in self.encoder.parameters():
             param.requires_grad = False
@@ -228,7 +241,10 @@ class ModularMultimodalWrapper(nn.Module):
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         # 1. Vision Injection
+        import gc
         if self.inject_vision:
+            gc.collect()
+            torch.cuda.empty_cache()
             print(f"  👁️  Injecting Vision Module ({vision_name})...")
             self.vision_encoder = VisionEncoder(model_name=vision_name, load_in_8bit=True)
             self.vision_proj = nn.Linear(self.vision_encoder.output_dim, self.llm_dim).to(device)
@@ -340,6 +356,15 @@ class OmniMultimodalLM(nn.Module):
         self.capabilities = {"vision": False, "audio": False}
         self.native_input_keys = {"vision": "images", "audio": "audios"} # Defaults for Qwen
         
+        # Extract names for Wrapper but remove from kwargs for Base Model
+        vision_name = kwargs.pop("vision_name", "google/siglip-so400m-patch14-512")
+        audio_name = kwargs.pop("audio_name", "openai/whisper-large-v3-turbo")
+        
+        # Extract wrapper-specific flags to prevent pollution of Base Model init
+        wrapper_enable_decoders = kwargs.pop("enable_decoders", True)
+        wrapper_num_latents = kwargs.pop("num_latents", 64)
+        wrapper_use_dfm = kwargs.pop("use_dfm", True)
+        
         try:
             config = AutoConfig.from_pretrained(llm_name, trust_remote_code=True)
             self.capabilities["vision"] = hasattr(config, "vision_config") or "vision" in str(config).lower()
@@ -410,17 +435,29 @@ class OmniMultimodalLM(nn.Module):
                 if hasattr(original_config, "quantization_config"):
                     compatible_config.quantization_config = original_config.quantization_config
                     print(f"  💾 Preserved Quantization Config: {compatible_config.quantization_config.get('quant_method', 'unknown')}")
+                    # If model is already quantized (GPTQ/AWQ), we must disable dynamic quantization (BNB)
+                    print("  ⚠️ disabling load_in_8bit/4bit to avoid conflict with native quantization.")
+                    kwargs.pop("load_in_8bit", None)
+                    kwargs.pop("load_in_4bit", None)
+                    kwargs.pop("quantization_config", None)
                 
                 print(f"  🧬 Synthesized Compatible Config: Qwen2Config (Vocab={vocab_size}, L={compatible_config.num_hidden_layers}, H={compatible_config.hidden_size})")
                 
                 # Load weights into the compatible shell
                 # We rely on default permissive loading to ignore the extra "thinker/talker" keys
+                
+                # Clean kwargs to avoid duplicates with manual args
+                kwargs.pop("device_map", None)
+                kwargs.pop("trust_remote_code", None)
+                kwargs.pop("low_cpu_mem_usage", None)
+                
                 base_model = AutoModelForCausalLM.from_pretrained(
                     llm_name, 
                     config=compatible_config,
                     device_map="auto", 
                     trust_remote_code=True,
-                    low_cpu_mem_usage=True
+                    low_cpu_mem_usage=True,
+                    **kwargs
                 )
                 
                 # Since we transplanted, we effectively stripped native capabilities
@@ -442,11 +479,25 @@ class OmniMultimodalLM(nn.Module):
         print(f"      - Audio:  Native={self.capabilities['audio']}  -> Inject={final_inject_audio}")
 
         # 4. Wrap
+        # 4. Wrap
+        # Clean kwargs of model-loading specific args that Wrapper doesn't accept
+        for key in ["device_map", "load_in_8bit", "load_in_4bit", "quantization_config", "trust_remote_code", "torch_dtype", "attn_implementation"]:
+            kwargs.pop(key, None)
+        
+        import gc
+        gc.collect()
+        torch.cuda.empty_cache()
+            
         self.wrapper = ModularMultimodalWrapper(
             base_model=base_model,
             inject_vision=final_inject_vision,
             inject_audio=final_inject_audio,
+            vision_name=vision_name,
+            audio_name=audio_name,
             llm_dim=base_model.config.hidden_size,
+            enable_decoders=wrapper_enable_decoders,
+            num_latents=wrapper_num_latents,
+            use_dfm=wrapper_use_dfm,
             **kwargs
         )
         

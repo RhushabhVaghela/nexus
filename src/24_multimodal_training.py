@@ -395,7 +395,8 @@ def main():
         vision_name=CONFIG["vision_model"],
         audio_name=CONFIG["audio_model"],
         device_map="auto",  # Hybrid CPU/GPU
-        load_in_8bit=True    # Quantize frozen models
+        load_in_8bit=True,   # Quantize frozen models
+        enable_decoders=False # Disable output decoders during training to save VRAM
     )
     
     logger.info("Memory allocation:")
@@ -411,13 +412,19 @@ def main():
         output_dir=args.output_dir,
         max_steps=max_steps,          # Required for IterableDataset
         per_device_train_batch_size=1, # Conservative batch size
+        per_device_eval_batch_size=1,  # Conservative eval batch
         save_steps=100,
         save_total_limit=3,
         logging_steps=1,
         learning_rate=1e-3,
         report_to="none",
         disable_tqdm=False,
-        remove_unused_columns=False   # Important for custom multimodal inputs
+        remove_unused_columns=False,   # Important for custom multimodal inputs
+        do_eval=True,
+        eval_strategy="steps",
+        eval_steps=100,
+        dataloader_num_workers=0,      # CRITICAL: Prevent RAM spike from worker duplication
+        dataloader_pin_memory=False    # CRITICAL: Save RAM
     )
     
     # 4. Freeze/Unfreeze based on Stage
@@ -426,9 +433,18 @@ def main():
         for p in model.llm.parameters(): p.requires_grad = False
         for p in model.vision_projector.parameters(): p.requires_grad = True
         for p in model.audio_projector.parameters(): p.requires_grad = True
-    else:
-        logger.info("Stage 2: Training Full Model")
-        for p in model.parameters(): p.requires_grad = True
+    elif args.stage == 2:
+        logger.info("Stage 2: Training Full Model (Respecting Quantization)")
+        # For 8-bit models, we cannot unfreeze Int8 weights. 
+        # We unfreeze only Trainable parts (Float16/32).
+        count = 0
+        for name, p in model.named_parameters():
+            if p.dtype in [torch.float16, torch.float32, torch.bfloat16]:
+                p.requires_grad = True
+                count += 1
+            else:
+                p.requires_grad = False
+        logger.info(f"  Example: Unfrozen {count} floating-point parameters (Projectors/Connectors). Int8 backbone remains frozen.")
             
     # 4.5. Detect Schema & Initialize Dynamic Collator
     schema = model.get_input_schema()
