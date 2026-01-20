@@ -22,7 +22,7 @@ class ImageDecoder(ContentDecoder):
     """
     SigLIP 2 Processor (512px)
     """
-    def __init__(self, model_id: str = "google/siglip-so400m-patch14-512"):
+    def __init__(self, model_id: str = "/mnt/e/data/encoders/vision encoders/siglip2-so400m-patch16-512"):
         self.processor = None
         if AutoProcessor:
             try:
@@ -34,7 +34,7 @@ class ImageDecoder(ContentDecoder):
         return {
             "modality": "image",
             "tensor_type": "pixel_values",
-            "processor_id": "google/siglip-so400m-patch14-512",
+            "processor_id": "/mnt/e/data/encoders/vision encoders/siglip2-so400m-patch16-512",
             # "tensor": ... (Done in pipeline)
         }
 
@@ -42,7 +42,7 @@ class AudioDecoder(ContentDecoder):
     """
     Whisper V3 Turbo
     """
-    def __init__(self, model_id: str = "openai/whisper-large-v3-turbo"):
+    def __init__(self, model_id: str = "/mnt/e/data/encoders/audio encoders/whisper-large-v3-turbo"):
         self.processor = None
         if AutoProcessor:
             try:
@@ -54,14 +54,14 @@ class AudioDecoder(ContentDecoder):
         return {
             "modality": "audio",
             "tensor_type": "input_features",
-            "processor_id": "openai/whisper-large-v3-turbo"
+            "processor_id": "/mnt/e/data/encoders/audio encoders/whisper-large-v3-turbo"
         }
 
 class VideoDecoder(ContentDecoder):
     """
     SigLIP 2 (Temporal Pooling)
     """
-    def __init__(self, model_id: str = "google/siglip-so400m-patch14-512"):
+    def __init__(self, model_id: str = "/mnt/e/data/encoders/vision encoders/siglip2-so400m-patch16-512"):
         pass
 
     def decode(self, file_path: str) -> Dict[str, Any]:

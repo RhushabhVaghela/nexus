@@ -107,7 +107,7 @@ class FeedForward(nn.Module):
 
 class VisionEncoder(nn.Module):
     """SigLIP 2 Vision Encoder (Feb 2025)"""
-    def __init__(self, model_name="google/siglip-so400m-patch14-512", output_dim=1152, load_in_8bit=False, device_map=None):
+    def __init__(self, model_name="/mnt/e/data/encoders/vision encoders/siglip2-so400m-patch16-512", output_dim=1152, load_in_8bit=False, device_map=None):
         super().__init__()
         print(f"Loading Vision Encoder: {model_name}")
         if load_in_8bit:
@@ -137,9 +137,7 @@ class VisionEncoder(nn.Module):
 
 class AudioEncoder(nn.Module):
     """Whisper Large V3 Turbo Audio Encoder"""
-class AudioEncoder(nn.Module):
-    """Whisper Large V3 Turbo Audio Encoder"""
-    def __init__(self, model_name="openai/whisper-large-v3-turbo", output_dim=1280, load_in_8bit=False, device_map=None):
+    def __init__(self, model_name="/mnt/e/data/encoders/audio encoders/whisper-large-v3-turbo", output_dim=1280, load_in_8bit=False, device_map=None):
         super().__init__()
         print(f"Loading Audio Encoder: {model_name}")
         if load_in_8bit:
@@ -223,8 +221,8 @@ class ModularMultimodalWrapper(nn.Module):
         base_model,
         inject_vision: bool = False,
         inject_audio: bool = False,
-        vision_name: str = "google/siglip-so400m-patch14-512",
-        audio_name: str = "openai/whisper-large-v3-turbo",
+        vision_name: str = "/mnt/e/data/encoders/vision encoders/siglip2-so400m-patch16-512",
+        audio_name: str = "/mnt/e/data/encoders/audio encoders/whisper-large-v3-turbo",
         llm_dim: int = 4096,
         num_latents: int = 64,
         use_dfm: bool = True,
