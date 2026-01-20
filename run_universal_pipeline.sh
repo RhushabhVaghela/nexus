@@ -70,6 +70,7 @@ SAMPLE_SIZE=0  # 0 = all
 BATCH_SIZE=1
 GRADIENT_ACCUMULATION=8
 EPOCHS=3
+DRY_RUN=false
 
 # ============ PARSE ARGUMENTS ============
 print_usage() {
@@ -97,6 +98,7 @@ print_usage() {
     echo "  --sample-size N            Limit samples per dataset (0=all)"
     echo "  --batch-size N             Training batch size (default: 1)"
     echo "  --epochs N                 Training epochs (default: 3)"
+    echo "  --dry-run                  Simulate training without executing"
     echo ""
     exit 1
 }
@@ -137,6 +139,7 @@ for arg in "$@"; do
             ENABLE_VISION_QA=true
             ENABLE_TRI_STREAMING=true
             ;;
+        --dry-run) DRY_RUN=true ;;
         --help|-h) print_usage ;;
     esac
 done
@@ -166,6 +169,9 @@ echo -e "${CYAN}╚════════════════════�
 echo ""
 echo -e "  Base Model:  ${GREEN}$(basename "$BASE_MODEL")${NC}"
 echo -e "  Output:      ${OUTPUT_DIR}"
+if $DRY_RUN; then
+    echo -e "  Mode:        ${YELLOW}DRY-RUN (no actual training)${NC}"
+fi
 echo ""
 
 # ============ STAGE 0: DETECT MODALITIES ============
@@ -293,54 +299,132 @@ echo ""
 # ============ EXECUTE TRAINING STAGES ============
 CURRENT_MODEL="$BASE_MODEL"
 
+# Build common args
+COMMON_ARGS="--sample-size $SAMPLE_SIZE --batch-size $BATCH_SIZE --epochs $EPOCHS"
+if $DRY_RUN; then
+    COMMON_ARGS="$COMMON_ARGS --dry-run"
+fi
+
 for stage in "${STAGES[@]}"; do
     log_step "Training: $stage"
     STAGE_OUTPUT="${OUTPUT_DIR}/${stage}"
     mkdir -p "$STAGE_OUTPUT"
     
+    if $DRY_RUN; then
+        log_info "[DRY-RUN] Would train $stage"
+    fi
+    
     case $stage in
         omni)
-            python "${SRC_DIR}/24_multimodal_training.py" \
-                --base-model "$CURRENT_MODEL" \
-                --output-dir "$STAGE_OUTPUT" \
-                --sample-size "$SAMPLE_SIZE" \
-                2>&1 | tee "${LOG_DIR}/train_omni.log"
+            if $DRY_RUN; then
+                log_info "[DRY-RUN] python ${SRC_DIR}/24_multimodal_training.py --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+            else
+                python "${SRC_DIR}/24_multimodal_training.py" \
+                    --base-model "$CURRENT_MODEL" \
+                    --output-dir "$STAGE_OUTPUT" \
+                    --sample-size "$SAMPLE_SIZE" \
+                    2>&1 | tee "${LOG_DIR}/train_omni.log"
+            fi
             CURRENT_MODEL="$STAGE_OUTPUT"
             ;;
         tools)
-            python "${SRC_DIR}/16_tool_integration.py" \
-                --model "$CURRENT_MODEL" \
-                --output-dir "$STAGE_OUTPUT" \
-                2>&1 | tee "${LOG_DIR}/train_tools.log"
+            if $DRY_RUN; then
+                log_info "[DRY-RUN] python ${SRC_DIR}/stages/stage_tools.py --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+            else
+                python "${SRC_DIR}/stages/stage_tools.py" \
+                    --base-model "$CURRENT_MODEL" \
+                    --output-dir "$STAGE_OUTPUT" \
+                    $COMMON_ARGS \
+                    2>&1 | tee "${LOG_DIR}/train_tools.log"
+            fi
             CURRENT_MODEL="$STAGE_OUTPUT"
             ;;
-        cot|reasoning|thinking)
-            log_info "Running $stage training on reasoning datasets..."
-            python "${SRC_DIR}/10_sft_training.py" \
-                --model "$CURRENT_MODEL" \
-                --datasets "$stage" \
-                --output-dir "$STAGE_OUTPUT" \
-                --epochs "$EPOCHS" \
-                2>&1 | tee "${LOG_DIR}/train_${stage}.log"
+        cot)
+            if $DRY_RUN; then
+                log_info "[DRY-RUN] python ${SRC_DIR}/stages/stage_cot.py --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+            else
+                python "${SRC_DIR}/stages/stage_cot.py" \
+                    --base-model "$CURRENT_MODEL" \
+                    --output-dir "$STAGE_OUTPUT" \
+                    $COMMON_ARGS \
+                    2>&1 | tee "${LOG_DIR}/train_cot.log"
+            fi
+            CURRENT_MODEL="$STAGE_OUTPUT"
+            ;;
+        reasoning)
+            if $DRY_RUN; then
+                log_info "[DRY-RUN] python ${SRC_DIR}/stages/stage_reasoning.py --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+            else
+                python "${SRC_DIR}/stages/stage_reasoning.py" \
+                    --base-model "$CURRENT_MODEL" \
+                    --output-dir "$STAGE_OUTPUT" \
+                    $COMMON_ARGS \
+                    2>&1 | tee "${LOG_DIR}/train_reasoning.log"
+            fi
+            CURRENT_MODEL="$STAGE_OUTPUT"
+            ;;
+        thinking)
+            if $DRY_RUN; then
+                log_info "[DRY-RUN] python ${SRC_DIR}/stages/stage_thinking.py --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+            else
+                python "${SRC_DIR}/stages/stage_thinking.py" \
+                    --base-model "$CURRENT_MODEL" \
+                    --output-dir "$STAGE_OUTPUT" \
+                    $COMMON_ARGS \
+                    2>&1 | tee "${LOG_DIR}/train_thinking.log"
+            fi
+            CURRENT_MODEL="$STAGE_OUTPUT"
+            ;;
+        streaming)
+            if $DRY_RUN; then
+                log_info "[DRY-RUN] python ${SRC_DIR}/stages/stage_streaming.py --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+            else
+                python "${SRC_DIR}/stages/stage_streaming.py" \
+                    --base-model "$CURRENT_MODEL" \
+                    --output-dir "$STAGE_OUTPUT" \
+                    $COMMON_ARGS \
+                    2>&1 | tee "${LOG_DIR}/train_streaming.log"
+            fi
             CURRENT_MODEL="$STAGE_OUTPUT"
             ;;
         podcast|vision-qa|video-understanding|tri-streaming)
             log_info "Running multimodal $stage training..."
-            python "${SRC_DIR}/24_multimodal_training.py" \
-                --base-model "$CURRENT_MODEL" \
-                --output-dir "$STAGE_OUTPUT" \
-                --capability "$stage" \
-                --sample-size "$SAMPLE_SIZE" \
-                2>&1 | tee "${LOG_DIR}/train_${stage}.log"
+            if $DRY_RUN; then
+                log_info "[DRY-RUN] python ${SRC_DIR}/24_multimodal_training.py --capability $stage"
+            else
+                python "${SRC_DIR}/24_multimodal_training.py" \
+                    --base-model "$CURRENT_MODEL" \
+                    --output-dir "$STAGE_OUTPUT" \
+                    --capability "$stage" \
+                    --sample-size "$SAMPLE_SIZE" \
+                    2>&1 | tee "${LOG_DIR}/train_${stage}.log"
+            fi
             CURRENT_MODEL="$STAGE_OUTPUT"
             ;;
-        image-generation|video-generation)
-            log_info "Running generation projector training for $stage..."
-            log_warn "  (This is advanced - using projector-only training)"
-            python "${SRC_DIR}/stages/stage_${stage//-/_}.py" \
-                --base-model "$CURRENT_MODEL" \
-                --output-dir "$STAGE_OUTPUT" \
-                2>&1 | tee "${LOG_DIR}/train_${stage}.log" || true
+        image-generation)
+            log_info "Running image generation projector training..."
+            if $DRY_RUN; then
+                log_info "[DRY-RUN] python ${SRC_DIR}/stages/stage_image_gen.py --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+            else
+                python "${SRC_DIR}/stages/stage_image_gen.py" \
+                    --base-model "$CURRENT_MODEL" \
+                    --output-dir "$STAGE_OUTPUT" \
+                    $COMMON_ARGS \
+                    2>&1 | tee "${LOG_DIR}/train_image_gen.log"
+            fi
+            CURRENT_MODEL="$STAGE_OUTPUT"
+            ;;
+        video-generation)
+            log_info "Running video generation projector training..."
+            if $DRY_RUN; then
+                log_info "[DRY-RUN] python ${SRC_DIR}/stages/stage_video_gen.py --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+            else
+                python "${SRC_DIR}/stages/stage_video_gen.py" \
+                    --base-model "$CURRENT_MODEL" \
+                    --output-dir "$STAGE_OUTPUT" \
+                    $COMMON_ARGS \
+                    2>&1 | tee "${LOG_DIR}/train_video_gen.log"
+            fi
             CURRENT_MODEL="$STAGE_OUTPUT"
             ;;
         *)

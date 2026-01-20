@@ -26,8 +26,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 # ============ PATH CONSTANTS ============
 TEST_MODEL_PATH = "/mnt/e/data/models/Qwen2.5-0.5B"
 OMNI_MODEL_PATH = "/mnt/e/data/base-model/Qwen2.5-Omni-7B-GPTQ-Int4"
-VISION_ENCODER_PATH = "/mnt/e/data/encoders/vision encoders/siglip2-so400m-patch16-512"
-AUDIO_ENCODER_PATH = "/mnt/e/data/encoders/audio encoders/whisper-large-v3-turbo"
+VISION_ENCODER_PATH = "/mnt/e/data/encoders/vision-encoders/siglip2-so400m-patch16-512"
+AUDIO_ENCODER_PATH = "/mnt/e/data/encoders/audio-encoders/whisper-large-v3-turbo"
 
 
 # ============ MARKERS ============
