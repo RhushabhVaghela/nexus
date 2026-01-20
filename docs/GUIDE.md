@@ -1,0 +1,217 @@
+# Manus Universal Omni Model - Complete Guide
+
+> **Last Updated:** January 2026  
+> **Hardware:** RTX 5080+ 16GB VRAM  
+> **Status:** Ready for Training
+
+---
+
+## 🎯 Overview
+
+This project trains a **Universal Any-to-Any Multimodal Model** with:
+
+- 12 trainable capabilities (CoT, Tools, Podcast, Image Gen, etc.)
+- Automatic modality detection and validation
+- Unified orchestrator with capability flags
+
+---
+
+## 📁 Project Structure
+
+```
+manus_model/
+├── src/
+│   ├── detect_modalities.py     # Probe model capabilities
+│   ├── capability_registry.py   # 12 capability definitions
+│   ├── training_controller.py   # Pause/resume/checkpoint
+│   ├── 24_multimodal_training.py # Main Omni training
+│   ├── 10_sft_training.py       # Text SFT training
+│   └── multimodal/
+│       ├── model.py             # Encoders, wrappers
+│       └── decoders.py          # Decoder interfaces
+├── configs/
+│   └── encoders.yaml            # All encoder/decoder paths
+├── run_universal_pipeline.sh    # ⭐ MAIN ORCHESTRATOR
+├── run_pipeline.sh              # Text-only pipeline
+└── run_multimodal_pipeline.sh   # Omni conversion
+```
+
+---
+
+## 🚀 Quick Start
+
+### 1. Detect Your Model's Capabilities
+
+```bash
+python src/detect_modalities.py /mnt/e/data/base-model/Qwen2.5-Omni-7B-GPTQ-Int4
+```
+
+### 2. View Available Training Capabilities
+
+```bash
+python src/capability_registry.py
+```
+
+### 3. Run Training with Orchestrator
+
+```bash
+# Text-only (any model)
+./run_universal_pipeline.sh --enable-cot --enable-tools
+
+# Full Omni training
+./run_universal_pipeline.sh --enable-full-omni
+
+# With image generation
+./run_universal_pipeline.sh --enable-omni --enable-image-generation
+```
+
+---
+
+## 🎛️ Capability Flags
+
+| Flag | Requires | Description |
+|------|----------|-------------|
+| `--enable-omni` | text | Convert to full Omni |
+| `--enable-cot` | text | Chain-of-Thought reasoning |
+| `--enable-reasoning` | text | Multi-level reasoning |
+| `--enable-tools` | text | Function calling |
+| `--enable-podcast` | Omni | NotebookLM-style audio |
+| `--enable-vision-qa` | vision | Image understanding |
+| `--enable-tri-streaming` | ALL | Gemini Live-style |
+| `--enable-image-generation` | SD3 decoder | Text→Image |
+| `--enable-video-generation` | SVD decoder | Text→Video |
+| `--enable-all-text` | text | All text capabilities |
+| `--enable-full-omni` | text | Everything |
+
+---
+
+## 📂 Data Locations
+
+```
+E:/data/
+├── base-model/
+│   └── Qwen2.5-Omni-7B-GPTQ-Int4/     # Base LLM
+├── encoders/
+│   ├── vision encoders/siglip2-so400m-patch16-512/
+│   └── audio encoders/whisper-large-v3-turbo/
+├── decoders/
+│   ├── vision-decoders/stabilityai_stable-diffusion-3-medium/
+│   └── vision-decoders/stable-video-diffusion-img2vid-xt-1-1/
+├── datasets/
+│   ├── JourneyDB-GoT/          # Image generation
+│   ├── Laion-Aesthetics-GoT/   # Image generation
+│   ├── OmniEdit-GoT/           # Image editing
+│   ├── VideoCoF-50k/           # Video generation
+│   └── ... (42 total datasets)
+└── models/
+    ├── checkpoints/
+    └── final/
+```
+
+---
+
+## ⚙️ Hardware Requirements
+
+| Component | Minimum | Recommended |
+|-----------|---------|-------------|
+| GPU VRAM | 14GB | 16GB+ |
+| RAM | 32GB | 64GB |
+| Storage | 500GB | 1TB NVMe |
+
+### Capability VRAM Usage
+
+| Capability | VRAM | Time |
+|------------|------|------|
+| CoT, Tools | ~8GB | 2h |
+| Vision-QA | ~10GB | 3h |
+| Podcast | ~12GB | 4h |
+| Tri-Streaming | ~14GB | 6h |
+| Image Gen | ~14GB | 6h |
+
+---
+
+## 🛡️ Training Safety Features
+
+### Pause/Resume Training
+
+```bash
+# Get PID
+ps aux | grep python
+
+# Pause: kill -USR1 <PID>
+# Resume: kill -USR1 <PID>
+# Emergency Checkpoint: kill -USR2 <PID>
+```
+
+### Automatic Cooldown
+
+- Every 500 steps: 1 min cooldown
+- GPU > 83°C: Auto cooldown
+- Configurable in `src/training_controller.py`
+
+---
+
+## 📊 Datasets by Capability
+
+| Capability | Datasets |
+|------------|----------|
+| **Reasoning** | CoT-Collection, O1-SFT-Pro/Ultra |
+| **Tool-Calling** | Gorilla, XLAM-60K, Hermes |
+| **Podcast** | OleSpeech-IV, SPoRC, Cornell |
+| **Image Gen** | JourneyDB-GoT, Laion-GoT, OmniEdit-GoT |
+| **Video Gen** | VideoCoF-50k, MSR-VTT, VaTeX |
+
+---
+
+## 📝 Key Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `run_universal_pipeline.sh` | ⭐ Main orchestrator |
+| `src/detect_modalities.py` | Probe model capabilities |
+| `src/capability_registry.py` | Capability definitions |
+| `src/training_controller.py` | Pause/checkpoint/cooldown |
+| `src/24_multimodal_training.py` | Omni training |
+
+---
+
+## 🔧 Configuration
+
+### `configs/encoders.yaml`
+
+Central config for all paths:
+
+- Encoder locations
+- Decoder locations
+- Dataset mappings
+- Output directories
+
+---
+
+## ❓ FAQ
+
+**Q: Which capabilities can I train with 16GB VRAM?**  
+A: All of them with batch_size=1 and gradient checkpointing.
+
+**Q: Do I need to download extra datasets for image generation?**  
+A: Yes - JourneyDB-GoT, Laion-GoT recommended (~100GB total).
+
+**Q: Can I pause training mid-way?**  
+A: Yes - use `kill -USR1 <PID>` to pause/resume.
+
+**Q: What if GPU overheats?**  
+A: Auto-cooldown triggers at 83°C. Can adjust in training_controller.py.
+
+---
+
+## 🎓 Recommended Training Order
+
+1. **Start small:** `--enable-cot` (test setup)
+2. **Add tools:** `--enable-cot --enable-tools`
+3. **Add vision:** `--enable-vision-qa`
+4. **Full Omni:** `--enable-full-omni`
+5. **Generation:** `--enable-image-generation`
+
+---
+
+*For archived legacy documentation, see `docs/archive/`*

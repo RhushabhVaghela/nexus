@@ -1,90 +1,115 @@
-# Multimodal Datasets for Manus Prime
+# Multimodal Datasets - Complete Reference
 
-## 🖼️ Vision (Image-to-Code)
-
-### 1. WebSight (BEST) ⭐
-
-- **Size**: 2M HTML/screenshot pairs
-- **Quality**: High (Tailwind CSS, real images)
-- **License**: Apache 2.0
-- **HuggingFace**: `HuggingFaceM4/WebSight`
-
-```python
-from datasets import load_dataset
-vision_ds = load_dataset("HuggingFaceM4/WebSight", split="train")
-```
-
-### 2. LLaVA-Instruct-150K (General Vision)
-
-- **Size**: 150K instruction pairs
-- **Use**: General vision-language alignment
-- **HuggingFace**: `liuhaotian/LLaVA-Instruct-150K`
+> **Updated:** January 2026
 
 ---
 
-## 🎤 Audio (Speech-to-Text/Code)
+## 📊 Dataset Summary
 
-### 1. Common Voice (BEST for ASR) ⭐
-
-- **Size**: 19K+ hours multilingual
-- **Use**: Speech recognition training
-- **HuggingFace**: `mozilla-foundation/common_voice_17_0`
-
-```python
-from datasets import load_dataset
-audio_ds = load_dataset("mozilla-foundation/common_voice_17_0", "en", split="train")
-```
-
-### 2. LibriSpeech (Clean English)
-
-- **Size**: 1000 hours clean speech
-- **Use**: High-quality ASR
-- **HuggingFace**: `openslr/librispeech_asr`
+| Category | Datasets | Total Samples |
+|----------|----------|---------------|
+| **Reasoning** | 6 | ~500K |
+| **Tool-Calling** | 6 | ~150K |
+| **Podcast/Audio** | 4 | ~200K |
+| **Image Generation** | 3 | ~220K |
+| **Video Generation** | 3 | ~100K |
+| **Vision/Video Understanding** | 5 | ~300K |
 
 ---
 
-## 🎬 Video Understanding
+## 🧠 Reasoning Datasets
 
-### 1. FineVideo (BEST) ⭐
-
-- **Size**: 43K videos, 3425 hours
-- **Quality**: Rich metadata, scene annotations
-- **HuggingFace**: `HuggingFaceM4/FineVideo`
-
-```python
-from datasets import load_dataset
-video_ds = load_dataset("HuggingFaceM4/FineVideo", split="train")
-```
-
-### 2. Video-MME Benchmark
-
-- **Use**: Evaluation of video understanding
-- **HuggingFace**: `lmms-lab/Video-MME`
+| Dataset | Samples | Quality | Use |
+|---------|---------|---------|-----|
+| `kaist-ai_CoT-Collection` | ~180K | ⭐⭐⭐ | High-quality CoT |
+| `O1-OPEN_OpenO1-SFT-Pro` | ~100K | ⭐⭐⭐ | Deep reasoning |
+| `O1-OPEN_OpenO1-SFT-Ultra` | ~100K | ⭐⭐⭐ | Ultra reasoning |
+| `dipta007_APIGen-MT-5k-with-think` | ~5K | ⭐⭐ | Tool + thinking |
+| `openai_gsm8k` | ~8K | ⭐⭐⭐ | Math reasoning |
+| `tatsu-lab_alpaca` | ~52K | ⭐ | Basic instructions |
 
 ---
 
-## 📥 Quick Download Script
+## 🔧 Tool-Calling Datasets
+
+| Dataset | Samples | Quality | Use |
+|---------|---------|---------|-----|
+| `gorilla-llm_Berkeley-Function-Calling-Leaderboard` | ~5K | ⭐⭐⭐ | Benchmark |
+| `gorilla-llm_gorilla-openfunctions-v2` | ~20K | ⭐⭐⭐ | Function calling |
+| `Salesforce_xlam-function-calling-60k` | ~60K | ⭐⭐⭐ | Large scale |
+| `NousResearch_hermes-function-calling-v1` | ~10K | ⭐⭐ | Hermes format |
+| `argilla_apigen-function-calling` | ~15K | ⭐⭐ | API generation |
+| `hiyouga_glaive-function-calling-v2-sharegpt` | ~40K | ⭐⭐ | ShareGPT format |
+
+---
+
+## 🎙️ Podcast/Audio Datasets
+
+| Dataset | Samples | Quality | Use |
+|---------|---------|---------|-----|
+| `olewave_OleSpeech-IV-2025-EN-AR-100` | ~100K | ⭐⭐⭐ | Primary podcast |
+| `blitt_SPoRC` | ~50K | ⭐⭐⭐ | Spoken conversations |
+| `spawn99_CornellMovieDialogCorpus` | ~220K | ⭐⭐ | Movie dialogue |
+| `IVLLab_MultiDialog` | ~30K | ⭐⭐ | Multi-turn dialog |
+
+---
+
+## 🎨 Image Generation Datasets
+
+| Dataset | Samples | Size | Use |
+|---------|---------|------|-----|
+| `LucasFang_JourneyDB-GoT` | ~120K | ~50GB | ⭐ Midjourney-style, grounding |
+| `LucasFang_Laion-Aesthetics-High-Resolution-GoT` | ~60K | ~30GB | ⭐ High-quality aesthetics |
+| `LucasFang_OmniEdit-GoT` | ~40K | ~20GB | Image editing prompts |
+
+**Total:** ~220K samples, ~100GB
+
+---
+
+## 🎬 Video Generation Datasets
+
+| Dataset | Samples | Size | Use |
+|---------|---------|------|-----|
+| `XiangpengYang_VideoCoF-50k` | ~50K | ~40GB | ⭐ Text-to-video |
+| `VLM2Vec_MSR-VTT` | ~10K | ~10GB | Video-text alignment |
+| `qingy2024_VaTeX` | ~40K | ~30GB | Video captioning |
+
+**Total:** ~100K samples, ~80GB
+
+---
+
+## 👁️ Vision/Video Understanding
+
+| Dataset | Samples | Use |
+|---------|---------|-----|
+| `OpenGVLab_ShareGPT-4o` | ~50K | Vision-text conversations |
+| `CASIA-IVA-Lab_valor-32k-annotations` | ~32K | Video annotations |
+| `mvp-lab_LLaVA-OneVision-1.5-RL-Data` | ~100K | Vision RL alignment |
+| `fullstack__stargate_s04e01_100topkdiverse_text2vid` | ~100 | Text-to-video samples |
+| `Mozilla_Common-Voice` | ~20K | Speech diversity |
+
+---
+
+## 📥 Download Commands
 
 ```bash
-# Install datasets library
-pip install datasets
+# Image Generation (100GB)
+huggingface-cli download LucasFang/JourneyDB-GoT --local-dir /mnt/e/data/datasets/JourneyDB-GoT
+huggingface-cli download LucasFang/Laion-Aesthetics-High-Resolution-GoT --local-dir /mnt/e/data/datasets/Laion-GoT
+huggingface-cli download LucasFang/OmniEdit-GoT --local-dir /mnt/e/data/datasets/OmniEdit-GoT
 
-# Download vision data (2M samples, ~50GB)
-python -c "from datasets import load_dataset; ds = load_dataset('HuggingFaceM4/WebSight', split='train[:100000]'); ds.save_to_disk('datasets/vision')"
-
-# Download audio data (sample)
-python -c "from datasets import load_dataset; ds = load_dataset('mozilla-foundation/common_voice_17_0', 'en', split='train[:10000]'); ds.save_to_disk('datasets/audio')"
-
-# Download video data (sample)
-python -c "from datasets import load_dataset; ds = load_dataset('HuggingFaceM4/FineVideo', split='train[:1000]'); ds.save_to_disk('datasets/video')"
+# Video Generation (50GB)
+huggingface-cli download XiangpengYang/VideoCoF-50k --local-dir /mnt/e/data/datasets/VideoCoF-50k
 ```
 
 ---
 
-## Training Priority
+## 🗂️ Local Path Convention
 
-| Modality | Dataset | Samples | Priority |
-|----------|---------|---------|----------|
-| **Vision** | WebSight | 100K | 🔴 HIGH |
-| **Audio** | Common Voice | 10K | 🟡 MEDIUM |
-| **Video** | FineVideo | 1K | 🟢 LOW |
+All datasets stored in:
+
+```
+/mnt/e/data/datasets/<dataset-name>/
+```
+
+Configured in: `configs/encoders.yaml`

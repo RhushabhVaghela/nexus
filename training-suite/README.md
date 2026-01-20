@@ -2,6 +2,22 @@
 
 This directory contains 18 training scripts for systematic experimentation across different sample sizes and optimization levels.
 
+## 🆕 New: Universal Orchestrator
+
+For capability-based training, use the new orchestrator instead:
+
+```bash
+# From project root
+./run_universal_pipeline.sh --enable-cot --enable-tools
+
+# See all options
+./run_universal_pipeline.sh --help
+```
+
+The orchestrator handles modality detection, validation, and sequential training.
+
+---
+
 ## Structure
 
 ```
@@ -103,3 +119,4 @@ sort -t, -k9 -n ../results/training_results.csv | head -5
 - Ultra scripts use 4-bit quantization (6x faster)
 - Optimized scripts use 8-bit quantization (3x faster)
 - Results automatically logged with metrics
+- For capability-based training, see `../run_universal_pipeline.sh`
