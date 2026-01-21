@@ -121,32 +121,90 @@ manus_model/
 | `--training-method` | sft | Training method (see below) |
 | `--dry-run` | false | Preview without training |
 
-### 10 SOTA Training Methods
+### 📚 Comprehensive Training Methods Reference
 
-| Method | Description | Use Case |
-|--------|-------------|----------|
-| `sft` | Supervised Fine-Tuning | Full weight updates |
-| `lora` | Low-Rank Adaptation | Parameter-efficient |
-| `qlora` | Quantized LoRA (4-bit) | Low-VRAM training |
-| `dora` | Weight-Decomposed LoRA | Improved LoRA (2024) |
-| `dpo` | Direct Preference Optimization | Alignment |
-| `grpo` | Group Relative Policy (DeepSeek) | Reasoning |
-| `orpo` | Odds Ratio Preference | Combined SFT+Preference |
-| `ppo` | Proximal Policy (RLHF) | Classic alignment |
-| `distillation` | Knowledge Distillation | Learn from teacher |
-| `cpt` | Continued Pre-Training | Domain adaptation |
+The pipeline supports **10 distinct training methodologies**, covering the full lifecycle of LLM development from pre-training to advanced reasoning alignment.
+
+#### 1. Supervised Learning (The Foundation)
+
+| Method | Script | Description | When to Use |
+|--------|--------|-------------|-------------|
+| **SFT** (Supervised Fine-Tuning) | `10_sft_training.py` | The standard approach. Updates model weights to minimize loss on target text. Supports full fine-tuning. | **Default choice**. Use for teaching new knowledge, formats, or styles (e.g., medical data, coding style). |
+| **CPT** (Continued Pre-Training) | `11_continued_pretraining.py` | Like SFT but on massive unstructured corpora. Focuses on domain adaptation without specific Q&A structure. | When you have **gb/tb of raw text** (e.g., legal documents) and want the model to "understand" the domain before teaching it tasks. |
+| **Distillation** | `23_multimodal_distillation.py` | Training a smaller "student" model to mimic a larger "teacher" model's outputs (or formatting raw multimodal data). | When deploying to **edge devices** or converting complex inputs (Vision/Audio) into standard formats without a massive model. |
+
+#### 2. Parameter-Efficient Tuning (Low VRAM)
+
+| Method | Script | Description | When to Use |
+|--------|--------|-------------|-------------|
+| **LoRA** (Low-Rank Adaptation) | `10_sft_training.py` | Freezes main weights and trains small "adapter" layers. Uses ~60% less VRAM than SFT. | **Always recommended** for single-GPU training. Matches SFT performance with fraction of the cost. |
+| **QLoRA** (Quantized LoRA) | `10_sft_training.py` | Combines LoRA with 4-bit model quantization. Extreme memory efficiency (runs 70B models on consumer GPUs). | When you have **limited VRAM** (e.g., 24GB for a 30B model). Slight trade-off in precision for massive accessibility. |
+
+#### 3. Alignment & Reasoning (Making it Smart)
+
+| Method | Script | Description | When to Use |
+|--------|--------|-------------|-------------|
+| **DPO** (Direct Preference Opt) | `src/dpo_training.py` | Optimizes model to prefer "chosen" over "rejected" answers directly, skipping the Reward Model step of RLHF. | For **style alignment** or **reducing hallucinations**. Much more stable and faster than PPO. |
+| **ORPO** (Odds Ratio PO) | `src/orpo_training.py` | Combines SFT and Alignment in one stage. Penalizes rejected answers during the generation phase. | **Efficiency**. Use if you want to SFT and Align simultaneously without a separate DPO stage. |
+| **PPO** (Proximal Policy Opt) | `src/ppo_training.py` | The classic "RLHF" method. Uses a separate Reward Model to guide the policy via reinforcement learning. | For **complex, subjective tasks** where a Reward Model exists (e.g., "be helpful but not sycophantic"). Harder to tune but distinct results. |
+| **GRPO** (Group Relative PO) | `src/12_grpo_training.py` | **DeepSeek-Style Reasoning**. Generates groups of outputs and reinforces the best ones based on rules/verifiers without a heavy critic model. | **Reasoning & Math**. The gold standard for "System 2" thinking properties. Forces model to self-correct and verify. |
+
+#### 4. Safety & Robustness
+
+| Method | Script | Description | When to Use |
+|--------|--------|-------------|-------------|
+| **Safety Tuning** | `13_safety_finetuning.py` | Targeted SFT on refusal/safety datasets to prevent harmful outputs or jailbreaks. | **Pre-deployment**. Critical for public-facing models to ensure compliance and safety. |
+| **Anti-Refusal** | `14_anti_refusal_training.py` | Specialized training to *reduce* false refusals ("I cannot answer that") while maintaining core safety. | If your model has become **"too woke" or overly sensitive** and refuses harmless prompts. |
+
+### Memory-Efficient Streaming & Long Context
+
+- **Giant File Support**: Handles 500GB+ files via `ChunkedSampleProcessor` and streaming.
+- **Long Context**: Scale to 128k+ tokens using `--long-context` (RoPE scaling).
+- **Quick Validation**: Rapidly verify pipelines with `--quick` (tiny batches, 10 steps).
+
+### Development Tools
+
+- **Metrics Tracker**: Auto-logs training/benchmark stats to `results/*.csv`.
+- **Omni-Modal Loading**: Universal loader for any architecture.
+- **Strict Real Models**: Zero mocks in production/testing.
+
+---
+
+## 🚀 "Manus 1.6 Max" Training Recipe (CoT + RL + Long Context)
+
+To replicate a high-reasoning, long-context model like Manus 1.6 Max or Gemini 3 Pro:
+
+### 1. SFT Stage (Thinking & Long Context)
+
+Train on Chain-of-Thought (CoT) datasets with RoPE scaling enabled:
 
 ```bash
-# Example: Train with QLoRA
-./run_pipeline.sh train --training-method=qlora
-
-# Example: DPO alignment
-./run_pipeline.sh train --training-method=dpo
+python src/10_sft_training.py \
+    --long-context \
+    --use_streaming \
+    --learning_rate 2e-5
 ```
 
-### Dry-Run Mode
+*Datasets: OpenO1, CoT-Collection (auto-detected)*
 
-Preview the training pipeline without executing:
+### 2. RL Stage (Refining Reasoning)
+
+Apply GRPO (Reinforcement Learning) to reward correct reasoning paths:
+
+```bash
+python src/12_grpo_training.py \
+    --stage 2
+```
+
+### 3. Verification
+
+```bash
+./run_universal_pipeline.sh --training-method grpo
+```
+
+---
+
+## Usage
 
 ```bash
 ./run_universal_pipeline.sh \
