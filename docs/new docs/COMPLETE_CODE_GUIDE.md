@@ -31,8 +31,8 @@ You now have every single file needed to train an advanced AI model. Here's how 
 
 Extract these files to a project directory:
 ```bash
-mkdir manus-training
-cd manus-training
+mkdir nexus-training
+cd nexus-training
 # Copy all 12 files here
 ls -la
 ```
@@ -41,7 +41,7 @@ ls -la
 
 ```bash
 bash 00_environment_setup.sh
-conda activate manus_training
+conda activate nexus_training
 ```
 
 ### Step 3: Execute Pipeline
@@ -71,8 +71,8 @@ python 08_comprehensive_eval.py
 
 # Deploy (optional)
 python 10_deployment_configs.py
-docker build -t manus .
-docker run -p 8000:8000 manus
+docker build -t nexus .
+docker run -p 8000:8000 nexus
 ```
 
 ---
@@ -178,7 +178,7 @@ Master orchestration script:
 ## 📁 DIRECTORY STRUCTURE CREATED
 
 ```
-manus-training/
+nexus-training/
 ├── 00_environment_setup.sh
 ├── 01_download_benchmarks.py
 ├── 02_generate_trajectories.py

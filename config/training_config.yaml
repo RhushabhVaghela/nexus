@@ -12,7 +12,7 @@ model:
 ## Data Paths
 data:
   # Automated downloads (HF streaming via mm_download_unified.py)
-  automated_data_dir: "/mnt/d/Research Experiments/manus_model/data"
+  automated_data_dir: "/mnt/d/Research Experiments/nexus_model/data"
   
   # Manual downloads (raw datasets)
   manual_data_dir: "/mnt/e/data/downloaded"
@@ -22,7 +22,7 @@ data:
   
   # Combined dataset paths for training
   training_data_sources:
-    - "/mnt/d/Research Experiments/manus_model/data"  # Automated (HF)
+    - "/mnt/d/Research Experiments/nexus_model/data"  # Automated (HF)
     - "/mnt/e/data/unified_multimodal"  # Manual processed
 
 ## Dataset Registry
@@ -69,6 +69,6 @@ training:
   
 ## Output
 output:
-  model_save_dir: "/mnt/e/models/manus-omni"
-  checkpoint_dir: "/mnt/e/checkpoints/manus-omni"
-  logs_dir: "/mnt/d/Research Experiments/manus_model/logs"
+  model_save_dir: "/mnt/e/models/nexus-omni"
+  checkpoint_dir: "/mnt/e/checkpoints/nexus-omni"
+  logs_dir: "/mnt/d/Research Experiments/nexus_model/logs"

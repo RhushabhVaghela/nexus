@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# MANUS UNIVERSAL PIPELINE ORCHESTRATOR
+# NEXUS UNIVERSAL PIPELINE ORCHESTRATOR
 # =============================================================================
 #
 # Unified pipeline for training any combination of capabilities on any base model.
@@ -25,6 +25,33 @@
 # =============================================================================
 
 set -e
+
+# ============ ENVIRONMENT CHECK ============
+# Ensure we are running in 'nexus' conda environment
+DESIRED_PYTHON="/home/rhushabh/miniconda3/envs/nexus/bin/python"
+CURRENT_PYTHON=$(which python || true)
+
+if [[ "$CONDA_DEFAULT_ENV" != "nexus" ]]; then
+    # Try to switch if the specific python binary exists
+    if [ -f "$DESIRED_PYTHON" ]; then
+        echo -e "\033[0;33m[⚠] Not in 'nexus' environment. Switching to explicit binary: $DESIRED_PYTHON\033[0m"
+        # Export for subprocesses
+        export PATH="/home/rhushabh/miniconda3/envs/nexus/bin:$PATH"
+        PYTHON_CMD="$DESIRED_PYTHON"
+    else
+        echo -e "\033[0;31m[✗] Error: Must be run in 'nexus' conda environment.\033[0m"
+        echo "    Current: $CONDA_DEFAULT_ENV"
+        echo "    Please run: conda activate nexus"
+        exit 1
+    fi
+else
+    PYTHON_CMD="python"
+fi
+
+# ============ AUTO-ORGANIZE DATASETS ============
+echo -e "\033[0;34m[INFO] Auto-organizing datasets...\033[0m"
+$PYTHON_CMD src/utils/organize_datasets.py --base-path /mnt/e/data --move || true
+echo ""
 
 # ============ COLORS ============
 RED='\033[0;31m'
@@ -167,7 +194,7 @@ mkdir -p "$LOG_DIR" "$OUTPUT_DIR" "$CHECKPOINT_DIR"
 # ============ HEADER ============
 echo ""
 echo -e "${CYAN}╔═══════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${CYAN}║         MANUS UNIVERSAL CAPABILITY PIPELINE                   ║${NC}"
+echo -e "${CYAN}║         NEXUS UNIVERSAL CAPABILITY PIPELINE                   ║${NC}"
 echo -e "${CYAN}╚═══════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "  Base Model:  ${GREEN}$(basename "$BASE_MODEL")${NC}"
@@ -332,9 +359,9 @@ for stage in "${STAGES[@]}"; do
             ;;
         tools)
             if $DRY_RUN; then
-                log_info "[DRY-RUN] python ${SRC_DIR}/stages/stage_tools.py --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+                log_info "[DRY-RUN] $PYTHON_CMD -m src.stages.stage_tools --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
             else
-                python "${SRC_DIR}/stages/stage_tools.py" \
+                $PYTHON_CMD -m src.stages.stage_tools \
                     --base-model "$CURRENT_MODEL" \
                     --output-dir "$STAGE_OUTPUT" \
                     $COMMON_ARGS \
@@ -344,9 +371,9 @@ for stage in "${STAGES[@]}"; do
             ;;
         cot)
             if $DRY_RUN; then
-                log_info "[DRY-RUN] python ${SRC_DIR}/stages/stage_cot.py --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+                log_info "[DRY-RUN] $PYTHON_CMD -m src.stages.stage_cot --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
             else
-                python "${SRC_DIR}/stages/stage_cot.py" \
+                $PYTHON_CMD -m src.stages.stage_cot \
                     --base-model "$CURRENT_MODEL" \
                     --output-dir "$STAGE_OUTPUT" \
                     $COMMON_ARGS \
@@ -356,9 +383,9 @@ for stage in "${STAGES[@]}"; do
             ;;
         reasoning)
             if $DRY_RUN; then
-                log_info "[DRY-RUN] python ${SRC_DIR}/stages/stage_reasoning.py --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+                log_info "[DRY-RUN] $PYTHON_CMD -m src.stages.stage_reasoning --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
             else
-                python "${SRC_DIR}/stages/stage_reasoning.py" \
+                $PYTHON_CMD -m src.stages.stage_reasoning \
                     --base-model "$CURRENT_MODEL" \
                     --output-dir "$STAGE_OUTPUT" \
                     $COMMON_ARGS \
@@ -368,9 +395,9 @@ for stage in "${STAGES[@]}"; do
             ;;
         thinking)
             if $DRY_RUN; then
-                log_info "[DRY-RUN] python ${SRC_DIR}/stages/stage_thinking.py --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+                log_info "[DRY-RUN] $PYTHON_CMD -m src.stages.stage_thinking --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
             else
-                python "${SRC_DIR}/stages/stage_thinking.py" \
+                $PYTHON_CMD -m src.stages.stage_thinking \
                     --base-model "$CURRENT_MODEL" \
                     --output-dir "$STAGE_OUTPUT" \
                     $COMMON_ARGS \
@@ -380,9 +407,9 @@ for stage in "${STAGES[@]}"; do
             ;;
         streaming)
             if $DRY_RUN; then
-                log_info "[DRY-RUN] python ${SRC_DIR}/stages/stage_streaming.py --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+                log_info "[DRY-RUN] $PYTHON_CMD -m src.stages.stage_streaming --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
             else
-                python "${SRC_DIR}/stages/stage_streaming.py" \
+                $PYTHON_CMD -m src.stages.stage_streaming \
                     --base-model "$CURRENT_MODEL" \
                     --output-dir "$STAGE_OUTPUT" \
                     $COMMON_ARGS \
@@ -393,9 +420,9 @@ for stage in "${STAGES[@]}"; do
         podcast|vision-qa|video-understanding|tri-streaming)
             log_info "Running multimodal $stage training..."
             if $DRY_RUN; then
-                log_info "[DRY-RUN] python ${SRC_DIR}/24_multimodal_training.py --capability $stage"
+                log_info "[DRY-RUN] $PYTHON_CMD ${SRC_DIR}/24_multimodal_training.py --capability $stage"
             else
-                python "${SRC_DIR}/24_multimodal_training.py" \
+                $PYTHON_CMD "${SRC_DIR}/24_multimodal_training.py" \
                     --base-model "$CURRENT_MODEL" \
                     --output-dir "$STAGE_OUTPUT" \
                     --capability "$stage" \
@@ -407,9 +434,9 @@ for stage in "${STAGES[@]}"; do
         image-generation)
             log_info "Running image generation projector training..."
             if $DRY_RUN; then
-                log_info "[DRY-RUN] python ${SRC_DIR}/stages/stage_image_gen.py --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+                log_info "[DRY-RUN] $PYTHON_CMD -m src.stages.stage_image_gen --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
             else
-                python "${SRC_DIR}/stages/stage_image_gen.py" \
+                $PYTHON_CMD -m src.stages.stage_image_gen \
                     --base-model "$CURRENT_MODEL" \
                     --output-dir "$STAGE_OUTPUT" \
                     $COMMON_ARGS \
@@ -420,9 +447,9 @@ for stage in "${STAGES[@]}"; do
         video-generation)
             log_info "Running video generation projector training..."
             if $DRY_RUN; then
-                log_info "[DRY-RUN] python ${SRC_DIR}/stages/stage_video_gen.py --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+                log_info "[DRY-RUN] $PYTHON_CMD -m src.stages.stage_video_gen --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
             else
-                python "${SRC_DIR}/stages/stage_video_gen.py" \
+                $PYTHON_CMD -m src.stages.stage_video_gen \
                     --base-model "$CURRENT_MODEL" \
                     --output-dir "$STAGE_OUTPUT" \
                     $COMMON_ARGS \

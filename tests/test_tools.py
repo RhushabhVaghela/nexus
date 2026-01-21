@@ -2,7 +2,7 @@
 import sys
 import json
 # Add src to path
-sys.path.append("/mnt/d/Research Experiments/manus_model/src")
+sys.path.append("/mnt/d/Research Experiments/nexus_model/src")
 
 from multimodal.tools import get_default_executor
 

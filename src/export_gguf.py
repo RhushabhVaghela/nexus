@@ -73,9 +73,9 @@ def main():
     
     args = parser.parse_args()
     
-    # Enforce 'manus' conda environment
-    if os.environ.get("CONDA_DEFAULT_ENV") != "manus":
-        sys.exit("\033[0;31m[ERROR] Must be run in 'manus' conda environment.\033[0m")
+    # Enforce 'nexus' conda environment
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        sys.exit("\033[0;31m[ERROR] Must be run in 'nexus' conda environment.\033[0m")
         
     export_gguf(args.model_path, args.output_path, args.quantization)
 

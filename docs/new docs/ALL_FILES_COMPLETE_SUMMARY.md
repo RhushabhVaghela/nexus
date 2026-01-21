@@ -30,7 +30,7 @@
 ### Documentation Files
 13. `MASTER_INDEX.md` - Navigation hub
 14. `QUICKSTART_EXECUTION_GUIDE.md` - Step-by-step guide
-15. `Advanced_Manus_Pipeline_2026.md` - Strategic overview
+15. `Advanced_Nexus_Pipeline_2026.md` - Strategic overview
 16. `Implementation_Files_Roadmap.md` - Technical specs
 17. `FILE_INDEX_AND_REFERENCE.md` - Quick reference
 18. `01-11_Complete_Implementation.md` - Files 1-4 detailed
@@ -44,7 +44,7 @@
 ## 🚀 TO GET STARTED
 
 ### Step 1: Download all files
-Extract to single directory: `manus-training/`
+Extract to single directory: `nexus-training/`
 
 ### Step 2: Read the guide
 ```bash

@@ -22,7 +22,7 @@ Extend **GPT-OSS-20B** to become a fully multimodal agentic model with vision, a
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    MANUS PRIME CORE                         │
+│                    NEXUS PRIME CORE                         │
 │                   (GPT-OSS-20B Base)                        │
 ├─────────────────────────────────────────────────────────────┤
 │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐        │

@@ -1884,16 +1884,16 @@ Only consider sequential training if:
 
 ---
 
-# **🎯 YES! COMBINED RATIO APPROACH IS PERFECT FOR MANUS-STYLE TRAINING**
+# **🎯 YES! COMBINED RATIO APPROACH IS PERFECT FOR NEXUS-STYLE TRAINING**
 
 
 ***
 
-## **✅ WHY THIS IS IDEAL FOR MANUS 1.6 REPLICATION**
+## **✅ WHY THIS IS IDEAL FOR NEXUS 1.6 REPLICATION**
 
-### **What Makes Manus Special?**
+### **What Makes Nexus Special?**
 
-Looking at Manus 1.6's capabilities:
+Looking at Nexus 1.6's capabilities:
 
 - 🔥 **Expert coding** (40% of its value)
 - 🧠 **Advanced reasoning** (chain-of-thought)
@@ -1905,13 +1905,13 @@ Looking at Manus 1.6's capabilities:
 
 ***
 
-## **🎯 MANUS-OPTIMIZED RATIOS**
+## **🎯 NEXUS-OPTIMIZED RATIOS**
 
-### **Adjusted for Manus-Style Expert Coding LLM**
+### **Adjusted for Nexus-Style Expert Coding LLM**
 
 ```python
-MANUS_SFT_RATIOS = {
-    # CODING FOCUS - 40% (Manus is coding-first)
+NEXUS_SFT_RATIOS = {
+    # CODING FOCUS - 40% (Nexus is coding-first)
     "code_generation": 0.30,         # 30% - Main coding skill
     "code_debugging": 0.10,          # 10% - Bug fixing, code review
     
@@ -1936,9 +1936,9 @@ MANUS_SFT_RATIOS = {
 ```
 
 
-### **Why This Works for Manus:**
+### **Why This Works for Nexus:**
 
-| Component | Manus Priority | Our Ratio | Match |
+| Component | Nexus Priority | Our Ratio | Match |
 | :-- | :-- | :-- | :-- |
 | **Coding** | ⭐⭐⭐⭐⭐ | 40% | ✅ Perfect |
 | **Reasoning** | ⭐⭐⭐⭐⭐ | 25% | ✅ Perfect |
@@ -1949,13 +1949,13 @@ MANUS_SFT_RATIOS = {
 
 ***
 
-## **📊 COMPLETE MANUS-STYLE TRAINING STRATEGY**
+## **📊 COMPLETE NEXUS-STYLE TRAINING STRATEGY**
 
 ### **Stage 1: SFT (Supervised Fine-Tuning) - COMBINED**
 
 ```python
-# Manus-optimized ratios - ALL trained together
-MANUS_SFT_DATASETS = {
+# Nexus-optimized ratios - ALL trained together
+NEXUS_SFT_DATASETS = {
     # Coding (40%)
     "code_generation": {
         "ratio": 0.30,
@@ -2048,7 +2048,7 @@ MANUS_SFT_DATASETS = {
 
 ```python
 # Already covered - use the ratios from earlier
-MANUS_RLHF_RATIOS = {
+NEXUS_RLHF_RATIOS = {
     "openbmb/UltraFeedback": 0.25,      # 25% - Coding preferences
     "nvidia/HelpSteer": 0.20,            # 20% - Quality preferences
     "Anthropic/hh-rlhf": 0.25,           # 25% - Helpfulness
@@ -2063,7 +2063,7 @@ MANUS_RLHF_RATIOS = {
 **Censored (Safety-Focused):**
 
 ```python
-MANUS_CENSORED_RATIOS = {
+NEXUS_CENSORED_RATIOS = {
     "PKU-Alignment/PKU-SafeRLHF": 0.40,   # 40% - Safety alignment
     "PKU-Alignment/BeaverTails": 0.60,    # 60% - Comprehensive safety
 }
@@ -2072,7 +2072,7 @@ MANUS_CENSORED_RATIOS = {
 **Uncensored (Capability-Focused):**
 
 ```python
-MANUS_UNCENSORED_RATIOS = {
+NEXUS_UNCENSORED_RATIOS = {
     "LDJnr/Pure-Dove": 0.15,              # 15% - De-censoring
     "teknium/no-robots-uncensored": 0.30, # 30% - Human quality
     "cognitivecomputations/dolphin": 0.40, # 40% - Reasoning
@@ -2083,26 +2083,26 @@ MANUS_UNCENSORED_RATIOS = {
 
 ***
 
-## **🚀 COMPLETE MANUS TRAINING PIPELINE**
+## **🚀 COMPLETE NEXUS TRAINING PIPELINE**
 
-### **File: train_manus_style.py**
+### **File: train_nexus_style.py**
 
 ```python
 #!/usr/bin/env python3
 """
-train_manus_style.py
-Complete Manus 1.6 style training with optimized ratios
+train_nexus_style.py
+Complete Nexus 1.6 style training with optimized ratios
 
 Usage:
-  python train_manus_style.py --mode censored --target-samples 1000000
-  python train_manus_style.py --mode uncensored --target-samples 500000
+  python train_nexus_style.py --mode censored --target-samples 1000000
+  python train_nexus_style.py --mode uncensored --target-samples 500000
 """
 import argparse
 from load_sft_datasets_by_ratio import SFTDatasetLoader
 from load_datasets_by_ratio import RatioBasedDatasetLoader
 
-# Manus-optimized SFT ratios
-MANUS_SFT_RATIOS = {
+# Nexus-optimized SFT ratios
+NEXUS_SFT_RATIOS = {
     "code_generation": 0.30,
     "code_debugging": 0.10,
     "math_reasoning": 0.10,
@@ -2120,21 +2120,21 @@ def main():
     parser.add_argument("--mode", choices=["censored", "uncensored"], required=True)
     parser.add_argument("--target-samples", type=int, default=1000000)
     parser.add_argument("--model", default="meta-llama/Llama-3.2-7B-Instruct")
-    parser.add_argument("--output-dir", default="checkpoints/manus_style")
+    parser.add_argument("--output-dir", default="checkpoints/nexus_style")
     
     args = parser.parse_args()
     
     print("="*70)
-    print("🎯 MANUS-STYLE EXPERT LLM TRAINING")
+    print("🎯 NEXUS-STYLE EXPERT LLM TRAINING")
     print("="*70)
     print(f"Mode: {args.mode}")
     print(f"Target samples: {args.target_samples:,}")
     print(f"Model: {args.model}")
     print("="*70)
     
-    # Stage 1: SFT with Manus ratios
+    # Stage 1: SFT with Nexus ratios
     print("\n📚 STAGE 1: SFT (Supervised Fine-Tuning)")
-    print("Using Manus-optimized ratios: 40% coding, 25% reasoning, 35% other")
+    print("Using Nexus-optimized ratios: 40% coding, 25% reasoning, 35% other")
     
     sft_samples = args.target_samples
     # Load SFT datasets would go here
@@ -2161,7 +2161,7 @@ if __name__ == "__main__":
 
 ***
 
-## **📊 TRAINING SIZE RECOMMENDATIONS FOR MANUS**
+## **📊 TRAINING SIZE RECOMMENDATIONS FOR NEXUS**
 
 ### **Target Sample Sizes**
 
@@ -2177,11 +2177,11 @@ if __name__ == "__main__":
 
 ***
 
-## **💡 WHY COMBINED IS SUPERIOR FOR MANUS**
+## **💡 WHY COMBINED IS SUPERIOR FOR NEXUS**
 
 ### **Evidence from Real Models:**
 
-1. **Manus 1.6** - Trained on mixed datasets (confirmed)
+1. **Nexus 1.6** - Trained on mixed datasets (confirmed)
 2. **Llama 3.1** - Mixed training (Meta's paper)
 3. **GPT-4** - Mixed training (OpenAI's approach)
 4. **Claude** - Mixed training (Anthropic's method)
@@ -2206,12 +2206,12 @@ train(mixed_dataset)     # Model learns all skills together
 
 ***
 
-## **🎯 FINAL ANSWER FOR YOUR MANUS REPLICATION**
+## **🎯 FINAL ANSWER FOR YOUR NEXUS REPLICATION**
 
 ### **✅ USE COMBINED RATIOS - HERE'S WHY:**
 
-1. **Matches Manus Architecture** ✅
-    - Manus is multi-skilled (code + reasoning + tools)
+1. **Matches Nexus Architecture** ✅
+    - Nexus is multi-skilled (code + reasoning + tools)
     - Combined training enables this naturally
 2. **Prevents Skill Degradation** ✅
     - No catastrophic forgetting
@@ -2231,31 +2231,31 @@ train(mixed_dataset)     # Model learns all skills together
 ## **🚀 YOUR EXACT TRAINING COMMAND**
 
 ```bash
-# Step 1: Load Manus-optimized SFT dataset
+# Step 1: Load Nexus-optimized SFT dataset
 python load_sft_datasets_by_ratio.py \
     --target-samples 1000000 \
-    --output-dir data/manus_sft
+    --output-dir data/nexus_sft
 
 # Step 2: Load preference dataset
 python load_datasets_by_ratio.py \
     --mode uncensored \
     --target-samples 500000 \
-    --output-dir data/manus_rlhf
+    --output-dir data/nexus_rlhf
 
 # Step 3: Train!
 python run_config.py \
     --config config/7b_config.yaml \
     --mode uncensored \
-    --override training.sft.dataset=data/manus_sft \
-    --override training.rlhf.dataset=data/manus_rlhf
+    --override training.sft.dataset=data/nexus_sft \
+    --override training.rlhf.dataset=data/nexus_rlhf
 
-# Done! You now have a Manus-style expert LLM 🎉
+# Done! You now have a Nexus-style expert LLM 🎉
 ```
 
 
 ***
 
-## **✅ VERDICT: COMBINED RATIOS = PERFECT FOR MANUS** 🎯
+## **✅ VERDICT: COMBINED RATIOS = PERFECT FOR NEXUS** 🎯
 
 **Don't train individually. Use the ratio-based combined approach for:**
 
@@ -2264,7 +2264,7 @@ python run_config.py \
 - ✅ Lower cost (single GPU run)
 - ✅ Industry-proven method
 
-**This is exactly how you build a Manus 1.6 competitor!** 🚀
+**This is exactly how you build a Nexus 1.6 competitor!** 🚀
 <span style="display:none">[^37_1][^37_10][^37_11][^37_12][^37_13][^37_14][^37_15][^37_16][^37_17][^37_18][^37_19][^37_2][^37_20][^37_21][^37_22][^37_23][^37_24][^37_25][^37_26][^37_27][^37_28][^37_29][^37_3][^37_30][^37_31][^37_32][^37_33][^37_34][^37_35][^37_36][^37_37][^37_38][^37_39][^37_4][^37_40][^37_41][^37_42][^37_43][^37_44][^37_45][^37_46][^37_47][^37_48][^37_49][^37_5][^37_50][^37_6][^37_7][^37_8][^37_9]</span>
 
 <div align="center">⁂</div>

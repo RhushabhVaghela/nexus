@@ -68,9 +68,9 @@ echo -e "${YELLOW}Optimization: OPT_PLACEHOLDER (SPEEDUP_PLACEHOLDER speedup)${N
 echo ""
 
 source /home/rhushabh/miniconda3/etc/profile.d/conda.sh
-conda activate manus
+conda activate nexus
 
-cd "/mnt/d/Research Experiments/manus_model"
+cd "/mnt/d/Research Experiments/nexus_model"
 
 mkdir -p /mnt/e/models/omni_SIZE_NAME_PLACEHOLDER_OPT_LEVEL_PLACEHOLDER
 mkdir -p logs

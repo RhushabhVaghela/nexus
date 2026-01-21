@@ -2204,3 +2204,44 @@ E   huggingface_hub.errors.HFValidationError: Repo id mu",tests/unit/test_omni_l
 2026-01-21T14:46:11.233519,tests/unit/test_universal_loader.py::TestEdgeCases::test_invalid_json,test_invalid_json,passed,0.000332,0.332,960.54,2047.79,,tests/unit/test_universal_loader.py
 2026-01-21T14:46:11.248041,tests/unit/test_universal_loader.py::TestEdgeCases::test_zero_sample_size,test_zero_sample_size,passed,0.002411,2.411,960.54,2047.79,,tests/unit/test_universal_loader.py
 2026-01-21T14:46:11.262147,tests/unit/test_universal_loader.py::TestEdgeCases::test_large_sample_size,test_large_sample_size,passed,0.002306,2.306,960.54,2047.79,,tests/unit/test_universal_loader.py
+2026-01-21T15:38:30.923896,tests/test_organize_datasets.py::test_inspect_content_cot,test_inspect_content_cot,passed,0.00026,0.26,0.0,552.53,,tests/test_organize_datasets.py
+2026-01-21T15:38:31.085122,tests/test_organize_datasets.py::test_inspect_content_tools,test_inspect_content_tools,failed,0.000152,0.152,0.0,553.53,"tests/test_organize_datasets.py:43: in test_inspect_content_tools
+    create_jsonl_file(p, [{""input"": ""..."", ""tool_calls"": [...]}])
+tests/test_organize_datasets.py:32: in create_jsonl_file
+    f.write(json.dumps(item) + '\n')
+/home/rhushabh/miniconda3/envs/manus/lib/python3.10/json/__init__.py:231: in dumps
+    return _default_encoder.encode(obj)
+/home/rhushabh/miniconda3/envs/manus/lib/python3.10/json/encoder.py:199: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+/home/rhushabh/minic",tests/test_organize_datasets.py
+2026-01-21T15:38:31.097837,tests/test_organize_datasets.py::test_inspect_content_vision,test_inspect_content_vision,passed,0.000197,0.197,0.0,553.53,,tests/test_organize_datasets.py
+2026-01-21T15:38:31.109424,tests/test_organize_datasets.py::test_inspect_content_reasoning,test_inspect_content_reasoning,passed,0.000192,0.192,0.0,553.53,,tests/test_organize_datasets.py
+2026-01-21T15:38:31.122052,tests/test_organize_datasets.py::test_inspect_content_empty_or_invalid,test_inspect_content_empty_or_invalid,passed,0.000173,0.173,0.0,553.53,,tests/test_organize_datasets.py
+2026-01-21T15:38:31.134350,tests/test_organize_datasets.py::test_get_destination_benchmark,test_get_destination_benchmark,passed,0.000166,0.166,0.0,553.53,,tests/test_organize_datasets.py
+2026-01-21T15:38:31.144621,tests/test_organize_datasets.py::test_get_destination_dataset_keyword,test_get_destination_dataset_keyword,passed,0.000148,0.148,0.0,553.53,,tests/test_organize_datasets.py
+2026-01-21T15:38:31.159012,tests/test_organize_datasets.py::test_get_destination_encoder_vision,test_get_destination_encoder_vision,passed,0.000116,0.116,0.0,553.53,,tests/test_organize_datasets.py
+2026-01-21T15:38:31.170779,tests/test_organize_datasets.py::test_get_destination_encoder_audio,test_get_destination_encoder_audio,passed,0.000109,0.109,0.0,553.53,,tests/test_organize_datasets.py
+2026-01-21T15:38:31.180960,tests/test_organize_datasets.py::test_get_destination_decoder_audio,test_get_destination_decoder_audio,passed,0.000118,0.118,0.0,553.53,,tests/test_organize_datasets.py
+2026-01-21T15:38:31.191255,tests/test_organize_datasets.py::test_organize_folder_integration,test_organize_folder_integration,passed,0.001111,1.111,0.0,553.53,,tests/test_organize_datasets.py
+2026-01-21T15:39:07.253590,tests/test_organize_datasets.py::test_inspect_content_cot,test_inspect_content_cot,passed,0.000222,0.222,0.0,552.21,,tests/test_organize_datasets.py
+2026-01-21T15:39:07.261194,tests/test_organize_datasets.py::test_inspect_content_tools,test_inspect_content_tools,passed,0.000181,0.181,0.0,552.21,,tests/test_organize_datasets.py
+2026-01-21T15:39:07.270295,tests/test_organize_datasets.py::test_inspect_content_vision,test_inspect_content_vision,passed,0.000164,0.164,0.0,552.21,,tests/test_organize_datasets.py
+2026-01-21T15:39:07.280032,tests/test_organize_datasets.py::test_inspect_content_reasoning,test_inspect_content_reasoning,passed,0.000165,0.165,0.0,552.21,,tests/test_organize_datasets.py
+2026-01-21T15:39:07.292605,tests/test_organize_datasets.py::test_inspect_content_empty_or_invalid,test_inspect_content_empty_or_invalid,passed,0.000149,0.149,0.0,552.21,,tests/test_organize_datasets.py
+2026-01-21T15:39:07.305714,tests/test_organize_datasets.py::test_get_destination_benchmark,test_get_destination_benchmark,passed,0.00044,0.44,0.0,552.21,,tests/test_organize_datasets.py
+2026-01-21T15:39:07.318549,tests/test_organize_datasets.py::test_get_destination_dataset_keyword,test_get_destination_dataset_keyword,passed,0.000141,0.141,0.0,552.33,,tests/test_organize_datasets.py
+2026-01-21T15:39:07.331845,tests/test_organize_datasets.py::test_get_destination_encoder_vision,test_get_destination_encoder_vision,passed,0.000202,0.202,0.0,552.33,,tests/test_organize_datasets.py
+2026-01-21T15:39:07.347068,tests/test_organize_datasets.py::test_get_destination_encoder_audio,test_get_destination_encoder_audio,passed,0.000117,0.117,0.0,552.33,,tests/test_organize_datasets.py
+2026-01-21T15:39:07.359982,tests/test_organize_datasets.py::test_get_destination_decoder_audio,test_get_destination_decoder_audio,passed,0.000108,0.108,0.0,552.33,,tests/test_organize_datasets.py
+2026-01-21T15:39:07.375985,tests/test_organize_datasets.py::test_organize_folder_integration,test_organize_folder_integration,passed,0.001225,1.225,0.0,552.33,,tests/test_organize_datasets.py
+2026-01-21T15:53:30.921723,tests/test_organize_datasets.py::test_inspect_content_cot,test_inspect_content_cot,passed,0.000294,0.294,0.0,552.64,,tests/test_organize_datasets.py
+2026-01-21T15:53:30.933045,tests/test_organize_datasets.py::test_inspect_content_tools,test_inspect_content_tools,passed,0.000198,0.198,0.0,552.64,,tests/test_organize_datasets.py
+2026-01-21T15:53:30.944763,tests/test_organize_datasets.py::test_inspect_content_vision,test_inspect_content_vision,passed,0.000209,0.209,0.0,552.64,,tests/test_organize_datasets.py
+2026-01-21T15:53:30.960442,tests/test_organize_datasets.py::test_inspect_content_reasoning,test_inspect_content_reasoning,passed,0.000248,0.248,0.0,552.64,,tests/test_organize_datasets.py
+2026-01-21T15:53:30.973281,tests/test_organize_datasets.py::test_inspect_content_empty_or_invalid,test_inspect_content_empty_or_invalid,passed,0.000161,0.161,0.0,552.64,,tests/test_organize_datasets.py
+2026-01-21T15:53:30.985173,tests/test_organize_datasets.py::test_get_destination_benchmark,test_get_destination_benchmark,passed,0.000168,0.168,0.0,552.64,,tests/test_organize_datasets.py
+2026-01-21T15:53:30.995340,tests/test_organize_datasets.py::test_get_destination_dataset_keyword,test_get_destination_dataset_keyword,passed,0.000155,0.155,0.0,552.64,,tests/test_organize_datasets.py
+2026-01-21T15:53:31.004369,tests/test_organize_datasets.py::test_get_destination_encoder_vision,test_get_destination_encoder_vision,passed,0.000115,0.115,0.0,552.64,,tests/test_organize_datasets.py
+2026-01-21T15:53:31.012905,tests/test_organize_datasets.py::test_get_destination_encoder_audio,test_get_destination_encoder_audio,passed,0.00011,0.11,0.0,552.64,,tests/test_organize_datasets.py
+2026-01-21T15:53:31.021800,tests/test_organize_datasets.py::test_get_destination_decoder_audio,test_get_destination_decoder_audio,passed,0.000169,0.169,0.0,552.64,,tests/test_organize_datasets.py
+2026-01-21T15:53:31.033854,tests/test_organize_datasets.py::test_organize_folder_integration,test_organize_folder_integration,passed,0.001327,1.327,0.0,552.64,,tests/test_organize_datasets.py

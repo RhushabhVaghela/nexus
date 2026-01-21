@@ -50,7 +50,7 @@ def create_docker_compose():
     compose = {
         "version": "3.8",
         "services": {
-            "manus-model": {
+            "nexus-model": {
                 "build": ".",
                 "ports": ["8000:8000"],
                 "environment": {
@@ -69,17 +69,17 @@ def create_k8s_deployment():
     k8s = {
         "apiVersion": "apps/v1",
         "kind": "Deployment",
-        "metadata": {"name": "manus-model"},
+        "metadata": {"name": "nexus-model"},
         "spec": {
             "replicas": 1,
-            "selector": {"matchLabels": {"app": "manus"}},
+            "selector": {"matchLabels": {"app": "nexus"}},
             "template": {
-                "metadata": {"labels": {"app": "manus"}},
+                "metadata": {"labels": {"app": "nexus"}},
                 "spec": {
                     "containers": [
                         {
                             "name": "model",
-                            "image": "manus:latest",
+                            "image": "nexus:latest",
                             "ports": [{"containerPort": 8000}],
                             "resources": {
                                 "limits": {"nvidia.com/gpu": "1"}
@@ -114,8 +114,8 @@ def main():
     
     print(f"✓ Deployment configs created in: {output_dir}")
     print("\nTo deploy:")
-    print("  docker build -t manus:latest .")
-    print("  docker run -p 8000:8000 manus:latest")
+    print("  docker build -t nexus:latest .")
+    print("  docker run -p 8000:8000 nexus:latest")
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════════
-# Manus Prime: Universal Model Configuration
+# Nexus Prime: Universal Model Configuration
 # ═══════════════════════════════════════════════════════════════
 # 
 # This config is ARCHITECTURE-AGNOSTIC. Change base_model.name
@@ -124,7 +124,7 @@ data:
 # ─────────────────────────────────────────────────────────────────
 
 output:
-  dir: "/mnt/e/models/manus-prime"
+  dir: "/mnt/e/models/nexus-prime"
   
   # Checkpointing
   save_total_limit: 3
@@ -139,7 +139,7 @@ output:
 
 wandb:
   enabled: false
-  project: "manus-prime"
+  project: "nexus-prime"
   entity: null
   run_name: null
 

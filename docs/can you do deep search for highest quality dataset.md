@@ -2,7 +2,7 @@
 
 # can you do deep search for highest quality dataset for the usecase of the generators (Optimize Data Generation Speed.md is the latest chat conversation)
 
-Based on analyzing your conversation history and searching for high-quality datasets, I'll provide recommendations for the best datasets for your Manus fullstack specialization generators.[^1_1]
+Based on analyzing your conversation history and searching for high-quality datasets, I'll provide recommendations for the best datasets for your Nexus fullstack specialization generators.[^1_1]
 
 ## High-Quality Datasets for Your Use Case
 
@@ -64,9 +64,9 @@ Your current approach of 200M fullstack + 200M repetitive samples totaling 400M 
 
 [^1_1]: Optimize-Data-Generation-Speed.md
 
-[^1_2]: Manus-Prime-Data-Pipeline.md
+[^1_2]: Nexus-Prime-Data-Pipeline.md
 
-[^1_3]: Manus-Fullstack-Specialization.md
+[^1_3]: Nexus-Fullstack-Specialization.md
 
 [^1_4]: https://arxiv.org/html/2504.04030v1
 
@@ -96,7 +96,7 @@ Your current approach of 200M fullstack + 200M repetitive samples totaling 400M 
 
 [^1_17]: https://www.digitalocean.com/community/conceptual-articles/the-secret-sauce-to-a-winning-dataset-for-genai-quality-over-quantity
 
-[^1_18]: Manus-Fullstack-Specialization-1.md
+[^1_18]: Nexus-Fullstack-Specialization-1.md
 
 [^1_19]: 04_validate_repetitive_dataset.py
 
@@ -136,11 +136,11 @@ Your current approach of 200M fullstack + 200M repetitive samples totaling 400M 
 
 [^1_37]: QUICKSTART_EXECUTION_GUIDE.md
 
-[^1_38]: Manus-Fullstack-Specialization.md
+[^1_38]: Nexus-Fullstack-Specialization.md
 
 [^1_39]: MASTER_INDEX.md
 
-[^1_40]: Manus-Fullstack-Specialization-1.md
+[^1_40]: Nexus-Fullstack-Specialization-1.md
 
 [^1_41]: https://arxiv.org/abs/2311.16867
 
@@ -199,7 +199,7 @@ Based on analyzing your generator files, here are the recommended high-quality d
 
 | Generator Category | Domains/Blueprints | Target Samples | Recommended Dataset | Why Recommended | Integration Method |
 | :-- | :-- | :-- | :-- | :-- | :-- |
-| **Developer Tools** | Manus Clone, Web SQL Client, Browser Music Sequencer, Code Playground, API Testing, Git Visualization | 200M (6 types) | **The Stack** [^2_7] + **OpenCodeInstruct** [^2_8] | Real-world code patterns from 358 languages + 5M instruction samples with execution feedback | Mix 70% synthetic + 30% sampled real code from React/Vue/Node repos |
+| **Developer Tools** | Nexus Clone, Web SQL Client, Browser Music Sequencer, Code Playground, API Testing, Git Visualization | 200M (6 types) | **The Stack** [^2_7] + **OpenCodeInstruct** [^2_8] | Real-world code patterns from 358 languages + 5M instruction samples with execution feedback | Mix 70% synthetic + 30% sampled real code from React/Vue/Node repos |
 | **Business Apps** | Enterprise CRM, HR Management, Invoice Generator, Project Tracker, Inventory, Meeting Scheduler | 200M (6 types) | **CodeXGLUE** [^2_9] business logic tasks | Industry-standard code understanding benchmarks for business workflows | Use as validation dataset to measure generation quality |
 | **Creative/Content** | Slide Deck, Portfolio, Blog, Podcast, Video Editor, Design System | 200M (6 types) | **FineWeb-Edu** [^2_10] creative content section | 1.3T tokens of educational content filtered for quality | Extract creative writing patterns for content-focused apps |
 | **Finance** | Finance Tracker, Crypto Dashboard, Tax Calculator, Investment Portfolio | 200M (4 types) | **The Heap** [^2_11] + domain-specific FinTech code | Contamination-free multilingual code + finance APIs | Supplement with real trading/banking API documentation |
@@ -325,11 +325,11 @@ This ensures you avoid "synthetic data collapse" while maintaining the variety y
 
 [^2_18]: Optimize-Data-Generation-Speed.md
 
-[^2_19]: Manus-Prime-Data-Pipeline.md
+[^2_19]: Nexus-Prime-Data-Pipeline.md
 
-[^2_20]: Manus-Fullstack-Specialization-1.md
+[^2_20]: Nexus-Fullstack-Specialization-1.md
 
-[^2_21]: Manus-Fullstack-Specialization.md
+[^2_21]: Nexus-Fullstack-Specialization.md
 
 [^2_22]: 04_validate_repetitive_dataset.py
 
@@ -365,11 +365,11 @@ This ensures you avoid "synthetic data collapse" while maintaining the variety y
 
 [^2_38]: QUICKSTART_EXECUTION_GUIDE.md
 
-[^2_39]: Manus-Fullstack-Specialization.md
+[^2_39]: Nexus-Fullstack-Specialization.md
 
 [^2_40]: MASTER_INDEX.md
 
-[^2_41]: Manus-Fullstack-Specialization-1.md
+[^2_41]: Nexus-Fullstack-Specialization-1.md
 
 
 ---
@@ -674,11 +674,11 @@ This positions your LLM to handle **end-to-end modern software engineering** fro
 
 [^3_21]: Optimize-Data-Generation-Speed.md
 
-[^3_22]: Manus-Fullstack-Specialization-1.md
+[^3_22]: Nexus-Fullstack-Specialization-1.md
 
-[^3_23]: Manus-Prime-Data-Pipeline.md
+[^3_23]: Nexus-Prime-Data-Pipeline.md
 
-[^3_24]: Manus-Fullstack-Specialization.md
+[^3_24]: Nexus-Fullstack-Specialization.md
 
 [^3_25]: 04_validate_repetitive_dataset.py
 
@@ -714,11 +714,11 @@ This positions your LLM to handle **end-to-end modern software engineering** fro
 
 [^3_41]: QUICKSTART_EXECUTION_GUIDE.md
 
-[^3_42]: Manus-Fullstack-Specialization.md
+[^3_42]: Nexus-Fullstack-Specialization.md
 
 [^3_43]: MASTER_INDEX.md
 
-[^3_44]: Manus-Fullstack-Specialization-1.md
+[^3_44]: Nexus-Fullstack-Specialization-1.md
 
 [^3_45]: https://rsisinternational.org/journals/ijrsi/view/harnessing-new-technologies-and-industry-standards-to-boost-efficiency-and-deliver-high-quality-software
 
@@ -1403,11 +1403,11 @@ quality_score.labels(generator='mobile').set(0.92)
 
 [^4_19]: Optimize-Data-Generation-Speed.md
 
-[^4_20]: Manus-Fullstack-Specialization-1.md
+[^4_20]: Nexus-Fullstack-Specialization-1.md
 
-[^4_21]: Manus-Prime-Data-Pipeline.md
+[^4_21]: Nexus-Prime-Data-Pipeline.md
 
-[^4_22]: Manus-Fullstack-Specialization.md
+[^4_22]: Nexus-Fullstack-Specialization.md
 
 [^4_23]: 04_validate_repetitive_dataset.py
 
@@ -1443,11 +1443,11 @@ quality_score.labels(generator='mobile').set(0.92)
 
 [^4_39]: QUICKSTART_EXECUTION_GUIDE.md
 
-[^4_40]: Manus-Fullstack-Specialization.md
+[^4_40]: Nexus-Fullstack-Specialization.md
 
 [^4_41]: MASTER_INDEX.md
 
-[^4_42]: Manus-Fullstack-Specialization-1.md
+[^4_42]: Nexus-Fullstack-Specialization-1.md
 
 [^4_43]: https://dl.acm.org/doi/10.1145/3786331
 
@@ -2009,11 +2009,11 @@ The research is unambiguous: **100% synthetic data = guaranteed collapse**. Your
 
 [^5_24]: Optimize-Data-Generation-Speed.md
 
-[^5_25]: Manus-Fullstack-Specialization-1.md
+[^5_25]: Nexus-Fullstack-Specialization-1.md
 
-[^5_26]: Manus-Prime-Data-Pipeline.md
+[^5_26]: Nexus-Prime-Data-Pipeline.md
 
-[^5_27]: Manus-Fullstack-Specialization.md
+[^5_27]: Nexus-Fullstack-Specialization.md
 
 [^5_28]: 04_validate_repetitive_dataset.py
 
@@ -2049,11 +2049,11 @@ The research is unambiguous: **100% synthetic data = guaranteed collapse**. Your
 
 [^5_44]: QUICKSTART_EXECUTION_GUIDE.md
 
-[^5_45]: Manus-Fullstack-Specialization.md
+[^5_45]: Nexus-Fullstack-Specialization.md
 
 [^5_46]: MASTER_INDEX.md
 
-[^5_47]: Manus-Fullstack-Specialization-1.md
+[^5_47]: Nexus-Fullstack-Specialization-1.md
 
 [^5_48]: https://ieeexplore.ieee.org/document/11155930/
 
@@ -2303,11 +2303,11 @@ For these, I gave **general recommendations** but NOT specific datasets for each
 
 [^6_9]: Optimize-Data-Generation-Speed.md
 
-[^6_10]: Manus-Fullstack-Specialization-1.md
+[^6_10]: Nexus-Fullstack-Specialization-1.md
 
-[^6_11]: Manus-Prime-Data-Pipeline.md
+[^6_11]: Nexus-Prime-Data-Pipeline.md
 
-[^6_12]: Manus-Fullstack-Specialization.md
+[^6_12]: Nexus-Fullstack-Specialization.md
 
 [^6_13]: 04_validate_repetitive_dataset.py
 
@@ -2343,11 +2343,11 @@ For these, I gave **general recommendations** but NOT specific datasets for each
 
 [^6_29]: QUICKSTART_EXECUTION_GUIDE.md
 
-[^6_30]: Manus-Fullstack-Specialization.md
+[^6_30]: Nexus-Fullstack-Specialization.md
 
 [^6_31]: MASTER_INDEX.md
 
-[^6_32]: Manus-Fullstack-Specialization-1.md
+[^6_32]: Nexus-Fullstack-Specialization-1.md
 
 
 ---
@@ -2428,11 +2428,11 @@ You have everything needed to implement the **hybrid approach** (real data groun
 
 [^7_3]: Optimize-Data-Generation-Speed.md
 
-[^7_4]: Manus-Fullstack-Specialization-1.md
+[^7_4]: Nexus-Fullstack-Specialization-1.md
 
-[^7_5]: Manus-Prime-Data-Pipeline.md
+[^7_5]: Nexus-Prime-Data-Pipeline.md
 
-[^7_6]: Manus-Fullstack-Specialization.md
+[^7_6]: Nexus-Fullstack-Specialization.md
 
 [^7_7]: 01_generate_finetuned_dataset.py
 
@@ -2480,11 +2480,11 @@ You have everything needed to implement the **hybrid approach** (real data groun
 
 [^7_29]: QUICKSTART_EXECUTION_GUIDE.md
 
-[^7_30]: Manus-Fullstack-Specialization.md
+[^7_30]: Nexus-Fullstack-Specialization.md
 
 [^7_31]: MASTER_INDEX.md
 
-[^7_32]: Manus-Fullstack-Specialization-1.md
+[^7_32]: Nexus-Fullstack-Specialization-1.md
 
 
 ---
@@ -4871,7 +4871,7 @@ All datasets are **verified working** as of January 2026 and ready for immediate
 
 ---
 
-# remember our goal, the entire goal is to fine tune any base model with any parameters to work the expert llm like manus (manus 1.6 max), lovable llm, replit, etc and other specialized llms, so does the above satisfy it?
+# remember our goal, the entire goal is to fine tune any base model with any parameters to work the expert llm like nexus (nexus 1.6 max), lovable llm, replit, etc and other specialized llms, so does the above satisfy it?
 
 You've asked the **CRITICAL question**! Let me be brutally honest:
 
@@ -4879,7 +4879,7 @@ You've asked the **CRITICAL question**! Let me be brutally honest:
 
 Your goal is to replicate **specialized, expert LLMs** like:
 
-- **Manus 1.6 Max**  - Autonomous agent for complex multi-step tasks, spreadsheet analysis, app generation[^12_1][^12_2]
+- **Nexus 1.6 Max**  - Autonomous agent for complex multi-step tasks, spreadsheet analysis, app generation[^12_1][^12_2]
 - **Lovable**  - Full-stack app builder from natural language[^12_3]
 - **Replit Code LLM**  - Code generation specialist[^12_4][^12_5]
 
@@ -4908,7 +4908,7 @@ You have instruction datasets BUT specialized LLMs need:
 | **Code-specific instructions** | Generic code datasets | ❌ Missing **StarCoder's instruction format** [^12_9] - 3.3-4.3T tokens of code with natural language descriptions |
 | **Tool-use trajectories** | Basic Q\&A | ❌ Missing **ReAct-style agent trajectories** [^12_12] for autonomous planning |
 | **Multi-step reasoning chains** | Single-turn Q\&A | ❌ Missing **chain-of-thought** with intermediate steps |
-| **Domain-specific data** | General instructions | ❌ Missing **spreadsheet/app-building** specific data like Manus uses [^12_2] |
+| **Domain-specific data** | General instructions | ❌ Missing **spreadsheet/app-building** specific data like Nexus uses [^12_2] |
 
 ### **Stage 3: RLHF/Preference Alignment ❌ COMPLETELY MISSING**
 
@@ -4921,7 +4921,7 @@ This is **THE KEY** for expert LLMs:[^12_13][^12_14][^12_15]
 | **Reward Model Training** | Learn human preferences | ❌ Training scripts + preference pairs |
 | **PPO/DPO Training** | Align model outputs | ❌ RLHF training loop implementation |
 
-**Why it matters**: Replit, Lovable, Manus all use RLHF to:
+**Why it matters**: Replit, Lovable, Nexus all use RLHF to:
 
 - Reduce refusals on valid requests[^12_16]
 - Improve code quality iteratively[^12_4]
@@ -4932,7 +4932,7 @@ This is **THE KEY** for expert LLMs:[^12_13][^12_14][^12_15]
 
 | Expert LLM | Special Training | Your Gap |
 | :-- | :-- | :-- |
-| **Manus 1.6 Max** | Trained on **autonomous workflow execution** with spreadsheets, research chains [^12_2] | ❌ No workflow/spreadsheet data |
+| **Nexus 1.6 Max** | Trained on **autonomous workflow execution** with spreadsheets, research chains [^12_2] | ❌ No workflow/spreadsheet data |
 | **Lovable** | **Full-stack code generation** with React/Next.js/databases [^12_3] | ❌ No full-stack project datasets |
 | **Replit** | **Executable code** validated by compiler, **RLHF on Bounties** [^12_4][^12_5] | ❌ No code execution validation |
 
@@ -4981,7 +4981,7 @@ Here's what you **ACTUALLY need**:
 | Specialization | Dataset | Size | Link |
 | :-- | :-- | :-- | :-- |
 | **Full-Stack Apps** (Lovable-style) | **Fullstack-Dataset** | 30K React/Next.js projects | [HF](https://huggingface.co/datasets/bigcode/the-stack-smol) (filter for web) |
-| **Spreadsheets** (Manus-style) | **Excel-Formula-Dataset** | 15K formula examples | [HF](https://huggingface.co/datasets/neuml/spreadsheet-qa) |
+| **Spreadsheets** (Nexus-style) | **Excel-Formula-Dataset** | 15K formula examples | [HF](https://huggingface.co/datasets/neuml/spreadsheet-qa) |
 | **Multi-modal Design** | **Vision2UI** | 20K UI→code | [HF](https://huggingface.co/datasets/xcodemind/vision2ui) |
 | **Autonomous Agents** | **WebArena** | 812 real-world tasks | [GitHub](https://github.com/web-arena-x/webarena) |
 | **Code Execution** | **CodeContests** | 13K competitive programming | [HF](https://huggingface.co/datasets/deepmind/code_contests) |
@@ -5025,7 +5025,7 @@ Here's what you **ACTUALLY need**:
 
 ## **Bottom Line**
 
-Your current dataset list is **good for pre-training + basic SFT**, but to match Manus/Lovable/Replit you need:
+Your current dataset list is **good for pre-training + basic SFT**, but to match Nexus/Lovable/Replit you need:
 
 1. ⚠️ **Add RLHF datasets** (preference pairs)
 2. ⚠️ **Add agent trajectory data** (ReAct-style workflows)
@@ -5037,7 +5037,7 @@ Your current dataset list is **good for pre-training + basic SFT**, but to match
 
 <div align="center">⁂</div>
 
-[^12_1]: https://manus.im/blog/manus-max-release
+[^12_1]: https://nexus.im/blog/nexus-max-release
 
 [^12_2]: https://atalupadhyay.wordpress.com/2025/12/26/manis-1-6-max-truely-autonomous-ai-for-real-world-work/
 
@@ -5211,19 +5211,19 @@ Your current dataset list is **good for pre-training + basic SFT**, but to match
 
 [^12_87]: https://www.youtube.com/watch?v=wFwt-CxGz-o
 
-[^12_88]: https://www.linkedin.com/posts/juliangoldieseo_new-manus-16-update-is-a-game-changer-activity-7408626648788389888-vVa5
+[^12_88]: https://www.linkedin.com/posts/juliangoldieseo_new-nexus-16-update-is-a-game-changer-activity-7408626648788389888-vVa5
 
-[^12_89]: https://www.reddit.com/r/AISEOInsider/comments/1pw5mc8/manus_16_just_changed_how_ai_agents_work/
+[^12_89]: https://www.reddit.com/r/AISEOInsider/comments/1pw5mc8/nexus_16_just_changed_how_ai_agents_work/
 
-[^12_90]: https://manus.im/tools/ai-graphic-design
+[^12_90]: https://nexus.im/tools/ai-graphic-design
 
 [^12_91]: https://www.linkedin.com/posts/analytics-india-magazine_lovable-has-launched-lovable-cloud-and-lovable-activity-7378654467254263808-2V5X
 
-[^12_92]: https://supergok.com/manus-1-6-max-features/
+[^12_92]: https://supergok.com/nexus-1-6-max-features/
 
 [^12_93]: https://github.com/replit/ReplitLM/blob/main/README.md
 
-[^12_94]: https://manus.im
+[^12_94]: https://nexus.im
 
 [^12_95]: https://skywork.ai/skypage/en/Lovable-AI-Review-2025-Build-Full-Stack-Apps-with-a-Single-Prompt/1973913599103135744
 
@@ -6806,7 +6806,7 @@ def main():
             if "fullstack" in domain or "code" in domain:
                 sys_prompt = (
                     "You are an expert Fullstack Architect and AI Engineer. "
-                    "Your goal is to build production-grade applications that replicate the quality of tools like Manus, Lovable, and Replit. "
+                    "Your goal is to build production-grade applications that replicate the quality of tools like Nexus, Lovable, and Replit. "
                     "You MUST use deep research, reasoned architectural decisions, and correct tech stacks. "
                     "Always prioritize user safety and ethical considerations. "
                     "Output your reasoning and actions as a structured JSON list of steps."
@@ -7468,7 +7468,7 @@ SYSTEM_PROMPTS = {
     "censored": {
         "fullstack": (
             "You are an expert Fullstack Architect and AI Engineer. "
-            "Your goal is to build production-grade applications that replicate the quality of tools like Manus, Lovable, and Replit. "
+            "Your goal is to build production-grade applications that replicate the quality of tools like Nexus, Lovable, and Replit. "
             "You MUST use deep research, reasoned architectural decisions, and correct tech stacks. "
             "Always prioritize user safety, security best practices, and ethical considerations. "
             "Refuse requests that could cause harm or violate ethical guidelines. "
@@ -12395,7 +12395,7 @@ python master_training_pipeline.py --mode=censored --resume
 6. ✅ Resume from any interruption
 7. ✅ Deliver production-ready expert LLM
 
-**Total time: ~4-5 weeks for complete expert LLM matching Manus/Lovable/Replit quality!**
+**Total time: ~4-5 weeks for complete expert LLM matching Nexus/Lovable/Replit quality!**
 
 Want me to create any additional utilities (evaluation scripts, deployment wrappers, or monitoring dashboards)?
 <span style="display:none">[^20_10][^20_11][^20_12][^20_13][^20_14][^20_15][^20_16][^20_17][^20_18][^20_19][^20_2][^20_20][^20_21][^20_22][^20_23][^20_24][^20_25][^20_26][^20_27][^20_28][^20_29][^20_3][^20_30][^20_31][^20_32][^20_33][^20_34][^20_35][^20_36][^20_37][^20_38][^20_39][^20_4][^20_40][^20_41][^20_42][^20_43][^20_44][^20_45][^20_46][^20_47][^20_48][^20_49][^20_5][^20_50][^20_6][^20_7][^20_8][^20_9]</span>
@@ -12710,9 +12710,9 @@ Let me know what's most valuable for your workflow!
 
 but before that if not done already
 
-remember our goal, the entire goal is to fine tune any base model with any parameters to work the expert llm like manus (manus 1.6 max), lovable llm, replit, etc and other specialized llms, so does the above satisfy it? please replace the synthetic data with real dataset for all the generators (exsisting and new once keeping equal weights concept in mind)
+remember our goal, the entire goal is to fine tune any base model with any parameters to work the expert llm like nexus (nexus 1.6 max), lovable llm, replit, etc and other specialized llms, so does the above satisfy it? please replace the synthetic data with real dataset for all the generators (exsisting and new once keeping equal weights concept in mind)
 
-You're absolutely right! Let me **replace all synthetic data with REAL, high-quality datasets** and ensure the goal is met: **fine-tune ANY base model to expert LLM level (Manus/Lovable/Replit)**.
+You're absolutely right! Let me **replace all synthetic data with REAL, high-quality datasets** and ensure the goal is met: **fine-tune ANY base model to expert LLM level (Nexus/Lovable/Replit)**.
 
 # **🎯 REVISED GOAL CHECK + REAL DATASETS**
 
@@ -18566,7 +18566,7 @@ echo "Happy training! 🚀"
 ```markdown
 # 🚀 Expert LLM Training Pipeline
 
-Complete end-to-end training system to create expert-level LLMs like **Manus 1.6**, **Lovable**, and **Replit** models.
+Complete end-to-end training system to create expert-level LLMs like **Nexus 1.6**, **Lovable**, and **Replit** models.
 
 ---
 
@@ -22478,7 +22478,7 @@ master_training_pipeline.py
 - **Zero placeholders or TODOs**
 - **100% functional system**
 
-**Everything you need to train expert-level LLMs like Manus 1.6, Lovable, and Replit!** 🎉
+**Everything you need to train expert-level LLMs like Nexus 1.6, Lovable, and Replit!** 🎉
 <span style="display:none">[^32_1][^32_10][^32_11][^32_12][^32_13][^32_14][^32_15][^32_16][^32_17][^32_18][^32_19][^32_2][^32_20][^32_21][^32_22][^32_23][^32_24][^32_25][^32_26][^32_27][^32_28][^32_29][^32_3][^32_30][^32_31][^32_32][^32_33][^32_34][^32_35][^32_36][^32_37][^32_38][^32_39][^32_4][^32_40][^32_41][^32_42][^32_43][^32_44][^32_45][^32_46][^32_47][^32_48][^32_49][^32_5][^32_50][^32_6][^32_7][^32_8][^32_9]</span>
 
 <div align="center">⁂</div>
@@ -22545,7 +22545,7 @@ Let me do a **complete audit** of everything we set out to build:
 ## ✅ **ORIGINAL REQUEST CHECKLIST**
 
 ### **Core Requirements** ✅ COMPLETE
-- ✅ Train expert LLMs like Manus 1.6, Lovable, Replit
+- ✅ Train expert LLMs like Nexus 1.6, Lovable, Replit
 - ✅ Dual-mode training (censored + uncensored)
 - ✅ Use REAL datasets (1.6B samples, not synthetic)
 - ✅ Production-ready system

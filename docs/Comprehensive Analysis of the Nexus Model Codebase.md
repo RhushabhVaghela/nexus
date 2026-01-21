@@ -1,8 +1,8 @@
 <img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" style="height:64px;margin-right:32px"/>
 
-## Comprehensive Analysis of the Manus Model Codebase
+## Comprehensive Analysis of the Nexus Model Codebase
 
-The [Manus Prime repository](https://github.com/RhushabhVaghela/manus-model) is an **architecture-agnostic omni-modal LLM training framework** with sophisticated multimodal capabilities and real-time streaming features.
+The [Nexus Prime repository](https://github.com/RhushabhVaghela/nexus-model) is an **architecture-agnostic omni-modal LLM training framework** with sophisticated multimodal capabilities and real-time streaming features.
 
 ### Core Architecture
 
@@ -180,7 +180,7 @@ If you want, the next step can be to enumerate each generator category explicitl
 
 [^2_7]: https://www.jetbrains.com/help/mps/mps-generator.html
 
-[^2_8]: https://manus.im
+[^2_8]: https://nexus.im
 
 [^2_9]: https://www.reddit.com/r/datasets/comments/1krs3z1/finally_built_the_dataset_generator_thing_i/
 
@@ -188,7 +188,7 @@ If you want, the next step can be to enumerate each generator category explicitl
 
 [^2_11]: https://pdfcoffee.com/gujarat-complete-data-pdf-free.html
 
-[^2_12]: https://huggingface.co/datasets/nyuuzyou/manus
+[^2_12]: https://huggingface.co/datasets/nyuuzyou/nexus
 
 [^2_13]: https://copyright.gov.in/Documents/ERegister/E-Register_June_2024.pdf
 
@@ -259,13 +259,13 @@ The union of these is 12 unique datasets; the script then uses ratio-based sampl
 
 [^3_9]: https://www.fpremium.in
 
-[^3_10]: https://manus.im/docs/integrations/data-sources
+[^3_10]: https://nexus.im/docs/integrations/data-sources
 
 [^3_11]: https://prashantmane92.wordpress.com
 
 [^3_12]: https://www.reddit.com/r/india/comments/1jlm482/mass_luxury_no_middle_the_broken_premium_puzzle/
 
-[^3_13]: https://datumo.com/en/blog/insight/manus-ai-agent/
+[^3_13]: https://datumo.com/en/blog/insight/nexus-ai-agent/
 
 [^3_14]: https://stackoverflow.com/questions/70047213/huggingface-load-dataset-method-how-to-assign-the-features-argument
 
@@ -449,9 +449,9 @@ If you want an absolutely complete table, the missing piece is to open 01/02/04 
 
 ---
 
-# since I am finetuning the basemodel (openai/gpt-oss-20b) to specific fullstack use case (just like manus 1.6 max of manus, lovable llm, replit llm, etc). should we add more targeted categories for repetative datasets apart from what we already have?
+# since I am finetuning the basemodel (openai/gpt-oss-20b) to specific fullstack use case (just like nexus 1.6 max of nexus, lovable llm, replit llm, etc). should we add more targeted categories for repetative datasets apart from what we already have?
 
-Yes, for a focused **fullstack** model, it is worth adding more targeted repetitive categories beyond what you already have. The current repetitive set is very general (math, science, generic tech, daily life); adding **software-engineering–shaped** categories will better match Manus-style, Lovable, Replit, etc.[^5_1][^5_2]
+Yes, for a focused **fullstack** model, it is worth adding more targeted repetitive categories beyond what you already have. The current repetitive set is very general (math, science, generic tech, daily life); adding **software-engineering–shaped** categories will better match Nexus-style, Lovable, Replit, etc.[^5_1][^5_2]
 
 Below is a concise set of extra categories that would give high leverage.
 
@@ -508,7 +508,7 @@ These would live alongside your existing `repetitive_*` categories, but focused 
 
 ## Priority suggestion for you
 
-Given your goals (Manus‑like, Lovable/Replit‑like fullstack agent), the **top 4 to implement first** would be:
+Given your goals (Nexus‑like, Lovable/Replit‑like fullstack agent), the **top 4 to implement first** would be:
 
 1. API + schema design (REST/GraphQL + DB)
 2. Frontend component patterns for CRUD flows
@@ -1140,7 +1140,7 @@ def generate_sample() -> Dict:
 If you want, the next step can be:
 
 - Wire this into your existing generation harness (where you actually call GPT‑OSS‑20B or a teacher model to fill `target`).
-- Add **weights per domain** so fullstack domains dominate (e.g., 60–70% fullstack, 30–40% general math/science/tech), which aligns with your goal of a Manus‑style fullstack specialist.[^6_5][^6_6][^6_7]
+- Add **weights per domain** so fullstack domains dominate (e.g., 60–70% fullstack, 30–40% general math/science/tech), which aligns with your goal of a Nexus‑style fullstack specialist.[^6_5][^6_6][^6_7]
 <span style="display:none">[^6_10][^6_11][^6_12][^6_13][^6_14][^6_15][^6_16][^6_17][^6_8][^6_9]</span>
 
 <div align="center">⁂</div>
@@ -1200,7 +1200,7 @@ You do **not** need to touch the premium loader (`03_load_premium_datasets.py`) 
 
 [^7_1]: https://copyright.gov.in/Documents/ERegister/E-Register_July_2017.pdf
 
-[^7_2]: https://manus.im
+[^7_2]: https://nexus.im
 
 [^7_3]: https://huggingface.co/Amirparsa-Sal/RANomAly/blob/b8f0bdc64466f8b3ebc19309b8f3fdbfb8cae3f5/generate_dataset_json/mpdd.py
 
@@ -2715,7 +2715,7 @@ If you want symmetry, you would need to add:
 
 [^12_4]: data_mixer.py
 
-[^12_5]: https://manus.im
+[^12_5]: https://nexus.im
 
 [^12_6]: https://www.proceedings.com/content/076/076082webtoc.pdf
 
@@ -2771,7 +2771,7 @@ You need actual multimodal data if you want:
 
 These are required to train the Perceiver adapters + LLM to actually *use* visual/audio context for your fullstack tasks, rather than just ignoring those tokens.[^13_8][^13_6][^13_7]
 
-## Practical plan for Manus‑style fullstack
+## Practical plan for Nexus‑style fullstack
 
 For your goal (text‑first fullstack model, with optional multimodal):
 
@@ -3565,7 +3565,7 @@ Podcast script generator (NotebookLM-style, 2 speakers with live interaction).
   that responds to the user and then naturally returns to the main topic.
 
 This module is model-agnostic: it calls a generic `call_llm()` function that
-you can wire to your local Manus model, OpenAI-compatible endpoint, etc.
+you can wire to your local Nexus model, OpenAI-compatible endpoint, etc.
 """
 
 import json
@@ -3599,12 +3599,12 @@ class PodcastScript:
 # LLM CALL ADAPTER
 # ═══════════════════════════════════════════════════════════════
 
-def call_llm(messages: List[Dict[str, str]], *, model: str = "manus-podcast") -> str:
+def call_llm(messages: List[Dict[str, str]], *, model: str = "nexus-podcast") -> str:
     """
     Generic LLM call.
 
     Replace this with your real inference client:
-    - HTTP call to your Manus inference server
+    - HTTP call to your Nexus inference server
     - OpenAI-compatible client
     - Local pipeline
 
@@ -4323,7 +4323,7 @@ This gives you:
 
 You only need to:
 
-- Wire `call_llm` in `generator.py` to your Manus model or OpenAI‑compatible server.
+- Wire `call_llm` in `generator.py` to your Nexus model or OpenAI‑compatible server.
 - Wire `synthesize_tts` to your preferred TTS (HTTP or CLI) and make sure `play_audio` fits your OS.
 <span style="display:none">[^18_2][^18_3][^18_4][^18_5]</span>
 
@@ -5092,7 +5092,7 @@ When you are ready for that last wiring step, you can share those training/decod
 
 ---
 
-# whatever I have is in the codebase, check the repo (with latest updates) - [https://github.com/RhushabhVaghela/manus-model.git](https://github.com/RhushabhVaghela/manus-model.git)
+# whatever I have is in the codebase, check the repo (with latest updates) - [https://github.com/RhushabhVaghela/nexus-model.git](https://github.com/RhushabhVaghela/nexus-model.git)
 
 The repo already contains most of what we just designed: your latest `main` branch includes the multimodal pipeline, triple‑modality streaming, and podcast modules wired to the same architecture.[^23_1]
 
@@ -5164,7 +5164,7 @@ Your current `generator.py` already matches the design: it supports 2‑speaker 
 ## What `generator.py` already does
 
 - Defines **Turn** and **PodcastScript** dataclasses with `to_dict` / `from_dict`.[^24_1]
-- Has a `call_llm(messages, model="manus-podcast")` stub that raises until you plug in your client.[^24_1]
+- Has a `call_llm(messages, model="nexus-podcast")` stub that raises until you plug in your client.[^24_1]
 - Uses two system prompts:
     - `BASE_SYSTEM_PROMPT` to generate the initial 2‑host dialogue from documents.
     - `INTERRUPT_SYSTEM_PROMPT` to generate follow‑up turns when the user interrupts.[^24_1]
@@ -5177,12 +5177,12 @@ exactly as intended (taking recent context and user message, returning new Host 
 
 ## What you still need to do
 
-- Implement `call_llm` so it actually calls your Manus model or OpenAI‑compatible endpoint, e.g.:
+- Implement `call_llm` so it actually calls your Nexus model or OpenAI‑compatible endpoint, e.g.:
 
 ```python
 import requests
 
-def call_llm(messages: List[Dict[str, str]], *, model: str = "manus-podcast") -> str:
+def call_llm(messages: List[Dict[str, str]], *, model: str = "nexus-podcast") -> str:
     resp = requests.post(
         "http://localhost:8000/v1/chat/completions",
         json={"model": model, "messages": messages},
@@ -5245,22 +5245,22 @@ Replace the existing `call_llm` stub with something like this (adapt URL/model a
 ```python
 import requests
 
-def call_llm(messages: List[Dict[str, str]], *, model: str = "manus-podcast") -> str:
+def call_llm(messages: List[Dict[str, str]], *, model: str = "nexus-podcast") -> str:
     """
     Call a chat-completions-compatible HTTP endpoint and return the raw assistant text.
 
     Expected server API (OpenAI-compatible):
       POST /v1/chat/completions
       {
-        "model": "manus-podcast",
+        "model": "nexus-podcast",
         "messages": [...],
         "temperature": 0.7
       }
 
     Adjust URL, headers, and JSON keys to your deployment.
     """
-    url = os.getenv("MANUS_API_URL", "http://localhost:8000/v1/chat/completions")
-    api_key = os.getenv("MANUS_API_KEY", "")
+    url = os.getenv("NEXUS_API_URL", "http://localhost:8000/v1/chat/completions")
+    api_key = os.getenv("NEXUS_API_KEY", "")
 
     headers = {
         "Content-Type": "application/json",
@@ -5286,7 +5286,7 @@ def call_llm(messages: List[Dict[str, str]], *, model: str = "manus-podcast") ->
 Make sure to:
 
 - `import os` and `import requests` at the top of `generator.py`.[^25_1]
-- Set `MANUS_API_URL` / `MANUS_API_KEY` in your env to point at your Manus model server.
+- Set `NEXUS_API_URL` / `NEXUS_API_KEY` in your env to point at your Nexus model server.
 
 With this in place:
 
@@ -5338,7 +5338,7 @@ Everything you showed is already aligned with the design; only small fixes/wirin
 
 ## Podcast player vs synthesizer
 
-- `podcast/generator.py` is good; just implement `call_llm` as discussed so it hits your Manus server.[^26_1]
+- `podcast/generator.py` is good; just implement `call_llm` as discussed so it hits your Nexus server.[^26_1]
 - You now have **two** podcast playback implementations:
     - `player.py`: older, print‑only, mock VAD, no real LLM hook.[^26_2]
     - `synthesizer.py`: newer, full queue‑based player with TTS + `handle_user_interrupt` integration.[^26_3]
@@ -5374,7 +5374,7 @@ Given your current repo, the **only essential wiring right now** is:
     - `mm_generate_screenshot_dataset.py` (data),
     - `24_multimodal_training.py` (model),
     - `podcast/` and `streaming/joint.py` (runtime)
-all talk to the **same** Manus chat endpoint.
+all talk to the **same** Nexus chat endpoint.
 <span style="display:none">[^26_10][^26_11][^26_12][^26_13][^26_14][^26_7][^26_8][^26_9]</span>
 
 <div align="center">⁂</div>
@@ -5418,7 +5418,7 @@ Now let me create a comprehensive audit document with all findings and recommend
 
 ## **COMPREHENSIVE DATASET \& ENCODER AUDIT REPORT**
 
-### **Manus Model - Current State + Recommendations**
+### **Nexus Model - Current State + Recommendations**
 
 
 ***
@@ -5778,7 +5778,7 @@ Perfect. Now let me continue with the complete audit document from Section 7:
 Create a new file `src/config/multimodal_datasets.yaml`:
 
 ```yaml
-# Manus Prime: Multimodal Dataset Configuration
+# Nexus Prime: Multimodal Dataset Configuration
 # Balanced mix of vision, audio, and video datasets for omni-modal training
 
 storage:
@@ -6573,7 +6573,7 @@ If fails → debug `src/multimodal/decoders.py` shape mismatches
 - Missing sample parameters in some scripts
 - No multimodal evaluation suite
 
-**For Your Goal** (Manus-style fullstack LLM):
+**For Your Goal** (Nexus-style fullstack LLM):
 
 - ✅ Architecture is right
 - ⚠️ Data strategy needs fullstack emphasis
@@ -7076,9 +7076,9 @@ python src/
 
 ---
 
-## **COMPREHENSIVE MANUS MODEL CODEBASE AUDIT - FINAL REPORT**
+## **COMPREHENSIVE NEXUS MODEL CODEBASE AUDIT - FINAL REPORT**
 
-I have completed an exhaustive audit of your Manus Model repository across datasets, benchmarks, encoders, decoders, and the complete data pipeline. Here are the critical findings:
+I have completed an exhaustive audit of your Nexus Model repository across datasets, benchmarks, encoders, decoders, and the complete data pipeline. Here are the critical findings:
 
 ### **Current State: 8/10 - Production-Ready for Text/Code, NOT Ready for Multimodal**
 
@@ -7174,13 +7174,13 @@ Your architecture is **excellent**. The encoders are **SOTA**. Now you just need
 
 ---
 
-## MANUS-MODEL: Complete Codebase Analysis \& Dataset Structure Documentation
+## NEXUS-MODEL: Complete Codebase Analysis \& Dataset Structure Documentation
 
-I've completed a thorough analysis of the manus-model repository. Here's the comprehensive breakdown:
+I've completed a thorough analysis of the nexus-model repository. Here's the comprehensive breakdown:
 
 ### **1. PROJECT OVERVIEW**[^32_1]
 
-**Manus Prime** is an architecture-agnostic LLM training framework with Omni-Modal support (Text, Image, Audio, Video), built on:
+**Nexus Prime** is an architecture-agnostic LLM training framework with Omni-Modal support (Text, Image, Audio, Video), built on:
 
 - **Base Model**: GPT-OSS-20B
 - **Vision Encoder**: SigLIP 2 (google/siglip-so400m-patch14-512)
@@ -7432,7 +7432,7 @@ Based on `05_generate_repetitive_dataset.py` recent commit (1 hour ago), a **ful
 ***
 
 <answer>
-Based on my comprehensive analysis of the manus-model repository:
+Based on my comprehensive analysis of the nexus-model repository:
 
 ## Summary
 
@@ -7464,26 +7464,26 @@ The entire system is designed for **efficient sampling** with `sample` parameter
 
 <div align="center">⁂</div>
 
-[^32_1]: https://github.com/RhushabhVaghela/manus-model/tree/main/src
+[^32_1]: https://github.com/RhushabhVaghela/nexus-model/tree/main/src
 
-[^32_2]: https://github.com/RhushabhVaghela/manus-model/blob/main/src/config/datasets.yaml
+[^32_2]: https://github.com/RhushabhVaghela/nexus-model/blob/main/src/config/datasets.yaml
 
 [^32_3]: https://huggingface.co/datasets/m-a-p/CodeFeedback-Filtered-Instruction
 
 [^32_4]: https://huggingface.co/datasets/bigcode/commitpackft
 
-[^32_5]: https://github.com/RhushabhVaghela/manus-model/blob/main/src/02_download_benchmarks.py
+[^32_5]: https://github.com/RhushabhVaghela/nexus-model/blob/main/src/02_download_benchmarks.py
 
-[^32_6]: https://github.com/RhushabhVaghela/manus-model/blob/main/src/multimodal/download.py
+[^32_6]: https://github.com/RhushabhVaghela/nexus-model/blob/main/src/multimodal/download.py
 
-[^32_7]: https://github.com/RhushabhVaghela/manus-model/blob/main/src/01_download_real_datasets.py
+[^32_7]: https://github.com/RhushabhVaghela/nexus-model/blob/main/src/01_download_real_datasets.py
 
-[^32_8]: https://github.com/RhushabhVaghela/manus-model/blob/main/src/multimodal/model.py
+[^32_8]: https://github.com/RhushabhVaghela/nexus-model/blob/main/src/multimodal/model.py
 
 
 ---
 
-# MANUS-MODEL: EXTENDED ANALYSIS - DATASET STRUCTURE \& FULLSTACK IMPLEMENTATION
+# NEXUS-MODEL: EXTENDED ANALYSIS - DATASET STRUCTURE \& FULLSTACK IMPLEMENTATION
 
 ## PART 2: NEW FULLSTACK DATASET GENERATION (05_generate_repetitive_dataset.py)[^33_1]
 
@@ -7873,11 +7873,11 @@ class DatasetNormalizer:
 
 <div align="center">⁂</div>
 
-[^33_1]: https://github.com/RhushabhVaghela/manus-model/blob/main/src/05_generate_repetitive_dataset.py
+[^33_1]: https://github.com/RhushabhVaghela/nexus-model/blob/main/src/05_generate_repetitive_dataset.py
 
 ---
 
-# MANUS-MODEL: COMPREHENSIVE CONTINUATION - PART 4 & 5
+# NEXUS-MODEL: COMPREHENSIVE CONTINUATION - PART 4 & 5
 
 ## PART 4: COMPLETE DATASET NORMALIZATION & SAMPLING PIPELINES,,[^34_1][^34_2][^34_3]
 
@@ -8265,13 +8265,13 @@ This design perfectly supports your **GPT-OSS-20B fine-tuning for fullstack use 
 
 <div align="center">⁂</div>
 
-[^34_1]: https://github.com/RhushabhVaghela/manus-model/blob/main/src/05_generate_repetitive_dataset.py
+[^34_1]: https://github.com/RhushabhVaghela/nexus-model/blob/main/src/05_generate_repetitive_dataset.py
 
-[^34_2]: https://github.com/RhushabhVaghela/manus-model/blob/main/src/01_download_real_datasets.py
+[^34_2]: https://github.com/RhushabhVaghela/nexus-model/blob/main/src/01_download_real_datasets.py
 
-[^34_3]: https://github.com/RhushabhVaghela/manus-model/blob/main/src/02_download_benchmarks.py
+[^34_3]: https://github.com/RhushabhVaghela/nexus-model/blob/main/src/02_download_benchmarks.py
 
-[^34_4]: https://github.com/RhushabhVaghela/manus-model/blob/main/src/config/datasets.yaml
+[^34_4]: https://github.com/RhushabhVaghela/nexus-model/blob/main/src/config/datasets.yaml
 
 
 ---
@@ -9135,7 +9135,7 @@ def fetch_video_with_sample(config: Dict, sample_limit: int) -> int:
 
 ---
 
-# Manus Prime: Complete Dataset & Category Analysis[^37_1][^37_2][^37_3][^37_4]
+# Nexus Prime: Complete Dataset & Category Analysis[^37_1][^37_2][^37_3][^37_4]
 
 I've thoroughly analyzed your codebase. Here's the complete breakdown:
 
@@ -9312,7 +9312,7 @@ You have **50 new fullstack engineering categories** added to repetitive dataset
 
 ### Dataset Composition Recommendation
 
-**For your fullstack fine-tuning (targeting Manus 1.6 + Lovable LLM level):**
+**For your fullstack fine-tuning (targeting Nexus 1.6 + Lovable LLM level):**
 
 ```
 
@@ -9331,7 +9331,7 @@ Total Dataset: 200M samples
 
 ### Why This Mix Works for Fullstack
 
-**Manus 1.6, Lovable LLM, Replit LLM** all focus on:
+**Nexus 1.6, Lovable LLM, Replit LLM** all focus on:
 - Real-world fullstack project scaffolding
 - Code generation with error handling
 - Multi-file project awareness
@@ -9363,8 +9363,8 @@ Your **100-category approach** (50 base + 50 fullstack) + **9 premium RLHF sourc
 
 <div align="center">⁂</div>
 
-[^37_1]: https://github.com/RhushabhVaghela/manus-model/blob/main/src/05_generate_repetitive_dataset.py
-[^37_2]: https://github.com/RhushabhVaghela/manus-model/blob/main/src/03_load_premium_datasets.py
-[^37_3]: https://github.com/RhushabhVaghela/manus-model/blob/main/src/06_generate_preference_dataset.py
-[^37_4]: https://github.com/RhushabhVaghela/manus-model/blob/main/src/01_download_real_datasets.py```
+[^37_1]: https://github.com/RhushabhVaghela/nexus-model/blob/main/src/05_generate_repetitive_dataset.py
+[^37_2]: https://github.com/RhushabhVaghela/nexus-model/blob/main/src/03_load_premium_datasets.py
+[^37_3]: https://github.com/RhushabhVaghela/nexus-model/blob/main/src/06_generate_preference_dataset.py
+[^37_4]: https://github.com/RhushabhVaghela/nexus-model/blob/main/src/01_download_real_datasets.py```
 

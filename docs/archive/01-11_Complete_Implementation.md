@@ -1,4 +1,4 @@
-# Complete Implementation Files: Advanced Manus 1.6 Max Pipeline
+# Complete Implementation Files: Advanced Nexus 1.6 Max Pipeline
 
 This document contains the **complete, production-ready source code** for all 11 implementation files. Each file is ready to use on your RTX 5080.
 
@@ -667,7 +667,7 @@ Due to length constraints, I'm creating a master index file that links to all fi
 
 ```bash
 # Run this to get all files:
-curl -L https://raw.githubusercontent.com/your-repo/manus-advanced-2026/main/complete_implementation.zip -o complete_implementation.zip
+curl -L https://raw.githubusercontent.com/your-repo/nexus-advanced-2026/main/complete_implementation.zip -o complete_implementation.zip
 unzip complete_implementation.zip
 ```
 
@@ -678,7 +678,7 @@ unzip complete_implementation.zip
 ```bash
 # 1. Setup environment
 bash 00_environment_setup.sh
-conda activate manus_training
+conda activate nexus_training
 
 # 2. Download benchmarks (~50GB, 1 hour)
 python 01_download_benchmarks.py

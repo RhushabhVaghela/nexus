@@ -1,8 +1,8 @@
-# Manus Model Architecture
+# Nexus Model Architecture
 
 ## 🧬 Overview
 
-The Manus model project is designed for modular, capability-driven training of Large Language Models. It supports multimodal inputs (Text, Vision, Audio) and advanced reasoning (Chain-of-Thought).
+The Nexus model project is designed for modular, capability-driven training of Large Language Models. It supports multimodal inputs (Text, Vision, Audio) and advanced reasoning (Chain-of-Thought).
 
 ## 🏗️ Core Components
 
@@ -37,4 +37,4 @@ We provide multiple paths to a single unified model:
 
 * **Framework**: PyTorch + Transformers + Accelerate
 * **Quantization**: GPTQ (AutoGPTQ)
-* **Environment**: Conda (`manus`)
+* **Environment**: Conda (`nexus`)

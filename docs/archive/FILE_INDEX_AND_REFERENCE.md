@@ -5,7 +5,7 @@
 ### 📚 STRATEGIC DOCUMENTS (4 files)
 - ✅ **MASTER_INDEX.md** - Navigation hub
 - ✅ **QUICKSTART_EXECUTION_GUIDE.md** - How to execute
-- ✅ **Advanced_Manus_Pipeline_2026.md** - Why & benchmarks
+- ✅ **Advanced_Nexus_Pipeline_2026.md** - Why & benchmarks
 - ✅ **Implementation_Files_Roadmap.md** - Technical specs
 
 ### 💾 IMPLEMENTATION CODE (8 files)
@@ -48,7 +48,7 @@ cat QUICKSTART_EXECUTION_GUIDE.md
 
 # 2. Setup (10 min)
 bash 00_environment_setup.sh
-conda activate manus_training
+conda activate nexus_training
 
 # 3. Download benchmarks (1 hr)
 python 01_download_benchmarks.py
@@ -77,8 +77,8 @@ python 08_comprehensive_eval.py
 
 # 11. Deploy (optional)
 python 10_deployment_configs.py
-docker build -t manus .
-docker run -p 8000:8000 manus
+docker build -t nexus .
+docker run -p 8000:8000 nexus
 ```
 
 ---
@@ -122,7 +122,7 @@ All documents provided:
 Your Files/
 ├── MASTER_INDEX.md
 ├── QUICKSTART_EXECUTION_GUIDE.md
-├── Advanced_Manus_Pipeline_2026.md
+├── Advanced_Nexus_Pipeline_2026.md
 ├── Implementation_Files_Roadmap.md
 ├── 01-11_Complete_Implementation.md
 ├── FILES_5-11_COMPLETE_IMPLEMENTATIONS.md

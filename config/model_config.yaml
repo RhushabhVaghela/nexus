@@ -23,8 +23,8 @@ data:
   mixed_data_dir: "/mnt/e/data/downloaded"
 
 output:
-  dir: "/mnt/e/models/manus-prime-sft"
+  dir: "/mnt/e/models/nexus-prime-sft"
 
 wandb:
   enabled: false
-  project: "manus-prime"
+  project: "nexus-prime"

@@ -1,5 +1,5 @@
 # =============================================================================
-# MANUS PRIME - Multimodal Pipeline Script
+# NEXUS PRIME - Multimodal Pipeline Script
 # =============================================================================
 # 
 # Purpose: Convert ANY text model to OMNI (any-to-any multimodal)
@@ -51,13 +51,29 @@ echo "🚀 Starting Multimodal Pipeline..."
 #
 # =============================================================================
 
+# Ensure 'nexus' environment
+if [[ "$CONDA_DEFAULT_ENV" != "nexus" ]]; then
+   if [ -f "/home/rhushabh/miniconda3/envs/nexus/bin/python" ]; then
+       PYTHON_CMD="/home/rhushabh/miniconda3/envs/nexus/bin/python"
+   else
+       echo "Error: Must be in 'nexus' environment"
+       exit 1
+   fi
+else
+   PYTHON_CMD="python"
+fi
+
+# Auto-organize
+echo "[INFO] Auto-organizing datasets..."
+$PYTHON_CMD src/utils/organize_datasets.py --base-path /mnt/e/data --move || true
+
 set -e
 
-# Enforce 'manus' conda environment
-if [ "$CONDA_DEFAULT_ENV" != "manus" ]; then
-    echo -e "\033[0;31m[ERROR] This script must be run in the 'manus' conda environment.\033[0m"
+# Enforce 'nexus' conda environment
+if [ "$CONDA_DEFAULT_ENV" != "nexus" ]; then
+    echo -e "\033[0;31m[ERROR] This script must be run in the 'nexus' conda environment.\033[0m"
     echo "Current environment: ${CONDA_DEFAULT_ENV:-None}"
-    echo "Please run: conda activate manus"
+    echo "Please run: conda activate nexus"
     exit 1
 fi
 

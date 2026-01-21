@@ -307,7 +307,7 @@ def main():
     os.makedirs('logs', exist_ok=True)
     
     logger.info("=" * 60)
-    logger.info("🚀 MANUS PRIME: Real Data Download & Normalize")
+    logger.info("🚀 NEXUS PRIME: Real Data Download & Normalize")
     logger.info("=" * 60)
     logger.info(f"Output directory: {BASE_DIR}")
     logger.info(f"Workers per dataset: {NUM_WORKERS}")

@@ -1,4 +1,4 @@
-# Manus Model - Universal Multimodal Training Pipeline
+# Nexus Model - Universal Multimodal Training Pipeline
 
 A comprehensive pipeline for training and extending language models with multimodal capabilities including vision, audio, video understanding, and generation.
 
@@ -8,7 +8,7 @@ A comprehensive pipeline for training and extending language models with multimo
 
 ```bash
 # Activate environment
-conda activate manus
+conda activate nexus
 
 # Run tests (109 tests, ~90s)
 pytest tests/unit/ tests/integration/ tests/e2e/ -v
@@ -56,10 +56,19 @@ pytest tests/unit/ tests/integration/ tests/e2e/ -v
 
 ---
 
+### Dataset Organization System
+
+- **Automatic Sorting** - Moves raw datasets into categorized folders (`datasets/cot`, `datasets/tools`, etc.)
+- **Content Detection** - Inspects JSON keys to identify dataset capability (e.g., `tool_calls` -> tools)
+- **Model Management** - Organizes encoders/decoders by modality
+- **Auto-Run** - Integrated into start of all pipelines
+
+---
+
 ## Project Structure
 
 ```
-manus_model/
+nexus_model/
 ├── run_universal_pipeline.sh    # Main orchestrator
 ├── src/
 │   ├── detect_modalities.py     # Model capability detection
@@ -165,14 +174,15 @@ The pipeline supports **10 distinct training methodologies**, covering the full 
 ### Development Tools
 
 - **Metrics Tracker**: Auto-logs training/benchmark stats to `results/*.csv`.
+- **Dataset Organizer**: Manages data library (`src/utils/organize_datasets.py`).
 - **Omni-Modal Loading**: Universal loader for any architecture.
 - **Strict Real Models**: Zero mocks in production/testing.
 
 ---
 
-## 🚀 "Manus 1.6 Max" Training Recipe (CoT + RL + Long Context)
+## 🚀 "Nexus 1.6 Max" Training Recipe (CoT + RL + Long Context)
 
-To replicate a high-reasoning, long-context model like Manus 1.6 Max or Gemini 3 Pro:
+To replicate a high-reasoning, long-context model like Nexus 1.6 Max or Gemini 3 Pro:
 
 ### 1. SFT Stage (Thinking & Long Context)
 
@@ -217,7 +227,7 @@ Output:
 
 ```
 ╔═══════════════════════════════════════════════════════════════╗
-║         MANUS UNIVERSAL CAPABILITY PIPELINE                   ║
+║         NEXUS UNIVERSAL CAPABILITY PIPELINE                   ║
 ╚═══════════════════════════════════════════════════════════════╝
 
   Base Model:  Qwen2.5-0.5B
@@ -396,8 +406,8 @@ python src/ppo_training.py --prompts_data /path/to/1tb_dataset
 
 ```bash
 # Optional overrides
-export MANUS_OUTPUT_DIR=/custom/output/path
-export MANUS_CHECKPOINT_DIR=/custom/checkpoints
+export NEXUS_OUTPUT_DIR=/custom/output/path
+export NEXUS_CHECKPOINT_DIR=/custom/checkpoints
 export CUDA_VISIBLE_DEVICES=0
 ```
 

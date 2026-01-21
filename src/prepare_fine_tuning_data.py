@@ -6,7 +6,7 @@ from pathlib import Path
 from datasets import load_dataset
 from tqdm import tqdm
 
-OUTPUT_FILE = "manus_agent_mix.jsonl"
+OUTPUT_FILE = "nexus_agent_mix.jsonl"
 
 def generate_synthetic_podcast(n=500):
     """

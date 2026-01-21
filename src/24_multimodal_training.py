@@ -422,9 +422,9 @@ def main():
     parser.add_argument("--log-results", action="store_true", help="Log results to CSV")
     args = parser.parse_args()
     
-    # Enforce 'manus' conda environment
-    if os.environ.get("CONDA_DEFAULT_ENV") != "manus":
-        sys.exit("\033[0;31m[ERROR] Must be run in 'manus' conda environment.\033[0m")
+    # Enforce 'nexus' conda environment
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        sys.exit("\033[0;31m[ERROR] Must be run in 'nexus' conda environment.\033[0m")
         
     log_header(logger, f"OMNI-MODAL TRAINING (Stage {args.stage})", {
         "Data": args.data_path,

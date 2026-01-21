@@ -91,7 +91,7 @@ def main():
     print(f"Limits: RAM < {RAM_THRESHOLD_PERCENT}% | VRAM < {VRAM_THRESHOLD_PERCENT}%")
     
     data_path = "/mnt/e/data/datasets"
-    output_dir = "./checkpoints/manus_fine_tuning"
+    output_dir = "./checkpoints/nexus_fine_tuning"
     sample_size = "5"
     
     # Run Stage 2 directly (Fine-Tuning) as per user flow

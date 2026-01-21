@@ -5,7 +5,7 @@ import torch
 from pathlib import Path
 
 # Add src to path
-sys.path.append("/mnt/d/Research Experiments/manus_model/src")
+sys.path.append("/mnt/d/Research Experiments/nexus_model/src")
 
 from multimodal.reasoning import ReasoningWrapper, ReasoningLevel
 from multimodal.model import OmniMultimodalLM

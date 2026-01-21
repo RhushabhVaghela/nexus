@@ -1,4 +1,4 @@
-# 📚 MASTER INDEX: Advanced Manus 1.6 Max Pipeline (2026)
+# 📚 MASTER INDEX: Advanced Nexus 1.6 Max Pipeline (2026)
 
 **Complete Production-Ready Training System for RTX 5080**  
 **Status**: ✅ READY TO EXECUTE  
@@ -24,7 +24,7 @@
 
 ### **Tier 2: Implementation Details** (Reference During Execution)
 
-📄 **Advanced_Manus_Pipeline_2026.md**
+📄 **Advanced_Nexus_Pipeline_2026.md**
 - Why each improvement matters
 - Complete benchmark suite breakdown
 - Full-stack specialization details
@@ -76,7 +76,7 @@
 | **How to run setup** | QUICKSTART_EXECUTION_GUIDE | Phase 1 |
 | **I need the actual code** | 01-11_Complete_Implementation | FILE 1-4 |
 | **I need specs for Files 5-11** | 01-11_Complete_Implementation | FILE 5-11 |
-| **Why this approach** | Advanced_Manus_Pipeline_2026 | Improvements section |
+| **Why this approach** | Advanced_Nexus_Pipeline_2026 | Improvements section |
 | **What's the timeline** | QUICKSTART_EXECUTION_GUIDE | Roadmap section |
 | **Monitor during training** | QUICKSTART_EXECUTION_GUIDE | Monitoring dashboard |
 | **Something went wrong** | QUICKSTART_EXECUTION_GUIDE | Issues section |
@@ -92,7 +92,7 @@
 
 # 2. Setup environment (10 min)
 bash 00_environment_setup.sh
-conda activate manus_training
+conda activate nexus_training
 
 # 3. Download benchmarks (1-2 hrs)
 python 01_download_benchmarks.py
@@ -137,7 +137,7 @@ python 04_sft_training.py
 
 ### Day 1-2: Understanding
 1. Read QUICKSTART_EXECUTION_GUIDE (20 min)
-2. Read Advanced_Manus_Pipeline_2026 (30 min)
+2. Read Advanced_Nexus_Pipeline_2026 (30 min)
 3. Understand why each benchmark matters
 4. Know what the code does (don't need to modify it)
 
@@ -336,9 +336,9 @@ You have everything needed to train a production-grade AI model:
 All documents are in the same directory:
 
 ```
-manus-advanced-2026/
+nexus-advanced-2026/
 ├── QUICKSTART_EXECUTION_GUIDE.md          ← Start here!
-├── Advanced_Manus_Pipeline_2026.md
+├── Advanced_Nexus_Pipeline_2026.md
 ├── Implementation_Files_Roadmap.md
 ├── 01-11_Complete_Implementation.md
 ├── 00_environment_setup.sh
@@ -363,6 +363,6 @@ Good luck! This is going to be amazing! 🚀
 
 ---
 
-*Advanced Manus 1.6 Max - January 16, 2026*  
+*Advanced Nexus 1.6 Max - January 16, 2026*  
 *Production Pipeline for Asus Zephyrus G16 (RTX 5080)*  
 *All files tested and ready to execute*

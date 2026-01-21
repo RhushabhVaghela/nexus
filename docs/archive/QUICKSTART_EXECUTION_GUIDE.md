@@ -1,4 +1,4 @@
-# 🚀 ADVANCED MANUS 1.6 MAX - COMPLETE PRODUCTION PIPELINE
+# 🚀 ADVANCED NEXUS 1.6 MAX - COMPLETE PRODUCTION PIPELINE
 
 **Status**: ✅ COMPLETE & READY TO EXECUTE  
 **Hardware**: Asus Zephyrus G16 (RTX 5080, 16GB VRAM)  
@@ -14,7 +14,7 @@ You now have **3 comprehensive documents** + **4 production-ready Python files**
 
 ### Documents Created:
 
-1. ✅ **Advanced_Manus_Pipeline_2026.md** (30KB)
+1. ✅ **Advanced_Nexus_Pipeline_2026.md** (30KB)
    - Complete strategic overview
    - Why each stage matters
    - Performance expectations
@@ -141,8 +141,8 @@ Day 15: Deploy with vLLM
 
 ```bash
 # 1. Clone your repo (setup first)
-git clone https://github.com/YOUR_USERNAME/manus-advanced-2026.git
-cd manus-advanced-2026
+git clone https://github.com/YOUR_USERNAME/nexus-advanced-2026.git
+cd nexus-advanced-2026
 
 # 2. Make scripts executable
 chmod +x *.sh *.py
@@ -151,7 +151,7 @@ chmod +x *.sh *.py
 bash 00_environment_setup.sh
 
 # 4. Activate environment
-conda activate manus_training
+conda activate nexus_training
 
 # 5. Verify installation
 python -c "import torch; print(f'PyTorch: {torch.__version__}')"
@@ -326,14 +326,14 @@ python 10_deployment_configs.py
 # - API endpoint examples
 
 # Quick deploy:
-docker build -t manus-model .
-docker run -p 8000:8000 manus-model
+docker build -t nexus-model .
+docker run -p 8000:8000 nexus-model
 
 # Test the API:
 curl http://localhost:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "manus",
+    "model": "nexus",
     "messages": [{"role": "user", "content": "Build a React todo app"}],
     "max_tokens": 2048
   }'
@@ -361,7 +361,7 @@ curl http://localhost:8000/v1/chat/completions \
 #!/bin/bash
 while true; do
     clear
-    echo "🖥️  MANUS TRAINING MONITOR"
+    echo "🖥️  NEXUS TRAINING MONITOR"
     echo "================================"
     
     echo "🔋 GPU Status:"
@@ -512,6 +512,6 @@ python 02_generate_trajectories.py
 **Stuck?** Review the troubleshooting section above  
 **Ready?** Let's train! 🔥
 
-*Advanced Manus 1.6 Max - January 2026*  
+*Advanced Nexus 1.6 Max - January 2026*  
 *For Asus Zephyrus G16 (RTX 5080)*  
 *Production-Ready Pipeline*

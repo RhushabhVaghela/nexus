@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
 FILE: 00_environment_setup.sh
-Purpose: Install all dependencies for Advanced Manus Pipeline on RTX 5080
+Purpose: Install all dependencies for Advanced Nexus Pipeline on RTX 5080
 Runtime: ~10 minutes
-Output: Conda environment 'manus_training' with all dependencies
+Output: Conda environment 'nexus_training' with all dependencies
 """
 
 #!/bin/bash
 set -e
 
 echo "═════════════════════════════════════════════════════════════════"
-echo "🔧 Advanced Manus 1.6 Max - Environment Setup for RTX 5080"
+echo "🔧 Advanced Nexus 1.6 Max - Environment Setup for RTX 5080"
 echo "═════════════════════════════════════════════════════════════════"
 echo ""
 
@@ -28,9 +28,9 @@ echo "✓ CUDA Capability: $CUDA_VERSION"
 echo ""
 
 # Create conda environment
-echo "📦 Creating conda environment 'manus_training'..."
-conda create -n manus_training python=3.11 -y
-conda activate manus_training
+echo "📦 Creating conda environment 'nexus_training'..."
+conda create -n nexus_training python=3.11 -y
+conda activate nexus_training
 
 echo "✓ Conda environment created"
 echo ""
@@ -132,7 +132,7 @@ echo "✅ Environment setup complete!"
 echo "═════════════════════════════════════════════════════════════════"
 echo ""
 echo "To activate environment:"
-echo "  conda activate manus_training"
+echo "  conda activate nexus_training"
 echo ""
 echo "Next steps:"
 echo "  1. Set API key: export OPENAI_API_KEY='sk-...'"

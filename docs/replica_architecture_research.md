@@ -1,10 +1,10 @@
 # Research & Schema Design for "Replica" Applications
 
-**Analysis of Architecture, UI/UX, and Tech Stacks for AI-Generated Apps (Manus/Lovable/Replit Style)**
+**Analysis of Architecture, UI/UX, and Tech Stacks for AI-Generated Apps (Nexus/Lovable/Replit Style)**
 
 ## 1. Executive Summary
 
-This document analyzes the schema design and architectural patterns required to build a "Replica" application—an AI-powered full-stack app generator similar to Manus, Lovable, or Replit. The analysis is based on the 40+ application blueprints defined in our finetuned dataset generator.
+This document analyzes the schema design and architectural patterns required to build a "Replica" application—an AI-powered full-stack app generator similar to Nexus, Lovable, or Replit. The analysis is based on the 40+ application blueprints defined in our finetuned dataset generator.
 
 ## 2. UI/UX Patterns & Templates
 

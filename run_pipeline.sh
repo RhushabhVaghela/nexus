@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# MANUS PRIME - Master Pipeline Script
+# NEXUS PRIME - Master Pipeline Script
 # =============================================================================
 # 
 # Main Pipeline (Text/Code):
@@ -34,11 +34,11 @@
 
 set -e
 
-# Enforce 'manus' conda environment
-if [ "$CONDA_DEFAULT_ENV" != "manus" ]; then
-    echo -e "\033[0;31m[ERROR] This script must be run in the 'manus' conda environment.\033[0m"
+# Enforce 'nexus' conda environment
+if [ "$CONDA_DEFAULT_ENV" != "nexus" ]; then
+    echo -e "\033[0;31m[ERROR] This script must be run in the 'nexus' conda environment.\033[0m"
     echo "Current environment: ${CONDA_DEFAULT_ENV:-None}"
-    echo "Please run: conda activate manus"
+    echo "Please run: conda activate nexus"
     exit 1
 fi
 
@@ -114,6 +114,26 @@ run_validate() {
 }
 
 # =============================================================================
+
+# Ensure 'nexus' environment
+if [[ "$CONDA_DEFAULT_ENV" != "nexus" ]]; then
+   if [ -f "/home/rhushabh/miniconda3/envs/nexus/bin/python" ]; then
+       PYTHON_CMD="/home/rhushabh/miniconda3/envs/nexus/bin/python"
+   else
+       echo "Error: Must be in 'nexus' environment"
+       exit 1
+   fi
+else
+   PYTHON_CMD="python"
+fi
+
+# Auto-organize
+echo "[INFO] Auto-organizing datasets..."
+$PYTHON_CMD src/utils/organize_datasets.py --base-path /mnt/e/data --move || true
+
+set -e
+
+# ============ COLORS =================================================================
 # PHASE 4: TRAIN
 # =============================================================================
 run_train() {
@@ -160,7 +180,7 @@ run_distill() {
 }
 
 echo "==============================================="
-echo "  MANUS PRIME PIPELINE"
+echo "  NEXUS PRIME PIPELINE"
 echo "  Phase: ${PHASE} | Mode: ${MODE}"
 echo "  Training Method: ${TRAINING_METHOD}"
 echo "==============================================="

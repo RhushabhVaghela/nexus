@@ -1,4 +1,4 @@
-# 🚀 Manus Prime: Master Implementation Plan (10/10)
+# 🚀 Nexus Prime: Master Implementation Plan (10/10)
 
 > **Version**: 2.0 | **Last Updated**: 2026-01-17  
 > **Base Model**: `openai/gpt-oss-20b` (architecture-agnostic, easily swappable)  
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-This document provides the **complete, actionable implementation plan** for building Manus Prime - a fullstack-specialized AI coding assistant. It addresses all gaps from the research document and fits within the 500GB storage constraint.
+This document provides the **complete, actionable implementation plan** for building Nexus Prime - a fullstack-specialized AI coding assistant. It addresses all gaps from the research document and fits within the 500GB storage constraint.
 
 ### Key Strategy: LoRA on Pre-trained Base
 
@@ -434,7 +434,7 @@ data:
   shuffle: true
   
 output:
-  dir: "/mnt/e/models/manus-prime"
+  dir: "/mnt/e/models/nexus-prime"
   save_steps: 1000
   eval_steps: 500
 ```

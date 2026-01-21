@@ -71,7 +71,7 @@ CONFIG = {
     "lora_alpha": 512,
     
     # Checkpointing
-    "output_dir": "/mnt/e/models/manus-prime-cpt",
+    "output_dir": "/mnt/e/models/nexus-prime-cpt",
     "save_steps": 5000,
     "logging_steps": 100,
     
@@ -244,7 +244,7 @@ def load_model_for_cpt():
 
 def main():
     logger.info("=" * 60)
-    logger.info("🔬 MANUS PRIME: Continued Pretraining (CPT)")
+    logger.info("🔬 NEXUS PRIME: Continued Pretraining (CPT)")
     logger.info("=" * 60)
     logger.info(f"   Model: {CONFIG['model_name']}")
     logger.info(f"   Target: {CONFIG['target_tokens']:,} tokens")

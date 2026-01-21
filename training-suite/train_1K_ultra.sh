@@ -29,9 +29,9 @@ echo -e "${YELLOW}Optimization: Ultra-Optimized (6x speedup)${NC}"
 echo ""
 
 source /home/rhushabh/miniconda3/etc/profile.d/conda.sh
-conda activate manus
+conda activate nexus
 
-cd "/mnt/d/Research Experiments/manus_model"
+cd "/mnt/d/Research Experiments/nexus_model"
 
 mkdir -p /mnt/e/models/omni_1K_ultra
 mkdir -p logs

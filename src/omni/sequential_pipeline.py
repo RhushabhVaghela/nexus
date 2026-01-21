@@ -57,7 +57,7 @@ def run_sequential_training(base_model: str, stages: list, output_dir: str, samp
         training_script = cap_info.training_script
         
         cmd = [
-            "conda", "run", "-n", "manus",
+            "conda", "run", "-n", "nexus",
             "python3", training_script,
             "--base-model", str(current_base),
             "--output-dir", str(stage_output),

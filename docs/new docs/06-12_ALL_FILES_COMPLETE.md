@@ -686,7 +686,7 @@ CMD ["python", "-m", "vllm.entrypoints.openai.api_server", \\
     compose = {
         "version": "3.8",
         "services": {
-            "manus": {
+            "nexus": {
                 "build": ".",
                 "ports": ["8000:8000"],
                 "environment": {"CUDA_VISIBLE_DEVICES": "0"},
@@ -711,7 +711,7 @@ if __name__ == "__main__":
 set -e
 
 echo "═══════════════════════════════════════════════════════════════"
-echo "🚀 ADVANCED MANUS 1.6 MAX - FULL PIPELINE"
+echo "🚀 ADVANCED NEXUS 1.6 MAX - FULL PIPELINE"
 echo "═══════════════════════════════════════════════════════════════"
 
 GREEN='\033[0;32m'
@@ -720,7 +720,7 @@ NC='\033[0m'
 
 echo -e "${BLUE}Step 1: Setup${NC}"
 bash 00_environment_setup.sh
-conda activate manus_training
+conda activate nexus_training
 
 echo -e "${BLUE}Step 2: Download Benchmarks${NC}"
 python 01_download_benchmarks.py

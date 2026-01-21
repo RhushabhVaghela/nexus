@@ -1,4 +1,4 @@
-# Manus Universal Omni Model - Complete Guide
+# Nexus Universal Omni Model - Complete Guide
 
 > **Last Updated:** January 2026  
 > **Hardware:** RTX 5080+ 16GB VRAM  
@@ -19,7 +19,7 @@ This project trains a **Universal Any-to-Any Multimodal Model** with:
 ## 📁 Project Structure
 
 ```
-manus_model/
+nexus_model/
 ├── src/
 │   ├── detect_modalities.py     # Probe model capabilities
 │   ├── capability_registry.py   # 12 capability definitions
@@ -153,6 +153,45 @@ E:/data/
     ├── checkpoints/
     └── final/
 ```
+
+---
+
+## 🗄️ Dataset Management
+
+The project includes an intelligent **Dataset Organizer** that automatically categorizes your raw data.
+
+### Automation
+
+- **Auto-Run**: The tool runs automatically at the start of `run_universal_pipeline.sh`.
+- **Content Detection**: It inspects JSON/JSONL files for keys (e.g., `prompt`, `messages`, `tool_calls`) to determine the capability type.
+- **Physical Organization**: Moves files into structured directories.
+
+### Manual Usage
+
+```bash
+# Preview changes (Dry Run)
+python src/utils/organize_datasets.py --base-path /mnt/e/data --dry-run
+
+# Apply changes
+python src/utils/organize_datasets.py --base-path /mnt/e/data --move
+```
+
+### Supported Categories
+
+| Category | Keywords / Content Signals |
+|----------|----------------------------|
+| **cot** | `messages`, `prompt`+`response`, `instruction`+`output` |
+| **reasoning** | `problem`+`solution`, `question`+`answer`, keywords: "math", "gsm8k" |
+| **tools** | `tool_calls`, `function` |
+| **vision-qa** | `image`, `visual` |
+| **benchmarks** | keywords: "benchmark", "eval", "mmlu", "humaneval" |
+
+### Model Organization
+
+The tool also organizes model components:
+
+- **Encoders**: `encoders/audio-encoders`, `encoders/vision-encoders`
+- **Decoders**: `decoders/audio-decoders`, `decoders/vision-decoders`
 
 ---
 

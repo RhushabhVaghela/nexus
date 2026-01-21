@@ -439,7 +439,7 @@ def generate_slurm_script(config: DistributedConfig, script_path: Path):
     """Generate SLURM submission script for multi-node training."""
     
     slurm_script = f"""#!/bin/bash
-#SBATCH --job-name=manus_training
+#SBATCH --job-name=nexus_training
 #SBATCH --nodes={config.num_nodes}
 #SBATCH --ntasks-per-node={config.num_gpus}
 #SBATCH --gpus-per-node={config.num_gpus}
@@ -456,7 +456,7 @@ module load python/3.11
 
 # Activate environment
 source ~/.bashrc
-conda activate manus_training
+conda activate nexus_training
 
 # Set environment variables
 export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
@@ -507,7 +507,7 @@ echo "Training complete!"
 # ═══════════════════════════════════════════════════════════════
 
 def main():
-    parser = argparse.ArgumentParser(description="Distributed training for Manus Model")
+    parser = argparse.ArgumentParser(description="Distributed training for Nexus Model")
     
     # Model
     parser.add_argument("--model", type=str, default="Qwen/Qwen2.5-7B-Instruct")

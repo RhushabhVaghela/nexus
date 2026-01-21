@@ -986,7 +986,7 @@ def create_docker_compose():
     compose = {
         "version": "3.8",
         "services": {
-            "manus-model": {
+            "nexus-model": {
                 "build": ".",
                 "ports": ["8000:8000"],
                 "environment": {
@@ -1005,17 +1005,17 @@ def create_k8s_deployment():
     k8s = {
         "apiVersion": "apps/v1",
         "kind": "Deployment",
-        "metadata": {"name": "manus-model"},
+        "metadata": {"name": "nexus-model"},
         "spec": {
             "replicas": 1,
-            "selector": {"matchLabels": {"app": "manus"}},
+            "selector": {"matchLabels": {"app": "nexus"}},
             "template": {
-                "metadata": {"labels": {"app": "manus"}},
+                "metadata": {"labels": {"app": "nexus"}},
                 "spec": {
                     "containers": [
                         {
                             "name": "model",
-                            "image": "manus:latest",
+                            "image": "nexus:latest",
                             "ports": [{"containerPort": 8000}],
                             "resources": {
                                 "limits": {"nvidia.com/gpu": "1"}
@@ -1050,8 +1050,8 @@ def main():
     
     print(f"✓ Deployment configs created in: {output_dir}")
     print("\nTo deploy:")
-    print("  docker build -t manus:latest .")
-    print("  docker run -p 8000:8000 manus:latest")
+    print("  docker build -t nexus:latest .")
+    print("  docker run -p 8000:8000 nexus:latest")
 
 if __name__ == "__main__":
     main()
@@ -1066,7 +1066,7 @@ if __name__ == "__main__":
 set -e
 
 echo "═══════════════════════════════════════════════════════════════"
-echo "🚀 ADVANCED MANUS 1.6 MAX - FULL PIPELINE"
+echo "🚀 ADVANCED NEXUS 1.6 MAX - FULL PIPELINE"
 echo "═══════════════════════════════════════════════════════════════"
 echo ""
 
@@ -1085,7 +1085,7 @@ NC='\033[0m'
 # Step 1: Setup
 echo -e "${BLUE}Step 1: Environment Setup${NC}"
 bash 00_environment_setup.sh
-conda activate manus_training
+conda activate nexus_training
 echo -e "${GREEN}✓ Environment ready${NC}\n"
 
 # Step 2: Download benchmarks
@@ -1152,7 +1152,7 @@ echo ""
 echo "Next steps:"
 echo "  1. Review evaluation_results/summary.json"
 echo "  2. Deploy with: python 10_deployment_configs.py"
-echo "  3. Serve with: docker build -t manus . && docker run -p 8000:8000 manus"
+echo "  3. Serve with: docker build -t nexus . && docker run -p 8000:8000 nexus"
 echo ""
 ```
 

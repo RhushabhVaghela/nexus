@@ -1,6 +1,6 @@
 # Training Methods Documentation
 
-Comprehensive guide to all training methods available in the Manus Model framework.
+Comprehensive guide to all training methods available in the Nexus Model framework.
 
 ---
 

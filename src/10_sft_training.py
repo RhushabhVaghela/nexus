@@ -87,11 +87,11 @@ CONFIG = {
     "synthetic_data_dir": "/mnt/e/data/finetuned-fullstack-dataset",
     
     # Output
-    "output_dir": yaml_config.get("output", {}).get("dir", "/mnt/e/models/manus-prime"),
+    "output_dir": yaml_config.get("output", {}).get("dir", "/mnt/e/models/nexus-prime"),
     
     # WandB
     "wandb_enabled": yaml_config.get("wandb", {}).get("enabled", False),
-    "wandb_project": yaml_config.get("wandb", {}).get("project", "manus-prime"),
+    "wandb_project": yaml_config.get("wandb", {}).get("project", "nexus-prime"),
 }
 
 
@@ -430,7 +430,7 @@ def load_datasets(use_streaming: bool = False, streaming_paths: list = None) -> 
 
 def main():
     logger.info("=" * 60)
-    logger.info("🎓 MANUS PRIME: Supervised Fine-Tuning (SFT)")
+    logger.info("🎓 NEXUS PRIME: Supervised Fine-Tuning (SFT)")
     logger.info("=" * 60)
     logger.info(f"   Model: {CONFIG['model_name']}")
     logger.info(f"   LoRA Rank: {CONFIG['lora_rank']}")
@@ -439,9 +439,9 @@ def main():
     logger.info(f"   Epochs: {CONFIG['epochs']}")
     logger.info("=" * 60)
     
-    # Enforce 'manus' conda environment
-    if os.environ.get("CONDA_DEFAULT_ENV") != "manus":
-        sys.exit("\033[0;31m[ERROR] Must be run in 'manus' conda environment.\033[0m")
+    # Enforce 'nexus' conda environment
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        sys.exit("\033[0;31m[ERROR] Must be run in 'nexus' conda environment.\033[0m")
 
     # Initialize WandB
     if CONFIG["wandb_enabled"] and WANDB_AVAILABLE:

@@ -11,7 +11,7 @@ You now have **EVERYTHING** needed to train an advanced AI model on consumer har
 ### **Strategic Documents** (5 files)
 1. ✅ MASTER_INDEX.md - Navigation hub
 2. ✅ QUICKSTART_EXECUTION_GUIDE.md - Step-by-step execution
-3. ✅ Advanced_Manus_Pipeline_2026.md - Why this approach
+3. ✅ Advanced_Nexus_Pipeline_2026.md - Why this approach
 4. ✅ Implementation_Files_Roadmap.md - Technical specifications
 5. ✅ FILE_INDEX_AND_REFERENCE.md - Quick reference
 
@@ -135,7 +135,7 @@ cat QUICKSTART_EXECUTION_GUIDE.md
 All code extracted to individual files:
 
 ```
-manus-training/
+nexus-training/
 ├── 00_environment_setup.sh          ← Start here
 ├── 01_download_benchmarks.py        ← Run order 1
 ├── 02_generate_trajectories.py      ← Run order 2
@@ -300,7 +300,7 @@ After 2 weeks of training, you will have:
 
 ---
 
-**Advanced Manus 1.6 Max - Complete & Ready to Execute**
+**Advanced Nexus 1.6 Max - Complete & Ready to Execute**
 
 **Start Date**: January 16, 2026  
 **Expected Completion**: January 30, 2026  

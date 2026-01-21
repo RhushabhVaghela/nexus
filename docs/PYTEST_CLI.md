@@ -1,6 +1,6 @@
 # Pytest CLI Reference
 
-Complete reference for pytest command-line options in the Manus Model test suite.
+Complete reference for pytest command-line options in the Nexus Model test suite.
 
 ---
 
@@ -8,7 +8,7 @@ Complete reference for pytest command-line options in the Manus Model test suite
 
 ```bash
 # Activate conda environment
-conda activate manus
+conda activate nexus
 
 # Run all unit tests (fast)
 python -m pytest tests/unit/ -v
@@ -273,7 +273,7 @@ pytest tests/ --full-tests --full-benchmarks -v
 To see all available options:
 
 ```bash
-conda run -n manus python -m pytest --help
+conda run -n nexus python -m pytest --help
 ```
 
 Custom options appear in the "custom options" section:

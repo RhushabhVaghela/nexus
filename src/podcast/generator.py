@@ -8,7 +8,7 @@ Podcast script generator (NotebookLM-style, 2 speakers with live interaction).
   that responds to the user and then naturally returns to the main topic.
 
 This module is model-agnostic: it calls a generic `call_llm()` function that
-you can wire to your local Manus model, OpenAI-compatible endpoint, etc.
+you can wire to your local Nexus model, OpenAI-compatible endpoint, etc.
 """
 
 import json
@@ -44,22 +44,22 @@ class PodcastScript:
 
 import requests
 
-def call_llm(messages: List[Dict[str, str]], *, model: str = "manus-podcast") -> str:
+def call_llm(messages: List[Dict[str, str]], *, model: str = "nexus-podcast") -> str:
     """
     Call a chat-completions-compatible HTTP endpoint and return the raw assistant text.
 
     Expected server API (OpenAI-compatible):
       POST /v1/chat/completions
       {
-        "model": "manus-podcast",
+        "model": "nexus-podcast",
         "messages": [...],
         "temperature": 0.7
       }
 
     Adjust URL, headers, and JSON keys to your deployment.
     """
-    url = os.getenv("MANUS_API_URL", "http://localhost:8000/v1/chat/completions")
-    api_key = os.getenv("MANUS_API_KEY", "")
+    url = os.getenv("NEXUS_API_URL", "http://localhost:8000/v1/chat/completions")
+    api_key = os.getenv("NEXUS_API_KEY", "")
 
     headers = {
         "Content-Type": "application/json",

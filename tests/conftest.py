@@ -170,7 +170,7 @@ DATASETS_PATH = "/mnt/e/data/datasets"
 # ============== PYTEST HOOKS ==============
 
 def pytest_addoption(parser):
-    """Add custom CLI options for Manus Model test suite."""
+    """Add custom CLI options for Nexus Model test suite."""
     parser.addoption(
         "--full-tests", "-F", 
         action="store_true", 

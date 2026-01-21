@@ -2,7 +2,7 @@
 """
 test_pipeline_integration.py
 
-End-to-end integration tests for the Manus Model dataset pipeline.
+End-to-end integration tests for the Nexus Model dataset pipeline.
 
 Tests:
 1. Repetitive dataset generation

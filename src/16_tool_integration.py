@@ -107,7 +107,7 @@ def main():
     logger.info("="*70)
     
     # Configuration
-    base_model_path = "./checkpoints/manus_fine_tuning" # Stage 2 output
+    base_model_path = "./checkpoints/nexus_fine_tuning" # Stage 2 output
     # If Stage 2 hasn't finished, use the base model path and we'll init fresh
     if not os.path.exists(base_model_path) or len(os.listdir(base_model_path)) == 0:
         logger.warning(f"⚠️  Stage 2 Checkpoint not found at {base_model_path}. Using base Qwen2.5-7B-Instruct.")

@@ -1,12 +1,12 @@
 # Shell Scripts Reference
 
-Complete documentation for all shell scripts in the Manus Model pipeline.
+Complete documentation for all shell scripts in the Nexus Model pipeline.
 
 ---
 
 ## run_universal_pipeline.sh
 
-**Location:** `/mnt/d/Research Experiments/manus_model/run_universal_pipeline.sh`
+**Location:** `/mnt/d/Research Experiments/nexus_model/run_universal_pipeline.sh`
 
 The main orchestrator script for training any combination of capabilities.
 
@@ -296,13 +296,13 @@ watch -n 1 nvidia-smi
 
 All scripts expect:
 
-- Conda environment: `manus`
+- Conda environment: `nexus`
 - CUDA available (optional, falls back to CPU)
 - Model paths under `/mnt/e/data/`
 
 ```bash
 # Activate environment
-conda activate manus
+conda activate nexus
 
 # Verify GPU
 python -c "import torch; print(torch.cuda.is_available())"
@@ -315,7 +315,7 @@ python -c "import torch; print(torch.cuda.is_available())"
 All scripts log to:
 
 ```
-/mnt/d/Research Experiments/manus_model/logs/
+/mnt/d/Research Experiments/nexus_model/logs/
 ├── train_cot.log
 ├── train_reasoning.log
 ├── train_omni.log
