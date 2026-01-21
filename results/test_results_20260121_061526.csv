@@ -1,0 +1,16 @@
+timestamp,test_id,test_name,test_class,test_module,test_file,outcome,errors_count,error,duration_seconds,duration_ms,duration_us,gpu_memory_bytes,gpu_memory_kb,gpu_memory_mb,gpu_peak_bytes,gpu_peak_mb,gpu_reserved_mb,ram_bytes,ram_kb,ram_mb,ram_percent,ram_available_mb,ram_total_mb,hostname,platform,python_version,torch_version,cuda_version,gpu_name,gpu_count,cpu_count,base_model,device
+2026-01-21T06:15:27.270289,tests/multimodal/test_download.py::TestMultimodalDownload::test_download_audio,test_download_audio,TestMultimodalDownload,test_download,tests/multimodal/test_download.py,failed,1,"tests/multimodal/test_download.py:48: in test_download_audio
+    self.mock_datasets.load_dataset.assert_any_call(""mozilla-foundation/common_voice_17_0"", ""en"", split=""train[:1000]"", trust_remote_code=True)
+/home/rhushabh/miniconda3/envs/manus/lib/python3.10/unittest/mock.py:1000: in assert_any_call
+    raise AssertionError(
+E   AssertionError: load_dataset('mozilla-foundation/common_voice_17_0', 'en', split='train[:1000]', trust_remote_code=True) call not found",0.190288,190.288,190288.2,0,0.0,0.0,0,0.0,0.0,568242176,554924.0,541.918,2.25,21378.6,24034.2,Zephyrus-G16,Linux,3.10.19,2.9.0+cu128,12.8,NVIDIA GeForce RTX 5080 Laptop GPU,1,8,/mnt/e/data/models/Qwen2.5-0.5B,cuda
+2026-01-21T06:15:27.448894,tests/multimodal/test_download.py::TestMultimodalDownload::test_download_video,test_download_video,TestMultimodalDownload,test_download,tests/multimodal/test_download.py,failed,1,"tests/multimodal/test_download.py:57: in test_download_video
+    self.mock_datasets.load_dataset.assert_any_call(""HuggingFaceM4/FineVideo"", split=""train[:100]"")
+/home/rhushabh/miniconda3/envs/manus/lib/python3.10/unittest/mock.py:1000: in assert_any_call
+    raise AssertionError(
+E   AssertionError: load_dataset('HuggingFaceM4/FineVideo', split='train[:100]') call not found",0.120964,120.964,120963.9,0,0.0,0.0,0,0.0,0.0,569421824,556076.0,543.043,2.26,21377.6,24034.2,Zephyrus-G16,Linux,3.10.19,2.9.0+cu128,12.8,NVIDIA GeForce RTX 5080 Laptop GPU,1,8,/mnt/e/data/models/Qwen2.5-0.5B,cuda
+2026-01-21T06:15:27.715193,tests/multimodal/test_download.py::TestMultimodalDownload::test_download_vision,test_download_vision,TestMultimodalDownload,test_download,tests/multimodal/test_download.py,failed,1,"tests/multimodal/test_download.py:38: in test_download_vision
+    self.mock_datasets.load_dataset.assert_any_call(""HuggingFaceM4/WebSight"", split=""train[:10000]"")
+/home/rhushabh/miniconda3/envs/manus/lib/python3.10/unittest/mock.py:1000: in assert_any_call
+    raise AssertionError(
+E   AssertionError: load_dataset('HuggingFaceM4/WebSight', split='train[:10000]') call not found",0.150587,150.587,150586.5,0,0.0,0.0,0,0.0,0.0,569552896,556204.0,543.168,2.26,21377.1,24034.2,Zephyrus-G16,Linux,3.10.19,2.9.0+cu128,12.8,NVIDIA GeForce RTX 5080 Laptop GPU,1,8,/mnt/e/data/models/Qwen2.5-0.5B,cuda

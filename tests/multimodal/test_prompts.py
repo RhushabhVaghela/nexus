@@ -8,7 +8,7 @@ import sys
 # Add src to path
 sys.path.append(str(Path(__file__).parents[2] / "src"))
 
-from multimodal.tests import get_test_prompts
+from multimodal import get_test_prompts
 
 class TestMultimodalPrompts(unittest.TestCase):
     

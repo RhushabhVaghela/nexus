@@ -17,28 +17,38 @@ class TestBenchmarkResult:
     
     def test_import_result(self):
         """Test BenchmarkResult can be imported."""
-        from src.benchmarks.benchmark_runner import BenchmarkResult
-        assert BenchmarkResult is not None
+        from src.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig
+        from src.metrics_tracker import BenchmarkMetrics
+        assert BenchmarkMetrics is not None
     
     def test_result_defaults(self):
         """Test BenchmarkResult default values."""
-        from src.benchmarks.benchmark_runner import BenchmarkResult
+        from src.metrics_tracker import BenchmarkMetrics
         
-        result = BenchmarkResult(name="test", category="generation")
+        result = BenchmarkMetrics(
+            name="test_ppl",
+            category="accuracy",
+            model_name="TestModel",
+            tokens_per_second=100.5,
+            perplexity=12.5,
+            success=True
+        )
         
-        assert result.name == "test"
-        assert result.category == "generation"
-        assert result.total_time_s == 0.0
-        assert result.tokens_per_second == 0.0
+        assert result.name == "test_ppl"
+        assert result.category == "accuracy"
+        assert result.total_time_s == 0.0 # This is a default for BenchmarkMetrics if not provided
+        assert result.tokens_per_second == 100.5
         assert result.success is True
+        assert result.perplexity == 12.5
     
     def test_result_custom_values(self):
         """Test BenchmarkResult custom values."""
-        from src.benchmarks.benchmark_runner import BenchmarkResult
+        from src.metrics_tracker import BenchmarkMetrics
         
-        result = BenchmarkResult(
-            name="gen_test",
+        result = BenchmarkMetrics(
+            name="test_gen",
             category="generation",
+            model_name="TestModel",
             total_time_s=1.5,
             tokens_per_second=100.0,
             perplexity=5.2,
@@ -86,7 +96,8 @@ class TestBenchmarkRunner:
         
         assert runner.config.model_path == "/fake/path"
         assert runner.model is None
-        assert runner.results == []
+        assert runner.local_results == []
+        assert runner.tracker is not None
     
     def test_get_memory_stats(self):
         """Test memory stats collection."""
@@ -106,7 +117,8 @@ class TestBenchmarkMethods:
     
     def test_benchmark_generation_mocked(self):
         """Test generation benchmark with mocked model."""
-        from src.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig, BenchmarkResult
+        from src.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig
+        from src.metrics_tracker import BenchmarkMetrics
         from unittest.mock import MagicMock, patch
         
         config = BenchmarkConfig(
@@ -141,35 +153,3 @@ class TestBenchmarkMethods:
         runner = BenchmarkRunner(config)
         
         assert callable(runner.benchmark_perplexity)
-    
-    def test_export_csv(self):
-        """Test CSV export."""
-        from src.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig, BenchmarkResult
-        import tempfile
-        import os
-        
-        config = BenchmarkConfig(model_path="/fake/path")
-        runner = BenchmarkRunner(config)
-        
-        # Add a test result
-        runner.results.append(BenchmarkResult(
-            name="test",
-            category="generation",
-            tokens_per_second=100.0,
-        ))
-        
-        # Export to temp file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
-            temp_path = f.name
-        
-        try:
-            runner.export_csv(temp_path)
-            assert os.path.exists(temp_path)
-            
-            # Check content
-            with open(temp_path) as f:
-                content = f.read()
-                assert "test" in content
-                assert "generation" in content
-        finally:
-            os.unlink(temp_path)

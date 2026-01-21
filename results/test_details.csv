@@ -1,0 +1,417 @@
+timestamp,test_id,name,outcome,duration_s,duration_ms,gpu_memory_mb,ram_mb,error,file
+2026-01-21T06:52:24.058308,tests/e2e/test_orchestrator_pipeline.py::TestOrchestratorScript::test_script_exists,test_script_exists,passed,0.002687,2.687,0.0,813.43,,tests/e2e/test_orchestrator_pipeline.py
+2026-01-21T06:52:24.072004,tests/e2e/test_orchestrator_pipeline.py::TestOrchestratorScript::test_script_is_executable,test_script_is_executable,passed,0.002661,2.661,0.0,813.55,,tests/e2e/test_orchestrator_pipeline.py
+2026-01-21T06:52:24.106341,tests/e2e/test_orchestrator_pipeline.py::TestOrchestratorScript::test_help_output,test_help_output,passed,0.022127,22.127,0.0,813.55,,tests/e2e/test_orchestrator_pipeline.py
+2026-01-21T06:52:24.139352,tests/e2e/test_orchestrator_pipeline.py::TestOrchestratorScript::test_help_lists_all_capabilities,test_help_lists_all_capabilities,passed,0.019054,19.054,0.0,813.68,,tests/e2e/test_orchestrator_pipeline.py
+2026-01-21T06:52:24.163009,tests/e2e/test_orchestrator_pipeline.py::TestModalityGateFlow::test_detect_modalities_for_text_model,test_detect_modalities_for_text_model,passed,0.015337,15.337,0.0,813.68,,tests/e2e/test_orchestrator_pipeline.py
+2026-01-21T06:52:24.176307,tests/e2e/test_orchestrator_pipeline.py::TestModalityGateFlow::test_capability_validation_rejects_invalid,test_capability_validation_rejects_invalid,passed,0.000125,0.125,0.0,813.68,,tests/e2e/test_orchestrator_pipeline.py
+2026-01-21T06:52:24.186685,tests/e2e/test_orchestrator_pipeline.py::TestModalityGateFlow::test_capability_validation_accepts_valid,test_capability_validation_accepts_valid,passed,0.000121,0.121,0.0,813.68,,tests/e2e/test_orchestrator_pipeline.py
+2026-01-21T06:52:24.214534,tests/e2e/test_orchestrator_pipeline.py::TestCapabilitySelection::test_enable_all_text_expands,test_enable_all_text_expands,passed,0.008916,8.916,0.0,813.68,,tests/e2e/test_orchestrator_pipeline.py
+2026-01-21T06:52:24.234715,tests/e2e/test_orchestrator_pipeline.py::TestCapabilitySelection::test_enable_full_omni_expands,test_enable_full_omni_expands,passed,0.005731,5.731,0.0,813.68,,tests/e2e/test_orchestrator_pipeline.py
+2026-01-21T06:52:24.247989,tests/e2e/test_orchestrator_pipeline.py::TestPipelineStageSequencing::test_training_order_from_registry,test_training_order_from_registry,passed,0.000132,0.132,0.0,813.68,,tests/e2e/test_orchestrator_pipeline.py
+2026-01-21T06:52:24.261914,tests/e2e/test_orchestrator_pipeline.py::TestPipelineStageSequencing::test_omni_comes_before_multimodal,test_omni_comes_before_multimodal,passed,0.000133,0.133,0.0,813.68,,tests/e2e/test_orchestrator_pipeline.py
+2026-01-21T06:52:24.275474,tests/e2e/test_orchestrator_pipeline.py::TestPipelineStageSequencing::test_text_capabilities_before_vision,test_text_capabilities_before_vision,passed,0.000124,0.124,0.0,813.8,,tests/e2e/test_orchestrator_pipeline.py
+2026-01-21T06:52:24.308013,tests/e2e/test_orchestrator_pipeline.py::TestIntegrationWithRealModel::test_full_detection_to_validation_flow,test_full_detection_to_validation_flow,passed,0.019456,19.456,0.0,813.8,,tests/e2e/test_orchestrator_pipeline.py
+2026-01-21T06:52:30.696339,tests/e2e/test_pipeline_execution.py::TestOrchestratorScenarios::test_scenario_text_only_capabilities,test_scenario_text_only_capabilities,passed,6.369166,6369.166,0.0,813.8,,tests/e2e/test_pipeline_execution.py
+2026-01-21T06:52:30.726746,tests/e2e/test_pipeline_execution.py::TestOrchestratorScenarios::test_scenario_help_runs,test_scenario_help_runs,passed,0.015985,15.985,0.0,813.8,,tests/e2e/test_pipeline_execution.py
+2026-01-21T06:52:33.560105,tests/e2e/test_pipeline_execution.py::TestOrchestratorScenarios::test_scenario_validation_gates,test_scenario_validation_gates,passed,2.820414,2820.414,0.0,813.8,,tests/e2e/test_pipeline_execution.py
+2026-01-21T06:52:33.587781,tests/e2e/test_pipeline_execution.py::TestPipelineComponentsIntegration::test_detect_then_validate_flow,test_detect_then_validate_flow,passed,0.014896,14.896,0.0,813.8,,tests/e2e/test_pipeline_execution.py
+2026-01-21T06:52:33.598936,tests/e2e/test_pipeline_execution.py::TestPipelineComponentsIntegration::test_training_controller_integration,test_training_controller_integration,passed,8.4e-05,0.084,0.0,813.8,,tests/e2e/test_pipeline_execution.py
+2026-01-21T06:52:33.611580,tests/e2e/test_pipeline_execution.py::TestOrchestratorOutputArtifacts::test_log_directory_creation,test_log_directory_creation,passed,0.000224,0.224,0.0,813.8,,tests/e2e/test_pipeline_execution.py
+2026-01-21T06:52:33.623055,tests/e2e/test_pipeline_execution.py::TestOrchestratorOutputArtifacts::test_checkpoint_directory_creation,test_checkpoint_directory_creation,passed,0.000172,0.172,0.0,813.8,,tests/e2e/test_pipeline_execution.py
+2026-01-21T06:52:33.642775,tests/e2e/test_pipeline_execution.py::TestOrchestratorOutputArtifacts::test_orchestrator_creates_log_dir,test_orchestrator_creates_log_dir,passed,0.006221,6.221,0.0,813.8,,tests/e2e/test_pipeline_execution.py
+2026-01-21T06:52:33.685617,tests/integration/test_config_files.py::TestEncodersConfig::test_encoders_config_loads,test_encoders_config_loads,passed,0.000127,0.127,0.0,813.8,,tests/integration/test_config_files.py
+2026-01-21T06:52:33.696026,tests/integration/test_config_files.py::TestEncodersConfig::test_encoders_has_vision,test_encoders_has_vision,passed,8.4e-05,0.084,0.0,813.93,,tests/integration/test_config_files.py
+2026-01-21T06:52:33.709848,tests/integration/test_config_files.py::TestEncodersConfig::test_encoders_has_audio,test_encoders_has_audio,passed,8.9e-05,0.089,0.0,813.93,,tests/integration/test_config_files.py
+2026-01-21T06:52:33.719091,tests/integration/test_config_files.py::TestEncodersConfig::test_encoder_paths_are_local,test_encoder_paths_are_local,passed,7.8e-05,0.078,0.0,813.93,,tests/integration/test_config_files.py
+2026-01-21T06:52:33.734232,tests/integration/test_config_files.py::TestEncodersConfig::test_base_models_section,test_base_models_section,passed,8.9e-05,0.089,0.0,813.93,,tests/integration/test_config_files.py
+2026-01-21T06:52:33.765467,tests/integration/test_config_files.py::TestDecodersConfig::test_decoders_config_loads,test_decoders_config_loads,passed,0.000116,0.116,0.0,813.93,,tests/integration/test_config_files.py
+2026-01-21T06:52:33.778879,tests/integration/test_config_files.py::TestDecodersConfig::test_has_vision_output,test_has_vision_output,passed,7.7e-05,0.077,0.0,813.93,,tests/integration/test_config_files.py
+2026-01-21T06:52:33.789781,tests/integration/test_config_files.py::TestDecodersConfig::test_has_video_output,test_has_video_output,passed,9.1e-05,0.091,0.0,813.93,,tests/integration/test_config_files.py
+2026-01-21T06:52:33.801222,tests/integration/test_config_files.py::TestDecodersConfig::test_decoder_has_type,test_decoder_has_type,passed,0.000111,0.111,0.0,813.93,,tests/integration/test_config_files.py
+2026-01-21T06:52:33.823646,tests/integration/test_config_files.py::TestDatasetsConfig::test_datasets_config_loads,test_datasets_config_loads,passed,0.000119,0.119,0.0,813.93,,tests/integration/test_config_files.py
+2026-01-21T06:52:33.836452,tests/integration/test_config_files.py::TestDatasetsConfig::test_has_datasets_section,test_has_datasets_section,passed,7.6e-05,0.076,0.0,813.93,,tests/integration/test_config_files.py
+2026-01-21T06:52:33.847034,tests/integration/test_config_files.py::TestDatasetsConfig::test_has_text_capabilities,test_has_text_capabilities,passed,9.3e-05,0.093,0.0,813.93,,tests/integration/test_config_files.py
+2026-01-21T06:52:33.855744,tests/integration/test_config_files.py::TestDatasetsConfig::test_capability_has_primary,test_capability_has_primary,passed,8.2e-05,0.082,0.0,813.93,,tests/integration/test_config_files.py
+2026-01-21T06:52:33.864931,tests/integration/test_config_files.py::TestDatasetsConfig::test_has_paths_section,test_has_paths_section,passed,9.3e-05,0.093,0.0,813.93,,tests/integration/test_config_files.py
+2026-01-21T06:52:33.900102,tests/integration/test_config_files.py::TestOutputsConfig::test_outputs_config_loads,test_outputs_config_loads,passed,0.00012,0.12,0.0,813.93,,tests/integration/test_config_files.py
+2026-01-21T06:52:33.915577,tests/integration/test_config_files.py::TestOutputsConfig::test_has_output_root,test_has_output_root,passed,0.0001,0.1,0.0,813.93,,tests/integration/test_config_files.py
+2026-01-21T06:52:33.927134,tests/integration/test_config_files.py::TestOutputsConfig::test_has_checkpoints,test_has_checkpoints,passed,8.6e-05,0.086,0.0,813.93,,tests/integration/test_config_files.py
+2026-01-21T06:52:33.938470,tests/integration/test_config_files.py::TestOutputsConfig::test_has_validation,test_has_validation,passed,8.6e-05,0.086,0.0,813.93,,tests/integration/test_config_files.py
+2026-01-21T06:52:33.951498,tests/integration/test_config_files.py::TestOutputsConfig::test_has_exports,test_has_exports,passed,8.9e-05,0.089,0.0,813.93,,tests/integration/test_config_files.py
+2026-01-21T06:52:34.105941,tests/integration/test_multimodal_encoders.py::TestVisionEncoderIntegration::test_vision_encoder_import,test_vision_encoder_import,passed,0.139307,139.307,0.0,814.05,,tests/integration/test_multimodal_encoders.py
+2026-01-21T06:52:34.113540,tests/integration/test_multimodal_encoders.py::TestVisionEncoderIntegration::test_vision_encoder_default_path,test_vision_encoder_default_path,passed,0.000136,0.136,0.0,814.05,,tests/integration/test_multimodal_encoders.py
+2026-01-21T06:53:17.429778,tests/integration/test_multimodal_encoders.py::TestVisionEncoderIntegration::test_vision_encoder_loads_if_exists,test_vision_encoder_loads_if_exists,passed,43.307529,43307.529,0.0,1048.11,,tests/integration/test_multimodal_encoders.py
+2026-01-21T06:53:17.443033,tests/integration/test_multimodal_encoders.py::TestAudioEncoderIntegration::test_audio_encoder_import,test_audio_encoder_import,passed,0.000116,0.116,0.0,1048.11,,tests/integration/test_multimodal_encoders.py
+2026-01-21T06:53:17.452844,tests/integration/test_multimodal_encoders.py::TestAudioEncoderIntegration::test_audio_encoder_default_path,test_audio_encoder_default_path,passed,0.000159,0.159,0.0,1048.11,,tests/integration/test_multimodal_encoders.py
+2026-01-21T06:53:17.480177,tests/integration/test_multimodal_encoders.py::TestProjectorShapes::test_projector_import,test_projector_import,passed,0.017314,17.314,0.0,1048.27,,tests/integration/test_multimodal_encoders.py
+2026-01-21T06:53:17.503516,tests/integration/test_multimodal_encoders.py::TestProjectorShapes::test_projector_initialization,test_projector_initialization,passed,0.011435,11.435,0.0,1054.77,,tests/integration/test_multimodal_encoders.py
+2026-01-21T06:53:17.535239,tests/integration/test_multimodal_encoders.py::TestProjectorShapes::test_projector_forward_shape,test_projector_forward_shape,passed,0.020032,20.032,0.0,1056.39,,tests/integration/test_multimodal_encoders.py
+2026-01-21T06:53:17.547497,tests/integration/test_multimodal_encoders.py::TestPerceiverResampler::test_resampler_import,test_resampler_import,passed,0.000179,0.179,0.0,1056.39,,tests/integration/test_multimodal_encoders.py
+2026-01-21T06:53:17.957003,tests/integration/test_multimodal_encoders.py::TestPerceiverResampler::test_resampler_initialization,test_resampler_initialization,passed,0.398118,398.118,0.0,1040.73,,tests/integration/test_multimodal_encoders.py
+2026-01-21T06:53:18.542899,tests/integration/test_multimodal_encoders.py::TestPerceiverResampler::test_resampler_reduces_sequence,test_resampler_reduces_sequence,passed,0.572711,572.711,0.0,1443.72,,tests/integration/test_multimodal_encoders.py
+2026-01-21T06:53:18.557401,tests/integration/test_multimodal_encoders.py::TestModularMultimodalWrapper::test_wrapper_import,test_wrapper_import,passed,0.000314,0.314,0.0,1443.72,,tests/integration/test_multimodal_encoders.py
+2026-01-21T06:53:18.568823,tests/integration/test_multimodal_encoders.py::TestModularMultimodalWrapper::test_wrapper_default_paths,test_wrapper_default_paths,passed,0.000207,0.207,0.0,1443.72,,tests/integration/test_multimodal_encoders.py
+2026-01-21T06:53:18.598144,tests/integration/test_multimodal_encoders.py::TestDecoderInterfaces::test_image_decoder_import,test_image_decoder_import,passed,0.018913,18.913,0.0,1443.72,,tests/integration/test_multimodal_encoders.py
+2026-01-21T06:53:18.608193,tests/integration/test_multimodal_encoders.py::TestDecoderInterfaces::test_audio_decoder_import,test_audio_decoder_import,passed,0.000138,0.138,0.0,1443.72,,tests/integration/test_multimodal_encoders.py
+2026-01-21T06:53:18.617668,tests/integration/test_multimodal_encoders.py::TestDecoderInterfaces::test_video_decoder_import,test_video_decoder_import,passed,0.000157,0.157,0.0,1443.72,,tests/integration/test_multimodal_encoders.py
+2026-01-21T06:53:18.627104,tests/integration/test_multimodal_encoders.py::TestDecoderInterfaces::test_omni_decoder_import,test_omni_decoder_import,passed,0.000118,0.118,0.0,1443.72,,tests/integration/test_multimodal_encoders.py
+2026-01-21T06:53:18.643451,tests/integration/test_multimodal_encoders.py::TestDecoderInterfaces::test_image_decoder_decode,test_image_decoder_decode,passed,0.006688,6.688,0.0,1443.72,,tests/integration/test_multimodal_encoders.py
+2026-01-21T06:53:18.659000,tests/integration/test_multimodal_encoders.py::TestDecoderInterfaces::test_audio_decoder_decode,test_audio_decoder_decode,passed,0.00625,6.25,0.0,1443.72,,tests/integration/test_multimodal_encoders.py
+2026-01-21T06:53:18.670212,tests/integration/test_multimodal_encoders.py::TestDecoderInterfaces::test_video_decoder_decode,test_video_decoder_decode,passed,0.000123,0.123,0.0,1443.72,,tests/integration/test_multimodal_encoders.py
+2026-01-21T06:53:18.693135,tests/integration/test_multimodal_encoders.py::TestDecoderInterfaces::test_omni_decoder_routes_correctly,test_omni_decoder_routes_correctly,passed,0.011501,11.501,0.0,1443.72,,tests/integration/test_multimodal_encoders.py
+2026-01-21T06:53:18.989835,tests/integration/test_omni_training.py::TestOmniStageImport::test_import_stage,test_import_stage,passed,0.285413,285.413,0.0,1443.72,,tests/integration/test_omni_training.py
+2026-01-21T06:53:19.000675,tests/integration/test_omni_training.py::TestOmniStageImport::test_import_config,test_import_config,passed,0.000134,0.134,0.0,1443.72,,tests/integration/test_omni_training.py
+2026-01-21T06:53:19.013185,tests/integration/test_omni_training.py::TestOmniStageImport::test_stage_has_name,test_stage_has_name,passed,0.000132,0.132,0.0,1443.72,,tests/integration/test_omni_training.py
+2026-01-21T06:53:19.026999,tests/integration/test_omni_training.py::TestOmniStageConfig::test_default_config,test_default_config,passed,0.000157,0.157,0.0,1443.72,,tests/integration/test_omni_training.py
+2026-01-21T06:53:19.039386,tests/integration/test_omni_training.py::TestOmniStageConfig::test_custom_config,test_custom_config,passed,0.000133,0.133,0.0,1443.72,,tests/integration/test_omni_training.py
+2026-01-21T06:53:19.198217,tests/integration/test_omni_training.py::TestOmniInferenceImport::test_import_inference,test_import_inference,passed,0.145915,145.915,0.0,1443.72,,tests/integration/test_omni_training.py
+2026-01-21T06:53:19.210096,tests/integration/test_omni_training.py::TestOmniInferenceImport::test_import_generation_config,test_import_generation_config,passed,0.000154,0.154,0.0,1443.72,,tests/integration/test_omni_training.py
+2026-01-21T06:53:19.220734,tests/integration/test_omni_training.py::TestGenerationConfig::test_default_values,test_default_values,passed,0.000124,0.124,0.0,1443.72,,tests/integration/test_omni_training.py
+2026-01-21T06:53:19.237009,tests/integration/test_omni_training.py::TestGenerationConfig::test_custom_values,test_custom_values,passed,0.000168,0.168,0.0,1443.72,,tests/integration/test_omni_training.py
+2026-01-21T06:53:19.286487,tests/integration/test_omni_training.py::TestOmniTrainingIntegration::test_stage_setup_mocked,test_stage_setup_mocked,passed,0.036886,36.886,0.0,1443.72,,tests/integration/test_omni_training.py
+2026-01-21T06:53:19.391343,tests/integration/test_omni_training.py::TestOmniTrainingIntegration::test_prepare_data_mocked,test_prepare_data_mocked,passed,0.092014,92.014,0.0,1443.72,,tests/integration/test_omni_training.py
+2026-01-21T06:53:19.421599,tests/integration/test_omni_training.py::TestOmniValidationPipeline::test_omni_model_detection_in_validation,test_omni_model_detection_in_validation,passed,0.018405,18.405,0.0,1443.72,,tests/integration/test_omni_training.py
+2026-01-21T06:53:27.563297,tests/integration/test_real_model_loading.py::TestRealModelLoading::test_model_loads_successfully,test_model_loads_successfully,passed,0.000218,0.218,948.67,1448.59,,tests/integration/test_real_model_loading.py
+2026-01-21T06:53:28.249803,tests/integration/test_real_model_loading.py::TestRealModelLoading::test_tokenizer_loads_successfully,test_tokenizer_loads_successfully,passed,0.00017,0.17,948.67,1451.09,,tests/integration/test_real_model_loading.py
+2026-01-21T06:53:28.263409,tests/integration/test_real_model_loading.py::TestRealModelLoading::test_model_on_correct_device,test_model_on_correct_device,passed,0.000189,0.189,948.67,1451.09,,tests/integration/test_real_model_loading.py
+2026-01-21T06:53:28.275603,tests/integration/test_real_model_loading.py::TestRealModelLoading::test_model_in_eval_mode,test_model_in_eval_mode,passed,0.000246,0.246,948.67,1451.09,,tests/integration/test_real_model_loading.py
+2026-01-21T06:53:28.289810,tests/integration/test_real_model_loading.py::TestRealModelLoading::test_model_config_accessible,test_model_config_accessible,passed,0.000179,0.179,948.67,1451.09,,tests/integration/test_real_model_loading.py
+2026-01-21T06:53:28.309679,tests/integration/test_real_model_loading.py::TestRealTokenization::test_encode_simple_text,test_encode_simple_text,passed,0.003553,3.553,948.67,1451.59,,tests/integration/test_real_model_loading.py
+2026-01-21T06:53:28.324733,tests/integration/test_real_model_loading.py::TestRealTokenization::test_decode_tokens,test_decode_tokens,passed,0.000815,0.815,948.67,1451.59,,tests/integration/test_real_model_loading.py
+2026-01-21T06:53:28.336635,tests/integration/test_real_model_loading.py::TestRealTokenization::test_tokenizer_special_tokens,test_tokenizer_special_tokens,passed,0.000162,0.162,948.67,1451.59,,tests/integration/test_real_model_loading.py
+2026-01-21T06:53:28.352967,tests/integration/test_real_model_loading.py::TestRealTokenization::test_batch_encoding,test_batch_encoding,passed,0.001737,1.737,948.67,1451.72,,tests/integration/test_real_model_loading.py
+2026-01-21T06:53:29.233539,tests/integration/test_real_model_loading.py::TestRealInference::test_simple_forward_pass,test_simple_forward_pass,passed,0.866808,866.808,957.98,1827.84,,tests/integration/test_real_model_loading.py
+2026-01-21T06:53:29.754296,tests/integration/test_real_model_loading.py::TestRealInference::test_small_generation,test_small_generation,passed,0.507716,507.716,957.98,2036.47,,tests/integration/test_real_model_loading.py
+2026-01-21T06:53:29.864881,tests/integration/test_real_model_loading.py::TestRealInference::test_math_inference,test_math_inference,passed,0.09828,98.28,957.98,2036.47,,tests/integration/test_real_model_loading.py
+2026-01-21T06:53:29.874018,tests/integration/test_real_model_loading.py::TestModelConfigInspection::test_config_has_model_type,test_config_has_model_type,passed,0.000107,0.107,957.98,2036.47,,tests/integration/test_real_model_loading.py
+2026-01-21T06:53:29.884162,tests/integration/test_real_model_loading.py::TestModelConfigInspection::test_config_has_architectures,test_config_has_architectures,passed,0.000116,0.116,957.98,2036.47,,tests/integration/test_real_model_loading.py
+2026-01-21T06:53:29.894540,tests/integration/test_real_model_loading.py::TestModelConfigInspection::test_text_only_model_no_vision_config,test_text_only_model_no_vision_config,passed,0.000119,0.119,957.98,2036.47,,tests/integration/test_real_model_loading.py
+2026-01-21T06:53:29.906174,tests/integration/test_real_model_loading.py::TestModelConfigInspection::test_text_only_model_no_audio_config,test_text_only_model_no_audio_config,passed,0.000122,0.122,957.98,2036.47,,tests/integration/test_real_model_loading.py
+2026-01-21T06:53:29.932005,tests/integration/test_real_model_loading.py::TestIntegrationWithDetectModalities::test_detect_on_real_text_model,test_detect_on_real_text_model,passed,0.014032,14.032,957.98,2036.47,,tests/integration/test_real_model_loading.py
+2026-01-21T06:53:29.958991,tests/integration/test_real_model_loading.py::TestIntegrationWithDetectModalities::test_model_type_is_qwen,test_model_type_is_qwen,passed,0.013846,13.846,957.98,2036.47,,tests/integration/test_real_model_loading.py
+2026-01-21T06:53:29.972169,tests/multimodal/test_distillation.py::TestDistillation::test_distill_image_mock,test_distill_image_mock,passed,0.00047,0.47,957.98,2036.47,,tests/multimodal/test_distillation.py
+2026-01-21T06:53:29.993499,tests/multimodal/test_download.py::TestMultimodalDownload::test_download_audio,test_download_audio,passed,0.010446,10.446,957.98,2036.97,,tests/multimodal/test_download.py
+2026-01-21T06:53:30.008946,tests/multimodal/test_download.py::TestMultimodalDownload::test_download_video,test_download_video,passed,0.003748,3.748,957.98,2036.97,,tests/multimodal/test_download.py
+2026-01-21T06:53:30.281767,tests/multimodal/test_download.py::TestMultimodalDownload::test_download_vision,test_download_vision,failed,0.00432,4.32,957.98,2042.09,"tests/multimodal/test_download.py:51: in test_download_vision
+    self.mock_Dataset.from_list.assert_called()
+/home/rhushabh/miniconda3/envs/manus/lib/python3.10/unittest/mock.py:898: in assert_called
+    raise AssertionError(msg)
+E   AssertionError: Expected 'from_list' to have been called.",tests/multimodal/test_download.py
+2026-01-21T06:53:30.318366,tests/multimodal/test_integration.py::TestOmniIntegration::test_decoders_sota_format,test_decoders_sota_format,passed,0.024999,24.999,957.98,2042.09,,tests/multimodal/test_integration.py
+2026-01-21T06:53:30.369373,tests/multimodal/test_prompts.py::TestMultimodalPrompts::test_get_prompts_structure,test_get_prompts_structure,failed,0.000186,0.186,957.98,2042.09,"tests/multimodal/test_prompts.py:24: in test_get_prompts_structure
+    self.assertIn(""id"", vision_item)
+E   AssertionError: 'id' not found in {'input': 'tests/assets/test_image_01.jpg', 'prompt': 'Describe this UI design.'}",tests/multimodal/test_prompts.py
+2026-01-21T06:53:30.411448,tests/multimodal/test_prompts.py::TestMultimodalPrompts::test_prompt_content,test_prompt_content,failed,0.000203,0.203,957.98,2042.09,"tests/multimodal/test_prompts.py:33: in test_prompt_content
+    self.assertIn(""assets/test_images/dashboard_ui.png"", vision_inputs)
+E   AssertionError: 'assets/test_images/dashboard_ui.png' not found in ['tests/assets/test_image_01.jpg', 'tests/assets/test_screenshot_01.png']",tests/multimodal/test_prompts.py
+2026-01-21T06:53:30.447746,tests/test_generators.py::TestGenerators::test_05_repetitive_engine,test_05_repetitive_engine,failed,0.000558,0.558,957.98,2042.09,"tests/test_generators.py:37: in test_05_repetitive_engine
+    self.assertEqual(sample[""domain""], ""factual_knowledge"")
+E   AssertionError: 'fullstack_engineering' != 'factual_knowledge'
+E   - fullstack_engineering
+E   + factual_knowledge",tests/test_generators.py
+2026-01-21T06:53:30.459306,tests/test_generators.py::TestGenerators::test_06_preference_engine,test_06_preference_engine,passed,0.000217,0.217,957.98,2042.09,,tests/test_generators.py
+2026-01-21T06:53:30.486527,tests/test_pipeline_integration.py::TestRepetitiveDatasetGeneration::test_generator_weights_exist,test_generator_weights_exist,skipped,0.002459,2.459,957.98,2042.09,,tests/test_pipeline_integration.py
+2026-01-21T06:53:30.508144,tests/test_pipeline_integration.py::TestRepetitiveDatasetGeneration::test_prompt_repetition_engine_initialization,test_prompt_repetition_engine_initialization,skipped,0.004118,4.118,957.98,2042.09,,tests/test_pipeline_integration.py
+2026-01-21T06:53:30.523839,tests/test_pipeline_integration.py::TestRepetitiveDatasetGeneration::test_repetition_styles,test_repetition_styles,skipped,0.0024,2.4,957.98,2042.09,,tests/test_pipeline_integration.py
+2026-01-21T06:53:30.541824,tests/test_pipeline_integration.py::TestPreferenceDatasetGeneration::test_preference_weights_balanced,test_preference_weights_balanced,skipped,0.002895,2.895,957.98,2042.09,,tests/test_pipeline_integration.py
+2026-01-21T06:53:30.556672,tests/test_pipeline_integration.py::TestPreferenceDatasetGeneration::test_preference_pair_structure,test_preference_pair_structure,skipped,0.002571,2.571,957.98,2042.09,,tests/test_pipeline_integration.py
+2026-01-21T06:53:30.610283,tests/test_pipeline_integration.py::TestMultimodalDatasetGeneration::test_multimodal_config_exists,test_multimodal_config_exists,passed,0.044743,44.743,957.98,2042.09,,tests/test_pipeline_integration.py
+2026-01-21T06:53:30.643723,tests/test_pipeline_integration.py::TestMultimodalDatasetGeneration::test_screenshot_generator_sample_structure,test_screenshot_generator_sample_structure,passed,0.023095,23.095,957.98,2042.09,,tests/test_pipeline_integration.py
+2026-01-21T06:53:30.680137,tests/test_pipeline_integration.py::TestMultimodalDatasetGeneration::test_diagram_generator_categories,test_diagram_generator_categories,passed,0.023058,23.058,957.98,2042.09,,tests/test_pipeline_integration.py
+2026-01-21T06:53:30.707336,tests/test_pipeline_integration.py::TestMultimodalDatasetGeneration::test_audio_meeting_generator_categories,test_audio_meeting_generator_categories,passed,0.017995,17.995,957.98,2042.09,,tests/test_pipeline_integration.py
+2026-01-21T06:53:31.858235,tests/test_pipeline_integration.py::TestUnifiedMultimodalDownloader::test_kaggle_priority,test_kaggle_priority,failed,1.080498,1080.498,957.98,2052.94,"tests/test_pipeline_integration.py:216: in test_kaggle_priority
+    mock_api.dataset_download_files.assert_called_once()
+/home/rhushabh/miniconda3/envs/manus/lib/python3.10/unittest/mock.py:908: in assert_called_once
+    raise AssertionError(msg)
+E   AssertionError: Expected 'dataset_download_files' to have been called once. Called 0 times.",tests/test_pipeline_integration.py
+2026-01-21T06:53:31.925295,tests/test_pipeline_integration.py::TestUnifiedMultimodalDownloader::test_hf_fallback,test_hf_fallback,failed,0.007403,7.403,957.98,2054.06,"tests/test_pipeline_integration.py:245: in test_hf_fallback
+    mock_api.dataset_download_files.assert_called_once()
+/home/rhushabh/miniconda3/envs/manus/lib/python3.10/unittest/mock.py:908: in assert_called_once
+    raise AssertionError(msg)
+E   AssertionError: Expected 'dataset_download_files' to have been called once. Called 0 times.",tests/test_pipeline_integration.py
+2026-01-21T06:53:31.941679,tests/test_pipeline_integration.py::TestDatasetValidation::test_validator_accepts_valid_sample,test_validator_accepts_valid_sample,skipped,0.002366,2.366,957.98,2054.06,,tests/test_pipeline_integration.py
+2026-01-21T06:53:31.958420,tests/test_pipeline_integration.py::TestDatasetValidation::test_validator_rejects_empty_messages,test_validator_rejects_empty_messages,skipped,0.002723,2.723,957.98,2054.06,,tests/test_pipeline_integration.py
+2026-01-21T06:53:31.973921,tests/test_pipeline_integration.py::TestDatasetValidation::test_modalities_validation,test_modalities_validation,skipped,0.002311,2.311,957.98,2054.06,,tests/test_pipeline_integration.py
+2026-01-21T06:53:32.046535,tests/test_pipeline_integration.py::TestDataMixer::test_normalize_to_messages_alpaca_format,test_normalize_to_messages_alpaca_format,passed,0.06171,61.71,957.98,2054.06,,tests/test_pipeline_integration.py
+2026-01-21T06:53:32.078323,tests/test_pipeline_integration.py::TestDataMixer::test_normalize_to_messages_preserves_modalities,test_normalize_to_messages_preserves_modalities,passed,0.000211,0.211,957.98,2054.06,,tests/test_pipeline_integration.py
+2026-01-21T06:53:32.132588,tests/test_pipeline_integration.py::TestDataMixer::test_mix_datasets_ratio,test_mix_datasets_ratio,passed,0.000261,0.261,957.98,2054.06,,tests/test_pipeline_integration.py
+2026-01-21T06:53:32.340319,tests/test_pipeline_integration.py::TestBenchmarks::test_fullstack_eval_has_evaluators,test_fullstack_eval_has_evaluators,skipped,0.193128,193.128,957.98,2054.06,,tests/test_pipeline_integration.py
+2026-01-21T06:53:32.351069,tests/test_pipeline_integration.py::TestBenchmarks::test_lovable_benchmark_categories,test_lovable_benchmark_categories,passed,0.000139,0.139,957.98,2054.06,,tests/test_pipeline_integration.py
+2026-01-21T06:53:32.367929,tests/test_pipeline_integration.py::TestStreamingAndPodcast::test_joint_streaming_orchestrator_exists,test_joint_streaming_orchestrator_exists,passed,0.00554,5.54,957.98,2054.06,,tests/test_pipeline_integration.py
+2026-01-21T06:53:32.385852,tests/test_pipeline_integration.py::TestStreamingAndPodcast::test_podcast_generator_exists,test_podcast_generator_exists,passed,0.005311,5.311,957.98,2054.06,,tests/test_pipeline_integration.py
+2026-01-21T06:53:32.401544,tests/test_pipeline_integration.py::TestStreamingAndPodcast::test_podcast_synthesizer_exists,test_podcast_synthesizer_exists,passed,0.00522,5.22,957.98,2054.06,,tests/test_pipeline_integration.py
+2026-01-21T06:53:32.564872,tests/test_pipeline_integration.py::TestPipelineEndToEnd::test_numbered_scripts_exist,test_numbered_scripts_exist,passed,0.152439,152.439,957.98,2054.06,,tests/test_pipeline_integration.py
+2026-01-21T06:53:32.599907,tests/test_pipeline_integration.py::TestPipelineEndToEnd::test_config_files_exist,test_config_files_exist,passed,0.02417,24.17,957.98,2054.06,,tests/test_pipeline_integration.py
+2026-01-21T06:53:32.620979,tests/test_pipeline_integration.py::TestPipelineEndToEnd::test_utils_modules_exist,test_utils_modules_exist,passed,0.010934,10.934,957.98,2054.06,,tests/test_pipeline_integration.py
+2026-01-21T06:53:33.389196,tests/test_reasoning.py::test_reasoning,test_reasoning,passed,0.756471,756.471,957.98,2190.44,,tests/test_reasoning.py
+2026-01-21T06:53:33.400818,tests/test_tools.py::test_tools,test_tools,passed,0.000324,0.324,957.98,2190.44,,tests/test_tools.py
+2026-01-21T06:53:33.413232,tests/test_validators.py::TestValidators::test_content_valid,test_content_valid,passed,0.000177,0.177,957.98,2190.44,,tests/test_validators.py
+2026-01-21T06:53:33.423239,tests/test_validators.py::TestValidators::test_schema_invalid,test_schema_invalid,passed,0.000166,0.166,957.98,2190.44,,tests/test_validators.py
+2026-01-21T06:53:33.433328,tests/test_validators.py::TestValidators::test_schema_valid,test_schema_valid,passed,0.000138,0.138,957.98,2190.44,,tests/test_validators.py
+2026-01-21T06:53:33.570145,tests/unit/test_benchmark_runner.py::TestBenchmarkResult::test_import_result,test_import_result,failed,0.061373,61.373,957.98,2190.44,"tests/unit/test_benchmark_runner.py:20: in test_import_result
+    from src.benchmarks.benchmark_runner import BenchmarkResult
+E   ImportError: cannot import name 'BenchmarkResult' from 'src.benchmarks.benchmark_runner' (/mnt/d/Research Experiments/manus_model/src/benchmarks/benchmark_runner.py)",tests/unit/test_benchmark_runner.py
+2026-01-21T06:53:33.607700,tests/unit/test_benchmark_runner.py::TestBenchmarkResult::test_result_defaults,test_result_defaults,failed,0.00015,0.15,957.98,2190.44,"tests/unit/test_benchmark_runner.py:25: in test_result_defaults
+    from src.benchmarks.benchmark_runner import BenchmarkResult
+E   ImportError: cannot import name 'BenchmarkResult' from 'src.benchmarks.benchmark_runner' (/mnt/d/Research Experiments/manus_model/src/benchmarks/benchmark_runner.py)",tests/unit/test_benchmark_runner.py
+2026-01-21T06:53:33.643569,tests/unit/test_benchmark_runner.py::TestBenchmarkResult::test_result_custom_values,test_result_custom_values,failed,0.000134,0.134,957.98,2190.44,"tests/unit/test_benchmark_runner.py:37: in test_result_custom_values
+    from src.benchmarks.benchmark_runner import BenchmarkResult
+E   ImportError: cannot import name 'BenchmarkResult' from 'src.benchmarks.benchmark_runner' (/mnt/d/Research Experiments/manus_model/src/benchmarks/benchmark_runner.py)",tests/unit/test_benchmark_runner.py
+2026-01-21T06:53:33.654733,tests/unit/test_benchmark_runner.py::TestBenchmarkConfig::test_import_config,test_import_config,passed,0.00014,0.14,957.98,2190.44,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:53:33.664906,tests/unit/test_benchmark_runner.py::TestBenchmarkConfig::test_config_defaults,test_config_defaults,passed,0.000131,0.131,957.98,2190.44,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:53:33.675281,tests/unit/test_benchmark_runner.py::TestBenchmarkRunner::test_import_runner,test_import_runner,passed,0.000107,0.107,957.98,2190.44,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:53:33.731630,tests/unit/test_benchmark_runner.py::TestBenchmarkRunner::test_runner_initialization,test_runner_initialization,failed,0.014716,14.716,957.98,2190.44,"tests/unit/test_benchmark_runner.py:89: in test_runner_initialization
+    assert runner.results == []
+E   AttributeError: 'BenchmarkRunner' object has no attribute 'results'",tests/unit/test_benchmark_runner.py
+2026-01-21T06:53:33.760195,tests/unit/test_benchmark_runner.py::TestBenchmarkRunner::test_get_memory_stats,test_get_memory_stats,passed,0.016236,16.236,957.98,2190.44,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:53:33.802776,tests/unit/test_benchmark_runner.py::TestBenchmarkMethods::test_benchmark_generation_mocked,test_benchmark_generation_mocked,failed,0.000156,0.156,957.98,2190.44,"tests/unit/test_benchmark_runner.py:109: in test_benchmark_generation_mocked
+    from src.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig, BenchmarkResult
+E   ImportError: cannot import name 'BenchmarkResult' from 'src.benchmarks.benchmark_runner' (/mnt/d/Research Experiments/manus_model/src/benchmarks/benchmark_runner.py)",tests/unit/test_benchmark_runner.py
+2026-01-21T06:53:33.828346,tests/unit/test_benchmark_runner.py::TestBenchmarkMethods::test_benchmark_perplexity_mocked,test_benchmark_perplexity_mocked,passed,0.014528,14.528,957.98,2190.44,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:53:33.867901,tests/unit/test_benchmark_runner.py::TestBenchmarkMethods::test_export_csv,test_export_csv,failed,0.000131,0.131,957.98,2190.44,"tests/unit/test_benchmark_runner.py:147: in test_export_csv
+    from src.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig, BenchmarkResult
+E   ImportError: cannot import name 'BenchmarkResult' from 'src.benchmarks.benchmark_runner' (/mnt/d/Research Experiments/manus_model/src/benchmarks/benchmark_runner.py)",tests/unit/test_benchmark_runner.py
+2026-01-21T06:53:33.894648,tests/unit/test_benchmarks.py::TestBenchmarkImports::test_import_benchmark_native,test_import_benchmark_native,passed,0.015279,15.279,957.98,2190.44,,tests/unit/test_benchmarks.py
+2026-01-21T06:53:33.920098,tests/unit/test_benchmarks.py::TestBenchmarkImports::test_import_benchmark_baseline,test_import_benchmark_baseline,passed,0.015167,15.167,957.98,2190.44,,tests/unit/test_benchmarks.py
+2026-01-21T06:53:33.931846,tests/unit/test_benchmarks.py::TestBenchmarkImports::test_import_benchmarks_init,test_import_benchmarks_init,passed,0.000132,0.132,957.98,2190.44,,tests/unit/test_benchmarks.py
+2026-01-21T06:53:33.946440,tests/unit/test_benchmarks.py::TestBenchmarkNative::test_run_native_benchmark_mocked,test_run_native_benchmark_mocked,passed,0.0024,2.4,957.98,2190.44,,tests/unit/test_benchmarks.py
+2026-01-21T06:53:33.958145,tests/unit/test_benchmarks.py::TestBenchmarkNative::test_benchmark_model_path,test_benchmark_model_path,passed,0.000123,0.123,957.98,2190.44,,tests/unit/test_benchmarks.py
+2026-01-21T06:53:33.969816,tests/unit/test_benchmarks.py::TestBenchmarkBaseline::test_run_benchmark_mocked,test_run_benchmark_mocked,passed,0.000119,0.119,957.98,2190.44,,tests/unit/test_benchmarks.py
+2026-01-21T06:53:33.980561,tests/unit/test_benchmarks.py::TestExpandedEvalSuite::test_import_expanded_eval,test_import_expanded_eval,passed,0.000149,0.149,957.98,2190.44,,tests/unit/test_benchmarks.py
+2026-01-21T06:53:33.992468,tests/unit/test_benchmarks.py::TestExpandedEvalSuite::test_has_evaluator_class,test_has_evaluator_class,passed,0.000134,0.134,957.98,2190.44,,tests/unit/test_benchmarks.py
+2026-01-21T06:53:34.004736,tests/unit/test_benchmarks.py::TestFullstackEval::test_import_fullstack_eval,test_import_fullstack_eval,passed,0.000122,0.122,957.98,2190.44,,tests/unit/test_benchmarks.py
+2026-01-21T06:53:34.015530,tests/unit/test_benchmarks.py::TestLovableBenchmark::test_import_lovable_benchmark,test_import_lovable_benchmark,passed,0.000135,0.135,957.98,2190.44,,tests/unit/test_benchmarks.py
+2026-01-21T06:53:34.027620,tests/unit/test_capability_registry.py::TestCapabilityRegistry::test_registry_initialization,test_registry_initialization,passed,0.000248,0.248,957.98,2190.44,,tests/unit/test_capability_registry.py
+2026-01-21T06:53:34.039823,tests/unit/test_capability_registry.py::TestCapabilityRegistry::test_key_capabilities_registered,test_key_capabilities_registered,passed,0.000112,0.112,957.98,2190.44,,tests/unit/test_capability_registry.py
+2026-01-21T06:53:34.052245,tests/unit/test_capability_registry.py::TestCapabilityRegistry::test_capability_has_required_modalities,test_capability_has_required_modalities,passed,0.000114,0.114,957.98,2190.44,,tests/unit/test_capability_registry.py
+2026-01-21T06:53:34.063650,tests/unit/test_capability_registry.py::TestCapabilityRegistry::test_text_only_capabilities,test_text_only_capabilities,passed,0.000111,0.111,957.98,2190.44,,tests/unit/test_capability_registry.py
+2026-01-21T06:53:34.072868,tests/unit/test_capability_registry.py::TestCapabilityValidation::test_validate_text_only_model,test_validate_text_only_model,passed,9.9e-05,0.099,957.98,2190.44,,tests/unit/test_capability_registry.py
+2026-01-21T06:53:34.084188,tests/unit/test_capability_registry.py::TestCapabilityValidation::test_validate_omni_model,test_validate_omni_model,passed,0.000101,0.101,957.98,2190.44,,tests/unit/test_capability_registry.py
+2026-01-21T06:53:34.095370,tests/unit/test_capability_registry.py::TestCapabilityValidation::test_get_nonexistent_capability,test_get_nonexistent_capability,passed,9.9e-05,0.099,957.98,2190.44,,tests/unit/test_capability_registry.py
+2026-01-21T06:53:34.106203,tests/unit/test_capability_registry.py::TestTrainingOrder::test_get_training_order,test_get_training_order,passed,0.000111,0.111,957.98,2190.44,,tests/unit/test_capability_registry.py
+2026-01-21T06:53:34.118713,tests/unit/test_capability_registry.py::TestTrainingOrder::test_text_capabilities_come_first,test_text_capabilities_come_first,passed,0.000108,0.108,957.98,2190.44,,tests/unit/test_capability_registry.py
+2026-01-21T06:53:34.130565,tests/unit/test_capability_registry.py::TestTrainingOrder::test_generation_capabilities_come_last,test_generation_capabilities_come_last,passed,0.000266,0.266,957.98,2190.44,,tests/unit/test_capability_registry.py
+2026-01-21T06:53:34.143778,tests/unit/test_capability_registry.py::TestVRAMEstimation::test_vram_estimates_exist,test_vram_estimates_exist,passed,0.000115,0.115,957.98,2190.44,,tests/unit/test_capability_registry.py
+2026-01-21T06:53:34.158551,tests/unit/test_capability_registry.py::TestVRAMEstimation::test_vram_estimates_reasonable,test_vram_estimates_reasonable,passed,0.000104,0.104,957.98,2190.44,,tests/unit/test_capability_registry.py
+2026-01-21T06:53:34.168739,tests/unit/test_capability_registry.py::TestVRAMEstimation::test_text_capabilities_low_vram,test_text_capabilities_low_vram,passed,0.0001,0.1,957.98,2190.44,,tests/unit/test_capability_registry.py
+2026-01-21T06:53:34.180158,tests/unit/test_capability_registry.py::TestCapabilityDataclass::test_capability_creation,test_capability_creation,passed,0.000118,0.118,957.98,2190.44,,tests/unit/test_capability_registry.py
+2026-01-21T06:53:34.191199,tests/unit/test_capability_registry.py::TestCapabilityDataclass::test_capability_required_fields,test_capability_required_fields,passed,0.000158,0.158,957.98,2190.44,,tests/unit/test_capability_registry.py
+2026-01-21T06:53:34.217917,tests/unit/test_detect_modalities.py::TestDetectModalitiesWithRealModel::test_detect_text_only_model,test_detect_text_only_model,passed,0.015777,15.777,957.98,2190.44,,tests/unit/test_detect_modalities.py
+2026-01-21T06:53:34.250555,tests/unit/test_detect_modalities.py::TestDetectModalitiesWithRealModel::test_detect_omni_model,test_detect_omni_model,passed,0.01971,19.71,957.98,2190.44,,tests/unit/test_detect_modalities.py
+2026-01-21T06:53:34.262581,tests/unit/test_detect_modalities.py::TestAnalyzeConfig::test_text_only_config,test_text_only_config,passed,0.000148,0.148,957.98,2190.44,,tests/unit/test_detect_modalities.py
+2026-01-21T06:53:34.273694,tests/unit/test_detect_modalities.py::TestAnalyzeConfig::test_vision_config_detection,test_vision_config_detection,passed,0.000159,0.159,957.98,2190.44,,tests/unit/test_detect_modalities.py
+2026-01-21T06:53:34.284184,tests/unit/test_detect_modalities.py::TestAnalyzeConfig::test_omni_model_detection,test_omni_model_detection,passed,0.000153,0.153,957.98,2190.44,,tests/unit/test_detect_modalities.py
+2026-01-21T06:53:34.296549,tests/unit/test_detect_modalities.py::TestFormatReport::test_json_format,test_json_format,passed,0.000332,0.332,957.98,2190.44,,tests/unit/test_detect_modalities.py
+2026-01-21T06:53:34.309131,tests/unit/test_detect_modalities.py::TestFormatReport::test_human_readable_format,test_human_readable_format,passed,0.000254,0.254,957.98,2190.44,,tests/unit/test_detect_modalities.py
+2026-01-21T06:53:34.323116,tests/unit/test_detect_modalities.py::TestEdgeCases::test_nonexistent_path,test_nonexistent_path,passed,0.000395,0.395,957.98,2190.44,,tests/unit/test_detect_modalities.py
+2026-01-21T06:53:34.336954,tests/unit/test_detect_modalities.py::TestEdgeCases::test_empty_config,test_empty_config,passed,0.000217,0.217,957.98,2190.44,,tests/unit/test_detect_modalities.py
+2026-01-21T06:53:34.371902,tests/unit/test_export_model.py::TestModelExporterImport::test_import_exporter,test_import_exporter,passed,0.021457,21.457,957.98,2190.44,,tests/unit/test_export_model.py
+2026-01-21T06:53:34.389324,tests/unit/test_export_model.py::TestModelExporterImport::test_import_export_all_formats,test_import_export_all_formats,passed,0.000115,0.115,957.98,2190.44,,tests/unit/test_export_model.py
+2026-01-21T06:53:34.402782,tests/unit/test_export_model.py::TestModelExporterImport::test_supported_formats,test_supported_formats,passed,0.000121,0.121,957.98,2190.44,,tests/unit/test_export_model.py
+2026-01-21T06:53:34.416180,tests/unit/test_export_model.py::TestModelExporterInit::test_init_with_valid_path,test_init_with_valid_path,passed,0.000827,0.827,957.98,2190.44,,tests/unit/test_export_model.py
+2026-01-21T06:53:34.430497,tests/unit/test_export_model.py::TestModelExporterInit::test_init_with_invalid_path,test_init_with_invalid_path,passed,0.000477,0.477,957.98,2190.44,,tests/unit/test_export_model.py
+2026-01-21T06:53:34.445339,tests/unit/test_export_model.py::TestModelExporterSafetensors::test_export_safetensors,test_export_safetensors,passed,0.001003,1.003,957.98,2190.44,,tests/unit/test_export_model.py
+2026-01-21T06:53:34.487662,tests/unit/test_export_model.py::TestModelExporterFormats::test_invalid_format_raises,test_invalid_format_raises,passed,0.0012,1.2,957.98,2190.44,,tests/unit/test_export_model.py
+2026-01-21T06:53:34.506247,tests/unit/test_export_model.py::TestModelExporterFormats::test_case_insensitive_format,test_case_insensitive_format,passed,0.001433,1.433,957.98,2190.44,,tests/unit/test_export_model.py
+2026-01-21T06:53:34.521126,tests/unit/test_export_model.py::TestExportMain::test_main_exists,test_main_exists,passed,0.000133,0.133,957.98,2190.44,,tests/unit/test_export_model.py
+2026-01-21T06:53:34.532627,tests/unit/test_export_model.py::TestExportMain::test_main_calls_exporter,test_main_calls_exporter,passed,0.000668,0.668,957.98,2190.44,,tests/unit/test_export_model.py
+2026-01-21T06:53:34.549536,tests/unit/test_omni_loader.py::TestOmniModelDetection::test_import_loader,test_import_loader,passed,0.000241,0.241,957.98,2190.44,,tests/unit/test_omni_loader.py
+2026-01-21T06:53:34.561837,tests/unit/test_omni_loader.py::TestOmniModelDetection::test_import_load_function,test_import_load_function,passed,0.000123,0.123,957.98,2190.44,,tests/unit/test_omni_loader.py
+2026-01-21T06:53:34.571711,tests/unit/test_omni_loader.py::TestOmniModelDetection::test_import_config,test_import_config,passed,0.000127,0.127,957.98,2190.44,,tests/unit/test_omni_loader.py
+2026-01-21T06:53:34.602631,tests/unit/test_omni_loader.py::TestOmniModelDetection::test_is_omni_model_true,test_is_omni_model_true,passed,0.020433,20.433,957.98,2190.44,,tests/unit/test_omni_loader.py
+2026-01-21T06:53:34.675763,tests/unit/test_omni_loader.py::TestOmniModelDetection::test_is_omni_model_false,test_is_omni_model_false,failed,0.018364,18.364,957.98,2190.44,"tests/unit/test_omni_loader.py:54: in test_is_omni_model_false
+    assert OmniModelLoader.is_omni_model(text_model_path) is False
+E   AssertionError: assert True is False
+E    +  where True = <function OmniModelLoader.is_omni_model at 0x7a1f5104f400>(PosixPath('/mnt/e/data/models/Qwen2.5-0.5B'))
+E    +    where <function OmniModelLoader.is_omni_model at 0x7a1f5104f400> = <class 'src.omni.loader.OmniModelLoader'>.is_omni_model",tests/unit/test_omni_loader.py
+2026-01-21T06:53:34.690967,tests/unit/test_omni_loader.py::TestOmniModelDetection::test_is_omni_model_nonexistent,test_is_omni_model_nonexistent,passed,0.000181,0.181,957.98,2190.44,,tests/unit/test_omni_loader.py
+2026-01-21T06:53:34.757774,tests/unit/test_omni_loader.py::TestOmniModelInfo::test_get_model_info_structure,test_get_model_info_structure,passed,0.054707,54.707,957.98,2190.44,,tests/unit/test_omni_loader.py
+2026-01-21T06:53:34.808467,tests/unit/test_omni_loader.py::TestOmniModelInfo::test_get_model_info_values,test_get_model_info_values,passed,0.039326,39.326,957.98,2190.44,,tests/unit/test_omni_loader.py
+2026-01-21T06:53:34.821035,tests/unit/test_omni_loader.py::TestOmniModelInfo::test_get_model_info_nonexistent,test_get_model_info_nonexistent,passed,0.000269,0.269,957.98,2190.44,,tests/unit/test_omni_loader.py
+2026-01-21T06:53:34.832631,tests/unit/test_omni_loader.py::TestOmniModelConfig::test_default_values,test_default_values,passed,0.000205,0.205,957.98,2190.44,,tests/unit/test_omni_loader.py
+2026-01-21T06:53:34.842156,tests/unit/test_omni_loader.py::TestOmniModelConfig::test_custom_values,test_custom_values,passed,0.000131,0.131,957.98,2190.44,,tests/unit/test_omni_loader.py
+2026-01-21T06:53:34.853587,tests/unit/test_omni_loader.py::TestOmniModelLoaderInit::test_loader_initialization,test_loader_initialization,passed,0.000127,0.127,957.98,2190.44,,tests/unit/test_omni_loader.py
+2026-01-21T06:53:34.865322,tests/unit/test_omni_loader.py::TestOmniModelLoaderInit::test_supported_architectures,test_supported_architectures,passed,0.000121,0.121,957.98,2190.44,,tests/unit/test_omni_loader.py
+2026-01-21T06:53:34.877741,tests/unit/test_omni_loader.py::TestOmniModelLoading::test_load_thinker_only_mocked,test_load_thinker_only_mocked,passed,0.002471,2.471,957.98,2190.44,,tests/unit/test_omni_loader.py
+2026-01-21T06:53:34.893833,tests/unit/test_omni_loader.py::TestOmniModelLoading::test_load_for_training_mocked,test_load_for_training_mocked,passed,0.001533,1.533,957.98,2190.44,,tests/unit/test_omni_loader.py
+2026-01-21T06:53:34.909018,tests/unit/test_omni_loader.py::TestOmniModelLoading::test_load_for_inference_mocked,test_load_for_inference_mocked,passed,0.00152,1.52,957.98,2190.44,,tests/unit/test_omni_loader.py
+2026-01-21T06:53:34.920473,tests/unit/test_omni_loader.py::TestOmniInference::test_import_inference,test_import_inference,passed,0.000152,0.152,957.98,2190.44,,tests/unit/test_omni_loader.py
+2026-01-21T06:53:34.934522,tests/unit/test_omni_loader.py::TestOmniInference::test_import_generation_config,test_import_generation_config,passed,0.000122,0.122,957.98,2190.44,,tests/unit/test_omni_loader.py
+2026-01-21T06:53:34.945885,tests/unit/test_omni_loader.py::TestOmniInference::test_generation_config_defaults,test_generation_config_defaults,passed,0.000227,0.227,957.98,2190.44,,tests/unit/test_omni_loader.py
+2026-01-21T06:53:34.958404,tests/unit/test_omni_loader.py::TestOmniInference::test_generation_config_custom,test_generation_config_custom,passed,0.000254,0.254,957.98,2190.44,,tests/unit/test_omni_loader.py
+2026-01-21T06:53:34.971222,tests/unit/test_stages.py::TestStageConfig::test_stage_config_import,test_stage_config_import,passed,0.000138,0.138,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:34.983108,tests/unit/test_stages.py::TestStageConfig::test_stage_config_creation,test_stage_config_creation,passed,0.00014,0.14,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.011073,tests/unit/test_stages.py::TestStageConfig::test_stage_config_to_dict,test_stage_config_to_dict,passed,0.000137,0.137,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.023793,tests/unit/test_stages.py::TestBaseStage::test_base_stage_import,test_base_stage_import,passed,0.00024,0.24,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.038047,tests/unit/test_stages.py::TestBaseStage::test_base_stage_is_abstract,test_base_stage_is_abstract,passed,0.000207,0.207,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.049166,tests/unit/test_stages.py::TestBaseStage::test_text_capability_stage_import,test_text_capability_stage_import,passed,0.000191,0.191,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.075298,tests/unit/test_stages.py::TestCoTStage::test_cot_stage_import,test_cot_stage_import,passed,0.01544,15.44,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.084273,tests/unit/test_stages.py::TestCoTStage::test_cot_stage_capability_name,test_cot_stage_capability_name,passed,0.000123,0.123,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.095013,tests/unit/test_stages.py::TestCoTStage::test_cot_stage_has_dataset_patterns,test_cot_stage_has_dataset_patterns,passed,0.00012,0.12,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.126452,tests/unit/test_stages.py::TestReasoningStage::test_reasoning_stage_import,test_reasoning_stage_import,passed,0.019945,19.945,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.139509,tests/unit/test_stages.py::TestReasoningStage::test_reasoning_stage_capability_name,test_reasoning_stage_capability_name,passed,0.000197,0.197,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.175272,tests/unit/test_stages.py::TestThinkingStage::test_thinking_stage_import,test_thinking_stage_import,passed,0.023526,23.526,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.190203,tests/unit/test_stages.py::TestThinkingStage::test_thinking_stage_capability_name,test_thinking_stage_capability_name,passed,0.00021,0.21,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.227082,tests/unit/test_stages.py::TestToolsStage::test_tools_stage_import,test_tools_stage_import,passed,0.024571,24.571,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.247576,tests/unit/test_stages.py::TestToolsStage::test_tools_stage_capability_name,test_tools_stage_capability_name,passed,0.000187,0.187,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.286388,tests/unit/test_stages.py::TestStreamingStage::test_streaming_stage_import,test_streaming_stage_import,passed,0.02431,24.31,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.297242,tests/unit/test_stages.py::TestStreamingStage::test_streaming_stage_capability_name,test_streaming_stage_capability_name,passed,0.00012,0.12,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.332873,tests/unit/test_stages.py::TestPodcastStage::test_podcast_stage_import,test_podcast_stage_import,passed,0.02532,25.32,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.341740,tests/unit/test_stages.py::TestPodcastStage::test_podcast_stage_capability_name,test_podcast_stage_capability_name,passed,0.000131,0.131,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.351561,tests/unit/test_stages.py::TestPodcastStage::test_podcast_stage_has_dataset_patterns,test_podcast_stage_has_dataset_patterns,passed,0.000132,0.132,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.378843,tests/unit/test_stages.py::TestVisionQAStage::test_vision_qa_stage_import,test_vision_qa_stage_import,passed,0.015772,15.772,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.387700,tests/unit/test_stages.py::TestVisionQAStage::test_vision_qa_stage_capability_name,test_vision_qa_stage_capability_name,passed,0.000176,0.176,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.399189,tests/unit/test_stages.py::TestVisionQAStage::test_vision_qa_stage_has_dataset_patterns,test_vision_qa_stage_has_dataset_patterns,passed,0.000127,0.127,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.428382,tests/unit/test_stages.py::TestVideoUnderstandingStage::test_video_stage_import,test_video_stage_import,passed,0.017849,17.849,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.438279,tests/unit/test_stages.py::TestVideoUnderstandingStage::test_video_stage_capability_name,test_video_stage_capability_name,passed,0.00012,0.12,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.465954,tests/unit/test_stages.py::TestTriStreamingStage::test_tri_streaming_stage_import,test_tri_streaming_stage_import,passed,0.017864,17.864,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.475187,tests/unit/test_stages.py::TestTriStreamingStage::test_tri_streaming_stage_capability_name,test_tri_streaming_stage_capability_name,passed,0.000117,0.117,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.500264,tests/unit/test_stages.py::TestImageGenStage::test_image_gen_stage_import,test_image_gen_stage_import,passed,0.016618,16.618,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:35.509704,tests/unit/test_stages.py::TestImageGenStage::test_image_gen_stage_capability_name,test_image_gen_stage_capability_name,passed,0.000118,0.118,957.98,2190.44,,tests/unit/test_stages.py
+2026-01-21T06:53:39.070921,tests/unit/test_stages.py::TestImageGenStage::test_image_projector_forward,test_image_projector_forward,passed,3.551711,3551.711,957.98,2190.56,,tests/unit/test_stages.py
+2026-01-21T06:53:39.107046,tests/unit/test_stages.py::TestVideoGenStage::test_video_gen_stage_import,test_video_gen_stage_import,passed,0.023371,23.371,957.98,2190.56,,tests/unit/test_stages.py
+2026-01-21T06:53:39.120886,tests/unit/test_stages.py::TestVideoGenStage::test_video_gen_stage_capability_name,test_video_gen_stage_capability_name,passed,9.8e-05,0.098,957.98,2190.56,,tests/unit/test_stages.py
+2026-01-21T06:53:39.249966,tests/unit/test_stages.py::TestVideoGenStage::test_video_projector_forward,test_video_projector_forward,passed,0.117684,117.684,957.98,2191.63,,tests/unit/test_stages.py
+2026-01-21T06:53:39.261150,tests/unit/test_stages.py::TestAllStagesHaveMain::test_cot_has_main,test_cot_has_main,passed,0.000112,0.112,957.98,2191.63,,tests/unit/test_stages.py
+2026-01-21T06:53:39.268667,tests/unit/test_stages.py::TestAllStagesHaveMain::test_reasoning_has_main,test_reasoning_has_main,passed,0.000103,0.103,957.98,2191.63,,tests/unit/test_stages.py
+2026-01-21T06:53:39.278555,tests/unit/test_stages.py::TestAllStagesHaveMain::test_thinking_has_main,test_thinking_has_main,passed,0.000121,0.121,957.98,2191.63,,tests/unit/test_stages.py
+2026-01-21T06:53:39.289026,tests/unit/test_stages.py::TestAllStagesHaveMain::test_tools_has_main,test_tools_has_main,passed,0.000102,0.102,957.98,2191.63,,tests/unit/test_stages.py
+2026-01-21T06:53:39.301404,tests/unit/test_stages.py::TestAllStagesHaveMain::test_streaming_has_main,test_streaming_has_main,passed,0.000134,0.134,957.98,2191.63,,tests/unit/test_stages.py
+2026-01-21T06:53:39.314123,tests/unit/test_stages.py::TestAllStagesHaveMain::test_podcast_has_main,test_podcast_has_main,passed,0.000114,0.114,957.98,2191.63,,tests/unit/test_stages.py
+2026-01-21T06:53:39.324896,tests/unit/test_stages.py::TestAllStagesHaveMain::test_vision_qa_has_main,test_vision_qa_has_main,passed,0.000107,0.107,957.98,2191.63,,tests/unit/test_stages.py
+2026-01-21T06:53:39.337262,tests/unit/test_stages.py::TestAllStagesHaveMain::test_video_has_main,test_video_has_main,passed,0.000103,0.103,957.98,2191.63,,tests/unit/test_stages.py
+2026-01-21T06:53:39.351431,tests/unit/test_stages.py::TestAllStagesHaveMain::test_tri_streaming_has_main,test_tri_streaming_has_main,passed,0.000119,0.119,957.98,2191.63,,tests/unit/test_stages.py
+2026-01-21T06:53:39.363995,tests/unit/test_stages.py::TestAllStagesHaveMain::test_image_gen_has_main,test_image_gen_has_main,passed,0.00016,0.16,957.98,2191.63,,tests/unit/test_stages.py
+2026-01-21T06:53:39.375099,tests/unit/test_stages.py::TestAllStagesHaveMain::test_video_gen_has_main,test_video_gen_has_main,passed,0.000119,0.119,957.98,2191.63,,tests/unit/test_stages.py
+2026-01-21T06:53:39.388621,tests/unit/test_training_controller.py::TestSetupSignalHandlers::test_setup_signal_handlers_runs,test_setup_signal_handlers_runs,passed,0.00021,0.21,957.98,2191.63,,tests/unit/test_training_controller.py
+2026-01-21T06:53:39.401209,tests/unit/test_training_controller.py::TestSetupSignalHandlers::test_signal_handlers_registered,test_signal_handlers_registered,passed,0.000564,0.564,957.98,2191.63,,tests/unit/test_training_controller.py
+2026-01-21T06:53:39.412327,tests/unit/test_training_controller.py::TestCheckPauseState::test_check_pause_state_not_paused,test_check_pause_state_not_paused,passed,0.000165,0.165,957.98,2191.63,,tests/unit/test_training_controller.py
+2026-01-21T06:53:40.424030,tests/unit/test_training_controller.py::TestCheckPauseState::test_check_pause_state_paused_then_resumed,test_check_pause_state_paused_then_resumed,passed,1.000955,1000.955,957.98,2191.63,,tests/unit/test_training_controller.py
+2026-01-21T06:53:40.435493,tests/unit/test_training_controller.py::TestCooldownLogic::test_cooldown_interval_constant_defined,test_cooldown_interval_constant_defined,passed,0.000107,0.107,957.98,2191.63,,tests/unit/test_training_controller.py
+2026-01-21T06:53:40.448732,tests/unit/test_training_controller.py::TestCooldownLogic::test_cooldown_duration_defined,test_cooldown_duration_defined,passed,9.9e-05,0.099,957.98,2191.63,,tests/unit/test_training_controller.py
+2026-01-21T06:53:40.464625,tests/unit/test_training_controller.py::TestCooldownLogic::test_check_and_cooldown_not_at_interval,test_check_and_cooldown_not_at_interval,passed,0.00068,0.68,957.98,2191.63,,tests/unit/test_training_controller.py
+2026-01-21T06:53:40.480457,tests/unit/test_training_controller.py::TestCooldownLogic::test_check_and_cooldown_at_interval,test_check_and_cooldown_at_interval,passed,0.001317,1.317,957.98,2191.63,,tests/unit/test_training_controller.py
+2026-01-21T06:53:40.493380,tests/unit/test_training_controller.py::TestGPUTemperatureMonitoring::test_temperature_threshold_defined,test_temperature_threshold_defined,passed,0.0001,0.1,957.98,2191.63,,tests/unit/test_training_controller.py
+2026-01-21T06:53:40.526341,tests/unit/test_training_controller.py::TestGPUTemperatureMonitoring::test_get_gpu_temperature_success,test_get_gpu_temperature_success,passed,0.000495,0.495,957.98,2191.63,,tests/unit/test_training_controller.py
+2026-01-21T06:53:40.544751,tests/unit/test_training_controller.py::TestGPUTemperatureMonitoring::test_get_gpu_temperature_failure,test_get_gpu_temperature_failure,passed,0.000406,0.406,957.98,2191.63,,tests/unit/test_training_controller.py
+2026-01-21T06:53:40.557345,tests/unit/test_training_controller.py::TestCompressedFileExtraction::test_extract_gzip,test_extract_gzip,passed,0.000635,0.635,957.98,2191.76,,tests/unit/test_training_controller.py
+2026-01-21T06:53:40.577643,tests/unit/test_training_controller.py::TestCompressedFileExtraction::test_extract_tar_gz,test_extract_tar_gz,passed,0.001512,1.512,957.98,2191.76,,tests/unit/test_training_controller.py
+2026-01-21T06:53:40.595425,tests/unit/test_training_controller.py::TestCompressedFileExtraction::test_extract_zip,test_extract_zip,passed,0.003013,3.013,957.98,2191.76,,tests/unit/test_training_controller.py
+2026-01-21T06:53:40.606477,tests/unit/test_training_controller.py::TestCompressedFileExtraction::test_non_compressed_passthrough,test_non_compressed_passthrough,passed,0.000197,0.197,957.98,2191.76,,tests/unit/test_training_controller.py
+2026-01-21T06:53:40.617528,tests/unit/test_training_controller.py::TestTrainingStepHook::test_hook_runs_without_error,test_hook_runs_without_error,passed,0.001151,1.151,957.98,2191.76,,tests/unit/test_training_controller.py
+2026-01-21T06:53:40.629500,tests/unit/test_training_controller.py::TestTrainingStepHook::test_hook_calls_pause_check,test_hook_calls_pause_check,passed,0.001646,1.646,957.98,2191.76,,tests/unit/test_training_controller.py
+2026-01-21T06:53:40.639546,tests/unit/test_training_controller.py::TestTrainingStepHook::test_hook_calls_cooldown_check,test_hook_calls_cooldown_check,passed,0.001085,1.085,957.98,2191.76,,tests/unit/test_training_controller.py
+2026-01-21T06:53:40.648617,tests/unit/test_training_controller.py::TestGlobalState::test_paused_state_toggleable,test_paused_state_toggleable,passed,0.000109,0.109,957.98,2191.76,,tests/unit/test_training_controller.py
+2026-01-21T06:53:40.658204,tests/unit/test_training_controller.py::TestGlobalState::test_checkpoint_requested_state,test_checkpoint_requested_state,passed,0.000113,0.113,957.98,2191.76,,tests/unit/test_training_controller.py
+2026-01-21T06:53:40.668848,tests/unit/test_universal_loader.py::TestUniversalLoaderImport::test_import_module,test_import_module,passed,0.000182,0.182,957.98,2191.76,,tests/unit/test_universal_loader.py
+2026-01-21T06:53:40.678024,tests/unit/test_universal_loader.py::TestUniversalLoaderImport::test_import_class,test_import_class,passed,9.8e-05,0.098,957.98,2191.76,,tests/unit/test_universal_loader.py
+2026-01-21T06:53:40.687780,tests/unit/test_universal_loader.py::TestUniversalLoaderImport::test_import_function,test_import_function,passed,0.000118,0.118,957.98,2191.76,,tests/unit/test_universal_loader.py
+2026-01-21T06:53:40.697194,tests/unit/test_universal_loader.py::TestUniversalLoaderImport::test_import_load_result,test_import_load_result,passed,0.000101,0.101,957.98,2191.76,,tests/unit/test_universal_loader.py
+2026-01-21T06:53:40.711347,tests/unit/test_universal_loader.py::TestFormatDetection::test_detect_json_array,test_detect_json_array,passed,0.000179,0.179,957.98,2191.76,,tests/unit/test_universal_loader.py
+2026-01-21T06:53:40.726171,tests/unit/test_universal_loader.py::TestFormatDetection::test_detect_json_dict,test_detect_json_dict,passed,0.000155,0.155,957.98,2191.76,,tests/unit/test_universal_loader.py
+2026-01-21T06:53:40.738811,tests/unit/test_universal_loader.py::TestFormatDetection::test_detect_jsonl,test_detect_jsonl,passed,0.000154,0.154,957.98,2191.76,,tests/unit/test_universal_loader.py
+2026-01-21T06:53:40.751529,tests/unit/test_universal_loader.py::TestFormatDetection::test_detect_csv,test_detect_csv,passed,0.000174,0.174,957.98,2191.76,,tests/unit/test_universal_loader.py
+2026-01-21T06:53:40.764007,tests/unit/test_universal_loader.py::TestFormatDetection::test_detect_text,test_detect_text,passed,0.000157,0.157,957.98,2191.76,,tests/unit/test_universal_loader.py
+2026-01-21T06:53:40.777853,tests/unit/test_universal_loader.py::TestFormatDetection::test_detect_nonexistent,test_detect_nonexistent,passed,0.000204,0.204,957.98,2191.76,,tests/unit/test_universal_loader.py
+2026-01-21T06:53:40.797909,tests/unit/test_universal_loader.py::TestJsonLoading::test_load_json_array,test_load_json_array,passed,0.004058,4.058,957.98,2192.01,,tests/unit/test_universal_loader.py
+2026-01-21T06:53:40.820378,tests/unit/test_universal_loader.py::TestJsonLoading::test_load_json_dict,test_load_json_dict,passed,0.00319,3.19,957.98,2192.01,,tests/unit/test_universal_loader.py
+2026-01-21T06:53:40.837477,tests/unit/test_universal_loader.py::TestJsonLoading::test_load_json_with_sample_size,test_load_json_with_sample_size,passed,0.00328,3.28,957.98,2192.01,,tests/unit/test_universal_loader.py
+2026-01-21T06:53:40.853283,tests/unit/test_universal_loader.py::TestJsonlLoading::test_load_jsonl,test_load_jsonl,passed,0.003922,3.922,957.98,2192.01,,tests/unit/test_universal_loader.py
+2026-01-21T06:53:40.869222,tests/unit/test_universal_loader.py::TestJsonlLoading::test_load_jsonl_sample_size,test_load_jsonl_sample_size,passed,0.002738,2.738,957.98,2192.01,,tests/unit/test_universal_loader.py
+2026-01-21T06:53:40.889289,tests/unit/test_universal_loader.py::TestJsonlLoading::test_load_jsonl_content,test_load_jsonl_content,passed,0.005314,5.314,957.98,2192.38,,tests/unit/test_universal_loader.py
+2026-01-21T06:53:46.964415,tests/unit/test_universal_loader.py::TestCsvLoading::test_load_csv,test_load_csv,passed,6.063,6063.0,957.98,2194.88,,tests/unit/test_universal_loader.py
+2026-01-21T06:53:46.980616,tests/unit/test_universal_loader.py::TestTextLoading::test_load_text,test_load_text,passed,0.00179,1.79,957.98,2195.01,,tests/unit/test_universal_loader.py
+2026-01-21T06:53:46.996830,tests/unit/test_universal_loader.py::TestTextLoading::test_load_text_content,test_load_text_content,passed,0.002095,2.095,957.98,2195.01,,tests/unit/test_universal_loader.py
+2026-01-21T06:53:47.012674,tests/unit/test_universal_loader.py::TestLoadResult::test_load_result_fields,test_load_result_fields,passed,0.002648,2.648,957.98,2195.01,,tests/unit/test_universal_loader.py
+2026-01-21T06:53:47.030499,tests/unit/test_universal_loader.py::TestLoadResult::test_load_result_source_path,test_load_result_source_path,passed,0.002373,2.373,957.98,2195.01,,tests/unit/test_universal_loader.py
+2026-01-21T06:53:47.047559,tests/unit/test_universal_loader.py::TestConvenienceFunction::test_load_dataset_universal,test_load_dataset_universal,passed,0.002366,2.366,957.98,2195.01,,tests/unit/test_universal_loader.py
+2026-01-21T06:53:47.061196,tests/unit/test_universal_loader.py::TestConvenienceFunction::test_load_dataset_universal_sample_size,test_load_dataset_universal_sample_size,passed,0.002396,2.396,957.98,2195.01,,tests/unit/test_universal_loader.py
+2026-01-21T06:54:17.142449,tests/unit/test_universal_loader.py::TestRealDatasets::test_load_cot_dataset,test_load_cot_dataset,passed,30.067729,30067.729,957.98,3936.42,,tests/unit/test_universal_loader.py
+2026-01-21T06:54:19.062242,tests/unit/test_universal_loader.py::TestRealDatasets::test_load_tools_dataset,test_load_tools_dataset,passed,1.901544,1901.544,957.98,3937.44,,tests/unit/test_universal_loader.py
+2026-01-21T06:54:19.232789,tests/unit/test_universal_loader.py::TestRealDatasets::test_load_o1_dataset,test_load_o1_dataset,passed,0.157784,157.784,957.98,3937.44,,tests/unit/test_universal_loader.py
+2026-01-21T06:54:20.307830,tests/unit/test_universal_loader.py::TestRealDatasets::test_load_gsm8k_dataset,test_load_gsm8k_dataset,passed,1.063702,1063.702,957.98,3937.57,,tests/unit/test_universal_loader.py
+2026-01-21T06:54:20.320613,tests/unit/test_universal_loader.py::TestEdgeCases::test_empty_file,test_empty_file,passed,0.00035,0.35,957.98,3937.57,,tests/unit/test_universal_loader.py
+2026-01-21T06:54:20.341901,tests/unit/test_universal_loader.py::TestEdgeCases::test_invalid_json,test_invalid_json,passed,0.000401,0.401,957.98,3937.57,,tests/unit/test_universal_loader.py
+2026-01-21T06:54:20.353466,tests/unit/test_universal_loader.py::TestEdgeCases::test_zero_sample_size,test_zero_sample_size,passed,0.002645,2.645,957.98,3937.57,,tests/unit/test_universal_loader.py
+2026-01-21T06:54:20.372227,tests/unit/test_universal_loader.py::TestEdgeCases::test_large_sample_size,test_large_sample_size,passed,0.002641,2.641,957.98,3937.57,,tests/unit/test_universal_loader.py
+2026-01-21T06:54:20.621206,tests/unit_streaming/test_streaming.py::TestStreamingComponents::test_joint_orchestrator,test_joint_orchestrator,failed,0.1606,160.6,957.98,3937.57,"tests/unit_streaming/test_streaming.py:62: in test_joint_orchestrator
+    orch = JointStreamingOrchestrator()
+E   TypeError: JointStreamingOrchestrator.__init__() missing 3 required positional arguments: 'vision_buffer', 'audio_buffer', and 'user_buffer'",tests/unit_streaming/test_streaming.py
+2026-01-21T06:54:20.758306,tests/unit_streaming/test_streaming.py::TestStreamingComponents::test_memory_init,test_memory_init,passed,0.124754,124.754,957.98,3937.57,,tests/unit_streaming/test_streaming.py
+2026-01-21T06:54:20.835729,tests/unit_streaming/test_streaming.py::TestStreamingComponents::test_podcast_generator,test_podcast_generator,passed,0.066467,66.467,957.98,3937.57,,tests/unit_streaming/test_streaming.py
+2026-01-21T06:54:20.957895,tests/unit_streaming/test_streaming.py::TestStreamingComponents::test_tts_init,test_tts_init,passed,0.108897,108.897,957.98,3937.57,,tests/unit_streaming/test_streaming.py
+2026-01-21T06:54:21.055201,tests/unit_streaming/test_streaming.py::TestStreamingComponents::test_vision_buffer,test_vision_buffer,passed,0.088829,88.829,957.98,3937.57,,tests/unit_streaming/test_streaming.py
+2026-01-21T06:54:36.929636,tests/integration/test_benchmarks_integration.py::test_generation_benchmark,test_generation_benchmark,failed,0.006328,6.328,0.0,624.89,"tests/integration/test_benchmarks_integration.py:38: in test_generation_benchmark
+    assert result.success, ""Generation benchmark failed""
+E   AssertionError: Generation benchmark failed
+E   assert False
+E    +  where False = BenchmarkMetrics(timestamp='2026-01-21T06:54:36.663857', name='test_gen', category='generation', model_name='Qwen2.5-0.5B', total_time_s=0.0, tokens_per_second=0.0, latency_ms=0.0, first_token_time_s=0.0, input_tokens=0, output_tokens=0, total_tokens=0, token_accuracy=0.0, ",tests/integration/test_benchmarks_integration.py
+2026-01-21T06:54:37.038180,tests/integration/test_benchmarks_integration.py::test_perplexity_benchmark,test_perplexity_benchmark,failed,0.025215,25.215,0.0,625.14,"tests/integration/test_benchmarks_integration.py:57: in test_perplexity_benchmark
+    assert result.success, ""Perplexity benchmark failed""
+E   AssertionError: Perplexity benchmark failed
+E   assert False
+E    +  where False = BenchmarkMetrics(timestamp='2026-01-21T06:54:36.958248', name='test_ppl', category='accuracy', model_name='Qwen2.5-0.5B', total_time_s=0.0, tokens_per_second=0.0, latency_ms=0.0, first_token_time_s=0.0, input_tokens=0, output_tokens=0, total_tokens=0, token_accuracy=0.0, pe",tests/integration/test_benchmarks_integration.py
+2026-01-21T06:57:27.637855,tests/unit/test_benchmark_runner.py::TestBenchmarkResult::test_import_result,test_import_result,passed,3.451941,3451.941,0.0,624.8,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:57:27.654308,tests/unit/test_benchmark_runner.py::TestBenchmarkResult::test_result_defaults,test_result_defaults,passed,0.000188,0.188,0.0,624.93,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:57:27.669375,tests/unit/test_benchmark_runner.py::TestBenchmarkResult::test_result_custom_values,test_result_custom_values,passed,0.000193,0.193,0.0,625.05,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:57:27.685278,tests/unit/test_benchmark_runner.py::TestBenchmarkConfig::test_import_config,test_import_config,passed,0.000198,0.198,0.0,625.05,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:57:27.700543,tests/unit/test_benchmark_runner.py::TestBenchmarkConfig::test_config_defaults,test_config_defaults,passed,0.00018,0.18,0.0,625.05,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:57:27.717245,tests/unit/test_benchmark_runner.py::TestBenchmarkRunner::test_import_runner,test_import_runner,passed,0.000183,0.183,0.0,625.05,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:57:27.754488,tests/unit/test_benchmark_runner.py::TestBenchmarkRunner::test_runner_initialization,test_runner_initialization,passed,0.020814,20.814,0.0,625.05,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:57:27.792406,tests/unit/test_benchmark_runner.py::TestBenchmarkRunner::test_get_memory_stats,test_get_memory_stats,passed,0.023754,23.754,0.0,625.05,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:57:27.831770,tests/unit/test_benchmark_runner.py::TestBenchmarkMethods::test_benchmark_generation_mocked,test_benchmark_generation_mocked,passed,0.024333,24.333,0.0,625.18,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:57:27.846350,tests/unit/test_benchmark_runner.py::TestBenchmarkMethods::test_benchmark_perplexity_mocked,test_benchmark_perplexity_mocked,passed,0.00019,0.19,0.0,625.18,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:57:28.204182,tests/unit/test_benchmark_runner.py::TestBenchmarkMethods::test_export_csv,test_export_csv,failed,0.023706,23.706,0.0,625.8,"tests/unit/test_benchmark_runner.py:162: in test_export_csv
+    runner.results.append(BenchmarkResult(
+E   AttributeError: 'BenchmarkRunner' object has no attribute 'results'",tests/unit/test_benchmark_runner.py
+2026-01-21T06:57:28.295528,tests/unit/test_omni_loader.py::TestOmniModelDetection::test_import_loader,test_import_loader,passed,0.076062,76.062,0.0,625.8,,tests/unit/test_omni_loader.py
+2026-01-21T06:57:28.310703,tests/unit/test_omni_loader.py::TestOmniModelDetection::test_import_load_function,test_import_load_function,passed,0.000188,0.188,0.0,625.8,,tests/unit/test_omni_loader.py
+2026-01-21T06:57:28.326437,tests/unit/test_omni_loader.py::TestOmniModelDetection::test_import_config,test_import_config,passed,0.000274,0.274,0.0,625.93,,tests/unit/test_omni_loader.py
+2026-01-21T06:57:28.368647,tests/unit/test_omni_loader.py::TestOmniModelDetection::test_is_omni_model_true,test_is_omni_model_true,passed,0.027061,27.061,0.0,625.93,,tests/unit/test_omni_loader.py
+2026-01-21T06:57:28.394458,tests/unit/test_omni_loader.py::TestOmniModelDetection::test_is_omni_model_false,test_is_omni_model_false,passed,0.009677,9.677,0.0,625.93,,tests/unit/test_omni_loader.py
+2026-01-21T06:57:28.409148,tests/unit/test_omni_loader.py::TestOmniModelDetection::test_is_omni_model_nonexistent,test_is_omni_model_nonexistent,passed,0.000293,0.293,0.0,625.93,,tests/unit/test_omni_loader.py
+2026-01-21T06:57:28.463393,tests/unit/test_omni_loader.py::TestOmniModelInfo::test_get_model_info_structure,test_get_model_info_structure,passed,0.040372,40.372,0.0,625.93,,tests/unit/test_omni_loader.py
+2026-01-21T06:57:28.521102,tests/unit/test_omni_loader.py::TestOmniModelInfo::test_get_model_info_values,test_get_model_info_values,passed,0.041486,41.486,0.0,625.93,,tests/unit/test_omni_loader.py
+2026-01-21T06:57:28.536114,tests/unit/test_omni_loader.py::TestOmniModelInfo::test_get_model_info_nonexistent,test_get_model_info_nonexistent,passed,0.000297,0.297,0.0,625.93,,tests/unit/test_omni_loader.py
+2026-01-21T06:57:28.551024,tests/unit/test_omni_loader.py::TestOmniModelConfig::test_default_values,test_default_values,passed,0.000182,0.182,0.0,625.93,,tests/unit/test_omni_loader.py
+2026-01-21T06:57:28.566218,tests/unit/test_omni_loader.py::TestOmniModelConfig::test_custom_values,test_custom_values,passed,0.00019,0.19,0.0,625.93,,tests/unit/test_omni_loader.py
+2026-01-21T06:57:28.583433,tests/unit/test_omni_loader.py::TestOmniModelLoaderInit::test_loader_initialization,test_loader_initialization,passed,0.000182,0.182,0.0,625.93,,tests/unit/test_omni_loader.py
+2026-01-21T06:57:28.597303,tests/unit/test_omni_loader.py::TestOmniModelLoaderInit::test_supported_architectures,test_supported_architectures,passed,0.00019,0.19,0.0,625.93,,tests/unit/test_omni_loader.py
+2026-01-21T06:57:38.202396,tests/unit/test_omni_loader.py::TestOmniModelLoading::test_load_thinker_only_mocked,test_load_thinker_only_mocked,passed,9.588843,9588.843,0.0,815.5,,tests/unit/test_omni_loader.py
+2026-01-21T06:57:38.223147,tests/unit/test_omni_loader.py::TestOmniModelLoading::test_load_for_training_mocked,test_load_for_training_mocked,passed,0.00459,4.59,0.0,815.5,,tests/unit/test_omni_loader.py
+2026-01-21T06:57:38.242093,tests/unit/test_omni_loader.py::TestOmniModelLoading::test_load_for_inference_mocked,test_load_for_inference_mocked,passed,0.001898,1.898,0.0,815.5,,tests/unit/test_omni_loader.py
+2026-01-21T06:57:38.293678,tests/unit/test_omni_loader.py::TestOmniInference::test_import_inference,test_import_inference,passed,0.034302,34.302,0.0,815.5,,tests/unit/test_omni_loader.py
+2026-01-21T06:57:38.310647,tests/unit/test_omni_loader.py::TestOmniInference::test_import_generation_config,test_import_generation_config,passed,0.000218,0.218,0.0,815.5,,tests/unit/test_omni_loader.py
+2026-01-21T06:57:38.327287,tests/unit/test_omni_loader.py::TestOmniInference::test_generation_config_defaults,test_generation_config_defaults,passed,0.000197,0.197,0.0,815.5,,tests/unit/test_omni_loader.py
+2026-01-21T06:57:38.344381,tests/unit/test_omni_loader.py::TestOmniInference::test_generation_config_custom,test_generation_config_custom,passed,0.000204,0.204,0.0,815.63,,tests/unit/test_omni_loader.py
+2026-01-21T06:58:17.026724,tests/unit/test_benchmark_runner.py::TestBenchmarkResult::test_import_result,test_import_result,passed,3.262052,3262.052,0.0,624.54,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:58:17.040331,tests/unit/test_benchmark_runner.py::TestBenchmarkResult::test_result_defaults,test_result_defaults,passed,0.000173,0.173,0.0,624.67,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:58:17.054905,tests/unit/test_benchmark_runner.py::TestBenchmarkResult::test_result_custom_values,test_result_custom_values,passed,0.000199,0.199,0.0,624.79,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:58:17.069623,tests/unit/test_benchmark_runner.py::TestBenchmarkConfig::test_import_config,test_import_config,passed,0.000153,0.153,0.0,624.79,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:58:17.085370,tests/unit/test_benchmark_runner.py::TestBenchmarkConfig::test_config_defaults,test_config_defaults,passed,0.000305,0.305,0.0,624.79,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:58:17.100277,tests/unit/test_benchmark_runner.py::TestBenchmarkRunner::test_import_runner,test_import_runner,passed,0.000152,0.152,0.0,624.79,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:58:17.135652,tests/unit/test_benchmark_runner.py::TestBenchmarkRunner::test_runner_initialization,test_runner_initialization,passed,0.020119,20.119,0.0,624.79,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:58:17.168145,tests/unit/test_benchmark_runner.py::TestBenchmarkRunner::test_get_memory_stats,test_get_memory_stats,passed,0.020191,20.191,0.0,624.79,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:58:17.202471,tests/unit/test_benchmark_runner.py::TestBenchmarkMethods::test_benchmark_generation_mocked,test_benchmark_generation_mocked,passed,0.020386,20.386,0.0,625.04,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:58:17.234023,tests/unit/test_benchmark_runner.py::TestBenchmarkMethods::test_benchmark_perplexity_mocked,test_benchmark_perplexity_mocked,passed,0.019158,19.158,0.0,625.04,,tests/unit/test_benchmark_runner.py
+2026-01-21T06:58:17.319615,tests/unit/test_omni_loader.py::TestOmniModelDetection::test_import_loader,test_import_loader,passed,0.07151,71.51,0.0,625.04,,tests/unit/test_omni_loader.py
+2026-01-21T06:58:17.333961,tests/unit/test_omni_loader.py::TestOmniModelDetection::test_import_load_function,test_import_load_function,passed,0.000302,0.302,0.0,625.04,,tests/unit/test_omni_loader.py
+2026-01-21T06:58:17.346960,tests/unit/test_omni_loader.py::TestOmniModelDetection::test_import_config,test_import_config,passed,0.000154,0.154,0.0,625.04,,tests/unit/test_omni_loader.py
+2026-01-21T06:58:17.383088,tests/unit/test_omni_loader.py::TestOmniModelDetection::test_is_omni_model_true,test_is_omni_model_true,passed,0.021471,21.471,0.0,625.17,,tests/unit/test_omni_loader.py
+2026-01-21T06:58:17.402805,tests/unit/test_omni_loader.py::TestOmniModelDetection::test_is_omni_model_false,test_is_omni_model_false,passed,0.005784,5.784,0.0,625.17,,tests/unit/test_omni_loader.py
+2026-01-21T06:58:17.416599,tests/unit/test_omni_loader.py::TestOmniModelDetection::test_is_omni_model_nonexistent,test_is_omni_model_nonexistent,passed,0.000236,0.236,0.0,625.17,,tests/unit/test_omni_loader.py
+2026-01-21T06:58:17.471693,tests/unit/test_omni_loader.py::TestOmniModelInfo::test_get_model_info_structure,test_get_model_info_structure,passed,0.041395,41.395,0.0,625.17,,tests/unit/test_omni_loader.py
+2026-01-21T06:58:17.525726,tests/unit/test_omni_loader.py::TestOmniModelInfo::test_get_model_info_values,test_get_model_info_values,passed,0.040153,40.153,0.0,625.17,,tests/unit/test_omni_loader.py
+2026-01-21T06:58:17.538974,tests/unit/test_omni_loader.py::TestOmniModelInfo::test_get_model_info_nonexistent,test_get_model_info_nonexistent,passed,0.000215,0.215,0.0,625.17,,tests/unit/test_omni_loader.py
+2026-01-21T06:58:17.552626,tests/unit/test_omni_loader.py::TestOmniModelConfig::test_default_values,test_default_values,passed,0.000159,0.159,0.0,625.17,,tests/unit/test_omni_loader.py
+2026-01-21T06:58:17.567088,tests/unit/test_omni_loader.py::TestOmniModelConfig::test_custom_values,test_custom_values,passed,0.000206,0.206,0.0,625.17,,tests/unit/test_omni_loader.py
+2026-01-21T06:58:17.579566,tests/unit/test_omni_loader.py::TestOmniModelLoaderInit::test_loader_initialization,test_loader_initialization,passed,0.000204,0.204,0.0,625.29,,tests/unit/test_omni_loader.py
+2026-01-21T06:58:17.593765,tests/unit/test_omni_loader.py::TestOmniModelLoaderInit::test_supported_architectures,test_supported_architectures,passed,0.000326,0.326,0.0,625.29,,tests/unit/test_omni_loader.py
+2026-01-21T06:58:26.381330,tests/unit/test_omni_loader.py::TestOmniModelLoading::test_load_thinker_only_mocked,test_load_thinker_only_mocked,passed,8.77294,8772.94,0.0,815.06,,tests/unit/test_omni_loader.py
+2026-01-21T06:58:26.397479,tests/unit/test_omni_loader.py::TestOmniModelLoading::test_load_for_training_mocked,test_load_for_training_mocked,passed,0.002437,2.437,0.0,815.19,,tests/unit/test_omni_loader.py
+2026-01-21T06:58:26.413041,tests/unit/test_omni_loader.py::TestOmniModelLoading::test_load_for_inference_mocked,test_load_for_inference_mocked,passed,0.001526,1.526,0.0,815.19,,tests/unit/test_omni_loader.py
+2026-01-21T06:58:26.463283,tests/unit/test_omni_loader.py::TestOmniInference::test_import_inference,test_import_inference,passed,0.033656,33.656,0.0,815.19,,tests/unit/test_omni_loader.py
+2026-01-21T06:58:26.477170,tests/unit/test_omni_loader.py::TestOmniInference::test_import_generation_config,test_import_generation_config,passed,0.000259,0.259,0.0,815.31,,tests/unit/test_omni_loader.py
+2026-01-21T06:58:26.493308,tests/unit/test_omni_loader.py::TestOmniInference::test_generation_config_defaults,test_generation_config_defaults,passed,0.000192,0.192,0.0,815.31,,tests/unit/test_omni_loader.py
+2026-01-21T06:58:26.510024,tests/unit/test_omni_loader.py::TestOmniInference::test_generation_config_custom,test_generation_config_custom,passed,0.000324,0.324,0.0,815.31,,tests/unit/test_omni_loader.py

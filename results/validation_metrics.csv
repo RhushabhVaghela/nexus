@@ -1,0 +1,5 @@
+timestamp,test_type,total_tests,passed,failed,skipped,duration_seconds,details,errors
+2026-01-21T06:54:21.316721,pytest_session,305,282,14,9,103.51382500000004,Session ending 06:54:21,14 failures
+2026-01-21T06:54:37.088083,pytest_session,2,0,2,0,0.031543,Session ending 06:54:37,2 failures
+2026-01-21T06:57:38.417189,pytest_session,31,30,1,0,13.372386000000002,Session ending 06:57:38,1 failures
+2026-01-21T06:58:26.578284,pytest_session,30,30,0,0,12.336337000000002,Session ending 06:58:26,

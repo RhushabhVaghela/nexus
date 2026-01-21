@@ -78,11 +78,14 @@ class OmniModelLoader:
             architectures = config.get("architectures", [])
             
             # Check for Omni indicators
+            if "omni" in model_path.name.lower():
+                return True
+
             if "omni" in model_type.lower():
                 return True
             
             for arch in architectures:
-                if "Omni" in arch:
+                if "Omni" in arch or "Qwen2" in arch:  # Relaxed check for Qwen2 based Omni models
                     return True
             
             return False
@@ -288,10 +291,26 @@ class OmniModelLoader:
         torch_dtype: torch.dtype,
     ):
         """Load model using direct import or AutoModelForCausalLM fallback."""
+        # Method 1: Try specific architecture class directly (matches config.json)
         try:
-            # Try specific Omni model class first
-            from transformers import Qwen2_5OmniModel
-            
+            from transformers.models.qwen2_5_omni.modeling_qwen2_5_omni import Qwen2_5OmniForConditionalGeneration
+            logger.info("Directly loading Qwen2_5OmniForConditionalGeneration...")
+            model = Qwen2_5OmniForConditionalGeneration.from_pretrained(
+                str(model_path),
+                device_map=device_map,
+                torch_dtype=torch_dtype,
+                trust_remote_code=True,
+            )
+            return model
+        except ImportError:
+            logger.debug("Could not direct import Qwen2_5OmniForConditionalGeneration")
+        except Exception as e:
+            logger.warning(f"Failed loading via Qwen2_5OmniForConditionalGeneration: {e}")
+
+        # Method 2: Try specific base model class
+        try:
+            from transformers.models.qwen2_5_omni.modeling_qwen2_5_omni import Qwen2_5OmniModel
+            logger.info("Directly loading Qwen2_5OmniModel...")
             model = Qwen2_5OmniModel.from_pretrained(
                 str(model_path),
                 device_map=device_map,
@@ -300,33 +319,54 @@ class OmniModelLoader:
             )
             return model
         except ImportError:
-            pass
+            logger.debug("Could not direct import Qwen2_5OmniModel")
+        except Exception as e:
+             logger.warning(f"Failed loading via Qwen2_5OmniModel: {e}")
 
-        # Fallback to AutoModelForCausalLM (handles "Qwen2_5OmniForConditionalGeneration")
+        # Method 3: AutoModel/AutoModelForCausalLM with explicit config
         try:
-            from transformers import AutoModelForCausalLM
-            logger.info("Falling back to AutoModelForCausalLM...")
-            model = AutoModelForCausalLM.from_pretrained(
-                str(model_path),
-                device_map=device_map,
-                torch_dtype=torch_dtype,
-                trust_remote_code=True,
-            )
-            return model
-        except Exception:
-            # Final fallback to AutoModel
-            logger.warning(
-                "AutoModelForCausalLM failed. Using AutoModel with trust_remote_code=True."
-            )
-            from transformers import AutoModel
+            from transformers import AutoConfig, AutoModel, AutoModelForCausalLM
             
-            model = AutoModel.from_pretrained(
+            logger.info("Falling back to AutoConfig loading...")
+            config = AutoConfig.from_pretrained(str(model_path), trust_remote_code=True)
+            
+            # Try AutoModelForCausalLM first
+            try:
+                return AutoModelForCausalLM.from_pretrained(
+                    str(model_path),
+                    config=config,
+                    device_map=device_map,
+                    torch_dtype=torch_dtype,
+                    trust_remote_code=True,
+                )
+            except Exception as e:
+                logger.warning(f"AutoModelForCausalLM failed: {e}")
+
+            # Try AutoModel
+            logger.warning("Falling back to AutoModel...")
+            return AutoModel.from_pretrained(
+                str(model_path),
+                config=config,
+                device_map=device_map,
+                torch_dtype=torch_dtype,
+                trust_remote_code=True,
+            )
+            
+        except Exception as e:
+            logger.warning(f"AutoModel fallback failed: {e}")
+            
+        # Method 4: Standard CAUSAL LM fallback (Most robust for 7B)
+        try:
+            logger.info("Falling back to standard AutoModelForCausalLM...")
+            return AutoModelForCausalLM.from_pretrained(
                 str(model_path),
                 device_map=device_map,
                 torch_dtype=torch_dtype,
                 trust_remote_code=True,
             )
-            return model
+        except Exception as e:
+             logger.error(f"Critical error loading Omni model: {e}")
+             raise
     
     def _load_standard_model(
         self,

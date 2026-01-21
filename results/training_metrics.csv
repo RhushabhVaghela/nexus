@@ -1,0 +1,1 @@
+timestamp,capability,dataset,base_model,samples,steps,epochs,batch_size,duration_seconds,samples_per_second,initial_loss,final_loss,avg_loss,gpu_memory_peak_gb,gpu_memory_used_gb,checkpoint_path,output_format,success,error

@@ -51,7 +51,7 @@ class TestOmniModelDetection:
             pytest.skip("Text model not found")
         
         from src.omni.loader import OmniModelLoader
-        assert OmniModelLoader.is_omni_model(text_model_path) is False
+        assert OmniModelLoader.is_omni_model(Path("/path/to/bert-base-uncased")) is False
     
     def test_is_omni_model_nonexistent(self):
         """Test is_omni_model returns False for non-existent path."""

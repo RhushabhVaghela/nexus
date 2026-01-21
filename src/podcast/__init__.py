@@ -1,4 +1,3 @@
-from .generator import PodcastGenerator
-from .player import PodcastPlayer
+from .generator import generate_podcast_script, PodcastScript
 
-__all__ = ["PodcastGenerator", "PodcastPlayer"]
+__all__ = ["generate_podcast_script", "PodcastScript"]

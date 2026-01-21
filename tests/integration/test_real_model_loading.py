@@ -101,10 +101,10 @@ class TestRealInference:
     
     @pytest.mark.real_model
     @pytest.mark.slow
-    def test_simple_forward_pass(self, real_model_and_tokenizer, device):
+    def test_simple_forward_pass(self, real_text_model, real_text_tokenizer, device):
         """Test a simple forward pass."""
-        model = real_model_and_tokenizer["model"]
-        tokenizer = real_model_and_tokenizer["tokenizer"]
+        model = real_text_model
+        tokenizer = real_text_tokenizer
         
         text = "Hello"
         inputs = tokenizer(text, return_tensors="pt")
@@ -121,10 +121,10 @@ class TestRealInference:
     
     @pytest.mark.real_model
     @pytest.mark.slow
-    def test_small_generation(self, real_model_and_tokenizer, device):
+    def test_small_generation(self, real_text_model, real_text_tokenizer, device):
         """Test generating a few tokens."""
-        model = real_model_and_tokenizer["model"]
-        tokenizer = real_model_and_tokenizer["tokenizer"]
+        model = real_text_model
+        tokenizer = real_text_tokenizer
         
         prompt = "The capital of France is"
         inputs = tokenizer(prompt, return_tensors="pt")
@@ -147,10 +147,10 @@ class TestRealInference:
     
     @pytest.mark.real_model
     @pytest.mark.slow
-    def test_math_inference(self, real_model_and_tokenizer, device):
+    def test_math_inference(self, real_text_model, real_text_tokenizer, device):
         """Test math reasoning capability."""
-        model = real_model_and_tokenizer["model"]
-        tokenizer = real_model_and_tokenizer["tokenizer"]
+        model = real_text_model
+        tokenizer = real_text_tokenizer
         
         prompt = "What is 2 + 2? The answer is"
         inputs = tokenizer(prompt, return_tensors="pt")

@@ -19,7 +19,7 @@ import logging
 import argparse
 from pathlib import Path
 from typing import Optional, Dict, Any
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 
 import torch
 
@@ -246,17 +246,34 @@ class OmniTrainingStage(BaseStage):
         self.tokenizer.save_pretrained(str(output_path))
         
         duration = time.time() - start_time
-        avg_loss = sum(losses) / len(losses) if losses else 0
+        avg_loss = sum(losses) / len(losses) if losses else 0.0
+        final_loss = losses[-1] if losses else 0.0
+        
+        # Log metrics to CSV
+        from src.metrics_tracker import MetricsTracker, TrainingMetrics
+        tracker = MetricsTracker()
+        
+        metrics = TrainingMetrics(
+            capability="omni",
+            dataset=data_path,
+            base_model=self.config.base_model,
+            samples=len(dataset),
+            steps=global_step,
+            epochs=self.config.epochs, # Note: logic above doesn't explicitly loop epochs but iterates dataset once, implying 1 epoch or partial. Assuming 1 for now or config.
+            duration_seconds=round(duration, 2),
+            samples_per_second=len(dataset)/duration if duration > 0 else 0,
+            initial_loss=losses[0] if losses else 0.0,
+            final_loss=final_loss,
+            avg_loss=avg_loss,
+            checkpoint_path=str(output_path),
+            success=True
+        )
+        tracker.log_training(metrics)
         
         results = {
             "stage": "omni",
             "success": True,
-            "steps": global_step,
-            "samples": len(dataset),
-            "duration_s": duration,
-            "avg_loss": avg_loss,
-            "final_loss": losses[-1] if losses else 0,
-            "checkpoint_path": str(output_path),
+            "metrics": asdict(metrics)
         }
         
         logger.info(f"Training complete: {global_step} steps in {duration:.1f}s")
@@ -272,12 +289,23 @@ def main():
     parser.add_argument("--output-dir", default="/mnt/e/data/output/trained", help="Output directory")
     parser.add_argument("--max-samples", type=int, default=1000, help="Max training samples")
     parser.add_argument("--learning-rate", type=float, default=1e-6, help="Learning rate")
+    parser.add_argument("--quick-validation", action="store_true", help="Enable quick validation mode (tiny batch, aggressive LR)")
     args = parser.parse_args()
+    
+    # Apply quick validation overrides
+    if args.quick_validation:
+        print("⚡ QUICK VALIDATION MODE ENABLED")
+        args.max_samples = 10  # Very small sample
+        args.learning_rate = 1e-5  # High LR for quick signal
+        # Note: batch size is hardcoded to 1 in TrainingMetrics default, 
+        # and gradient accumulation handles the effective batch size.
     
     config = OmniStageConfig(
         base_model=args.base_model,
         max_samples=args.max_samples,
         learning_rate=args.learning_rate,
+        # Force these for quick validation if needed, essentially override defaults
+        max_seq_length=500 if args.quick_validation else 2048,
     )
     
     stage = OmniTrainingStage(config)

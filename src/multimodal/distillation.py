@@ -250,6 +250,141 @@ class MultimodalDataProcessor:
         vid_in = self.data_dir / "video"
         if vid_in.exists(): self.process_video(vid_in)
 
+class DistillationEngine:
+    """
+    Engine for knowledge distillation from teacher models (e.g. GPT-4o, proprietary APIs)
+    to student datasets.
+    """
+    def __init__(self, teacher_model: str, student_model: str, device_map: str = "auto"):
+        self.teacher_model_path = teacher_model
+        self.student_model_path = student_model
+        self.device_map = device_map
+        self.teacher = None
+        self.teacher_tokenizer = None
+        self.student = None
+        self.student_tokenizer = None
+        
+    def load_models(self):
+        """Load teacher and student models."""
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        import torch
+        
+        logger.info(f"Loading Teacher: {self.teacher_model_path}")
+        self.teacher = AutoModelForCausalLM.from_pretrained(
+            self.teacher_model_path, 
+            device_map=self.device_map,
+            trust_remote_code=True,
+            torch_dtype=torch.float16
+        )
+        self.teacher_tokenizer = AutoTokenizer.from_pretrained(
+            self.teacher_model_path, 
+            trust_remote_code=True
+        )
+
+        logger.info(f"Loading Student: {self.student_model_path}")
+        self.student = AutoModelForCausalLM.from_pretrained(
+            self.student_model_path, 
+            device_map=self.device_map,
+            trust_remote_code=True,
+            torch_dtype=torch.float16
+        )
+        self.student_tokenizer = AutoTokenizer.from_pretrained(
+            self.student_model_path, 
+            trust_remote_code=True
+        )
+        
+    def distill_image(self, image_path: str, prompt: str = "Analyze this image") -> Dict[str, Any]:
+        """
+        Distillation process for an image input.
+        If models are loaded, runs actual inference on Teacher (Omni).
+        Otherwise returns mock data (for testing).
+        """
+        import uuid
+        
+        teacher_response = "Mock teacher response"
+        confidence = 0.99
+        
+        if self.teacher:
+            try:
+                # Prepare input messages
+                messages = [
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "image", "image": image_path},
+                            {"type": "text", "text": prompt},
+                        ],
+                    }
+                ]
+                
+                # Use tokenizer's chat template if available
+                text = self.teacher_tokenizer.apply_chat_template(
+                    messages, 
+                    tokenize=False, 
+                    add_generation_prompt=True
+                )
+                
+                model_inputs = self.teacher_tokenizer(
+                    [text], 
+                    return_tensors="pt"
+                ).to(self.teacher.device)
+                
+                # Generate
+                generated_ids = self.teacher.generate(
+                    **model_inputs,
+                    max_new_tokens=512
+                )
+                
+                # Slice the output tokens
+                generated_ids = [
+                    output_ids[len(input_ids):] 
+                    for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
+                ]
+                
+                teacher_response = self.teacher_tokenizer.batch_decode(
+                    generated_ids, 
+                    skip_special_tokens=True
+                )[0]
+                
+                confidence = 1.0 # Placeholder for actual confidence extraction
+                
+            except Exception as e:
+                logger.error(f"Distillation inference failed: {e}")
+                teacher_response = f"Error during distillation: {str(e)}"
+                confidence = 0.0
+            
+        return {
+            "id": str(uuid.uuid4()),
+            "model": self.teacher_model_path,
+            "input": image_path,
+            "prompt": prompt,
+            "teacher_response": teacher_response,
+            "confidence": confidence
+        }
+
 if __name__ == "__main__":
-    processor = MultimodalDataProcessor("/mnt/e/data/multimodal")
+    import argparse
+    parser = argparse.ArgumentParser(description="Multimodal Data Processor & Distillation")
+    parser.add_argument("--data-dir", required=True, help="Path to raw data")
+    parser.add_argument("--distill", action="store_true", help="Run distillation")
+    parser.add_argument("--distill-teacher", default="/mnt/e/data/models/Qwen2.5-Omni", help="Teacher model path")
+    parser.add_argument("--distill-student", default="/mnt/e/data/models/Qwen2.5-0.5B", help="Student model path")
+    
+    args = parser.parse_args()
+    
+    processor = MultimodalDataProcessor(args.data_dir)
+    
+    if args.distill:
+        logger.info("Starting Distillation Pipeline...")
+        engine = DistillationEngine(
+            teacher_model=args.distill_teacher, 
+            student_model=args.distill_student
+        )
+        try:
+            engine.load_models()
+        except Exception as e:
+             logger.warning(f"Could not load models: {e}. Running in Mock Mode.")
+             
+        logger.info(f"Distillation Engine initialized with Teacher={args.distill_teacher}, Student={args.distill_student}")
+    
     processor.run()

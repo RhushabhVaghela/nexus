@@ -91,6 +91,61 @@ class ValidationMetrics:
     errors: str = ""
 
 
+@dataclass
+class BenchmarkMetrics:
+    """Metrics for benchmark run."""
+    timestamp: str = ""
+    name: str = ""
+    category: str = ""  # "generation", "accuracy", "perplexity"
+    model_name: str = ""
+    
+    # Timing
+    total_time_s: float = 0.0
+    tokens_per_second: float = 0.0
+    latency_ms: float = 0.0
+    first_token_time_s: float = 0.0
+    
+    # Counts
+    input_tokens: int = 0
+    output_tokens: int = 0
+    total_tokens: int = 0
+    
+    # Accuracy
+    token_accuracy: float = 0.0
+    perplexity: float = 0.0
+    loss: float = 0.0
+    
+    # Memory
+    gpu_peak_mb: float = 0.0
+    gpu_reserved_mb: float = 0.0
+    ram_mb: float = 0.0
+    
+    # Status
+    success: bool = True
+    error: str = ""
+
+
+@dataclass
+class TestDetailMetrics:
+    """Metrics for a single test execution."""
+    timestamp: str = ""
+    test_id: str = ""
+    name: str = ""
+    outcome: str = ""  # passed, failed, skipped
+    
+    # Timing
+    duration_s: float = 0.0
+    duration_ms: float = 0.0
+    
+    # Memory
+    gpu_memory_mb: float = 0.0
+    ram_mb: float = 0.0
+    
+    # Details
+    error: str = ""
+    file: str = ""
+
+
 class MetricsTracker:
     """Track and export metrics to CSV."""
     
@@ -99,21 +154,28 @@ class MetricsTracker:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
         self.training_file = self.output_dir / "training_metrics.csv"
+        self.training_file = self.output_dir / "training_metrics.csv"
+        self.training_file = self.output_dir / "training_metrics.csv"
         self.validation_file = self.output_dir / "validation_metrics.csv"
+        self.benchmark_file = self.output_dir / "benchmark_metrics.csv"
+        self.test_details_file = self.output_dir / "test_details.csv"
         
         self._init_csv_files()
     
     def _init_csv_files(self):
         """Initialize CSV files with headers if they don't exist."""
-        if not self.training_file.exists():
-            with open(self.training_file, 'w', newline='') as f:
-                writer = csv.DictWriter(f, fieldnames=list(TrainingMetrics.__annotations__.keys()))
-                writer.writeheader()
+        files_map = {
+            self.training_file: TrainingMetrics,
+            self.validation_file: ValidationMetrics,
+            self.benchmark_file: BenchmarkMetrics,
+            self.test_details_file: TestDetailMetrics,
+        }
         
-        if not self.validation_file.exists():
-            with open(self.validation_file, 'w', newline='') as f:
-                writer = csv.DictWriter(f, fieldnames=list(ValidationMetrics.__annotations__.keys()))
-                writer.writeheader()
+        for path, dataclass_type in files_map.items():
+            if not path.exists():
+                with open(path, 'w', newline='') as f:
+                    writer = csv.DictWriter(f, fieldnames=list(dataclass_type.__annotations__.keys()))
+                    writer.writeheader()
     
     def log_training(self, metrics: TrainingMetrics):
         """Append training metrics to CSV."""
@@ -134,6 +196,24 @@ class MetricsTracker:
             writer.writerow(asdict(metrics))
         
         logger.info(f"Logged validation metrics: {metrics.test_type}")
+
+    def log_benchmark(self, metrics: BenchmarkMetrics):
+        """Append benchmark metrics to CSV."""
+        metrics.timestamp = datetime.now().isoformat()
+        
+        with open(self.benchmark_file, 'a', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=list(BenchmarkMetrics.__annotations__.keys()))
+            writer.writerow(asdict(metrics))
+        
+        logger.info(f"Logged benchmark metrics: {metrics.name}")
+    
+    def log_test_detail(self, metrics: TestDetailMetrics):
+        """Append test detail metrics to CSV."""
+        metrics.timestamp = datetime.now().isoformat()
+        
+        with open(self.test_details_file, 'a', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=list(TestDetailMetrics.__annotations__.keys()))
+            writer.writerow(asdict(metrics))
     
     def get_gpu_metrics(self) -> Dict[str, float]:
         """Get current GPU metrics."""

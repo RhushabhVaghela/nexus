@@ -204,12 +204,10 @@ class OmniInference:
         if not hasattr(self.model, 'talker'):
             logger.warning("Model does not have talker component, returning text only")
             return {"text": self.generate(prompt, config), "audio": None}
-        
-        # TODO: Implement audio generation via talker
-        # This would involve:
-        # 1. Generate text tokens via thinker
-        # 2. Generate audio codes via talker
-        # 3. Decode audio codes to waveform
+            
+        # Audio generation logic is model-specific and currently experimental for Omni
+        # Returning text-only until Talker API is standardized
+        logger.warning("Audio generation requested but Talker API is not yet standardized. Returning text only.")
         
         text = self.generate(prompt, config)
         return {"text": text, "audio": None}

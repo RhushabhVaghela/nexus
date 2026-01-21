@@ -11,50 +11,63 @@ sys.path.append(str(Path(__file__).parents[2] / "src"))
 class TestMultimodalDownload(unittest.TestCase):
     
     def setUp(self):
-        # Create a mock for the datasets module
-        self.mock_datasets = MagicMock()
-        self.mock_datasets.load_dataset = MagicMock()
-        
-        # Patch sys.modules to include our mock
-        self.modules_patcher = patch.dict(sys.modules, {"datasets": self.mock_datasets})
-        self.modules_patcher.start()
-        
-        # Force reload of the module to ensure it picks up the mocked datasets
+        # Import the module to test
         import multimodal.download
-        importlib.reload(multimodal.download)
         self.module = multimodal.download
+        
+        # Store original objects
+        self.original_load_dataset = getattr(self.module, 'load_dataset', None)
+        self.original_Dataset = getattr(self.module, 'Dataset', None)
+        
+        # Create mocks
+        self.mock_load_dataset = MagicMock()
+        self.mock_Dataset = MagicMock()
+        
+        # Patch the module attributes
+        self.module.load_dataset = self.mock_load_dataset
+        self.module.Dataset = self.mock_Dataset
 
     def tearDown(self):
-        self.modules_patcher.stop()
+        # Restore original objects
+        if self.original_load_dataset:
+            self.module.load_dataset = self.original_load_dataset
+        if self.original_Dataset:
+            self.module.Dataset = self.original_Dataset
 
     def test_download_vision(self):
         mock_ds = MagicMock()
-        self.mock_datasets.load_dataset.return_value = mock_ds
+        self.mock_load_dataset.return_value = mock_ds
+        # Setup mock for Dataset.from_list().save_to_disk() chain
+        mock_static_ds = MagicMock()
+        self.mock_Dataset.from_list.return_value = mock_static_ds
         
         output_dir = "/tmp/test_output"
         self.module.download_vision_data(output_dir)
         
         # Check call arguments
-        self.mock_datasets.load_dataset.assert_any_call("HuggingFaceM4/WebSight", split="train[:10000]")
-        mock_ds.save_to_disk.assert_called()
+        self.mock_load_dataset.assert_any_call("HuggingFaceM4/WebSight", split="train", streaming=True)
+        # Verify iteration and saving
+        mock_ds.take.assert_called()
+        self.mock_Dataset.from_list.assert_called()
+        mock_static_ds.save_to_disk.assert_called()
 
     def test_download_audio(self):
         mock_ds = MagicMock()
-        self.mock_datasets.load_dataset.return_value = mock_ds
+        self.mock_load_dataset.return_value = mock_ds
         
         output_dir = "/tmp/test_output"
         self.module.download_audio_data(output_dir)
         
-        self.mock_datasets.load_dataset.assert_any_call("mozilla-foundation/common_voice_17_0", "en", split="train[:1000]", trust_remote_code=True)
+        self.mock_load_dataset.assert_any_call("mozilla-foundation/common_voice_17_0", "en", split="train", streaming=True, trust_remote_code=True)
 
     def test_download_video(self):
         mock_ds = MagicMock()
-        self.mock_datasets.load_dataset.return_value = mock_ds
+        self.mock_load_dataset.return_value = mock_ds
         
         output_dir = "/tmp/test_output"
         self.module.download_video_data(output_dir)
         
-        self.mock_datasets.load_dataset.assert_any_call("HuggingFaceM4/FineVideo", split="train[:100]")
+        self.mock_load_dataset.assert_any_call("HuggingFaceM4/FineVideo", split="train", streaming=True)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
