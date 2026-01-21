@@ -38,6 +38,52 @@ manus_model/
 
 ---
 
+## 📊 Performance Benchmarks
+
+Run comprehensive benchmarks:
+
+```bash
+python src/benchmarks/benchmark_runner.py \
+  --model /mnt/e/data/models/Qwen2.5-0.5B \
+  --output results/benchmark.csv
+```
+
+**Sample Results (Qwen2.5-0.5B):**
+
+| Metric | Value |
+|--------|-------|
+| Tokens/sec | 60.3 |
+| Latency | 773ms |
+| Perplexity | 11.06 |
+| GPU Peak | 997MB |
+
+---
+
+## 🔄 Omni Model Support
+
+### Custom Omni Loader
+
+```python
+from src.omni.loader import OmniModelLoader
+
+# For training (freezes talker)
+loader = OmniModelLoader()
+model, tokenizer = loader.load_for_training("/path/to/omni")
+
+# For inference
+model, tokenizer = loader.load_for_inference("/path/to/omni")
+```
+
+### Omni Training Stage
+
+```bash
+python -m src.stages.stage_omni \
+  --base-model /mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4 \
+  --data-dir /mnt/e/data/datasets/kaist-ai_CoT-Collection
+```
+
+---
+
 ## 🚀 Quick Start
 
 ### 1. Detect Your Model's Capabilities

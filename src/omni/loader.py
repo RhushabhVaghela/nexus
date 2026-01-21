@@ -267,12 +267,17 @@ class OmniModelLoader:
         """Load full model with thinker and talker."""
         from transformers import AutoModel
         
-        model = AutoModel.from_pretrained(
-            str(model_path),
-            device_map=device_map,
-            torch_dtype=torch_dtype,
-            trust_remote_code=trust_remote_code,
-        )
+        try:
+            model = AutoModel.from_pretrained(
+                str(model_path),
+                device_map=device_map,
+                torch_dtype=torch_dtype,
+                trust_remote_code=trust_remote_code,
+            )
+        except Exception as e:
+            logger.warning(f"AutoModel failed: {e}, trying direct import...")
+            # Fall back to direct import
+            model = self._load_with_direct_import(model_path, device_map, torch_dtype)
         
         return model
     
@@ -282,7 +287,7 @@ class OmniModelLoader:
         device_map: str,
         torch_dtype: torch.dtype,
     ):
-        """Load model using direct import from transformers."""
+        """Load model using direct import or AutoModelForCausalLM fallback."""
         try:
             # Try specific Omni model class first
             from transformers import Qwen2_5OmniModel
@@ -295,10 +300,23 @@ class OmniModelLoader:
             )
             return model
         except ImportError:
-            # Fallback to AutoModel with trust_remote_code
+            pass
+
+        # Fallback to AutoModelForCausalLM (handles "Qwen2_5OmniForConditionalGeneration")
+        try:
+            from transformers import AutoModelForCausalLM
+            logger.info("Falling back to AutoModelForCausalLM...")
+            model = AutoModelForCausalLM.from_pretrained(
+                str(model_path),
+                device_map=device_map,
+                torch_dtype=torch_dtype,
+                trust_remote_code=True,
+            )
+            return model
+        except Exception:
+            # Final fallback to AutoModel
             logger.warning(
-                "Qwen2_5OmniModel not found in transformers. "
-                "Using AutoModel with trust_remote_code=True."
+                "AutoModelForCausalLM failed. Using AutoModel with trust_remote_code=True."
             )
             from transformers import AutoModel
             
