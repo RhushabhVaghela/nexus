@@ -90,20 +90,33 @@ class OmniDataset(torch.utils.data.IterableDataset):
       - XLAM/Tool (query/answers)
       - Native (messages)
     """
-    def __init__(self, data_path: str, split: str = "train", samples_per_dataset: int = 0):
+    def __init__(self, data_path: str, split: str = "train", samples_per_dataset: int = 0, balanced: bool = True):
         self.split = split
         self.limit = samples_per_dataset
         self.base_path = Path(data_path)
+        self.balanced = balanced
         self.dataset_counts = {} # Tracks count per dataset identifier
         
         if not self.base_path.exists():
             logger.error(f"❌ Data path not found: {self.base_path}")
             
-        # Pre-scan basic directories only (lightweight)
-        self.dataset_dirs = [d for d in self.base_path.iterdir() if d.is_dir()] if self.base_path.is_dir() else [self.base_path]
-        if not self.dataset_dirs: self.dataset_dirs = [self.base_path]
+        # 1. Discover Datasets (recursive discovery)
+        from src.metrics_tracker import discover_datasets
+        discovered = discover_datasets(str(self.base_path))
         
-        logger.info(f"🌊 Initialized Streamable Dataset ({split}). Ready to stream from {len(self.dataset_dirs)} sources.")
+        # Flatten discovery into a category map
+        self.category_map = discovered # {category: [paths]}
+        self.dataset_dirs = []
+        for paths in self.category_map.values():
+            self.dataset_dirs.extend([Path(p) for p in paths])
+            
+        if not self.dataset_dirs:
+            # Fallback to direct path
+            self.dataset_dirs = [self.base_path]
+        
+        logger.info(f"🌊 Initialized Streamable Dataset ({split}). Discovered {len(self.dataset_dirs)} sources across {len(self.category_map)} categories.")
+        if balanced:
+            logger.info("⚖️ Balanced Mode: Interleaving samples between capability categories.")
 
     def _get_files_for_split(self):
         """Generator to yield relevant files for this split."""
@@ -173,25 +186,92 @@ class OmniDataset(torch.utils.data.IterableDataset):
 
 
     def __iter__(self):
-        worker_info = torch.utils.data.get_worker_info()
+        """Streaming iterator over data."""
+        if self.balanced and len(self.category_map) > 1:
+            yield from self._iter_balanced()
+        else:
+            yield from self._iter_sequential()
+
+    def _iter_sequential(self):
+        """Traditional sequential file-by-file streaming."""
         file_iterator = self._get_files_for_split()
         
         for file_path in file_iterator:
-            # Identify dataset name for limit tracking (e.g. "Salesforce_xlam...")
-            try:
-                # Find which dataset_dir this file belongs to
-                dataset_name = next((d.name for d in self.dataset_dirs if d in file_path.parents), file_path.parent.name)
-            except:
-                dataset_name = file_path.parent.name
+            yield from self._parse_file(file_path)
+
+    def _iter_balanced(self):
+        """Interleaved streaming to balance between categories."""
+        # Setup iterators for each category
+        iterators = {}
+        for cat, paths in self.category_map.items():
+            # Get files for this category only
+            cat_dirs = [Path(p) for p in paths]
             
-            # Check Global Dataset Limit
-            current_count = self.dataset_counts.get(dataset_name, 0)
-            if self.limit > 0 and current_count >= self.limit:
-                continue
+            def cat_file_gen(dirs):
+                orig_dirs = self.dataset_dirs
+                self.dataset_dirs = dirs
+                files = list(self._get_files_for_split())
+                random.shuffle(files)
+                self.dataset_dirs = orig_dirs
+                for f in files:
+                    yield from self._parse_file(f)
+            
+            iterators[cat] = cat_file_gen(cat_dirs)
+        
+        if not iterators:
+            return
+
+        while iterators:
+            cats = list(iterators.keys())
+            for cat in cats:
+                try:
+                    sample = next(iterators[cat])
+                    yield sample
+                except StopIteration:
+                    del iterators[cat]
+
+    def _parse_file(self, file_path: Path):
+        """Parse a single data file and yield samples with limit tracking."""
+        try:
+            # Identify dataset name for limit tracking
+            dataset_name = next((d.name for d in self.dataset_dirs if d in file_path.parents), file_path.parent.name)
+        except:
+            dataset_name = file_path.parent.name
+            
+        # Check Global Dataset Limit
+        if self.limit > 0 and self.dataset_counts.get(dataset_name, 0) >= self.limit:
+            return
+            
+        try:
+            if file_path.suffix == ".jsonl":
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        if not line.strip(): continue
+                        try:
+                            sample = json.loads(line)
+                            if self._yield_sample(sample, dataset_name):
+                                yield self._process_sample(sample)
+                            else:
+                                break # Limit hit
+                        except json.JSONDecodeError: continue
+            elif file_path.suffix == ".json":
+                # Handle hybrid JSON/JSONL
+                is_jsonl = False
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                        if isinstance(data, list):
+                            for sample in data:
+                                if self._yield_sample(sample, dataset_name):
+                                    yield self._process_sample(sample)
+                                else:
+                                    break
+                except json.JSONDecodeError as e:
+                    if "Extra data" in str(e): is_jsonl = True
+                    else: logger.warning(f"Error reading {file_path}: {e}")
                 
-            try:
-                if file_path.suffix == ".jsonl":
-                    # Stream line-by-line
+                if is_jsonl:
+                    # Fallback to line-by-line for mislabeled JSONL
                     with open(file_path, 'r', encoding='utf-8') as f:
                         for line in f:
                             if not line.strip(): continue
@@ -199,43 +279,10 @@ class OmniDataset(torch.utils.data.IterableDataset):
                                 sample = json.loads(line)
                                 if self._yield_sample(sample, dataset_name):
                                     yield self._process_sample(sample)
-                                else:
-                                    break # Limit hit for this dataset
+                                else: break
                             except json.JSONDecodeError: continue
-                            
-                elif file_path.suffix == ".json":
-                    # Hybrid Strategy: Try valid JSON list first. If "Extra data", assume JSONL.
-                    # This handles "the-stack-smol" which names JSONL files as .json
-                    is_jsonl = False
-                    
-                    try:
-                        with open(file_path, 'r', encoding='utf-8') as f:
-                            data = json.load(f)
-                            if isinstance(data, list):
-                                for sample in data:
-                                    if self._yield_sample(sample, dataset_name):
-                                        yield self._process_sample(sample)
-                                    else:
-                                        break # Limit hit
-                    except json.JSONDecodeError as e:
-                        if "Extra data" in str(e):
-                            is_jsonl = True
-                        else:
-                            logger.warning(f"Error reading {file_path}: {e}")
-                            
-                    if is_jsonl:
-                         with open(file_path, 'r', encoding='utf-8') as f:
-                            for line in f:
-                                if not line.strip(): continue
-                                try:
-                                    sample = json.loads(line)
-                                    if self._yield_sample(sample, dataset_name):
-                                        yield self._process_sample(sample)
-                                    else:
-                                        break # Limit hit
-                                except json.JSONDecodeError: continue
-            except Exception as e:
-                logger.warning(f"Error reading {file_path}: {e}")
+        except Exception as e:
+            logger.warning(f"Error processing {file_path}: {e}")
 
     def _yield_sample(self, sample, dataset_name):
         """Returns True if sample should be yielded (updates count), False if limit reached."""

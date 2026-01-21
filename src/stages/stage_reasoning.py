@@ -58,29 +58,13 @@ class ReasoningStage(BaseStage):
             if self.tokenizer.pad_token is None:
                 self.tokenizer.pad_token = self.tokenizer.eos_token
             
-            self.logger.info("Loading reasoning datasets...")
+            self.logger.info("Loading reasoning datasets dynamic...")
+            self.train_dataset = self.load_dynamic_datasets()
             
-            datasets = []
-            
-            # NuminaMath-CoT
-            try:
-                ds = load_dataset(
-                    "AI-MO/NuminaMath-CoT",
-                    split="train",
-                    trust_remote_code=True,
-                )
-                if self.config.sample_size > 0:
-                    ds = ds.select(range(min(self.config.sample_size, len(ds))))
-                datasets.append(ds)
-                self.logger.info(f"Loaded NuminaMath-CoT: {len(ds)} samples")
-            except Exception as e:
-                self.logger.warning(f"Could not load NuminaMath: {e}")
-            
-            if datasets:
-                self.train_dataset = concatenate_datasets(datasets)
+            if self.train_dataset:
                 self.logger.info(f"Total samples: {len(self.train_dataset)}")
             else:
-                self.train_dataset = None
+                self.logger.warning("No datasets loaded")
             
             self.optimizer = torch.optim.AdamW(
                 self.model.parameters(),

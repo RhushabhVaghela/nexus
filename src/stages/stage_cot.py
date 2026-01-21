@@ -37,37 +37,15 @@ class CoTStage(TextCapabilityStage):
             return True
         
         # Load CoT datasets
-        self.logger.info("Loading Chain-of-Thought datasets...")
+        self.logger.info("Loading Chain-of-Thought datasets dynamic...")
+        self.train_dataset = self.load_dynamic_datasets()
         
-        try:
-            datasets = []
+        if self.train_dataset:
+            self.logger.info(f"Total training samples: {len(self.train_dataset)}")
+        else:
+            self.logger.warning("No datasets loaded")
             
-            # Try loading OpenThoughts
-            try:
-                ds = load_dataset(
-                    "open-thoughts/OpenThoughts-114k",
-                    split="train",
-                    trust_remote_code=True,
-                )
-                if self.config.sample_size > 0:
-                    ds = ds.select(range(min(self.config.sample_size, len(ds))))
-                datasets.append(ds)
-                self.logger.info(f"Loaded OpenThoughts: {len(ds)} samples")
-            except Exception as e:
-                self.logger.warning(f"Could not load OpenThoughts: {e}")
-            
-            if datasets:
-                self.train_dataset = concatenate_datasets(datasets)
-                self.logger.info(f"Total training samples: {len(self.train_dataset)}")
-            else:
-                self.logger.warning("No datasets loaded, using empty dataset")
-                self.train_dataset = None
-            
-            return True
-            
-        except Exception as e:
-            self.logger.error(f"Failed to load datasets: {e}")
-            return False
+        return True
     
     def train(self) -> Dict[str, Any]:
         """Run CoT training."""

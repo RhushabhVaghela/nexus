@@ -53,27 +53,13 @@ class VideoUnderstandingStage(BaseStage):
                 self.tokenizer.pad_token = self.tokenizer.eos_token
             
             # Load video dataset
-            self.logger.info("Loading video caption datasets...")
+            self.logger.info("Loading video datasets dynamic...")
+            self.train_dataset = self.load_dynamic_datasets()
             
-            try:
-                ds = load_dataset(
-                    "HuggingFaceM4/webvid",
-                    split="train",
-                    streaming=True,
-                    trust_remote_code=True,
-                )
-                # Load limited samples from streaming
-                samples = []
-                limit = self.config.sample_size if self.config.sample_size > 0 else 1000
-                for i, sample in enumerate(ds):
-                    if i >= limit:
-                        break
-                    samples.append(sample)
-                self.train_dataset = samples
-                self.logger.info(f"Loaded webvid: {len(samples)} samples")
-            except Exception as e:
-                self.logger.warning(f"Could not load webvid: {e}")
-                self.train_dataset = None
+            if self.train_dataset:
+                self.logger.info(f"Loaded: {len(self.train_dataset)} samples")
+            else:
+                self.logger.warning("No datasets loaded")
             
             self.optimizer = torch.optim.AdamW(
                 self.model.parameters(),

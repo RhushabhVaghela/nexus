@@ -40,6 +40,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.data.universal_loader import load_dataset_universal
 from src.omni.loader import OmniModelLoader
+from src.metrics_tracker import ALL_DATASETS
 
 logging.basicConfig(
     level=logging.INFO,
@@ -93,27 +94,48 @@ LOCAL_DATASETS = {
 
 
 def load_dataset_for_capability(capability: str, sample_size: int = 2):
-    """Load dataset using universal loader."""
-    path = LOCAL_DATASETS.get(capability)
-    if path is None:
-        logger.info(f"{capability}: No dataset needed (runtime feature)")
+    """Load dataset using dynamic discovery or fallback mapping."""
+    # 1. Try dynamic discovery first
+    paths = ALL_DATASETS.get(capability, [])
+    
+    if not paths:
+        # 2. Try legacy mapping if not found dynamically
+        legacy_path = LOCAL_DATASETS.get(capability)
+        if legacy_path:
+            paths = [legacy_path]
+            
+    if not paths and capability != "streaming":
+        logger.warning(f"{capability}: No datasets found via discovery or legacy mapping")
         return None
-    
-    path = Path(path)
-    if not path.exists():
-        logger.warning(f"{capability}: Path not found: {path}")
+        
+    if capability == "streaming":
+        logger.info(f"{capability}: Runtime feature, no dataset needed")
         return None
+        
+    # Combine all found datasets for this capability
+    from datasets import concatenate_datasets
+    datasets = []
     
-    logger.info(f"{capability}: Loading from {path}")
-    
-    result = load_dataset_universal(path, sample_size=sample_size)
-    
-    if result.error:
-        logger.error(f"{capability}: Load error: {result.error}")
+    for path in paths:
+        p = Path(path)
+        if not p.exists():
+            continue
+            
+        logger.info(f"{capability}: Loading from {path}")
+        try:
+            result = load_dataset_universal(p, sample_size=sample_size)
+            if result.dataset:
+                datasets.append(result.dataset)
+        except Exception as e:
+            logger.error(f"{capability}: Failed to load {path}: {e}")
+            
+    if not datasets:
         return None
-    
-    logger.info(f"{capability}: Loaded {result.num_samples} samples ({result.format} format)")
-    return result.dataset
+        
+    if len(datasets) == 1:
+        return datasets[0]
+        
+    return concatenate_datasets(datasets)
 
 
 @dataclass

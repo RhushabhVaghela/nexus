@@ -84,21 +84,13 @@ class ToolsStage(BaseStage):
             self.tokenizer.add_special_tokens(special_tokens)
             self.model.resize_token_embeddings(len(self.tokenizer))
             
-            self.logger.info("Loading tool calling datasets...")
+            self.logger.info("Loading tool calling datasets dynamic...")
+            self.train_dataset = self.load_dynamic_datasets()
             
-            try:
-                ds = load_dataset(
-                    "Salesforce/xlam-function-calling-60k",
-                    split="train",
-                    trust_remote_code=True,
-                )
-                if self.config.sample_size > 0:
-                    ds = ds.select(range(min(self.config.sample_size, len(ds))))
-                self.train_dataset = ds
-                self.logger.info(f"Loaded: {len(ds)} samples")
-            except Exception as e:
-                self.logger.warning(f"Could not load dataset: {e}")
-                self.train_dataset = None
+            if self.train_dataset:
+                self.logger.info(f"Loaded: {len(self.train_dataset)} samples")
+            else:
+                self.logger.warning("No datasets loaded")
             
             self.optimizer = torch.optim.AdamW(
                 self.model.parameters(),

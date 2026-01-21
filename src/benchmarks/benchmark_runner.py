@@ -200,33 +200,72 @@ class BenchmarkRunner:
             from src.data.universal_loader import load_dataset_universal
             
             # Iterate through ALL categories and ALL paths
-            for category, paths in ALL_DATASETS.items():
+            # We shuffle categories to get a good mix
+            import random
+            categories = list(ALL_DATASETS.keys())
+            random.shuffle(categories)
+            
+            for category in categories:
+                paths = ALL_DATASETS[category]
                 for path in paths:
                     if not Path(path).exists():
-                         print(f"Skipping missing dataset: {path}")
                          continue
                          
                     try:
-                        res = load_dataset_universal(path, sample_size=1) # Take 1 sample from each
+                        # Take 1 sample from each to avoid overwhelming
+                        res = load_dataset_universal(path, sample_size=1)
                         if res.dataset:
-                             prompts.append(str(res.dataset[0]))
+                             sample = res.dataset[0]
+                             
+                             # Handle standard 'messages' format vs raw 'text'
+                             if isinstance(sample, dict):
+                                 if "messages" in sample:
+                                     # Get first user message content
+                                     for msg in sample["messages"]:
+                                         if msg.get("role") == "user":
+                                             prompts.append(msg.get("content", ""))
+                                             break
+                                 elif "text" in sample:
+                                     prompts.append(sample["text"])
+                                 elif "instruction" in sample:
+                                     prompts.append(sample["instruction"])
+                                 elif "query" in sample:
+                                     prompts.append(sample["query"])
+                                 else:
+                                     # Fallback: first value that is a string
+                                     for v in sample.values():
+                                         if isinstance(v, str) and len(v) > 5:
+                                             prompts.append(v)
+                                             break
+                             elif isinstance(sample, str):
+                                 prompts.append(sample)
+                                 
+                        if len(prompts) >= 10: # limit to 10 real samples
+                            break
                     except Exception as e:
                         print(f"Failed to sample {path}: {e}")
+                
+                if len(prompts) >= 10:
+                    break
                         
         except Exception as e:
             print(f"Warning: Could not load real datasets: {e}")
         
-        # Fallback prompts if absolutely nothing loaded
-        if not prompts:
-            prompts = [
+        # Filter empty and duplicates
+        prompts = list(set([p for p in prompts if p and len(p) > 2]))
+        
+        # Fallback prompts if absolutely nothing loaded or too few
+        if len(prompts) < 3:
+            fallbacks = [
                 "Explain quantum computing in simple terms.",
                 "Write a poem about a robot learning to love.",
                 "What are the main differences between Python and C++?",
                 "Solve this math problem: If x + 2 = 10, what is x?",
                 "Translate 'Hello world' to French, Spanish, and German.",
             ]
+            prompts.extend(fallbacks)
             
-        return prompts # Return ALL collected prompts (no limit)
+        return prompts[:15] # Return a manageable set
 
     def run_all(self):
         """Run all benchmarks."""

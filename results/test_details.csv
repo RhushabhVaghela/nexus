@@ -1185,3 +1185,5 @@ E   TypeError: JointStreamingOrchestrator.__init__() missing 3 required position
 2026-01-21T07:30:43.634383,tests/unit_streaming/test_streaming.py::TestStreamingComponents::test_podcast_generator,test_podcast_generator,passed,0.058598,58.598,957.98,3926.97,,tests/unit_streaming/test_streaming.py
 2026-01-21T07:30:43.767378,tests/unit_streaming/test_streaming.py::TestStreamingComponents::test_tts_init,test_tts_init,passed,0.122675,122.675,957.98,3926.97,,tests/unit_streaming/test_streaming.py
 2026-01-21T07:30:43.889503,tests/unit_streaming/test_streaming.py::TestStreamingComponents::test_vision_buffer,test_vision_buffer,passed,0.109498,109.498,957.98,3926.97,,tests/unit_streaming/test_streaming.py
+2026-01-21T09:21:33.964358,tests/unit/test_multitask_balancing.py::TestMultitaskBalancing::test_interleaved_sampling,test_interleaved_sampling,passed,0.003232,3.232,0.0,836.05,,tests/unit/test_multitask_balancing.py
+2026-01-21T09:21:33.979881,tests/unit/test_multitask_balancing.py::TestMultitaskBalancing::test_sequential_sampling,test_sequential_sampling,passed,0.002452,2.452,0.0,836.05,,tests/unit/test_multitask_balancing.py

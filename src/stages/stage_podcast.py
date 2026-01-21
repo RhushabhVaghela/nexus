@@ -152,28 +152,13 @@ class PodcastStage(BaseStage):
             self.model.resize_token_embeddings(len(self.tokenizer))
             
             # Load dialogue datasets
-            self.logger.info("Loading podcast/conversational datasets...")
+            self.logger.info("Loading podcast/conversational datasets dynamic...")
+            self.train_dataset = self.load_dynamic_datasets()
             
-            datasets = []
-            
-            try:
-                ds = load_dataset(
-                    "daily_dialog",
-                    split="train",
-                    trust_remote_code=True,
-                )
-                if self.config.sample_size > 0:
-                    ds = ds.select(range(min(self.config.sample_size, len(ds))))
-                datasets.append(ds)
-                self.logger.info(f"Loaded daily_dialog: {len(ds)} samples")
-            except Exception as e:
-                self.logger.warning(f"Could not load daily_dialog: {e}")
-            
-            if datasets:
-                self.train_dataset = concatenate_datasets(datasets)
+            if self.train_dataset:
                 self.logger.info(f"Total training samples: {len(self.train_dataset)}")
             else:
-                self.train_dataset = None
+                self.logger.warning("No datasets loaded")
             
             self.optimizer = torch.optim.AdamW(
                 self.model.parameters(),

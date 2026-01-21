@@ -68,10 +68,9 @@ class UniversalDataLoader:
         if self.path.is_file():
             suffix = self.path.suffix.lower()
             if suffix in self.SUPPORTED_FORMATS:
+                if suffix == ".json":
+                    return self._detect_json_format(self.path)
                 return self.SUPPORTED_FORMATS[suffix]
-            # Check content for JSON vs JSONL
-            if suffix == ".json":
-                return self._detect_json_format()
             return "unknown"
         
         # Directory - check contents
@@ -79,20 +78,24 @@ class UniversalDataLoader:
             # Check for HF dataset format
             if (self.path / "dataset_info.json").exists():
                 return "huggingface"
-            if list(self.path.glob("*.arrow")):
+            if list(self.path.glob("**/*.arrow")):
                 return "arrow"
             # Check for data files
-            for ext in [".parquet", ".json", ".jsonl", ".csv"]:
+            # Priority: parquet > jsonl > json > csv > text
+            for ext in [".parquet", ".jsonl", ".json", ".csv", ".txt"]:
                 files = list(self.path.glob(f"**/*{ext}"))
                 if files:
+                    if ext == ".json":
+                        # Check first JSON file to see if it's array or line-delimited
+                        return self._detect_json_format(files[0])
                     return self.SUPPORTED_FORMATS.get(ext, "unknown")
         
         return "unknown"
     
-    def _detect_json_format(self) -> str:
+    def _detect_json_format(self, file_path: Path) -> str:
         """Detect if JSON file is array or line-delimited."""
         try:
-            with open(self.path, 'r', encoding='utf-8') as f:
+            with open(file_path, 'r', encoding='utf-8') as f:
                 first_char = f.read(1).strip()
                 if first_char == '[':
                     return "json_array"
@@ -193,13 +196,22 @@ class UniversalDataLoader:
         from datasets import Dataset
         import pyarrow as pa
         
-        arrow_files = list(self.path.glob("*.arrow")) if self.path.is_dir() else [self.path]
+        arrow_files = self._get_all_files([".arrow"])
         
         tables = []
-        for f in arrow_files[:1]:  # Load first file
-            with open(f, 'rb') as fp:
-                reader = pa.ipc.open_file(fp)
-                tables.append(reader.read_all())
+        for f in arrow_files:
+            try:
+                with open(f, 'rb') as fp:
+                    reader = pa.ipc.open_file(fp)
+                    tables.append(reader.read_all())
+                
+                # Check if we have enough samples to stop loading more files
+                if sample_size:
+                    current_total = sum(len(t) for t in tables)
+                    if current_total >= sample_size:
+                        break
+            except Exception as e:
+                logger.warning(f"Failed to load arrow file {f}: {e}")
         
         if tables:
             table = pa.concat_tables(tables) if len(tables) > 1 else tables[0]
@@ -222,16 +234,29 @@ class UniversalDataLoader:
         """Load JSON array format."""
         from datasets import Dataset
         
-        with open(self.path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
+        json_files = self._get_all_files([".json"])
+        data = []
         
-        if isinstance(data, dict):
-            # Convert dict to list
-            data = list(data.values())
+        for file_path in json_files:
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    file_data = json.load(f)
+                
+                if isinstance(file_data, dict):
+                    file_data = list(file_data.values())
+                
+                if isinstance(file_data, list):
+                    data.extend(file_data)
+                
+                if sample_size and len(data) >= sample_size:
+                    data = data[:sample_size]
+                    break
+            except Exception as e:
+                logger.warning(f"Error loading {file_path}: {e}")
         
-        if sample_size:
-            data = data[:sample_size]
-        
+        if not data:
+            raise ValueError("No JSON data found")
+            
         ds = Dataset.from_list(data)
         
         return LoadResult(
@@ -244,44 +269,32 @@ class UniversalDataLoader:
     
     def _load_json_dict(self, sample_size: Optional[int]) -> LoadResult:
         """Load JSON dict format (key: sample)."""
-        from datasets import Dataset
-        
-        with open(self.path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        
-        if isinstance(data, dict):
-            data = list(data.values())
-        
-        if sample_size:
-            data = data[:sample_size]
-        
-        ds = Dataset.from_list(data)
-        
-        return LoadResult(
-            dataset=ds,
-            format="json_dict",
-            num_samples=len(ds),
-            columns=ds.column_names,
-            source_path=str(self.path),
-        )
+        # Same as json_array for loading logic
+        return self._load_json_array(sample_size)
     
     def _load_jsonl(self, sample_size: Optional[int]) -> LoadResult:
         """Load JSONL (newline-delimited JSON) format."""
         from datasets import Dataset
         
         data = []
-        file_path = self.path if self.path.is_file() else self._find_first_file([".jsonl", ".json"])
+        jsonl_files = self._get_all_files([".jsonl", ".json"])
         
-        with open(file_path, 'r', encoding='utf-8') as f:
-            for i, line in enumerate(f):
-                if sample_size and i >= sample_size:
+        for file_path in jsonl_files:
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line:
+                            try:
+                                data.append(json.loads(line))
+                                if sample_size and len(data) >= sample_size:
+                                    break
+                            except json.JSONDecodeError:
+                                continue
+                if sample_size and len(data) >= sample_size:
                     break
-                line = line.strip()
-                if line:
-                    try:
-                        data.append(json.loads(line))
-                    except json.JSONDecodeError:
-                        continue
+            except Exception as e:
+                logger.warning(f"Error loading {file_path}: {e}")
         
         if not data:
             raise ValueError("No valid JSONL data found")
@@ -293,22 +306,19 @@ class UniversalDataLoader:
             format="jsonl",
             num_samples=len(ds),
             columns=ds.column_names,
-            source_path=str(file_path),
+            source_path=str(self.path),
         )
     
     def _load_parquet(self, sample_size: Optional[int]) -> LoadResult:
         """Load Parquet format."""
         from datasets import load_dataset
         
-        if self.path.is_dir():
-            parquet_files = list(self.path.glob("**/*.parquet"))
-            if not parquet_files:
-                raise ValueError("No parquet files found")
-            file_path = str(parquet_files[0])
-        else:
-            file_path = str(self.path)
+        parquet_files = [str(f) for f in self._get_all_files([".parquet"])]
+        if not parquet_files:
+            raise ValueError("No parquet files found")
         
-        ds = load_dataset("parquet", data_files=file_path, split="train")
+        # load_dataset can take a list of files
+        ds = load_dataset("parquet", data_files={"train": parquet_files}, split="train")
         
         if sample_size and len(ds) > sample_size:
             ds = ds.select(range(sample_size))
@@ -318,16 +328,18 @@ class UniversalDataLoader:
             format="parquet",
             num_samples=len(ds),
             columns=ds.column_names,
-            source_path=file_path,
+            source_path=str(self.path),
         )
     
     def _load_csv(self, sample_size: Optional[int]) -> LoadResult:
         """Load CSV format."""
         from datasets import load_dataset
         
-        file_path = self.path if self.path.is_file() else self._find_first_file([".csv"])
-        
-        ds = load_dataset("csv", data_files=str(file_path), split="train")
+        csv_files = [str(f) for f in self._get_all_files([".csv"])]
+        if not csv_files:
+            raise ValueError("No CSV files found")
+            
+        ds = load_dataset("csv", data_files={"train": csv_files}, split="train")
         
         if sample_size and len(ds) > sample_size:
             ds = ds.select(range(sample_size))
@@ -337,23 +349,32 @@ class UniversalDataLoader:
             format="csv",
             num_samples=len(ds),
             columns=ds.column_names,
-            source_path=str(file_path),
+            source_path=str(self.path),
         )
     
     def _load_text(self, sample_size: Optional[int]) -> LoadResult:
         """Load plain text format (one sample per line)."""
         from datasets import Dataset
         
-        file_path = self.path if self.path.is_file() else self._find_first_file([".txt"])
-        
+        text_files = self._get_all_files([".txt"])
         data = []
-        with open(file_path, 'r', encoding='utf-8') as f:
-            for i, line in enumerate(f):
-                if sample_size and i >= sample_size:
-                    break
-                if line.strip():
-                    data.append({"text": line.strip()})
         
+        for file_path in text_files:
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        if line.strip():
+                            data.append({"text": line.strip()})
+                            if sample_size and len(data) >= sample_size:
+                                break
+                if sample_size and len(data) >= sample_size:
+                    break
+            except Exception as e:
+                logger.warning(f"Error loading {file_path}: {e}")
+        
+        if not data:
+            raise ValueError("No text data found")
+            
         ds = Dataset.from_list(data)
         
         return LoadResult(
@@ -361,18 +382,31 @@ class UniversalDataLoader:
             format="text",
             num_samples=len(ds),
             columns=["text"],
-            source_path=str(file_path),
+            source_path=str(self.path),
         )
-    
+
+    def _get_all_files(self, extensions: List[str]) -> List[Path]:
+        """Get all files matching extensions in a directory (recursive) or self.path if it's a file."""
+        if self.path.is_file():
+            suffix = self.path.suffix.lower()
+            if suffix in extensions:
+                return [self.path]
+            return []
+        
+        all_files = []
+        for ext in extensions:
+            all_files.extend(list(self.path.glob(f"**/*{ext}")))
+            
+        # Optional: Sort files to ensure deterministic loading order
+        all_files.sort()
+        
+        return all_files
+
     def _find_first_file(self, extensions: List[str]) -> Path:
         """Find first file matching extensions."""
-        if self.path.is_file():
-            return self.path
-        
-        for ext in extensions:
-            files = list(self.path.glob(f"**/*{ext}"))
-            if files:
-                return files[0]
+        files = self._get_all_files(extensions)
+        if files:
+            return files[0]
         
         raise FileNotFoundError(f"No files with extensions {extensions} found in {self.path}")
     

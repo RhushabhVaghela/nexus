@@ -123,17 +123,20 @@ class OmniTrainingStage(BaseStage):
     
     def prepare_data(self, data_path: str) -> Any:
         """Prepare dataset for Omni training."""
+        logger.info(f"Preparing data for Omni stage...")
+        
+        if data_path == "dynamic" or not Path(data_path).exists():
+            self.logger.info("Using dynamic dataset discovery for Omni stage")
+            return self.load_dynamic_datasets()
+            
         from src.data.universal_loader import load_dataset_universal
-        
         logger.info(f"Loading data from {data_path}")
-        
         result = load_dataset_universal(data_path, sample_size=self.config.max_samples)
         
         if result.error:
             raise ValueError(f"Failed to load data: {result.error}")
         
         logger.info(f"Loaded {result.num_samples} samples ({result.format} format)")
-        
         return result.dataset
     
     def train_step(self, batch: Dict[str, torch.Tensor]) -> float:

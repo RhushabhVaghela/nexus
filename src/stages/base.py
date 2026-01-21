@@ -29,6 +29,8 @@ from src.training_controller import (
     check_pause_state,
     scan_and_extract_datasets,
 )
+from src.metrics_tracker import ALL_DATASETS
+from src.data.universal_loader import load_dataset_universal
 
 
 @dataclass
@@ -95,6 +97,40 @@ class BaseStage(ABC):
         
         return logger
     
+    def load_dynamic_datasets(self) -> Any:
+        """
+        Dynamically load datasets based on the capability name.
+        Looks up paths in ALL_DATASETS and combines them.
+        """
+        from datasets import concatenate_datasets
+        
+        paths = ALL_DATASETS.get(self.config.capability_name, [])
+        if not paths:
+            self.logger.warning(f"No dynamic datasets found for capability: {self.config.capability_name}")
+            return None
+            
+        self.logger.info(f"Loading {len(paths)} datasets for {self.config.capability_name}...")
+        
+        datasets = []
+        for path in paths:
+            if not Path(path).exists():
+                continue
+            try:
+                res = load_dataset_universal(path, sample_size=self.config.sample_size)
+                if res.dataset:
+                    datasets.append(res.dataset)
+                    self.logger.info(f"  ✓ Loaded {path} ({len(res.dataset)} samples)")
+            except Exception as e:
+                self.logger.warning(f"  ✗ Failed to load {path}: {e}")
+                
+        if not datasets:
+            return None
+            
+        if len(datasets) == 1:
+            return datasets[0]
+            
+        return concatenate_datasets(datasets)
+
     @abstractmethod
     def prepare(self) -> bool:
         """

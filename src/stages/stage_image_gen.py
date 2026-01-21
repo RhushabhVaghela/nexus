@@ -93,20 +93,14 @@ class ImageGenStage(BaseStage):
             
             self.logger.info(f"Projector initialized: {llm_dim} -> 2048 x 77")
             
-            # Load dataset
-            try:
-                ds = load_dataset(
-                    "lambdalabs/naruto-blip-captions",
-                    split="train",
-                    trust_remote_code=True,
-                )
-                if self.config.sample_size > 0:
-                    ds = ds.select(range(min(self.config.sample_size, len(ds))))
-                self.train_dataset = ds
-                self.logger.info(f"Loaded {len(ds)} image-caption pairs")
-            except Exception as e:
-                self.logger.warning(f"Could not load dataset: {e}")
-                self.train_dataset = None
+            # Load image-gen dataset
+            self.logger.info("Loading image-gen datasets dynamic...")
+            self.train_dataset = self.load_dynamic_datasets()
+            
+            if self.train_dataset:
+                self.logger.info(f"Loaded {len(self.train_dataset)} image-caption pairs")
+            else:
+                self.logger.warning("No datasets loaded")
             
             return True
             

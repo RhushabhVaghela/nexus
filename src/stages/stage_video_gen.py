@@ -89,27 +89,14 @@ class VideoGenStage(BaseStage):
             
             self.logger.info(f"Video projector initialized: {llm_dim} -> 1024 x 14 frames")
             
-            # Load video caption dataset
-            try:
-                ds = load_dataset(
-                    "HuggingFaceM4/webvid",
-                    split="train",
-                    streaming=True,
-                    trust_remote_code=True,
-                )
-                # Take limited samples for training
-                samples = []
-                for i, sample in enumerate(ds):
-                    if self.config.sample_size > 0 and i >= self.config.sample_size:
-                        break
-                    samples.append(sample)
-                    if i >= 1000:  # Cap at 1000 for memory
-                        break
-                self.train_dataset = samples
-                self.logger.info(f"Loaded {len(samples)} video captions")
-            except Exception as e:
-                self.logger.warning(f"Could not load webvid: {e}")
-                self.train_dataset = None
+            # Load video-gen dataset
+            self.logger.info("Loading video-gen datasets dynamic...")
+            self.train_dataset = self.load_dynamic_datasets()
+            
+            if self.train_dataset:
+                self.logger.info(f"Loaded {len(self.train_dataset)} video captions")
+            else:
+                self.logger.warning("No datasets loaded")
             
             return True
             

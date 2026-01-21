@@ -55,20 +55,14 @@ class TriStreamingStage(BaseStage):
             # Tri-streaming typically combines multiple data sources
             self.logger.info("Loading multimodal streaming datasets...")
             
-            # Try to load mixed multimodal data
-            try:
-                ds = load_dataset(
-                    "daily_dialog",
-                    split="train",
-                    trust_remote_code=True,
-                )
-                if self.config.sample_size > 0:
-                    ds = ds.select(range(min(self.config.sample_size, len(ds))))
-                self.train_dataset = ds
-                self.logger.info(f"Loaded dialog data: {len(ds)} samples")
-            except Exception as e:
-                self.logger.warning(f"Could not load dataset: {e}")
-                self.train_dataset = None
+            # Load Tri-streaming dataset
+            self.logger.info("Loading Tri-streaming datasets dynamic...")
+            self.train_dataset = self.load_dynamic_datasets()
+            
+            if self.train_dataset:
+                self.logger.info(f"Loaded: {len(self.train_dataset)} samples")
+            else:
+                self.logger.warning("No datasets loaded")
             
             self.optimizer = torch.optim.AdamW(
                 self.model.parameters(),

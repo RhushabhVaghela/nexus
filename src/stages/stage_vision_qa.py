@@ -52,35 +52,13 @@ class VisionQAStage(BaseStage):
                 self.tokenizer.pad_token = self.tokenizer.eos_token
             
             # Load VQA dataset
-            self.logger.info("Loading VQA datasets...")
+            self.logger.info("Loading VQA datasets dynamic...")
+            self.train_dataset = self.load_dynamic_datasets()
             
-            try:
-                ds = load_dataset(
-                    "HuggingFaceM4/VQAv2",
-                    split="train",
-                    trust_remote_code=True,
-                )
-                if self.config.sample_size > 0:
-                    ds = ds.select(range(min(self.config.sample_size, len(ds))))
-                self.train_dataset = ds
-                self.logger.info(f"Loaded VQAv2: {len(ds)} samples")
-            except Exception as e:
-                self.logger.warning(f"Could not load VQAv2: {e}")
-                # Fallback to simpler dataset
-                try:
-                    ds = load_dataset(
-                        "lambdalabs/naruto-blip-captions",
-                        split="train",
-                        trust_remote_code=True,
-                    )
-                    if self.config.sample_size > 0:
-                        ds = ds.select(range(min(self.config.sample_size, len(ds))))
-                    self.train_dataset = ds
-                    self.logger.info(f"Loaded naruto-blip: {len(ds)} samples")
-                except Exception as e2:
-                    self.logger.warning(f"Could not load fallback: {e2}")
-                    self.train_dataset = None
-            
+            if self.train_dataset:
+                self.logger.info(f"Loaded: {len(self.train_dataset)} samples")
+            else:
+                self.logger.warning("No datasets loaded")
             self.optimizer = torch.optim.AdamW(
                 self.model.parameters(),
                 lr=self.config.learning_rate,

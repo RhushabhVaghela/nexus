@@ -288,7 +288,80 @@ def run_with_progress(iterable, desc: str = "Processing", callback=None):
 
 # ============== ALL AVAILABLE DATASETS ==============
 
-ALL_DATASETS = {
+def discover_datasets(base_path: str = "/mnt/e/data/datasets") -> Dict[str, List[str]]:
+    """
+    Dynamically discover datasets by scanning a base directory.
+    Subdirectories are treated as dataset folders.
+    If a subdirectory contains files like 'MathVista', it gets tagged appropriately.
+    """
+    datasets = {
+        "cot": [], "reasoning": [], "thinking": [], "tools": [],
+        "vision-qa": [], "video-understanding": [], "image-generation": [],
+        "video-generation": [], "podcast": [], "streaming": []
+    }
+    
+    base = Path(base_path)
+    if not base.exists():
+        return datasets
+        
+    # Map keywords to categories
+    KEYWORD_MAP = {
+        "cot": "cot", "reasoning": "reasoning", "thought": "thinking", "thinking": "thinking",
+        "tool": "tools", "xlam": "tools", "hermes": "tools", "apigen": "tools",
+        "vision": "vision-qa", "math": "vision-qa", "mm": "vision-qa",
+        "video": "video-understanding", "msr-vtt": "video-understanding",
+        "image": "image-generation", "generation": "image-generation",
+        "vid-gen": "video-generation", "text2vid": "video-generation",
+        "podcast": "podcast", "dialog": "podcast",
+        "tri-streaming": "tri-streaming", "streaming": "streaming"
+    }
+    
+    try:
+        # Optimized recursive search using a single pass (os.walk)
+        data_extensions = {".json", ".jsonl", ".parquet", ".arrow"}
+        
+        for root, dirs, files in os.walk(base_path):
+            # Check for HF dataset
+            if "dataset_info.json" in files:
+                path_str = root
+                _categorize(path_str, datasets, KEYWORD_MAP)
+                continue # Skip subdirs of HF dataset
+                
+            # Check for data files
+            has_data = any(Path(f).suffix.lower() in data_extensions for f in files)
+            
+            if has_data:
+                _categorize(root, datasets, KEYWORD_MAP)
+                # Once we identify a folder as a dataset, we stop descending
+                # because UniversalDataLoader will handle its subfolders recursively.
+                # This prevents duplication if subfolders also contain data files.
+                dirs[:] = [] 
+                
+    except Exception as e:
+        logger.warning(f"Error during optimized dataset discovery: {e}")
+        
+    # Remove duplicates within categories
+    for cat in datasets:
+        datasets[cat] = list(set(datasets[cat]))
+        
+    return datasets
+
+def _categorize(path: str, datasets: Dict[str, List[str]], keyword_map: Dict[str, str]):
+    """Helper to categorize a path based on keywords."""
+    path_lower = path.lower()
+    matched = False
+    for kw, cat in keyword_map.items():
+        if kw in path_lower:
+            datasets[cat].append(path)
+            matched = True
+            break
+    
+    if not matched and ("gsm" in path_lower or "math" in path_lower):
+        datasets["reasoning"].append(path)
+
+
+# Default static list for fallback or explicit legacy support
+_STATIC_DATASETS = {
     "cot": [
         "/mnt/e/data/datasets/kaist-ai_CoT-Collection/data/CoT_collection_en.json",
         "/mnt/e/data/datasets/O1-OPEN_OpenO1-SFT-Pro",
@@ -331,6 +404,26 @@ ALL_DATASETS = {
         "/mnt/e/data/datasets/fullstack__stargate_s04e01_100topkdiverse_text2vid",
     ],
 }
+
+# Final ALL_DATASETS combines Static + Dynamically discovered
+def get_all_datasets() -> Dict[str, List[str]]:
+    """Combine static dataset list with dynamic discovery."""
+    dynamic = discover_datasets()
+    combined = _STATIC_DATASETS.copy()
+    
+    for cat, paths in dynamic.items():
+        if cat not in combined:
+            combined[cat] = []
+        # Add paths while avoiding duplicates
+        existing = set(combined[cat])
+        for p in paths:
+            if p not in existing:
+                combined[cat].append(p)
+                existing.add(p)
+                
+    return combined
+
+ALL_DATASETS = get_all_datasets()
 
 
 def print_summary_table(metrics_list: List[TrainingMetrics]):
