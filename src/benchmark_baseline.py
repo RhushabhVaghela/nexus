@@ -13,7 +13,7 @@ def run_benchmark():
     
     # 1. Load Model
     model = OmniMultimodalLM(
-        llm_name="/mnt/e/data/base-model/Qwen2.5-Omni-7B-GPTQ-Int4",
+        llm_name="/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4",
         device_map="auto"
     )
     model.eval()

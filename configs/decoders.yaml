@@ -1,0 +1,40 @@
+# Decoder Configuration
+# Paths to vision and video decoders for generation capabilities
+
+decoders:
+  vision_output:
+    default: "/mnt/e/data/decoders/vision-decoders/stabilityai_stable-diffusion-3-medium-diffusers"
+    type: "diffusion"
+    description: "Image generation decoder (Stable Diffusion 3)"
+    notes: "Requires LLM→Diffusion projector training"
+    vram_requirement: "8GB+"
+    
+  video_output:
+    default: "/mnt/e/data/decoders/video-decoders/stabilityai_stable-video-diffusion-img2vid-xt-1-1"
+    type: "diffusion"
+    description: "Video generation decoder (Stable Video Diffusion)"
+    notes: "Requires LLM→VideoGen projector training"
+    vram_requirement: "12GB+"
+
+  audio_output:
+    default: "/mnt/e/data/decoders/audio-decoders/parler-tts-large-v1"
+    type: "vocoder"
+    description: "Text-to-speech decoder"
+    notes: "For TTS output generation"
+    vram_requirement: "4GB+"
+
+# Generation pipeline configuration
+generation:
+  image:
+    resolution: [512, 512]
+    inference_steps: 30
+    guidance_scale: 7.5
+    
+  video:
+    resolution: [576, 1024]
+    num_frames: 25
+    fps: 7
+    
+  audio:
+    sample_rate: 24000
+    max_duration_s: 30

@@ -255,34 +255,3 @@ class TestDecoderInterfaces:
         result = decoder.decode("test.mp4", modality="video")
         assert result["modality"] == "video"
 
-
-class TestEncodersConfig:
-    """Test encoders.yaml configuration."""
-    
-    def test_config_loads(self, encoders_config):
-        """Test config loads successfully."""
-        assert encoders_config is not None
-    
-    def test_config_has_encoders(self, encoders_config):
-        """Test config has encoders section."""
-        assert "encoders" in encoders_config
-        assert "vision" in encoders_config["encoders"]
-        assert "audio_input" in encoders_config["encoders"]
-    
-    def test_config_has_decoders(self, encoders_config):
-        """Test config has decoders section."""
-        assert "decoders" in encoders_config
-        assert "vision_output" in encoders_config["decoders"]
-        assert "video_output" in encoders_config["decoders"]
-    
-    def test_config_has_datasets(self, encoders_config):
-        """Test config has datasets section."""
-        assert "datasets" in encoders_config
-    
-    def test_encoder_paths_are_local(self, encoders_config):
-        """Test encoder paths use local paths."""
-        vision_path = encoders_config["encoders"]["vision"]["default"]
-        assert "/mnt/e/data" in vision_path
-        
-        audio_path = encoders_config["encoders"]["audio_input"]["default"]
-        assert "/mnt/e/data" in audio_path

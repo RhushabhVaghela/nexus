@@ -1,72 +1,30 @@
 # Encoder Configuration
-# Paths to vision and audio encoders
+# Paths to vision and audio encoders for input processing
 
 encoders:
   vision:
-    default: "/mnt/e/data/encoders/vision encoders/siglip2-so400m-patch16-512"
+    default: "/mnt/e/data/encoders/vision-encoders/siglip2-so400m-patch16-512"
     alternatives:
       - "google/siglip-so400m-patch14-384"  # HF Hub fallback
       - "google/siglip-so400m-patch16-512"
     input_size: 512
+    description: "Vision encoder for image/video understanding"
     
   audio_input:
-    default: "/mnt/e/data/encoders/audio encoders/whisper-large-v3-turbo"
+    default: "/mnt/e/data/encoders/audio-encoders/whisper-large-v3-turbo"
     alternatives:
       - "openai/whisper-large-v3-turbo"  # HF Hub fallback
       - "openai/whisper-large-v3"
+    description: "Audio encoder for speech/sound understanding"
       
   audio_output:
-    default: "/mnt/e/data/encoders/audio encoders/parakeet-tdt-0.6b-v3"
+    default: "/mnt/e/data/encoders/audio-encoders/parakeet-tdt-0.6b-v3"
     alternatives:
       - "nvidia/parakeet-tdt-0.6b"  # HF Hub fallback
+    description: "TTS encoder for audio generation"
 
-# Decoder Configuration (for generation capabilities)
-decoders:
-  vision_output:
-    default: "/mnt/e/data/decoders/vision-decoders/stabilityai_stable-diffusion-3-medium-diffusers"
-    type: "diffusion"
-    notes: "Requires LLM→Diffusion projector training"
-    
-  video_output:
-    default: "/mnt/e/data/decoders/vision-decoders/stabilityai_stable-video-diffusion-img2vid-xt-1-1"
-    type: "diffusion"
-    notes: "Requires LLM→VideoGen projector training"
-      
 # Base model configuration
 base_models:
-  default: "/mnt/e/data/base-model/Qwen2.5-Omni-7B-GPTQ-Int4"
-  
-# Output directories
-output:
-  checkpoints: "/mnt/e/data/models/checkpoints"
-  final: "/mnt/e/data/models/final"
-
-# Dataset mappings (from dataset_usecase_catalog.md)
-datasets:
-  podcast:
-    - "olewave_OleSpeech-IV-2025-EN-AR-100"
-    - "blitt_SPoRC"
-    - "spawn99_CornellMovieDialogCorpus"
-    - "IVLLab_MultiDialog"
-  tri_streaming:
-    - "E-MM1-100M"
-    - "CASIA-IVA-Lab_valor-32k-annotations"
-    - "OpenGVLab_ShareGPT-4o"
-    - "VLM2Vec_MSR-VTT"
-  reasoning:
-    high: ["kaist-ai_CoT-Collection", "O1-OPEN_OpenO1-SFT-Pro", "O1-OPEN_OpenO1-SFT-Ultra"]
-    medium: ["dipta007_APIGen-MT-5k-with-think", "openai_gsm8k"]
-    low: ["tatsu-lab_alpaca"]
-  tool_calling:
-    - "gorilla-llm_Berkeley-Function-Calling-Leaderboard"
-    - "gorilla-llm_gorilla-openfunctions-v2"
-    - "Salesforce_xlam-function-calling-60k"
-    - "NousResearch_hermes-function-calling-v1"
-  image_generation:
-    - "LucasFang_JourneyDB-GoT"
-    - "LucasFang_Laion-Aesthetics-High-Resolution-GoT"
-    - "LucasFang_OmniEdit-GoT"
-  video_generation:
-    - "XiangpengYang_VideoCoF-50k"
-    - "VLM2Vec_MSR-VTT"
-    - "qingy2024_VaTeX"
+  text_only: "/mnt/e/data/models/Qwen2.5-0.5B"
+  omni: "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
+  default: "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"

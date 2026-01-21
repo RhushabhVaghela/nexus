@@ -9,7 +9,7 @@ from pathlib import Path
 # Suppress warnings
 warnings.filterwarnings("ignore")
 
-MODEL_PATH = "/mnt/e/data/base-model/Qwen2.5-Omni-7B-GPTQ-Int4"
+MODEL_PATH = "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
 AUDIO_PATH = "/mnt/e/data/datasets/Mozilla_Common-Voice/cv-invalid/cv-invalid/sample-015622.mp3"
 IMAGE_PATH = "/home/rhushabh/.gemini/antigravity/brain/f4c98929-5553-4cda-ae47-4a9aaae1d01d/uploaded_image_0_1768862917726.png"
 

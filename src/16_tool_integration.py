@@ -127,7 +127,7 @@ def main():
         
         # 2. Init Model
         model = OmniMultimodalLM(
-            llm_name="/mnt/e/data/base-model/Qwen2.5-Omni-7B-GPTQ-Int4",
+            llm_name="/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4",
             vision_name="/mnt/e/data/encoders/vision encoders/siglip2-so400m-patch16-512",
             audio_name="/mnt/e/data/encoders/audio encoders/whisper-large-v3-turbo",
             inject_vision=True,

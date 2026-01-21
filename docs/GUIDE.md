@@ -43,7 +43,7 @@ manus_model/
 ### 1. Detect Your Model's Capabilities
 
 ```bash
-python src/detect_modalities.py /mnt/e/data/base-model/Qwen2.5-Omni-7B-GPTQ-Int4
+python src/detect_modalities.py /mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4
 ```
 
 ### 2. View Available Training Capabilities

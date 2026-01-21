@@ -16,7 +16,7 @@ def audit_capabilities():
     print("🕵️ CAPABILITY AUDIT: Checking Agentic IQ...")
     print("-------------------------------------------")
     
-    model_path = "/mnt/e/data/base-model/Qwen2.5-Omni-7B-GPTQ-Int4"
+    model_path = "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
     
     # 1. Load Model
     print(f"📦 Loading Model from {model_path}...")

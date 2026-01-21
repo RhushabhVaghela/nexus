@@ -258,7 +258,7 @@ def get_omni_model(model_path: str):
         _MODEL_CACHE = OmniMultimodalLM(model_path)
     return _MODEL_CACHE, _TOKENIZER_CACHE
 
-def call_omni_llm(messages: List[Dict[str, str]], model_path: str = "/mnt/e/data/base-model/Qwen2.5-Omni-7B-GPTQ-Int4") -> str:
+def call_omni_llm(messages: List[Dict[str, str]], model_path: str = "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4") -> str:
     """
     Adapter that calls the actual OmniMultimodalLM logic.
     """
@@ -300,7 +300,7 @@ def main():
     parser.add_argument("--docs", type=str, nargs="+", required=True)
     parser.add_argument("--topic", type=str, default=None)
     parser.add_argument("--out", type=str, default="-")
-    parser.add_argument("--model", type=str, default="/mnt/e/data/base-model/Qwen2.5-Omni-7B-GPTQ-Int4")
+    parser.add_argument("--model", type=str, default="/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4")
 
     args = parser.parse_args()
 

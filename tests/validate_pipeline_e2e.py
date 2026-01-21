@@ -3,20 +3,23 @@
 validate_pipeline_e2e.py
 Real end-to-end validation of the training pipeline.
 
-Uses local datasets at E:/data/datasets with sample_size=2.
+Uses Universal Data Loader for all dataset formats (JSON, JSONL, parquet, etc.)
 Validates all stages work with real model and produce checkpoints.
 
-OOM Safeguards:
-- GPU memory clearing between stages
-- Memory monitoring before each stage
-- Automatic cooldown integration
+Directory Structure Explanation:
+- validation_output/   -> E2E test checkpoints (one folder per capability)
+                          Each contains complete model files (safetensors + tokenizer)
+- Each checkpoint is a COMPLETE loadable model for inference or further training
 
 Usage:
-    # Validate text capabilities with 2 samples
+    # Validate specific capabilities
     python tests/validate_pipeline_e2e.py --capabilities cot tools --sample-size 2
     
     # Validate all text capabilities
     python tests/validate_pipeline_e2e.py --all-text
+    
+    # Validate all capabilities
+    python tests/validate_pipeline_e2e.py --all
 """
 
 import os
@@ -34,6 +37,9 @@ import logging
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+
+from src.data.universal_loader import load_dataset_universal
+from src.omni.loader import OmniModelLoader
 
 logging.basicConfig(
     level=logging.INFO,
@@ -71,12 +77,12 @@ def check_memory_safe(min_free_gb: float = 2.0) -> bool:
 # ============== LOCAL DATASET MAPPING ==============
 
 LOCAL_DATASETS = {
-    # Capability -> (local path, file pattern)
+    # Capability -> local dataset path (supports any format via universal loader)
     "cot": "/mnt/e/data/datasets/kaist-ai_CoT-Collection/data/CoT_collection_en.json",
     "reasoning": "/mnt/e/data/datasets/openai_gsm8k",
-    "thinking": "/mnt/e/data/datasets/O1-OPEN_OpenO1-SFT-Pro",
+    "thinking": "/mnt/e/data/datasets/O1-OPEN_OpenO1-SFT-Pro",  # Now works with universal loader!
     "tools": "/mnt/e/data/datasets/Salesforce_xlam-function-calling-60k/xlam_function_calling_60k.json",
-    "streaming": None,  # Runtime feature
+    "streaming": None,  # Runtime feature, no training
     "podcast": "/mnt/e/data/datasets/spawn99_CornellMovieDialogCorpus",
     "vision-qa": "/mnt/e/data/datasets/AI4Math_MathVista",  
     "video-understanding": "/mnt/e/data/datasets/VLM2Vec_MSR-VTT",
@@ -85,79 +91,43 @@ LOCAL_DATASETS = {
     "video-generation": "/mnt/e/data/datasets/fullstack__stargate_s04e01_100topkdiverse_text2vid",
 }
 
-def load_local_dataset(capability: str, sample_size: int = 2):
-    """Load dataset from local path instead of downloading."""
-    from datasets import Dataset
-    
-    path_str = LOCAL_DATASETS.get(capability)
-    if path_str is None:
+
+def load_dataset_for_capability(capability: str, sample_size: int = 2):
+    """Load dataset using universal loader."""
+    path = LOCAL_DATASETS.get(capability)
+    if path is None:
         logger.info(f"{capability}: No dataset needed (runtime feature)")
         return None
     
-    path = Path(path_str)
+    path = Path(path)
     if not path.exists():
-        logger.warning(f"{capability}: Local path not found: {path}")
+        logger.warning(f"{capability}: Path not found: {path}")
         return None
     
     logger.info(f"{capability}: Loading from {path}")
     
-    try:
-        # If it's a JSON file, load directly
-        if path.suffix == '.json':
-            with open(path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            
-            # Handle dict format (key: sample)
-            if isinstance(data, dict):
-                data = list(data.values())[:sample_size]
-            else:
-                data = data[:sample_size]
-            
-            logger.info(f"{capability}: Loaded {len(data)} samples from JSON")
-            return Dataset.from_list(data)
-        
-        # If it's a directory, look for files
-        if path.is_dir():
-            # Try parquet first
-            parquet_files = list(path.glob("**/*.parquet"))
-            if parquet_files:
-                from datasets import load_dataset
-                ds = load_dataset("parquet", data_files=str(parquet_files[0]), split="train")
-                if len(ds) > sample_size:
-                    ds = ds.select(range(sample_size))
-                logger.info(f"{capability}: Loaded {len(ds)} from parquet")
-                return ds
-            
-            # Try JSON files
-            json_files = list(path.glob("**/*.json")) + list(path.glob("**/*.jsonl"))
-            if json_files:
-                with open(json_files[0], 'r', encoding='utf-8') as f:
-                    content = f.read(10)
-                    f.seek(0)
-                    if content.startswith('[') or content.startswith('{'):
-                        data = json.load(f)
-                        if isinstance(data, dict):
-                            data = list(data.values())
-                    else:
-                        data = [json.loads(line) for line in f][:sample_size]
-                
-                data = data[:sample_size]
-                logger.info(f"{capability}: Loaded {len(data)} from JSON")
-                return Dataset.from_list(data)
-        
-    except Exception as e:
-        logger.error(f"{capability}: Load failed: {e}")
+    result = load_dataset_universal(path, sample_size=sample_size)
     
-    return None
+    if result.error:
+        logger.error(f"{capability}: Load error: {result.error}")
+        return None
+    
+    logger.info(f"{capability}: Loaded {result.num_samples} samples ({result.format} format)")
+    return result.dataset
 
 
 @dataclass
 class ValidationResult:
+    """Result of validating a single capability."""
     capability: str
     success: bool
     steps: int
     duration_s: float
     checkpoint_path: Optional[str]
+    dataset_format: str = ""
+    samples_loaded: int = 0
+    initial_loss: float = 0.0
+    final_loss: float = 0.0
     error: Optional[str] = None
 
 
@@ -176,6 +146,7 @@ def validate_single_stage(
     logger.info(f"{'='*60}")
     
     start = time.time()
+    losses = []
     
     # Clear memory before each stage
     clear_gpu_memory()
@@ -190,23 +161,42 @@ def validate_single_stage(
     stage_output.mkdir(parents=True, exist_ok=True)
     
     try:
-        # Load dataset
-        dataset = load_local_dataset(capability, sample_size)
+        # Load dataset using universal loader
+        dataset = load_dataset_for_capability(capability, sample_size)
+        dataset_format = "none"
+        samples_loaded = 0
+        
         if dataset is None and capability != "streaming":
             return ValidationResult(
                 capability=capability, success=False, steps=0, duration_s=time.time()-start,
                 checkpoint_path=None, error="Could not load dataset"
             )
         
-        # Load model
+        if dataset is not None:
+            samples_loaded = len(dataset)
+            # Try to detect format
+            dataset_format = "universal"
+        
+        # Load model (smart loader handles Omni vs standard models)
         logger.info(f"{capability}: Loading model...")
-        tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
-        model = AutoModelForCausalLM.from_pretrained(
-            base_model,
-            torch_dtype=torch.float16,
-            device_map="auto",
-            trust_remote_code=True,
-        )
+        
+        # Check if Omni model
+        is_omni = OmniModelLoader.is_omni_model(base_model)
+        
+        if is_omni:
+            logger.info(f"{capability}: Detected Omni model, using OmniModelLoader")
+            loader = OmniModelLoader()
+            model, tokenizer = loader.load_for_training(base_model)
+        else:
+            # Standard text model
+            tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
+            model = AutoModelForCausalLM.from_pretrained(
+                base_model,
+                torch_dtype=torch.float16,
+                device_map="auto",
+                trust_remote_code=True,
+            )
+        
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
         
@@ -217,25 +207,48 @@ def validate_single_stage(
         else:
             logger.info(f"{capability}: Training on {len(dataset)} samples...")
             model.train()
-            optimizer = torch.optim.AdamW(model.parameters(), lr=1e-5)
+            
+            # Training params optimized for small batch validation
+            base_lr = 1e-6  # Lower LR to prevent gradient explosion
+            warmup_steps = max(1, len(dataset) // 5)  # 20% warmup
+            accumulation_steps = 2  # Gradient accumulation
+            
+            optimizer = torch.optim.AdamW(model.parameters(), lr=base_lr)
             
             steps = 0
+            accumulated_loss = 0
             for sample in dataset:
-                text = str(sample)[:500]
-                inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=256)
+                # Use longer text for better gradients
+                text = str(sample)[:1024]
+                inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=512)
                 inputs = {k: v.to(model.device) for k, v in inputs.items()}
                 inputs["labels"] = inputs["input_ids"].clone()
                 
                 outputs = model(**inputs)
-                loss = outputs.loss
-                logger.info(f"{capability}: Step {steps+1}, Loss={loss.item():.4f}")
+                loss = outputs.loss / accumulation_steps  # Scale for accumulation
+                accumulated_loss += loss.item()
                 
                 loss.backward()
-                optimizer.step()
-                optimizer.zero_grad()
+                
+                # Update weights every accumulation_steps
+                if (steps + 1) % accumulation_steps == 0 or (steps + 1) == len(dataset):
+                    # Gradient clipping
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                    optimizer.step()
+                    optimizer.zero_grad()
+                    
+                    # Learning rate warmup
+                    if steps < warmup_steps:
+                        for param_group in optimizer.param_groups:
+                            param_group['lr'] = base_lr * ((steps + 1) / warmup_steps)
+                    
+                    logger.info(f"{capability}: Step {steps+1}, Loss={accumulated_loss:.4f}")
+                    losses.append(accumulated_loss)
+                    accumulated_loss = 0
+                
                 steps += 1
         
-        # Save
+        # Save checkpoint (creates complete model directory)
         logger.info(f"{capability}: Saving checkpoint...")
         model.save_pretrained(str(stage_output))
         tokenizer.save_pretrained(str(stage_output))
@@ -248,6 +261,10 @@ def validate_single_stage(
             steps=steps,
             duration_s=duration,
             checkpoint_path=str(stage_output),
+            dataset_format=dataset_format,
+            samples_loaded=samples_loaded,
+            initial_loss=losses[0] if losses else 0.0,
+            final_loss=losses[-1] if losses else 0.0,
         )
         
     except Exception as e:
@@ -274,10 +291,11 @@ def run_validation(
     
     logger.info(f"\n{'#'*60}")
     logger.info(f"E2E PIPELINE VALIDATION")
+    logger.info(f"{'#'*60}")
     logger.info(f"Base model: {base_model}")
     logger.info(f"Output dir: {output_dir}")
     logger.info(f"Capabilities: {capabilities}")
-    logger.info(f"Sample size: {sample_size}, Epochs: {epochs}")
+    logger.info(f"Sample size: {sample_size}")
     logger.info(f"{'#'*60}\n")
     
     Path(output_dir).mkdir(parents=True, exist_ok=True)
@@ -302,23 +320,24 @@ def run_validation(
 
 def print_summary(results: List[ValidationResult]):
     """Print validation summary."""
-    print("\n" + "="*70)
+    print("\n" + "="*80)
     print("VALIDATION SUMMARY")
-    print("="*70)
+    print("="*80)
     
     passed = sum(1 for r in results if r.success)
     total = len(results)
     
     print(f"\nResults: {passed}/{total} passed\n")
-    print(f"{'Capability':<20} {'Status':<8} {'Steps':<8} {'Time':<10} {'Checkpoint'}")
-    print("-"*70)
+    print(f"{'Capability':<20} {'Status':<8} {'Steps':<6} {'Samples':<8} {'Loss':<12} {'Time':<8} {'Checkpoint'}")
+    print("-"*80)
     
     for r in results:
-        status = "✅ PASS" if r.success else "❌ FAIL"
+        status = "✅" if r.success else "❌"
         ckpt = Path(r.checkpoint_path).name if r.checkpoint_path else "None"
-        print(f"{r.capability:<20} {status:<8} {r.steps:<8} {r.duration_s:>6.1f}s   {ckpt}")
+        loss_str = f"{r.initial_loss:.2f}→{r.final_loss:.2f}" if r.initial_loss else "N/A"
+        print(f"{r.capability:<20} {status:<8} {r.steps:<6} {r.samples_loaded:<8} {loss_str:<12} {r.duration_s:>5.1f}s   {ckpt}")
     
-    print("="*70)
+    print("="*80)
     
     if passed == total:
         print("\n🎉 ALL VALIDATIONS PASSED!")
@@ -329,12 +348,12 @@ def print_summary(results: List[ValidationResult]):
 def main():
     parser = argparse.ArgumentParser(description="E2E Pipeline Validation")
     parser.add_argument("--base-model", default="/mnt/e/data/models/Qwen2.5-0.5B")
-    parser.add_argument("--output-dir", default="/mnt/e/data/models/validation_output")
+    parser.add_argument("--output-dir", default="/mnt/e/data/output/validation")
     parser.add_argument("--sample-size", type=int, default=2)
     parser.add_argument("--epochs", type=int, default=1)
     parser.add_argument("--capabilities", nargs="+", default=["cot", "tools", "streaming"])
-    parser.add_argument("--all-text", action="store_true")
-    parser.add_argument("--all", action="store_true")
+    parser.add_argument("--all-text", action="store_true", help="Validate all text capabilities")
+    parser.add_argument("--all", action="store_true", help="Validate all capabilities")
     
     args = parser.parse_args()
     

@@ -24,7 +24,7 @@ def test_loading():
     print("\n--- Loading Vision Encoder (SigLip) ---")
     try:
         vision_encoder = VisionEncoder(
-            model_name="/mnt/e/data/base-model/siglip2-so400m-patch16-512", # Using local path if possible or hub
+            model_name="/mnt/e/data/models/siglip2-so400m-patch16-512", # Using local path if possible or hub
             load_in_8bit=True
         )
     except Exception as e:
@@ -37,7 +37,7 @@ def test_loading():
     print("\n--- Loading Audio Encoder (Whisper) ---")
     try:
         audio_encoder = AudioEncoder(
-            model_name="/mnt/e/data/base-model/whisper-large-v3-turbo",
+            model_name="/mnt/e/data/models/whisper-large-v3-turbo",
             load_in_8bit=True
         )
     except Exception as e:

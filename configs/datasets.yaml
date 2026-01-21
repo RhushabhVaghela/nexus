@@ -1,0 +1,76 @@
+# Dataset Configuration
+# Dataset mappings for each capability (from dataset_usecase_catalog.md)
+
+datasets:
+  # Text-only capabilities
+  cot:
+    primary: "kaist-ai_CoT-Collection"
+    alternatives:
+      - "O1-OPEN_OpenO1-SFT-Pro"
+      - "O1-OPEN_OpenO1-SFT-Ultra"
+    
+  reasoning:
+    primary: "openai_gsm8k"
+    alternatives:
+      - "kaist-ai_CoT-Collection"
+      - "O1-OPEN_OpenO1-SFT-Pro"
+    
+  thinking:
+    primary: "O1-OPEN_OpenO1-SFT-Pro"
+    alternatives:
+      - "O1-OPEN_OpenO1-SFT-Ultra"
+    
+  tools:
+    primary: "Salesforce_xlam-function-calling-60k"
+    alternatives:
+      - "gorilla-llm_Berkeley-Function-Calling-Leaderboard"
+      - "gorilla-llm_gorilla-openfunctions-v2"
+      - "NousResearch_hermes-function-calling-v1"
+      - "hiyouga_glaive-function-calling-v2-sharegpt"
+      - "argilla_apigen-function-calling"
+
+  # Audio/Podcast capabilities
+  podcast:
+    primary: "spawn99_CornellMovieDialogCorpus"
+    alternatives:
+      - "olewave_OleSpeech-IV-2025-EN-AR-100"
+      - "blitt_SPoRC"
+      - "IVLLab_MultiDialog"
+
+  # Multimodal streaming
+  tri_streaming:
+    primary: "VoiceAssistant_Lite"  
+    alternatives:
+      - "E-MM1-100M"
+      - "CASIA-IVA-Lab_valor-32k-annotations"
+      - "VLM2Vec_MSR-VTT"
+
+  # Vision capabilities
+  vision_qa:
+    primary: "AI4Math_MathVista"
+    alternatives:
+      - "AI4Math_MathVerse"
+      - "AI4Math_IneqMath"
+
+  video_understanding:
+    primary: "VLM2Vec_MSR-VTT"
+    alternatives:
+      - "qingy2024_VaTeX"
+      - "XiangpengYang_VideoCoF-50k"
+
+  # Generation capabilities
+  image_generation:
+    primary: "LucasFang_Laion-Aesthetics-High-Resolution-GoT"
+    alternatives:
+      - "LucasFang_JourneyDB-GoT"
+      - "LucasFang_OmniEdit-GoT"
+
+  video_generation:
+    primary: "fullstack__stargate_s04e01_100topkdiverse_text2vid"
+    alternatives:
+      - "XiangpengYang_VideoCoF-50k"
+      - "qingy2024_VaTeX"
+
+# Dataset root paths
+paths:
+  datasets: "/mnt/e/data/datasets"

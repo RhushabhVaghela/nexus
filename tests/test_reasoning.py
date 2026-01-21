@@ -18,7 +18,7 @@ def test_reasoning():
     # For this test, we DO want to see if the wrapper formats keys correctly.
     # We will load the REAL tokenizer but mock the generation to avoid loading 5GB model just for prompt check.
     
-    model_name = "/mnt/e/data/base-model/Qwen2.5-Omni-7B-GPTQ-Int4"
+    model_name = "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
     if not os.path.exists(model_name):
         print(f"⚠️ Model path not found: {model_name}. Using Qwen/Qwen2.5-7B-Instruct tokenizer for test.")
         tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-7B-Instruct", trust_remote_code=True)

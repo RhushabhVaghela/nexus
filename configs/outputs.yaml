@@ -1,0 +1,129 @@
+# Output Directory Configuration
+# Centralized output paths for training, validation, and exports
+
+# ============================================================
+# DIRECTORY STRUCTURE OVERVIEW
+# ============================================================
+#
+# E:/data/output/           <- ALL training/validation outputs
+# ├── checkpoints/          <- Intermediate saves during training
+# ├── trained/              <- Final trained models
+# ├── validation/           <- E2E test outputs (temporary)
+# └── exports/              <- Quantized models (GGUF, AWQ)
+#
+# This structure keeps E:/data/models/ clean with only base models.
+# All training artifacts go to E:/data/output/
+#
+# ============================================================
+
+output:
+  root: "/mnt/e/data/output"
+  
+  # ------------------------------------------------------------
+  # CHECKPOINTS: Intermediate Training Saves
+  # ------------------------------------------------------------
+  # Purpose: Save progress during long training runs (hours/days)
+  #          so training can resume if interrupted.
+  # When saved: Every N steps (configurable, default 500)
+  # Format: safetensors + tokenizer files
+  # Retention: Keep during training, delete after trained/ is populated
+  # Size: ~988MB per checkpoint (for Qwen2.5-0.5B)
+  checkpoints:
+    path: "/mnt/e/data/output/checkpoints"
+    description: "Intermediate checkpoints during long training runs"
+    save_every_steps: 500
+    max_to_keep: 3
+    format: "safetensors"
+    usage: |
+      Used by: run_universal_pipeline.sh
+      Safe to delete: After training completes and trained/ is populated
+    
+  # ------------------------------------------------------------
+  # TRAINED: Final Trained Models
+  # ------------------------------------------------------------
+  # Purpose: Store the final, fully-trained model after all stages
+  #          complete. This is your production-ready model.
+  # When saved: After all training stages complete successfully
+  # Format: Complete model directory (safetensors + config + tokenizer)
+  # Retention: KEEP - This is your production model!
+  trained:
+    path: "/mnt/e/data/output/trained"
+    description: "Final trained models ready for inference/deployment"
+    format: "safetensors"
+    contents:
+      - "model.safetensors"      # Model weights (~988MB for 0.5B, ~12GB for 7B)
+      - "config.json"            # Model architecture config
+      - "tokenizer.json"         # Tokenizer vocabulary
+      - "tokenizer_config.json"  # Tokenizer settings
+      - "generation_config.json" # Generation parameters
+      - "special_tokens_map.json"# Special token mappings
+    usage: |
+      Used by: Inference scripts, export_model.py
+      Safe to delete: NO - This is your trained model!
+    
+  # ------------------------------------------------------------
+  # VALIDATION: E2E Test Outputs
+  # ------------------------------------------------------------
+  # Purpose: Quick sanity checks to verify the pipeline works correctly
+  #          before running expensive full training. These are TEST
+  #          checkpoints, not production models.
+  # When saved: During validate_pipeline_e2e.py runs
+  # Format: Same as trained (complete model directories)
+  # Retention: TEMPORARY - Safe to delete after verification
+  # Size: ~988MB per capability (5GB total for all text capabilities)
+  validation:
+    path: "/mnt/e/data/output/validation"
+    description: "E2E pipeline validation outputs (test checkpoints)"
+    cleanup_after: "After verification complete"
+    subdirectories:
+      - "cot/"        # Chain-of-thought validation
+      - "reasoning/"  # Mathematical reasoning validation
+      - "thinking/"   # Extended thinking validation (JSONL)
+      - "tools/"      # Function calling validation
+      - "streaming/"  # Token streaming validation
+    usage: |
+      Used by: tests/validate_pipeline_e2e.py
+      Safe to delete: YES - These are just test artifacts
+    
+  # ------------------------------------------------------------
+  # EXPORTS: Quantized/Converted Models
+  # ------------------------------------------------------------
+  # Purpose: Store quantized versions of trained models for deployment.
+  #          GGUF for llama.cpp, AWQ for faster inference.
+  # When saved: When running export_model.py
+  # Formats: GGUF (llama.cpp), AWQ (int4), safetensors
+  # Retention: Keep for deployment
+  exports:
+    path: "/mnt/e/data/output/exports"
+    description: "Quantized/converted models for deployment"
+    formats:
+      - name: "safetensors"
+        description: "Default PyTorch format"
+        size_reduction: "0%"
+      - name: "gguf"
+        description: "llama.cpp compatible format"
+        size_reduction: "~50-75%"
+      - name: "awq"
+        description: "INT4 quantization for faster inference"
+        size_reduction: "~75%"
+    usage: |
+      Used by: src/export_model.py
+      Safe to delete: Only if you have the trained/ source
+
+# ============================================================
+# LOCAL RESULTS AND LOGS (in project directory)
+# ============================================================
+
+results:
+  path: "./results"
+  description: "Test metrics CSV files with timing, memory, system info"
+  contents:
+    - "test_results_YYYYMMDD_HHMMSS.csv"
+  columns: 35+  # Including timing_ms, gpu_memory_mb, ram_mb, etc.
+  
+logs:
+  path: "./logs"
+  description: "Training and pipeline execution logs"
+  contents:
+    - "multimodal_training.log"
+    - "sft_training.log"

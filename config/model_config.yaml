@@ -1,5 +1,5 @@
 base_model:
-  name: "/mnt/d/Research Experiments/manus_model/base-model/Qwen2.5-Omni-7B-GPTQ-Int4"
+  name: "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
   torch_dtype: "float16"
   trust_remote_code: true
 

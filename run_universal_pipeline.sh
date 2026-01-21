@@ -47,9 +47,9 @@ SRC_DIR="${PROJECT_DIR}/src"
 LOG_DIR="${PROJECT_DIR}/logs"
 CONFIG_FILE="${PROJECT_DIR}/configs/encoders.yaml"
 
-BASE_MODEL="/mnt/e/data/base-model/Qwen2.5-Omni-7B-GPTQ-Int4"
-OUTPUT_DIR="/mnt/e/data/models/trained"
-CHECKPOINT_DIR="/mnt/e/data/models/checkpoints"
+BASE_MODEL="/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
+OUTPUT_DIR="/mnt/e/data/output/trained"
+CHECKPOINT_DIR="/mnt/e/data/output/checkpoints"
 
 # Capability flags (all false by default)
 ENABLE_OMNI=false

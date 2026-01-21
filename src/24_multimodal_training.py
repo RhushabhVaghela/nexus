@@ -72,7 +72,7 @@ from utils.logging_config import setup_logger, log_header, log_completion
 logger = setup_logger(__name__, "logs/multimodal_training.log")
 
 CONFIG = {
-    "base_model": "/mnt/e/data/base-model/Qwen2.5-Omni-7B-GPTQ-Int4",
+    "base_model": "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4",
     "vision_model": "/mnt/e/data/encoders/vision encoders/siglip2-so400m-patch16-512",
     "audio_model": "/mnt/e/data/encoders/audio encoders/whisper-large-v3-turbo",
     "output_dir": "/mnt/e/data/models/omnimodal_any2any",

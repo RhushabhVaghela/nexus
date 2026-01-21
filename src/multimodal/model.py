@@ -174,7 +174,7 @@ logging.getLogger("auto_gptq").setLevel(logging.ERROR)
 
 class VideoDecoder(nn.Module):
     """PaDT OVD 3B Video Decoder"""
-    def __init__(self, model_name="/mnt/e/data/base-model/PaDT_OVD_3B"):
+    def __init__(self, model_name="/mnt/e/data/models/PaDT_OVD_3B"):
         super().__init__()
         print(f"Loading Video Decoder: {model_name}")
         self.decoder = AutoModel.from_pretrained(model_name, trust_remote_code=True)
@@ -189,7 +189,7 @@ class VideoDecoder(nn.Module):
 
 class SpeechDecoder(nn.Module):
     """Parakeet TDT Speech Decoder"""
-    def __init__(self, model_name="/mnt/e/data/base-model/parakeet-tdt-0.6b-v3"):
+    def __init__(self, model_name="/mnt/e/data/models/parakeet-tdt-0.6b-v3"):
         super().__init__()
         print(f"Loading Speech Decoder: {model_name}")
         self.decoder = AutoModel.from_pretrained(model_name, trust_remote_code=True)
