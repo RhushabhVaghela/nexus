@@ -32,6 +32,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 # Import unified tracker
 from src.metrics_tracker import MetricsTracker, BenchmarkMetrics, ALL_DATASETS
+from src.omni.loader import OmniModelLoader
 
 
 @dataclass
@@ -57,28 +58,13 @@ class BenchmarkRunner:
         self.model = None
         self.tokenizer = None
         self.tracker = MetricsTracker(output_dir=config.output_dir)
+        self.loader = OmniModelLoader(config.model_path)
         
     def setup(self):
-        """Load model and tokenizer."""
-        from transformers import AutoModelForCausalLM, AutoTokenizer
-        
+        """Load model and tokenizer using Universal Loader."""
         print(f"Loading model from {self.config.model_path}")
-        
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            self.config.model_path,
-            trust_remote_code=True,
-        )
-        if self.tokenizer.pad_token is None:
-            self.tokenizer.pad_token = self.tokenizer.eos_token
-        
-        self.model = AutoModelForCausalLM.from_pretrained(
-            self.config.model_path,
-            torch_dtype=torch.float16,
-            device_map="auto",
-            trust_remote_code=True,
-        )
+        self.model, self.tokenizer = self.loader.load(mode="full")
         self.model.eval()
-        
         print(f"Model loaded on {self.model.device}")
     
     def _get_memory_stats(self) -> Dict[str, float]:
@@ -106,6 +92,9 @@ class BenchmarkRunner:
     
     def benchmark_generation(self, prompt: str, name: str = "generation") -> BenchmarkMetrics:
         """Benchmark text generation speed."""
+        if self.model is None or self.tokenizer is None:
+            self.setup()
+            
         result = BenchmarkMetrics(
             name=name, 
             category="generation", 
@@ -172,7 +161,10 @@ class BenchmarkRunner:
         return result
     
     def benchmark_perplexity(self, text: str, name: str = "perplexity") -> BenchmarkMetrics:
-        """Benchmark perplexity."""
+        """Benchmark model perplexity (accuracy)."""
+        if self.model is None or self.tokenizer is None:
+            self.setup()
+
         result = BenchmarkMetrics(
             name=name, 
             category="accuracy", 

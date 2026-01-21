@@ -171,10 +171,10 @@ DATASETS_PATH = "/mnt/e/data/datasets"
 
 def pytest_addoption(parser):
     """Add custom CLI options."""
-    parser.addoption("--full-tests", action="store_true", help="Run entire test suite (including slow integration/e2e)")
-    parser.addoption("--full-benchmarks", action="store_true", help="Run all benchmarks")
-    parser.addoption("--test", action="store", help="Filter for specific test (alias for -k)")
-    parser.addoption("--benchmark", action="store", help="Filter for specific benchmark")
+    parser.addoption("--full-tests", "-F", action="store_true", help="Run entire test suite (including slow integration/e2e)")
+    parser.addoption("--full-benchmarks", "-G", action="store_true", help="Run all benchmarks (Global)")
+    parser.addoption("--test", "-T", action="store", help="Filter for specific tests (comma-separated, alias for -k)")
+    parser.addoption("--benchmark", "-B", action="store", help="Filter for specific benchmarks (comma-separated)")
 
 
 def pytest_configure(config):
@@ -189,23 +189,27 @@ def pytest_configure(config):
 def pytest_collection_modifyitems(config, items):
     """Handle custom options for filtering."""
     
-    # 1. Handle --test <name> (Alias for -k)
-    specific_test = config.getoption("--test")
-    if specific_test:
+    # 1. Handle --test <names> (Alias for -k, supports comma-sep)
+    specific_tests = config.getoption("--test")
+    if specific_tests:
         selected = []
+        target_names = [t.strip() for t in specific_tests.split(",") if t.strip()]
         for item in items:
-            if specific_test in item.nodeid:
+            # Check if ANY of the target names appear in the nodeid
+            if any(target in item.nodeid for target in target_names):
                 selected.append(item)
         items[:] = selected
         return
 
-    # 2. Handle --benchmark <name>
-    specific_benchmark = config.getoption("--benchmark")
-    if specific_benchmark:
+    # 2. Handle --benchmark <names>
+    specific_benchmarks = config.getoption("--benchmark")
+    if specific_benchmarks:
         selected = []
+        target_names = [b.strip() for b in specific_benchmarks.split(",") if b.strip()]
         for item in items:
-            if "benchmark" in item.keywords and specific_benchmark in item.nodeid:
-                selected.append(item)
+            if "benchmark" in item.keywords:
+                if any(target in item.nodeid for target in target_names):
+                    selected.append(item)
         items[:] = selected
         return
 
@@ -213,7 +217,7 @@ def pytest_collection_modifyitems(config, items):
     # If set, we run EVERYTHING including benchmarks.
     # If NOT set, we skip benchmarks unless explicitly requested via --benchmark
     run_benchmarks = config.getoption("--full-benchmarks")
-    if not run_benchmarks and not specific_benchmark:
+    if not run_benchmarks and not specific_benchmarks:
         skip_benchmark = pytest.mark.skip(reason="Use --full-benchmarks to run")
         for item in items:
             if "benchmark" in item.keywords:

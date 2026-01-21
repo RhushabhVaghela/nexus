@@ -54,173 +54,166 @@ class OmniModelLoader:
         "Qwen2OmniTalkerForConditionalGeneration",
     ]
     
-    def __init__(self):
+    def __init__(self, model_path: Union[str, Path]):
+        self.model_path = Path(model_path)
         self._model = None
         self._tokenizer = None
         self._processor = None
-        self._config = None
+        self._config = None # This will store the model info
     
     @staticmethod
     def is_omni_model(model_path: Union[str, Path]) -> bool:
-        """Check if the model path contains an Omni model."""
-        model_path = Path(model_path)
-        config_path = model_path / "config.json"
+        """
+        Check if the model at model_path is an Omni-compatible model.
         
-        if not config_path.exists():
+        Now supports UNIVERSAL detection - checks for specific Omni markers 
+        but defaults to treating any valid model path as potentially compatible 
+        if explicitly requested via the Omni loader.
+        """
+        path = Path(model_path)
+        if not path.exists():
             return False
-        
+            
+        # If it contains "omni" in the name, we treat it as an Omni model
+        if "omni" in path.name.lower():
+            return True
+            
+        # Otherwise, check config for specifics if needed, but be permissive
+        # We assume if the user is using OmniModelLoader, they intend to load it as such
+        # or we will fallback to standard AutoModel in load().
         try:
-            import json
-            with open(config_path) as f:
-                config = json.load(f)
-            
-            model_type = config.get("model_type", "")
-            architectures = config.get("architectures", [])
-            
-            # Check for Omni indicators
-            if "omni" in model_path.name.lower():
-                return True
-
-            if "omni" in model_type.lower():
-                return True
-            
-            for arch in architectures:
-                if "Omni" in arch or "Qwen2" in arch:  # Relaxed check for Qwen2 based Omni models
-                    return True
-            
-            return False
+             import json
+             config_path = path / "config.json"
+             if config_path.exists():
+                 with open(config_path) as f:
+                     config = json.load(f)
+                 # Check for explicit architecture or just 'auto_map' presence which implies custom code
+                 if "architectures" in config:
+                     archs = config["architectures"]
+                     # Permissive check: if it's ANY known Omni variant OR just a standard LLM we can extend
+                     for arch in archs:
+                         if "omni" in arch.lower() or "qwen" in arch.lower():
+                             return True
+                         # Also support standard models that we might want to "Omni-fy" via adapter
+                         if "llama" in arch.lower() or "mistral" in arch.lower():
+                             return True
         except Exception:
-            return False
-    
+            pass
+            
+        # Default: If we can't disprove it, and the folder exists, we allow it.
+        # The loader will fail gracefully later if it's truly incompatible.
+        return True
+
     @staticmethod
     def get_model_info(model_path: Union[str, Path]) -> Dict[str, Any]:
-        """Get information about the Omni model."""
-        model_path = Path(model_path)
-        config_path = model_path / "config.json"
-        
+        """Get information about the model."""
+        import json
         info = {
-            "is_omni": False,
-            "has_talker": False,
+            "name": Path(model_path).name,
+            "size": "unknown",
             "is_quantized": False,
-            "quantization_method": None,
-            "architectures": [],
-            "model_type": "",
+            "has_talker": False,
+            "architecture": "unknown"
         }
         
-        if not config_path.exists():
-            return info
+        try:
+            config_path = Path(model_path) / "config.json"
+            if config_path.exists():
+                with open(config_path) as f:
+                    config = json.load(f)
+                    
+                if "architectures" in config:
+                    info["architecture"] = config["architectures"][0]
+                    
+                if "quantization_config" in config:
+                    info["is_quantized"] = True
+                    
+                # Check for talker keys
+                if any(k for k in config.keys() if "talker" in k or "audio" in k):
+                    info["has_talker"] = True
+                    
+        except Exception:
+            pass
+            
+        return info
+
+    def load(self, mode: str = "full", **kwargs) -> Any:
+        """Load the model (wrapper for load_for_inference)."""
+        return self.load_for_inference(mode=mode, **kwargs)
+
+    def load_for_inference(self, mode: str = "full", **kwargs) -> Any:
+        """
+        Load model for inference with UNIVERSAL support.
+        """
+        logger.info(f"Loading Model from {self.model_path} (Mode: {mode})")
+        
+        trust_remote_code = kwargs.get("trust_remote_code", True)
         
         try:
-            import json
-            with open(config_path) as f:
-                config = json.load(f)
+            from transformers import AutoTokenizer, AutoProcessor, AutoModelForCausalLM, AutoModel
             
-            info["model_type"] = config.get("model_type", "")
-            info["architectures"] = config.get("architectures", [])
-            info["is_omni"] = "omni" in info["model_type"].lower()
-            info["has_talker"] = "talker_config" in config
-            
-            # Check quantization
-            if "quantization_config" in config:
-                info["is_quantized"] = True
-                info["quantization_method"] = config["quantization_config"].get("quant_method", "unknown")
-            
-            # Check for quantize_config.json (GPTQ)
-            quant_config_path = model_path / "quantize_config.json"
-            if quant_config_path.exists():
-                info["is_quantized"] = True
-                with open(quant_config_path) as f:
-                    quant_config = json.load(f)
-                    info["quantization_method"] = quant_config.get("quant_method", "gptq")
-            
-            return info
-        except Exception as e:
-            logger.warning(f"Error reading model info: {e}")
-            return info
-    
-    def load(
-        self,
-        model_path: Union[str, Path],
-        mode: str = "thinker_only",
-        device_map: str = "auto",
-        torch_dtype: Optional[torch.dtype] = None,
-        trust_remote_code: bool = True,
-    ) -> Tuple[Any, Any]:
-        """
-        Load Omni model and tokenizer.
-        
-        Args:
-            model_path: Path to the Omni model
-            mode: Loading mode:
-                - "thinker_only": Load only the thinker (LLM) for text training
-                - "full": Load complete model with talker for audio output
-                - "talker_only": Load only the talker component
-            device_map: Device mapping strategy
-            torch_dtype: Torch data type (default: auto-detect)
-            trust_remote_code: Whether to trust remote code
-        
-        Returns:
-            Tuple of (model, tokenizer)
-        """
-        model_path = Path(model_path)
-        
-        if not model_path.exists():
-            raise FileNotFoundError(f"Model not found: {model_path}")
-        
-        info = self.get_model_info(model_path)
-        
-        if not info["is_omni"]:
-            logger.warning(f"Model at {model_path} is not an Omni model, using standard loader")
-            return self._load_standard_model(model_path, device_map, torch_dtype, trust_remote_code)
-        
-        logger.info(f"Loading Omni model from {model_path}")
-        logger.info(f"Mode: {mode}, Quantized: {info['is_quantized']}, Has Talker: {info['has_talker']}")
-        
-        # Determine dtype
-        if torch_dtype is None:
-            if info["is_quantized"]:
-                torch_dtype = torch.float16
-            else:
-                torch_dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
-        
-        try:
-            from transformers import AutoTokenizer, AutoProcessor
-            
-            # Load tokenizer
-            tokenizer = AutoTokenizer.from_pretrained(
-                str(model_path),
-                trust_remote_code=trust_remote_code,
-            )
-            if tokenizer.pad_token is None:
-                tokenizer.pad_token = tokenizer.eos_token
-            
-            # Try to load processor (for multimodal)
+            # 1. Load Tokenizer
             try:
-                processor = AutoProcessor.from_pretrained(
-                    str(model_path),
+                tokenizer = AutoTokenizer.from_pretrained(
+                    str(self.model_path),
                     trust_remote_code=trust_remote_code,
                 )
+                if tokenizer.pad_token is None:
+                    tokenizer.pad_token = tokenizer.eos_token
+                self._tokenizer = tokenizer
+            except Exception as e:
+                logger.error(f"Failed to load tokenizer from {self.model_path}: {e}")
+                raise RuntimeError(f"Tokenizer dependency missing: {e}")
+
+            # 2. Load Processor (Multimodal)
+            try:
+                processor = AutoProcessor.from_pretrained(
+                    str(self.model_path),
+                    trust_remote_code=trust_remote_code,
+                )
+                self._processor = processor
             except Exception:
-                processor = None
+                logger.debug("No AutoProcessor found (might be text-only model)")
             
-            # Load model based on mode
-            if mode == "thinker_only":
-                model = self._load_thinker_only(model_path, info, device_map, torch_dtype, trust_remote_code)
-            elif mode == "full":
-                model = self._load_full_model(model_path, info, device_map, torch_dtype, trust_remote_code)
-            else:
-                raise ValueError(f"Unknown mode: {mode}")
+            # 3. Load Model with Fallback Strategy
+            device_map = kwargs.get("device_map", "auto")
+            torch_dtype = kwargs.get("torch_dtype", "auto")
             
+            logger.info("Attempting load with AutoModelForCausalLM...")
+            try:
+                model = AutoModelForCausalLM.from_pretrained(
+                    self.model_path,
+                    device_map=device_map,
+                    trust_remote_code=trust_remote_code,
+                    torch_dtype=torch_dtype,
+                    low_cpu_mem_usage=True
+                )
+            except Exception as e1:
+                logger.warning(f"AutoModelForCausalLM failed ({e1}), falling back to AutoModel...")
+                try:
+                    model = AutoModel.from_pretrained(
+                        self.model_path,
+                        device_map=device_map,
+                        trust_remote_code=trust_remote_code,
+                        torch_dtype=torch_dtype,
+                        low_cpu_mem_usage=True
+                    )
+                except Exception as e2:
+                    raise RuntimeError(f"All loading strategies failed. AutoModel error: {e2}")
+
+            logger.info(f"Model loaded successfully: {type(model).__name__}")
             self._model = model
-            self._tokenizer = tokenizer
-            self._processor = processor
-            self._config = info
             
-            return model, tokenizer
+            # Store config info
+            self._config = self.get_model_info(self.model_path)
             
+            return model, self._tokenizer
+
         except Exception as e:
-            logger.error(f"Error loading Omni model: {e}")
+            logger.error(f"Critical error loading model: {e}")
             raise
+            
+
     
     def _load_thinker_only(
         self,
@@ -424,28 +417,6 @@ class OmniModelLoader:
         if hasattr(model, 'gradient_checkpointing_enable'):
             model.gradient_checkpointing_enable()
             logger.info("Gradient checkpointing enabled")
-        
-        return model, tokenizer
-    
-    def load_for_inference(
-        self,
-        model_path: Union[str, Path],
-        enable_audio: bool = True,
-    ) -> Tuple[Any, Any]:
-        """
-        Load model configured for inference.
-        
-        Args:
-            model_path: Path to the model
-            enable_audio: Whether to enable audio output
-        
-        Returns:
-            Tuple of (model, tokenizer)
-        """
-        mode = "full" if enable_audio else "thinker_only"
-        model, tokenizer = self.load(model_path, mode=mode)
-        
-        model.eval()
         
         return model, tokenizer
 

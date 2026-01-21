@@ -9,7 +9,9 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 from dataclasses import asdict
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+# Real model path from user environment
+REAL_MODEL_PATH = "/mnt/e/data/models/Qwen2.5-0.5B"
 
 
 class TestBenchmarkResult:
@@ -115,35 +117,44 @@ class TestBenchmarkRunner:
 class TestBenchmarkMethods:
     """Test individual benchmark methods with mocks."""
     
-    def test_benchmark_generation_mocked(self):
-        """Test generation benchmark with mocked model."""
+    def test_benchmark_generation_real_or_mock(self):
+        """Test generation benchmark with Real model if available, else Mock."""
         from src.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig
         from src.metrics_tracker import BenchmarkMetrics
-        from unittest.mock import MagicMock, patch
+        from unittest.mock import MagicMock
+        
+        path_to_use = REAL_MODEL_PATH if Path(REAL_MODEL_PATH).exists() else "/fake/path"
         
         config = BenchmarkConfig(
-            model_path="/fake/path",
+            model_path=path_to_use,
             warmup_runs=1,
             benchmark_runs=1,
-        )
-        runner = BenchmarkRunner(config)
-        
-        # Mock model and tokenizer
-        runner.model = MagicMock()
-        runner.model.device = "cpu"
-        runner.model.generate.return_value = MagicMock(
-            sequences=MagicMock(shape=(1, 50)),
-            scores=[],
+            max_new_tokens=5
         )
         
-        runner.tokenizer = MagicMock()
-        runner.tokenizer.return_value = {
-            "input_ids": MagicMock(shape=(1, 10), to=MagicMock(return_value={"input_ids": MagicMock(shape=(1, 10))})),
-        }
-        
-        # This will fail gracefully - that's OK for this test
-        # The important thing is the method exists and is callable
-        assert callable(runner.benchmark_generation)
+        if Path(path_to_use).exists():
+            # REAL RUN
+            print(f"Running test with REAL MODEL at {path_to_use}")
+            runner = BenchmarkRunner(config)
+            runner.setup() # Load real model
+            result = runner.benchmark_generation("Test prompt", "real_test")
+            assert result.success
+            assert result.tokens_per_second > 0
+        else:
+            # MOCK RUN
+            print("Real model not found, falling back to MOCK")
+            runner = BenchmarkRunner(config)
+            runner.model = MagicMock()
+            runner.model.device = "cpu"
+            runner.model.generate.return_value = MagicMock(
+                sequences=MagicMock(shape=(1, 50)),
+                scores=[]
+            )
+            runner.tokenizer = MagicMock()
+            runner.tokenizer.return_value = {
+                "input_ids": MagicMock(shape=(1, 10), to=MagicMock(return_value={"input_ids": MagicMock(shape=(1, 10))})),
+            }
+            assert callable(runner.benchmark_generation)
     
     def test_benchmark_perplexity_mocked(self):
         """Test perplexity benchmark with mocked model."""

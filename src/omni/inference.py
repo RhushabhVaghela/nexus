@@ -196,21 +196,47 @@ class OmniInference:
         Returns:
             Dict with "text" and "audio" (if enabled)
         """
+        text_output = self.generate(prompt, config)
+
         if not self.enable_audio:
-            return {"text": self.generate(prompt, config), "audio": None}
+            return {"text": text_output, "audio": None}
         
         # For full Omni model with talker
         # This requires the talker component to be loaded
-        if not hasattr(self.model, 'talker'):
-            logger.warning("Model does not have talker component, returning text only")
-            return {"text": self.generate(prompt, config), "audio": None}
+        if not hasattr(self.model, 'talker') and not hasattr(self.model, 'speech_generator'):
+            logger.warning("Model does not have talker/speech component, returning text only")
+            return {"text": text_output, "audio": None}
+
+        # Audio Generation Logic
+        try:
+            # 1. Tokenize text for speech generation (if separated)
+            # Some models use the same tokens, some need specific text-to-speech tokens
             
-        # Audio generation logic is model-specific and currently experimental for Omni
-        # Returning text-only until Talker API is standardized
-        logger.warning("Audio generation requested but Talker API is not yet standardized. Returning text only.")
-        
-        text = self.generate(prompt, config)
-        return {"text": text, "audio": None}
+            # 2. Invoke Talker/Speech Generator
+            # We support two common interfaces: .talker() and .generate_speech()
+            audio_data = None
+            
+            if hasattr(self.model, 'talker'):
+                # Interface A: Qwen-Omni style 'talker' submodule
+                # Expects hidden states or text input
+                # This is a hypothetical interface implementation based on common multimodal patterns
+                logger.info("Generating audio with .talker component...")
+                audio_out = self.model.talker.generate(
+                    text_input=text_output, 
+                    voice=kwargs.get("voice", "default")
+                )
+                audio_data = audio_out.audio_values if hasattr(audio_out, 'audio_values') else audio_out
+                
+            elif hasattr(self.model, 'generate_speech'):
+                # Interface B: Unified generate_speech method
+                audio_data = self.model.generate_speech(text_output)
+
+            return {"text": text_output, "audio": audio_data}
+
+        except Exception as e:
+            logger.error(f"Failed to generate audio: {e}")
+            logger.warning("Returning text-only due to audio generation failure.")
+            return {"text": text_output, "audio": None}
     
     def chat(
         self,
