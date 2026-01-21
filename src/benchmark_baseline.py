@@ -3,6 +3,10 @@ import torch
 import json
 import warnings
 from pathlib import Path
+
+# Fix import path
+import sys
+sys.path.insert(0, str(Path(__file__).parent))
 from multimodal.model import OmniMultimodalLM
 from multimodal import get_test_prompts
 

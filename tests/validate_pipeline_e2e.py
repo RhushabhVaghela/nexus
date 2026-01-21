@@ -209,44 +209,90 @@ def validate_single_stage(
             model.train()
             
             # Training params optimized for small batch validation
-            base_lr = 1e-6  # Lower LR to prevent gradient explosion
-            warmup_steps = max(1, len(dataset) // 5)  # 20% warmup
-            accumulation_steps = 2  # Gradient accumulation
+            # VERY conservative to prevent NaN
+            base_lr = 1e-7  # Ultra-low LR for small batches
+            warmup_steps = max(2, len(dataset) // 3)  # 33% warmup
+            accumulation_steps = 4  # Higher accumulation for stability
+            max_loss_value = 10.0  # Skip steps with loss > this
             
-            optimizer = torch.optim.AdamW(model.parameters(), lr=base_lr)
+            optimizer = torch.optim.AdamW(model.parameters(), lr=base_lr, eps=1e-6)
             
             steps = 0
             accumulated_loss = 0
+            valid_loss_count = 0
+            nan_count = 0
+            
             for sample in dataset:
                 # Use longer text for better gradients
-                text = str(sample)[:1024]
-                inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=512)
+                text = str(sample)[:2048]  # Even longer text
+                inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=512, padding="max_length")
                 inputs = {k: v.to(model.device) for k, v in inputs.items()}
                 inputs["labels"] = inputs["input_ids"].clone()
                 
-                outputs = model(**inputs)
-                loss = outputs.loss / accumulation_steps  # Scale for accumulation
-                accumulated_loss += loss.item()
-                
-                loss.backward()
+                try:
+                    outputs = model(**inputs)
+                    loss = outputs.loss
+                    
+                    # Check for NaN/Inf and skip
+                    if torch.isnan(loss) or torch.isinf(loss):
+                        nan_count += 1
+                        logger.warning(f"{capability}: Step {steps+1} - Skipping NaN/Inf loss")
+                        optimizer.zero_grad()
+                        steps += 1
+                        continue
+                    
+                    # Clip loss magnitude to prevent explosion
+                    if loss.item() > max_loss_value:
+                        logger.warning(f"{capability}: Step {steps+1} - Loss {loss.item():.2f} > {max_loss_value}, clipping")
+                        loss = loss.clamp(max=max_loss_value)
+                    
+                    # Scale for accumulation
+                    loss = loss / accumulation_steps
+                    accumulated_loss += loss.item()
+                    valid_loss_count += 1
+                    
+                    loss.backward()
+                    
+                except RuntimeError as e:
+                    logger.error(f"{capability}: Step {steps+1} - Runtime error: {e}")
+                    optimizer.zero_grad()
+                    steps += 1
+                    continue
                 
                 # Update weights every accumulation_steps
                 if (steps + 1) % accumulation_steps == 0 or (steps + 1) == len(dataset):
-                    # Gradient clipping
-                    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                    # Aggressive gradient clipping
+                    grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.5)
+                    
+                    # Skip update if gradients are NaN
+                    if torch.isnan(grad_norm) or torch.isinf(grad_norm):
+                        logger.warning(f"{capability}: Skipping update - grad_norm is NaN/Inf")
+                        optimizer.zero_grad()
+                        accumulated_loss = 0
+                        valid_loss_count = 0
+                        steps += 1
+                        continue
+                    
                     optimizer.step()
                     optimizer.zero_grad()
                     
                     # Learning rate warmup
-                    if steps < warmup_steps:
+                    current_step = (steps + 1) // accumulation_steps
+                    if current_step < warmup_steps:
+                        lr_scale = (current_step + 1) / warmup_steps
                         for param_group in optimizer.param_groups:
-                            param_group['lr'] = base_lr * ((steps + 1) / warmup_steps)
+                            param_group['lr'] = base_lr * lr_scale
                     
-                    logger.info(f"{capability}: Step {steps+1}, Loss={accumulated_loss:.4f}")
-                    losses.append(accumulated_loss)
+                    avg_loss = accumulated_loss / max(valid_loss_count, 1) * accumulation_steps
+                    logger.info(f"{capability}: Step {steps+1}, Loss={avg_loss:.4f}, GradNorm={grad_norm:.4f}")
+                    losses.append(avg_loss)
                     accumulated_loss = 0
+                    valid_loss_count = 0
                 
                 steps += 1
+            
+            if nan_count > 0:
+                logger.warning(f"{capability}: Total NaN/Inf steps skipped: {nan_count}")
         
         # Save checkpoint (creates complete model directory)
         logger.info(f"{capability}: Saving checkpoint...")
