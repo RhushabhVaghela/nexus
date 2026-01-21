@@ -118,7 +118,31 @@ manus_model/
 | `--sample-size` | 0 (all) | Limit samples per dataset |
 | `--batch-size` | 1 | Training batch size |
 | `--epochs` | 3 | Number of epochs |
+| `--training-method` | sft | Training method (see below) |
 | `--dry-run` | false | Preview without training |
+
+### 10 SOTA Training Methods
+
+| Method | Description | Use Case |
+|--------|-------------|----------|
+| `sft` | Supervised Fine-Tuning | Full weight updates |
+| `lora` | Low-Rank Adaptation | Parameter-efficient |
+| `qlora` | Quantized LoRA (4-bit) | Low-VRAM training |
+| `dora` | Weight-Decomposed LoRA | Improved LoRA (2024) |
+| `dpo` | Direct Preference Optimization | Alignment |
+| `grpo` | Group Relative Policy (DeepSeek) | Reasoning |
+| `orpo` | Odds Ratio Preference | Combined SFT+Preference |
+| `ppo` | Proximal Policy (RLHF) | Classic alignment |
+| `distillation` | Knowledge Distillation | Learn from teacher |
+| `cpt` | Continued Pre-Training | Domain adaptation |
+
+```bash
+# Example: Train with QLoRA
+./run_pipeline.sh train --training-method=qlora
+
+# Example: DPO alignment
+./run_pipeline.sh train --training-method=dpo
+```
 
 ### Dry-Run Mode
 
@@ -267,6 +291,31 @@ decoders:
   video_output:
     default: stabilityai/stable-video-diffusion-img2vid-xt
 ```
+
+### ⚡ Memory-Efficient Streaming (New)
+
+Train on **limited RAM** with **unlimited dataset size**.
+
+| Feature | Description | Support |
+|---------|-------------|---------|
+| **Streaming** | Iterate over datasets larger than RAM (500GB+) | All Scripts |
+| **Giant Files** | Process single 40GB+ files (videos, logs) via chunking | All Scripts |
+| **Auto-Detect** | Automatically switches to streaming for files >1GB | Built-in |
+
+**Usage:**
+
+```bash
+# SFT with manual streaming (optional, auto-detects anyway)
+python src/10_sft_training.py --use_streaming
+
+# PPO with massive prompts file
+python src/ppo_training.py --prompts_data /path/to/1tb_dataset
+```
+
+### 🔨 Development Tools
+
+- `tests/unit_streaming/` - Validation for streaming logic
+- `src/detect_modalities.py` - Probe model capabilities
 
 ### Environment Variables
 

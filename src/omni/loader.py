@@ -50,8 +50,94 @@ class OmniModelLoader:
     """
     
     SUPPORTED_ARCHITECTURES = [
+        # =========== ANY-TO-ANY OMNI MODELS (Unified Multimodal) ===========
+        # Qwen Omni family (text+audio+vision+video in/out)
         "Qwen2_5OmniForConditionalGeneration",
-        "Qwen2OmniTalkerForConditionalGeneration",
+        "Qwen2OmniTalkerForConditionalGeneration", 
+        "Qwen3OmniForConditionalGeneration",
+        # NExT-GPT (any-to-any: text, image, audio, video)
+        "NExTGPTForConditionalGeneration",
+        "NExTGPTModel",
+        # NExT-OMNI (discrete flow paradigm)
+        "NExTOMNIForConditionalGeneration",
+        # AWS Nova 2 Omni
+        "NovaOmniForConditionalGeneration",
+        # OpenAI-style (GPT-4o architecture approximations)
+        "GPT4OmniForConditionalGeneration",
+        "OmniModalTransformer",
+        # Gemini-style unified models
+        "GeminiForConditionalGeneration",
+        "GeminiOmniForConditionalGeneration",
+        # Meta Chameleon (any-to-any)
+        "ChameleonForConditionalGeneration",
+        
+        # =========== TEXT-ONLY LLMs ===========
+        # Qwen family
+        "Qwen2ForCausalLM",
+        "Qwen2_5ForCausalLM",
+        "Qwen3ForCausalLM",
+        # Llama family
+        "LlamaForCausalLM",
+        "LlamaModel",
+        "Llama3ForCausalLM",
+        "Llama4ForCausalLM",
+        # Mistral family
+        "MistralForCausalLM",
+        "MixtralForCausalLM",
+        # Phi family
+        "PhiForCausalLM",
+        "Phi3ForCausalLM",
+        "Phi4ForCausalLM",
+        # Gemma family
+        "GemmaForCausalLM",
+        "Gemma2ForCausalLM",
+        "Gemma3ForCausalLM",
+        # DeepSeek family
+        "DeepseekForCausalLM",
+        "DeepseekV2ForCausalLM",
+        "DeepseekV3ForCausalLM",
+        # Other text models
+        "FalconForCausalLM",
+        "GPT2LMHeadModel",
+        "GPTNeoXForCausalLM",
+        "OPTForCausalLM",
+        "BloomForCausalLM",
+        "StableLMForCausalLM",
+        "MambaForCausalLM",
+        "RecurrentGemmaForCausalLM",
+        
+        # =========== VISION-LANGUAGE MODELS ===========
+        "Qwen2VLForConditionalGeneration",
+        "MllamaForConditionalGeneration",  # Llama vision
+        "Phi3VForCausalLM",  # Phi vision
+        "PaliGemmaForConditionalGeneration",
+        "LlavaForConditionalGeneration",
+        "LlavaNextForConditionalGeneration",
+        "LlavaOneVisionForConditionalGeneration",
+        "InternLMForCausalLM",
+        "InternVLChatModel",
+        "CogVLMForCausalLM",
+        "Idefics2ForConditionalGeneration",
+        "Florence2ForConditionalGeneration",
+        "MolmoForCausalLM",
+        "PixtralForConditionalGeneration",
+        
+        # =========== AUDIO MODELS ===========
+        "WhisperForConditionalGeneration",
+        "Wav2Vec2ForCTC",
+        "SeamlessM4TForConditionalGeneration",
+        "MusicGenForConditionalGeneration",
+        "SpeechT5ForTextToSpeech",
+        
+        # =========== VIDEO MODELS ===========
+        "VideoLlamaForConditionalGeneration",
+        "MPlug2ForConditionalGeneration",
+        "VideoChatGPTForConditionalGeneration",
+        
+        # =========== IMAGE GENERATION ===========
+        "StableDiffusionPipeline",
+        "SDXLPipeline",
+        "Flux1ForConditionalGeneration",
     ]
     
     def __init__(self, model_path: Union[str, Path]):

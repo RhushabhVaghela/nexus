@@ -94,6 +94,72 @@ CONFIG = {
     "wandb_project": yaml_config.get("wandb", {}).get("project", "manus-prime"),
 }
 
+
+# ═══════════════════════════════════════════════════════════════
+# CLI ARGUMENTS & QUICK MODE
+# ═══════════════════════════════════════════════════════════════
+import argparse
+parser = argparse.ArgumentParser(description="SFT Training Stage")
+parser.add_argument("--quick", action="store_true", help="Enable Quick Validation Mode (Tiny batch, truncated text)")
+parser.add_argument("--use_streaming", action="store_true", help="Enable Streaming Dataset Mode")
+parser.add_argument("--long-context", action="store_true", help="Enable RoPE Scaling for Long Context (128k+)")
+args, unknown = parser.parse_known_args()
+
+# Apply CLI flags to CONFIG
+if args.long_context:
+    CONFIG["long_context_scaling"] = True
+    logger.info("📐 Long Context RoPE Scaling: ENABLED")
+
+# Override CONFIG for Quick Mode
+if args.quick:
+    logger.warning("⚡ QUICK MODE ENABLED: Overriding params for validation ⚡")
+    CONFIG["batch_size"] = 1
+    CONFIG["max_seq_length"] = 500
+    CONFIG["learning_rate"] = 1e-5
+    CONFIG["epochs"] = 1
+    CONFIG["gradient_checkpointing"] = False # Faster for tiny checks
+    CONFIG["logging_steps"] = 1
+    CONFIG["steps"] = 10 # Limit steps
+    logger.info(f"   Batch Size: {CONFIG['batch_size']}")
+    logger.info(f"   Max Seq Len: {CONFIG['max_seq_length']}")
+
+# Custom Callback for Metrics Tracking
+from transformers import TrainerCallback
+from src.metrics_tracker import MetricsTracker, TrainingMetrics
+import time
+
+class CSVMetricsCallback(TrainerCallback):
+    """Log training results to CSV using MetricsTracker."""
+    def __init__(self):
+        self.tracker = MetricsTracker()
+        self.start_time = time.time()
+        
+    def on_train_end(self, args, state, control, **kwargs):
+        duration = time.time() - self.start_time
+        samples = state.global_step * args.per_device_train_batch_size # approx
+        
+        # Calculate loss stats from log history
+        losses = [x['loss'] for x in state.log_history if 'loss' in x]
+        final_loss = losses[-1] if losses else 0.0
+        avg_loss = sum(losses) / len(losses) if losses else 0.0
+        
+        metrics = TrainingMetrics(
+            capability="SFT",
+            dataset="Mixed (SFT)",
+            base_model=CONFIG["model_name"],
+            samples=samples,
+            steps=state.global_step,
+            epochs=state.num_train_epochs,
+            batch_size=args.per_device_train_batch_size,
+            duration_seconds=duration,
+            samples_per_second=samples/duration if duration > 0 else 0,
+            final_loss=final_loss,
+            avg_loss=avg_loss,
+            success=True
+        )
+        self.tracker.log_training(metrics)
+        logger.info(f"✅ Training Metrics logged to {self.tracker.training_file}")
+
 # ═══════════════════════════════════════════════════════════════
 # GPU DETECTION & VRAM-BASED ADJUSTMENTS
 # ═══════════════════════════════════════════════════════════════
@@ -256,6 +322,8 @@ def load_model_and_tokenizer():
             device_map="auto",
             trust_remote_code=CONFIG["trust_remote_code"],
             load_in_4bit=True,
+            # RoPE Scaling for Long Context (e.g. Gemini/Claude style)
+            rope_scaling={"type": "dynamic", "factor": 2.0} if CONFIG.get("long_context_scaling") else None
         )
         
         if CONFIG["lora_enabled"]:
@@ -282,9 +350,43 @@ def load_model_and_tokenizer():
 # DATA LOADING
 # ═══════════════════════════════════════════════════════════════
 
-def load_datasets() -> Dict[str, Dataset]:
-    """Load train and validation datasets (Real Data High Priority)."""
+def load_datasets(use_streaming: bool = False, streaming_paths: list = None) -> Dict[str, Dataset]:
+    """
+    Load train and validation datasets.
     
+    Args:
+        use_streaming: If True, use streaming for 500GB+ datasets
+        streaming_paths: List of paths for streaming (if use_streaming=True)
+    
+    Returns:
+        Dict with 'train' and optionally 'test' datasets
+    """
+    
+    # STREAMING MODE: For 500GB+ datasets
+    if use_streaming:
+        logger.info("📂 Loading datasets in STREAMING mode (memory-efficient)")
+        try:
+            from src.data.streaming_trainer import StreamingDatasetLoader, StreamingConfig
+            
+            if not streaming_paths:
+                streaming_paths = ["/mnt/e/data/datasets"]
+            
+            config = StreamingConfig(
+                buffer_size=10000,
+                max_samples=None  # No limit in streaming mode
+            )
+            loader = StreamingDatasetLoader(streaming_paths, config)
+            streaming_dataset = loader.get_streaming_dataset()
+            
+            logger.info(f"   Streaming from: {streaming_paths}")
+            logger.info("   ✓ Streaming dataset ready (samples loaded on-demand)")
+            
+            return {"train": streaming_dataset}
+            
+        except ImportError as e:
+            logger.warning(f"Streaming not available: {e}. Falling back to standard loading.")
+    
+    # STANDARD MODE: Load full dataset into memory
     # Base path for Real Processed Data (from 04_process_real_datasets.py)
     real_data_base = Path("/mnt/e/data/processed")
     train_dir = real_data_base / "train"
@@ -314,17 +416,13 @@ def load_datasets() -> Dict[str, Dataset]:
         files = list(val_dir.glob("*.jsonl"))
         if files:
             logger.info(f"📂 Loading REAL EVAL data from {val_dir}")
-            datasets["test"] = load_dataset("json", data_files=[str(f) for f in files], split="train") # It's 'train' split of the json loader
+            datasets["test"] = load_dataset("json", data_files=[str(f) for f in files], split="train")
             
     if "train" not in datasets:
         logger.error("❌ No training data found! Run 'run_pipeline.sh process' first.")
         sys.exit(1)
         
     return datasets
-    
-    logger.error("❌ No training data found!")
-    logger.error("   Run generators first or use utils/data_mixer.py")
-    sys.exit(1)
 
 # ═══════════════════════════════════════════════════════════════
 # TRAINING
@@ -356,7 +454,7 @@ def main():
     
     # Load data
     logger.info("\n📂 Loading datasets...")
-    datasets = load_datasets()
+    datasets = load_datasets(use_streaming=args.use_streaming)
     train_dataset = datasets["train"]
     eval_dataset = datasets.get("test")
     

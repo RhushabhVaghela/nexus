@@ -20,11 +20,15 @@
 #   process     - Process text data (04-06)
 #   validate    - Validate text datasets (07-09)
 #   train       - Run training pipeline (10-15)
+#   distill     - Run distillation from teacher model
 #   all         - Run complete TEXT pipeline (01-15)
 #
 # Options:
 #   --mode=censored|uncensored  - Training mode (default: censored)
 #   --target-samples=N          - For premium datasets (default: 100000)
+#   --training-method=METHOD    - Training method (sft|lora|qlora|dpo|grpo|orpo|distillation)
+#   --teacher-model=PATH        - Teacher model for distillation
+#   --distillation-alpha=FLOAT  - Distillation alpha (default: 0.5)
 #
 # =============================================================================
 
@@ -46,12 +50,18 @@ PHASE="${1:-all}"
 MODE="censored"
 TARGET_SAMPLES=100000
 SAMPLE_SIZE=200000 # Default limit from python script
+TRAINING_METHOD="sft"  # Default: supervised fine-tuning
+TEACHER_MODEL=""
+DISTILLATION_ALPHA=0.5
 
 for arg in "$@"; do
     case $arg in
         --mode=*) MODE="${arg#*=}" ;;
         --target-samples=*) TARGET_SAMPLES="${arg#*=}" ;;
         --sample-size=*) SAMPLE_SIZE="${arg#*=}" ;;
+        --training-method=*) TRAINING_METHOD="${arg#*=}" ;;
+        --teacher-model=*) TEACHER_MODEL="${arg#*=}" ;;
+        --distillation-alpha=*) DISTILLATION_ALPHA="${arg#*=}" ;;
     esac
 done
 
@@ -107,10 +117,18 @@ run_validate() {
 # PHASE 4: TRAIN
 # =============================================================================
 run_train() {
-    log_info "Phase 4: Training (mode: ${MODE})..."
+    log_info "Phase 4: Training (mode: ${MODE}, method: ${TRAINING_METHOD})..."
     
-    python "${SRC_DIR}/10_sft_training.py" --mode="${MODE}" 2>&1 | tee "${LOG_DIR}/10_sft.log"
-    python "${SRC_DIR}/12_grpo_training.py" --mode="${MODE}" 2>&1 | tee "${LOG_DIR}/12_grpo.log"
+    # Pass training method to training scripts
+    python "${SRC_DIR}/10_sft_training.py" \
+        --mode="${MODE}" \
+        --training-method="${TRAINING_METHOD}" \
+        2>&1 | tee "${LOG_DIR}/10_sft.log"
+    
+    python "${SRC_DIR}/12_grpo_training.py" \
+        --mode="${MODE}" \
+        --training-method="${TRAINING_METHOD}" \
+        2>&1 | tee "${LOG_DIR}/12_grpo.log"
     
     if [ "${MODE}" = "censored" ]; then
         python "${SRC_DIR}/13_safety_finetuning.py" 2>&1 | tee "${LOG_DIR}/13_safety.log"
@@ -122,26 +140,49 @@ run_train() {
 }
 
 # =============================================================================
-# MAIN
+# PHASE 5: DISTILLATION (Optional)
 # =============================================================================
-echo "=============================================="
+run_distill() {
+    if [ -z "${TEACHER_MODEL}" ]; then
+        log_info "Skipping distillation: --teacher-model not specified"
+        return
+    fi
+    
+    log_info "Phase 5: Distillation from teacher: ${TEACHER_MODEL}"
+    
+    python "${SRC_DIR}/distillation.py" \
+        --mode="${MODE}" \
+        --teacher-model="${TEACHER_MODEL}" \
+        --distillation-alpha="${DISTILLATION_ALPHA}" \
+        2>&1 | tee "${LOG_DIR}/distillation.log"
+    
+    log_success "Distillation complete"
+}
+
+echo "==============================================="
 echo "  MANUS PRIME PIPELINE"
 echo "  Phase: ${PHASE} | Mode: ${MODE}"
-echo "=============================================="
+echo "  Training Method: ${TRAINING_METHOD}"
+echo "==============================================="
 
 case "${PHASE}" in
     download)   run_download ;;
     process)    run_process ;;
     validate)   run_validate ;;
     train)      run_train ;;
+    distill)    run_distill ;;
     all)
         run_download
         run_process
         run_validate
         run_train
+        run_distill
         ;;
     *)
-        echo "Usage: ./run_pipeline.sh [download|process|validate|train|multimodal|all] [options]"
+        echo "Usage: ./run_pipeline.sh [download|process|validate|train|distill|all] [options]"
+        echo ""
+        echo "Training Methods: sft, lora, qlora, dpo, grpo, orpo, distillation"
+        echo "Example: ./run_pipeline.sh train --training-method=qlora --mode=censored"
         exit 1
         ;;
 esac

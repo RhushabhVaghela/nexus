@@ -1,26 +1,53 @@
-#!/bin/bash
 # =============================================================================
 # MANUS PRIME - Multimodal Pipeline Script
 # =============================================================================
 # 
+# Purpose: Convert ANY text model to OMNI (any-to-any multimodal)
+#
+# Intelligent Behavior:
+#   - Detects base model's native modalities using detect_modalities.py
+#   - SKIPS training if model is already Omni (all modalities present)
+#   - Only adds MISSING modalities to partial multimodal models
+#
+# 2. Start Multimodal Training
+echo "🔍 Checking base model capabilities..."
+
+# Detect modalities using the python script
+MODALITIES=$(python3 src/detect_modalities.py --json "$BASE_MODEL")
+IS_ALREADY_OMNI=$(echo "$MODALITIES" | python3 -c "import sys, json; data=json.load(sys.stdin); mods=data.get('modalities', {}); print('true' if mods.get('vision') and mods.get('audio_input') and mods.get('video') else 'false')")
+
+if [ "$IS_ALREADY_OMNI" == "true" ] && [ "$FORCE" == "false" ]; then
+    echo "⚠️  Model is ALREADY Omni-capable (Vision + Audio + Video)."
+    echo "   Skipping training to prevent degradation."
+    echo "   Use --force to train anyway."
+    exit 0
+fi
+
+if [ "$IS_ALREADY_OMNI" == "true" ]; then
+    echo "ℹ️  Model is Omni, but --force is set. Proceeding with training..."
+fi
+
+echo "🚀 Starting Multimodal Pipeline..."
 # Stages:
 #   1. DOWNLOAD (Script 22) - Fetch raw Vision/Audio data
-#   2. DISTILL  (Script 23) - Use Teacher VLM to label data
-#   3. TRAIN    (Script 24) - Train Omni-Modal Projectors (Stage 1) or Full Model (Stage 2)
+#   2. DISTILL  (Script 23) - Process and format multimodal data
+#   3. TRAIN    (Script 24) - Train Omni-Modal Projectors
 #
 # Usage:
-#   ./run_multimodal_pipeline.sh [phase] [options]
+#   ./run_multimodal_pipeline.sh [phase] --base-model=/path/to/model [options]
 #
 # Phases:
 #   download      - Run Script 22
 #   distill       - Run Script 23 (requires --modality)
 #   train         - Run Script 24 (requires --stage)
-#   all           - Run full pipeline (Vision default)
+#   all           - Run full pipeline
 #
 # Options:
+#   --base-model=PATH        Base model path (REQUIRED for train)
 #   --modality=vision|audio|video
 #   --stage=1|2
 #   --teacher=mock-teacher|gpt-4v|gemini-pro
+#   --force                  Force training even if model is Omni
 #
 # =============================================================================
 
@@ -44,9 +71,13 @@ STAGE=1
 TEACHER="mock-teacher"
 LIMIT=1000
 SAMPLE_SIZE=0
+BASE_MODEL=""
+FORCE_TRAIN=false
 
 for arg in "$@"; do
     case $arg in
+        --base-model=*) BASE_MODEL="${arg#*=}" ;;
+        --force) FORCE_TRAIN=true ;;
         --modality=*) MODALITY="${arg#*=}" ;;
         --stage=*) STAGE="${arg#*=}" ;;
         --teacher=*) TEACHER="${arg#*=}" ;;
@@ -62,6 +93,33 @@ NC='\033[0m'
 
 log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
 log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
+log_warn() { echo -e "${YELLOW}[⚠]${NC} $1"; }
+
+YELLOW='\033[0;33m'
+
+# =============================================================================
+# MODALITY DETECTION - Check if model is already Omni
+# =============================================================================
+check_if_omni() {
+    if [ -z "${BASE_MODEL}" ]; then
+        log_warn "No --base-model specified, skipping Omni detection"
+        return 1  # Not Omni (continue training)
+    fi
+    
+    log_info "Detecting modalities for: ${BASE_MODEL}"
+    
+    # Run detect_modalities.py and capture result
+    RESULT=$(python "${SRC_DIR}/detect_modalities.py" --json "${BASE_MODEL}" 2>/dev/null || echo '{}')
+    
+    # Check if is_omni flag is set
+    IS_OMNI=$(echo "$RESULT" | python -c "import sys,json; d=json.load(sys.stdin); print(d.get('is_omni', False))" 2>/dev/null || echo "False")
+    
+    if [ "$IS_OMNI" = "True" ]; then
+        return 0  # Is Omni
+    else
+        return 1  # Not Omni
+    fi
+}
 
 # 1. DOWNLOAD
 run_download() {

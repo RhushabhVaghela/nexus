@@ -204,8 +204,23 @@ def main():
     
     # Load data
     logger.info("\n📂 Loading rejection-sampled data...")
-    dataset = load_dataset("json", data_files="rejection_sampled.jsonl", split="train")
-    logger.info(f"✓ Loaded {len(dataset)} samples")
+    
+    # Check for streaming request or large file
+    use_streaming = os.path.getsize("rejection_sampled.jsonl") > 1 * 1024 * 1024 * 1024  # >1GB auto-stream
+    
+    if use_streaming:
+        logger.info("🌊 Using StreamingDatasetLoader for large dataset")
+        try:
+            from src.data.streaming_trainer import StreamingDatasetLoader, StreamingConfig
+            loader = StreamingDatasetLoader("rejection_sampled.jsonl", StreamingConfig(buffer_size=1000))
+            dataset = loader.get_streaming_dataset()
+        except ImportError:
+            logger.warning("Streaming loader not found. Loading full dataset.")
+            dataset = load_dataset("json", data_files="rejection_sampled.jsonl", split="train")
+    else:
+        dataset = load_dataset("json", data_files="rejection_sampled.jsonl", split="train")
+        
+    logger.info("✓ Data loaded")
     
     def prepare_grpo(sample):
         return {

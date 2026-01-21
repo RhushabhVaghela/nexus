@@ -24,11 +24,16 @@ from pathlib import Path
 from typing import Optional
 import torch
 
-# ============ CONSTANTS ============
+# ============ CONSTANTS (DEFAULTS) ============
 COOLDOWN_INTERVAL_STEPS = 500  # Cooldown every N steps
 COOLDOWN_DURATION_SECONDS = 60  # 1 minute cooldown
-GPU_TEMP_THRESHOLD = 83  # Celsius - pause if exceeded
+DEFAULT_GPU_TEMP_THRESHOLD = 83  # Celsius - pause if exceeded
+DEFAULT_CPU_TEMP_THRESHOLD = 88  # Celsius - pause if exceeded
 CHECKPOINT_DIR = "/mnt/e/data/models/checkpoints"
+
+# ============ CONFIGURABLE STATE ============
+_gpu_temp_threshold = DEFAULT_GPU_TEMP_THRESHOLD
+_cpu_temp_threshold = DEFAULT_CPU_TEMP_THRESHOLD
 
 # ============ GLOBAL STATE ============
 _paused = False
@@ -60,6 +65,23 @@ def setup_signal_handlers():
         print(f"   Checkpoint:   kill -USR2 {os.getpid()}")
 
 
+def set_thresholds(gpu_temp: int = None, cpu_temp: int = None):
+    """
+    Configure custom temperature thresholds.
+    
+    Args:
+        gpu_temp: GPU temperature threshold in Celsius (default: 83)
+        cpu_temp: CPU temperature threshold in Celsius (default: 88)
+    """
+    global _gpu_temp_threshold, _cpu_temp_threshold
+    if gpu_temp is not None:
+        _gpu_temp_threshold = gpu_temp
+        print(f"⚙️ GPU temp threshold set to {gpu_temp}°C")
+    if cpu_temp is not None:
+        _cpu_temp_threshold = cpu_temp
+        print(f"⚙️ CPU temp threshold set to {cpu_temp}°C")
+
+
 def get_gpu_temperature() -> float:
     """Get current GPU temperature in Celsius."""
     try:
@@ -74,9 +96,38 @@ def get_gpu_temperature() -> float:
         return 0.0
 
 
+def get_cpu_temperature() -> float:
+    """
+    Get current CPU temperature in Celsius.
+    Works on Linux via /sys or sensors command.
+    """
+    try:
+        # Method 1: Try /sys thermal zones (most reliable on Linux)
+        thermal_path = Path("/sys/class/thermal/thermal_zone0/temp")
+        if thermal_path.exists():
+            with open(thermal_path) as f:
+                return float(f.read().strip()) / 1000.0
+        
+        # Method 2: Try lm-sensors
+        output = subprocess.check_output(
+            ["sensors", "-u"],
+            encoding="utf-8",
+            stderr=subprocess.DEVNULL
+        )
+        for line in output.split("\n"):
+            if "temp1_input" in line or "Core 0" in line:
+                parts = line.split(":")
+                if len(parts) > 1:
+                    return float(parts[1].strip())
+    except Exception:
+        pass
+    return 0.0
+
+
 def check_and_cooldown(current_step: int) -> bool:
     """
     Check if cooldown is needed and perform it.
+    Monitors both GPU and CPU temperatures.
     
     Returns:
         True if cooldown was performed
@@ -87,10 +138,17 @@ def check_and_cooldown(current_step: int) -> bool:
         _perform_cooldown()
         return True
     
-    # Check by temperature
-    temp = get_gpu_temperature()
-    if temp > GPU_TEMP_THRESHOLD:
-        print(f"\n🔥 GPU at {temp}°C (threshold: {GPU_TEMP_THRESHOLD}°C) - Cooling down...")
+    # Check GPU temperature
+    gpu_temp = get_gpu_temperature()
+    if gpu_temp > _gpu_temp_threshold:
+        print(f"\n🔥 GPU at {gpu_temp}°C (threshold: {_gpu_temp_threshold}°C) - Cooling down...")
+        _perform_cooldown()
+        return True
+    
+    # Check CPU temperature
+    cpu_temp = get_cpu_temperature()
+    if cpu_temp > _cpu_temp_threshold:
+        print(f"\n🔥 CPU at {cpu_temp}°C (threshold: {_cpu_temp_threshold}°C) - Cooling down...")
         _perform_cooldown()
         return True
     

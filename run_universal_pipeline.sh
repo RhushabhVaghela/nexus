@@ -71,6 +71,7 @@ BATCH_SIZE=1
 GRADIENT_ACCUMULATION=8
 EPOCHS=3
 DRY_RUN=false
+TRAINING_METHOD="sft"  # sft, lora, qlora, dpo, grpo, orpo, ppo, distillation, cpt
 
 # ============ PARSE ARGUMENTS ============
 print_usage() {
@@ -98,6 +99,7 @@ print_usage() {
     echo "  --sample-size N            Limit samples per dataset (0=all)"
     echo "  --batch-size N             Training batch size (default: 1)"
     echo "  --epochs N                 Training epochs (default: 3)"
+    echo "  --training-method METHOD   Training method: sft|lora|qlora|dpo|grpo|orpo|ppo|distillation|cpt"
     echo "  --dry-run                  Simulate training without executing"
     echo ""
     exit 1
@@ -110,6 +112,7 @@ for arg in "$@"; do
         --sample-size=*) SAMPLE_SIZE="${arg#*=}" ;;
         --batch-size=*) BATCH_SIZE="${arg#*=}" ;;
         --epochs=*) EPOCHS="${arg#*=}" ;;
+        --training-method=*) TRAINING_METHOD="${arg#*=}" ;;
         --enable-omni) ENABLE_OMNI=true ;;
         --enable-cot) ENABLE_COT=true ;;
         --enable-reasoning) ENABLE_REASONING=true ;;

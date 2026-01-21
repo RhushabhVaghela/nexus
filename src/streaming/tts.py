@@ -47,12 +47,9 @@ class TTSStreamer:
         if not text.strip():
             return
             
-        # Simulate processing time (<200ms target)
-        # audio_chunk = self.model.inference(text)
-        
-        # Mock audio chunk
-        audio_chunk = b'\x00' * 1024 
-        self.audio_queue.put(audio_chunk)
+        # Real-time inference
+        # If model is missing, we must fail rather than mock
+        raise NotImplementedError("Real TTS model not loaded. Mocking is disabled per policy.")
         
     def get_audio_stream(self):
         """

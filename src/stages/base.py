@@ -49,6 +49,10 @@ class StageConfig:
     save_steps: int = 500
     eval_steps: int = 100
     dry_run: bool = False
+    # Distillation options (optional)
+    enable_distillation: bool = False
+    teacher_model_path: Optional[str] = None
+    distillation_alpha: float = 0.5  # Weight for soft targets vs hard labels
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -96,6 +100,56 @@ class BaseStage(ABC):
         logger.addHandler(ch)
         
         return logger
+    
+    def load_teacher_model(self):
+        """
+        Load teacher model for distillation (if enabled).
+        Teacher model is used to generate soft targets.
+        """
+        if not self.config.enable_distillation:
+            return None
+            
+        if not self.config.teacher_model_path:
+            self.logger.warning("Distillation enabled but no teacher_model_path specified")
+            return None
+            
+        from transformers import AutoModelForCausalLM
+        
+        self.logger.info(f"Loading teacher model from {self.config.teacher_model_path}")
+        teacher = AutoModelForCausalLM.from_pretrained(
+            self.config.teacher_model_path,
+            torch_dtype=torch.float16,
+            device_map="auto",
+            trust_remote_code=True,
+        )
+        teacher.eval()  # Teacher is always in eval mode
+        return teacher
+    
+    def compute_distillation_loss(
+        self, 
+        student_logits: torch.Tensor, 
+        teacher_logits: torch.Tensor, 
+        temperature: float = 2.0
+    ) -> torch.Tensor:
+        """
+        Compute KL-divergence loss for distillation (soft targets).
+        
+        Args:
+            student_logits: Output logits from student model
+            teacher_logits: Output logits from teacher model
+            temperature: Softmax temperature (higher = softer targets)
+            
+        Returns:
+            KL divergence loss
+        """
+        import torch.nn.functional as F
+        
+        student_probs = F.log_softmax(student_logits / temperature, dim=-1)
+        teacher_probs = F.softmax(teacher_logits / temperature, dim=-1)
+        
+        loss = F.kl_div(student_probs, teacher_probs, reduction="batchmean")
+        # Scale by T^2 as per Hinton et al.
+        return loss * (temperature ** 2)
     
     def load_dynamic_datasets(self) -> Any:
         """

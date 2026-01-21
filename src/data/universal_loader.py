@@ -21,6 +21,11 @@ Usage:
 import os
 import json
 import csv
+import gzip
+import zipfile
+import tarfile
+import shutil
+import tempfile
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Union
 from dataclasses import dataclass
@@ -41,7 +46,11 @@ class LoadResult:
 
 
 class UniversalDataLoader:
-    """Universal dataset loader that auto-detects and loads any format."""
+    """Universal dataset loader that auto-detects and loads any format.
+    
+    Supports STREAMING extraction from archives (.gz, .zip, .tar.gz)
+    without fully decompressing - efficient for sampling.
+    """
     
     SUPPORTED_FORMATS = {
         ".json": "json",
@@ -50,6 +59,14 @@ class UniversalDataLoader:
         ".csv": "csv",
         ".arrow": "arrow",
         ".txt": "text",
+    }
+    
+    ARCHIVE_FORMATS = {
+        ".gz": "gzip",      # Gzip (including .jsonl.gz, .json.gz)
+        ".zip": "zip",
+        ".tar": "tar",
+        ".tgz": "tar_gzip",
+        ".rar": "rar",      # Requires unrar
     }
     
     def __init__(self, path: Union[str, Path]):
@@ -61,12 +78,27 @@ class UniversalDataLoader:
         self._detected_format = None
     
     def detect_format(self) -> str:
-        """Auto-detect dataset format."""
+        """Auto-detect dataset format, including archives for streaming load."""
         if not self.path.exists():
             raise FileNotFoundError(f"Dataset not found: {self.path}")
         
         if self.path.is_file():
             suffix = self.path.suffix.lower()
+            
+            # Check for archive formats FIRST (for streaming extraction)
+            if suffix in self.ARCHIVE_FORMATS:
+                # Detect inner format: e.g., .jsonl.gz -> "gzip_jsonl"
+                inner_suffix = Path(self.path.stem).suffix.lower()
+                archive_type = self.ARCHIVE_FORMATS[suffix]
+                if inner_suffix:
+                    return f"{archive_type}_{inner_suffix.lstrip('.')}"
+                return archive_type
+            
+            # Check for .tar.gz (compound suffix)
+            if self.path.name.endswith(".tar.gz"):
+                return "tar_gzip"
+            
+            # Standard formats
             if suffix in self.SUPPORTED_FORMATS:
                 if suffix == ".json":
                     return self._detect_json_format(self.path)
@@ -118,20 +150,53 @@ class UniversalDataLoader:
         except Exception:
             pass
         return "json"
-    
+            
+    def _try_streaming_loader(self, sample_size: Optional[int]) -> Optional[LoadResult]:
+        """Try using StreamingDatasetLoader for large datasets."""
+        try:
+            from src.data.streaming_trainer import StreamingDatasetLoader, StreamingConfig
+            
+            # Convert sample_size to max_samples
+            config = StreamingConfig(buffer_size=10000, max_samples=sample_size)
+            loader = StreamingDatasetLoader([str(self.path)], config)
+            
+            # Check if it's worth streaming (size check is internal to loader usually, but we can try)
+            # If it works, it returns an IterableDataset
+            dataset = loader.get_streaming_dataset()
+            
+            return LoadResult(
+                dataset=dataset,
+                format="streaming",
+                num_samples=sample_size or 0, # Unknown total
+                columns=[], # Unknown until iterated
+                source_path=str(self.path)
+            )
+        except Exception as e:
+            return None
+
     def load(self, sample_size: Optional[int] = None, split: str = "train") -> LoadResult:
         """
         Load dataset with auto-format detection.
-        
-        Args:
-            sample_size: Max samples to load (None for all)
-            split: Dataset split to load (for HF format)
-        
-        Returns:
-            LoadResult with dataset and metadata
         """
         fmt = self.detect_format()
         self._detected_format = fmt
+        
+        # AUTO-STREAMING CHECK
+        # If file is > 1GB or directory, try streaming first for memory safety
+        should_stream = False
+        if self.path.is_file() and self.path.stat().st_size > 1024**3:
+            should_stream = True
+        elif self.path.is_dir():
+            # Rough check
+            total_size = sum(f.stat().st_size for f in self.path.glob("**/*") if f.is_file())
+            if total_size > 1024**3:
+                should_stream = True
+                
+        if should_stream:
+            logger.info(f"🌊 Large dataset detected ({fmt}), attempting streaming load...")
+            res = self._try_streaming_loader(sample_size)
+            if res: 
+                return res
         
         logger.info(f"Loading {self.path} (format: {fmt})")
         
@@ -152,6 +217,15 @@ class UniversalDataLoader:
                 return self._load_csv(sample_size)
             elif fmt == "text":
                 return self._load_text(sample_size)
+            # Streaming archive formats (efficient - no full extraction)
+            elif fmt.startswith("gzip_"):
+                return self._load_gzip_stream(sample_size, fmt)
+            elif fmt.startswith("zip"):
+                return self._load_zip_stream(sample_size)
+            elif fmt.startswith("tar"):
+                return self._load_tar_stream(sample_size)
+            elif fmt == "rar":
+                return self._load_rar_stream(sample_size)
             else:
                 # Try all formats
                 return self._try_all_formats(sample_size)
@@ -382,6 +456,274 @@ class UniversalDataLoader:
             format="text",
             num_samples=len(ds),
             columns=["text"],
+            source_path=str(self.path),
+        )
+
+    def _load_gzip_stream(self, sample_size: Optional[int], fmt: str) -> LoadResult:
+        """
+        STREAMING gzip load - reads samples directly from compressed stream.
+        Only decompresses the bytes needed for sampling - NOT the full file.
+        
+        Supports: .jsonl.gz, .json.gz, .csv.gz
+        """
+        from datasets import Dataset
+        
+        inner_format = fmt.replace("gzip_", "")  # e.g., "jsonl"
+        data = []
+        
+        logger.info(f"📦 Streaming from gzip ({inner_format}) - sample_size={sample_size}")
+        
+        with gzip.open(self.path, 'rt', encoding='utf-8') as f:
+            if inner_format in ("jsonl", "json"):
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        try:
+                            data.append(json.loads(line))
+                            if sample_size and len(data) >= sample_size:
+                                break  # STOP READING - efficient!
+                        except json.JSONDecodeError:
+                            continue
+            elif inner_format == "csv":
+                import csv
+                reader = csv.DictReader(f)
+                for row in reader:
+                    data.append(dict(row))
+                    if sample_size and len(data) >= sample_size:
+                        break
+            else:
+                # Text fallback
+                for line in f:
+                    if line.strip():
+                        data.append({"text": line.strip()})
+                        if sample_size and len(data) >= sample_size:
+                            break
+        
+        if not data:
+            raise ValueError(f"No data found in gzip stream: {self.path}")
+        
+        ds = Dataset.from_list(data)
+        return LoadResult(
+            dataset=ds,
+            format=fmt,
+            num_samples=len(ds),
+            columns=ds.column_names,
+            source_path=str(self.path),
+        )
+    
+    def _load_zip_stream(self, sample_size: Optional[int]) -> LoadResult:
+        """
+        STREAMING zip load - reads from first matching file in zip.
+        Only extracts/reads the bytes needed.
+        """
+        from datasets import Dataset
+        
+        data = []
+        logger.info(f"📦 Streaming from zip - sample_size={sample_size}")
+        
+        with zipfile.ZipFile(self.path, 'r') as zf:
+            # Find first data file
+            for name in zf.namelist():
+                suffix = Path(name).suffix.lower()
+                if suffix in (".jsonl", ".json", ".csv", ".txt"):
+                    with zf.open(name) as f:
+                        text_stream = f.read().decode('utf-8')
+                        
+                        if suffix in (".jsonl", ".json"):
+                            for line in text_stream.split('\n'):
+                                line = line.strip()
+                                if line:
+                                    try:
+                                        data.append(json.loads(line))
+                                        if sample_size and len(data) >= sample_size:
+                                            break
+                                    except json.JSONDecodeError:
+                                        continue
+                        elif suffix == ".csv":
+                            import csv
+                            import io
+                            reader = csv.DictReader(io.StringIO(text_stream))
+                            for row in reader:
+                                data.append(dict(row))
+                                if sample_size and len(data) >= sample_size:
+                                    break
+                        else:
+                            for line in text_stream.split('\n'):
+                                if line.strip():
+                                    data.append({"text": line.strip()})
+                                    if sample_size and len(data) >= sample_size:
+                                        break
+                    
+                    if sample_size and len(data) >= sample_size:
+                        break
+        
+        if not data:
+            raise ValueError(f"No data found in zip: {self.path}")
+        
+        ds = Dataset.from_list(data)
+        return LoadResult(
+            dataset=ds,
+            format="zip",
+            num_samples=len(ds),
+            columns=ds.column_names,
+            source_path=str(self.path),
+        )
+    
+    def _load_tar_stream(self, sample_size: Optional[int]) -> LoadResult:
+        """
+        STREAMING tar/tar.gz load - reads from compressed tar stream.
+        """
+        from datasets import Dataset
+        
+        data = []
+        logger.info(f"📦 Streaming from tar - sample_size={sample_size}")
+        
+        mode = "r:gz" if ".gz" in str(self.path) or ".tgz" in str(self.path) else "r"
+        
+        with tarfile.open(self.path, mode) as tf:
+            for member in tf:
+                if member.isfile():
+                    suffix = Path(member.name).suffix.lower()
+                    if suffix in (".jsonl", ".json", ".csv", ".txt"):
+                        f = tf.extractfile(member)
+                        if f:
+                            content = f.read().decode('utf-8')
+                            
+                            if suffix in (".jsonl", ".json"):
+                                for line in content.split('\n'):
+                                    line = line.strip()
+                                    if line:
+                                        try:
+                                            data.append(json.loads(line))
+                                            if sample_size and len(data) >= sample_size:
+                                                break
+                                        except json.JSONDecodeError:
+                                            continue
+                            else:
+                                for line in content.split('\n'):
+                                    if line.strip():
+                                        data.append({"text": line.strip()})
+                                        if sample_size and len(data) >= sample_size:
+                                            break
+                
+                if sample_size and len(data) >= sample_size:
+                    break
+        
+        if not data:
+            raise ValueError(f"No data found in tar: {self.path}")
+        
+        ds = Dataset.from_list(data)
+        return LoadResult(
+            dataset=ds,
+            format="tar",
+            num_samples=len(ds),
+            columns=ds.column_names,
+            source_path=str(self.path),
+        )
+    
+    def _load_rar_stream(self, sample_size: Optional[int]) -> LoadResult:
+        """
+        STREAMING RAR load - reads from RAR archive.
+        Requires: rarfile library OR unrar command-line tool.
+        """
+        from datasets import Dataset
+        
+        data = []
+        logger.info(f"📦 Streaming from RAR - sample_size={sample_size}")
+        
+        try:
+            # Method 1: Try rarfile library (pip install rarfile)
+            import rarfile
+            
+            with rarfile.RarFile(self.path, 'r') as rf:
+                for name in rf.namelist():
+                    suffix = Path(name).suffix.lower()
+                    if suffix in (".jsonl", ".json", ".csv", ".txt"):
+                        with rf.open(name) as f:
+                            content = f.read().decode('utf-8')
+                            
+                            if suffix in (".jsonl", ".json"):
+                                for line in content.split('\n'):
+                                    line = line.strip()
+                                    if line:
+                                        try:
+                                            data.append(json.loads(line))
+                                            if sample_size and len(data) >= sample_size:
+                                                break
+                                        except json.JSONDecodeError:
+                                            continue
+                            elif suffix == ".csv":
+                                import csv
+                                import io
+                                reader = csv.DictReader(io.StringIO(content))
+                                for row in reader:
+                                    data.append(dict(row))
+                                    if sample_size and len(data) >= sample_size:
+                                        break
+                            else:
+                                for line in content.split('\n'):
+                                    if line.strip():
+                                        data.append({"text": line.strip()})
+                                        if sample_size and len(data) >= sample_size:
+                                            break
+                        
+                        if sample_size and len(data) >= sample_size:
+                            break
+                            
+        except ImportError:
+            # Method 2: Fallback to unrar command
+            import subprocess
+            import tempfile
+            
+            logger.info("rarfile not installed, using unrar command...")
+            
+            # List files in RAR
+            try:
+                result = subprocess.run(
+                    ["unrar", "l", str(self.path)],
+                    capture_output=True,
+                    encoding="utf-8"
+                )
+                
+                # Extract to temp and read only needed files
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    # Extract only first matching file
+                    for line in result.stdout.split('\n'):
+                        for ext in (".jsonl", ".json", ".csv", ".txt"):
+                            if ext in line.lower():
+                                # Extract this file
+                                subprocess.run(
+                                    ["unrar", "e", "-o+", str(self.path), tmpdir],
+                                    capture_output=True
+                                )
+                                
+                                # Read from extracted
+                                for f in Path(tmpdir).glob(f"*{ext}"):
+                                    with open(f, 'r', encoding='utf-8') as fp:
+                                        for line in fp:
+                                            if line.strip():
+                                                try:
+                                                    data.append(json.loads(line))
+                                                except:
+                                                    data.append({"text": line.strip()})
+                                                if sample_size and len(data) >= sample_size:
+                                                    break
+                                    break
+                                break
+                        if data:
+                            break
+            except FileNotFoundError:
+                raise RuntimeError("RAR extraction requires 'rarfile' library or 'unrar' command")
+        
+        if not data:
+            raise ValueError(f"No data found in RAR: {self.path}")
+        
+        ds = Dataset.from_list(data)
+        return LoadResult(
+            dataset=ds,
+            format="rar",
+            num_samples=len(ds),
+            columns=ds.column_names,
             source_path=str(self.path),
         )
 

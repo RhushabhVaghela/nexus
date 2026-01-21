@@ -110,18 +110,42 @@ except ImportError as e:
 
 def create_streaming_dataset(
     languages: list,
-    max_samples: Optional[int] = None
+    max_samples: Optional[int] = None,
+    local_paths: Optional[list] = None
 ) -> IterableDataset:
     """
-    Stream The Stack data without downloading 6TB.
-    Filters by language for efficiency.
+    Stream code data for pretraining.
+    Supports:
+    1. Local 500GB+ datasets (via StreamingDatasetLoader)
+    2. HuggingFace Hub (bigcode/the-stack)
     """
-    logger.info(f"🌊 Creating streaming dataset for languages: {languages}")
     
-    # Load with streaming
+    # 1. Local Streaming (Preferred for 500GB disks)
+    if local_paths:
+        logger.info(f"🌊 Streaming from local paths: {local_paths}")
+        try:
+            from src.data.streaming_trainer import StreamingDatasetLoader, StreamingConfig
+            
+            config = StreamingConfig(
+                buffer_size=10000,
+                max_samples=max_samples
+            )
+            loader = StreamingDatasetLoader(local_paths, config)
+            dataset = loader.get_streaming_dataset()
+            
+            # Add simple language filter if metadata exists
+            # Note: Local datasets might not have 'lang' column unless synthesized
+            return dataset
+            
+        except ImportError:
+            logger.warning("StreamingDatasetLoader not found, falling back to HF Hub")
+
+    # 2. HF Hub Streaming (Fallback/Default)
+    logger.info(f"🌊 Streaming from HF Hub: {CONFIG['dataset_name']} ({languages})")
+    
     dataset = load_dataset(
         CONFIG["dataset_name"],
-        data_dir="data",  # The Stack structure
+        data_dir="data",
         split="train",
         streaming=True,
         trust_remote_code=True
