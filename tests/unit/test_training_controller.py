@@ -28,8 +28,11 @@ from src.training_controller import (
     extract_if_compressed,
     training_step_hook,
     get_gpu_temperature,
+    get_cpu_temperature,
+    set_thresholds,
     COOLDOWN_INTERVAL_STEPS,
-    GPU_TEMP_THRESHOLD,
+    DEFAULT_GPU_TEMP_THRESHOLD,
+    DEFAULT_CPU_TEMP_THRESHOLD,
     COOLDOWN_DURATION_SECONDS,
 )
 
@@ -125,9 +128,9 @@ class TestGPUTemperatureMonitoring:
     
     def test_temperature_threshold_defined(self):
         """Test temperature threshold is defined."""
-        assert GPU_TEMP_THRESHOLD > 0
-        assert GPU_TEMP_THRESHOLD >= 75
-        assert GPU_TEMP_THRESHOLD <= 90
+        assert DEFAULT_GPU_TEMP_THRESHOLD > 0
+        assert DEFAULT_GPU_TEMP_THRESHOLD >= 75
+        assert DEFAULT_GPU_TEMP_THRESHOLD <= 90
     
     @patch('subprocess.run')
     def test_get_gpu_temperature_success(self, mock_run):

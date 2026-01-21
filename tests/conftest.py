@@ -170,11 +170,45 @@ DATASETS_PATH = "/mnt/e/data/datasets"
 # ============== PYTEST HOOKS ==============
 
 def pytest_addoption(parser):
-    """Add custom CLI options."""
-    parser.addoption("--full-tests", "-F", action="store_true", help="Run entire test suite (including slow integration/e2e)")
-    parser.addoption("--full-benchmarks", "-G", action="store_true", help="Run all benchmarks (Global)")
-    parser.addoption("--test", "-T", action="store", help="Filter for specific tests (comma-separated, alias for -k)")
-    parser.addoption("--benchmark", "-B", action="store", help="Filter for specific benchmarks (comma-separated)")
+    """Add custom CLI options for Manus Model test suite."""
+    parser.addoption(
+        "--full-tests", "-F", 
+        action="store_true", 
+        default=False,
+        help="Run entire test suite including slow integration/e2e tests. "
+             "Uses Qwen2.5-0.5B model at /mnt/e/data/models/Qwen2.5-0.5B. "
+             "Duration: ~90s. Default: False (slow tests skipped)"
+    )
+    parser.addoption(
+        "--full-benchmarks", "-G", 
+        action="store_true",
+        default=False,
+        help="Run ALL benchmarks (Global). Measures tokens/sec, latency, perplexity. "
+             "Uses real dataset samples from ALL_DATASETS. "
+             "Results exported to results/benchmark_metrics.csv. Default: False"
+    )
+    parser.addoption(
+        "--test", "-T", 
+        action="store",
+        default=None,
+        help="Filter for specific tests by name pattern. Supports comma-separated values. "
+             "Example: --test 'model_load,tokenizer' or -T cot. Default: None (all tests)"
+    )
+    parser.addoption(
+        "--benchmark", "-B", 
+        action="store",
+        default=None,
+        help="Filter for specific benchmarks by name pattern. Comma-separated. "
+             "Only selects @pytest.mark.benchmark tests. Example: -B generation. Default: None"
+    )
+    parser.addoption(
+        "--no-skip", "-N",
+        action="store_true",
+        default=False,
+        help="Force run ALL tests and benchmarks, including those that would normally be "
+             "skipped due to missing models/files. Implies --full-tests and --full-benchmarks. "
+             "Use for 100% coverage testing with real models. Default: False"
+    )
 
 
 def pytest_configure(config):
@@ -213,20 +247,27 @@ def pytest_collection_modifyitems(config, items):
         items[:] = selected
         return
 
-    # 3. Handle --full-benchmarks
+    # 3. Handle --no-skip (force run everything, no skips)
+    no_skip = config.getoption("--no-skip")
+    if no_skip:
+        # --no-skip implies --full-tests and --full-benchmarks
+        # Don't add any skip markers - run everything
+        return
+    
+    # 4. Handle --full-benchmarks
     # If set, we run EVERYTHING including benchmarks.
     # If NOT set, we skip benchmarks unless explicitly requested via --benchmark
     run_benchmarks = config.getoption("--full-benchmarks")
     if not run_benchmarks and not specific_benchmarks:
-        skip_benchmark = pytest.mark.skip(reason="Use --full-benchmarks to run")
+        skip_benchmark = pytest.mark.skip(reason="Use --full-benchmarks or --no-skip to run")
         for item in items:
             if "benchmark" in item.keywords:
                 item.add_marker(skip_benchmark)
     
-    # 4. Handle --full-tests (vs slow tests)
+    # 5. Handle --full-tests (vs slow tests)
     run_full = config.getoption("--full-tests")
     if not run_full:
-        skip_slow = pytest.mark.skip(reason="Use --full-tests to run slow tests")
+        skip_slow = pytest.mark.skip(reason="Use --full-tests or --no-skip to run slow tests")
         for item in items:
             if "slow" in item.keywords:
                 item.add_marker(skip_slow)
@@ -273,6 +314,11 @@ def pytest_sessionfinish(session, exitstatus):
 
 
 # ============== FIXTURES ==============
+
+@pytest.fixture(scope="session")
+def no_skip(request):
+    """Check if --no-skip flag is set. Tests can use this to avoid skipping."""
+    return request.config.getoption("--no-skip")
 
 @pytest.fixture(scope="session")
 def device():

@@ -121,7 +121,8 @@ class TestTrainingScriptsExist:
     
     @pytest.fixture
     def scripts_dir(self):
-        return Path(__file__).parent.parent / "src"
+        # Go up from tests/unit/ to project root, then into src/
+        return Path(__file__).parent.parent.parent / "src"
     
     def test_sft_script_exists(self, scripts_dir):
         """SFT training script exists."""

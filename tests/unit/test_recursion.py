@@ -48,33 +48,25 @@ def test_recursive_discovery_and_loading(tmp_path):
     found_my_ds = any("my_reasoning_ds" in p for p in reasoning_paths)
     found_shards = any("shards" in p and p.endswith("shards") for p in reasoning_paths)
     
-    if not found_my_ds:
-        print("❌ FAILED: my_reasoning_ds not discovered")
-        return False
-        
-    if found_shards:
-        print("❌ FAILED: Duplicate shard directory discovered")
-        return False
+    assert found_my_ds, "my_reasoning_ds not discovered"
+    assert not found_shards, "Duplicate shard directory discovered"
     
     # 3. Test Loading
     loader = UniversalDataLoader(my_ds)
     result = loader.load()
     
     print(f"Loaded {result.num_samples} samples")
-    if result.num_samples != 2:
-        print(f"❌ FAILED: Expected 2 samples, got {result.num_samples}")
-        return False
+    assert result.num_samples == 2, f"Expected 2 samples, got {result.num_samples}"
         
     samples = [s["text"] for s in result.dataset]
-    if "root sample" not in samples or "shard sample" not in samples:
-        print(f"❌ FAILED: Missing samples. Got: {samples}")
-        return False
+    assert "root sample" in samples, f"Missing 'root sample'. Got: {samples}"
+    assert "shard sample" in samples, f"Missing 'shard sample'. Got: {samples}"
     
     print("✅ Recursive Discovery and Loading Verified!")
-    return True
 
 if __name__ == "__main__":
     import tempfile
     with tempfile.TemporaryDirectory() as tmp:
-        success = test_recursive_discovery_and_loading(Path(tmp))
-        sys.exit(0 if success else 1)
+        test_recursive_discovery_and_loading(Path(tmp))
+        print("Test passed!")
+

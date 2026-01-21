@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
 """
-Omni Model Loader
-Universal loader for Qwen2.5-Omni models supporting training, validation, and inference.
+Universal Model Loader
 
-The Qwen2.5-Omni model has two main components:
-- Thinker: Main LLM for text reasoning and multimodal understanding
-- Talker: Audio output generation model
+Universal loader supporting 50+ model architectures for training, validation, and inference.
+
+Supported Model Families:
+- Any-to-Any Omni: Qwen-Omni, NExT-GPT, Gemini, Chameleon
+- Text-Only LLMs: Qwen, Llama, Mistral, Phi, Gemma, DeepSeek, Falcon, GPT-2, OPT, Bloom
+- Vision-Language: LLaVA, PaliGemma, CogVLM, InternVL, Florence, Pixtral
+- Audio: Whisper, Wav2Vec2, SeamlessM4T, MusicGen, SpeechT5
+- Video: VideoLlama, MPlug2, VideoChatGPT
+- Image Generation: StableDiffusion, SDXL, Flux
 
 Usage:
     from src.omni.loader import OmniModelLoader
     
-    loader = OmniModelLoader()
-    model, tokenizer = loader.load("/path/to/omni-model", mode="thinker_only")
+    loader = OmniModelLoader("/path/to/any-model")
+    model, tokenizer = loader.load(mode="thinker_only")
 """
 
 import os
@@ -40,13 +45,14 @@ class OmniModelConfig:
 
 class OmniModelLoader:
     """
-    Universal loader for Qwen2.5-Omni models.
+    Universal Model Loader supporting 50+ architectures.
     
     Supports:
-    - GPTQ quantized models
-    - Full precision models
-    - Thinker-only mode for text training
-    - Full mode for audio output
+    - Any HuggingFace model (auto-detection)
+    - GPTQ/GGUF quantized models
+    - Full precision and bfloat16 models
+    - Multimodal models (vision, audio, video)
+    - Text-only LLMs (Qwen, Llama, Mistral, Phi, Gemma, DeepSeek, etc.)
     """
     
     SUPPORTED_ARCHITECTURES = [

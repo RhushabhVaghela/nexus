@@ -1,6 +1,6 @@
 # Test Suite Documentation
 
-Complete reference for the Manus Model test suite covering 109 tests across unit, integration, and E2E test categories.
+Complete reference for the Manus Model test suite covering **346 tests** across unit, integration, multimodal, and E2E test categories.
 
 ---
 
@@ -8,10 +8,12 @@ Complete reference for the Manus Model test suite covering 109 tests across unit
 
 | Category | Tests | Duration | Command |
 |----------|-------|----------|---------|
-| Unit | 48 | ~5s | `pytest tests/unit/ -v` |
-| Integration | 40 | ~30s | `pytest tests/integration/ -v` |
+| Unit | 180 | ~10s | `pytest tests/unit/ -v` |
+| Integration | 68 | ~45s | `pytest tests/integration/ -v` |
+| Multimodal | 20 | ~15s | `pytest tests/multimodal/ -v` |
 | E2E | 21 | ~60s | `pytest tests/e2e/ -v` |
-| **Total** | **109** | **~90s** | `pytest tests/ -v` |
+| Streaming | 10 | ~5s | `pytest tests/unit_streaming/ -v` |
+| **Total** | **346** | **~120s** | `pytest tests/ --full-tests -v` |
 
 ---
 

@@ -317,16 +317,33 @@ pytest tests/unit/ -v
 
 # Integration tests only
 pytest tests/integration/ -v
-
-# E2E tests only
-pytest tests/e2e/ -v
-
-# Skip slow tests
-pytest tests/ -v -m "not slow"
-
-# Run specific test
-pytest tests/unit/test_detect_modalities.py::TestDetectModalities::test_detect_text_only_model -v
 ```
+
+### ⚡ Advanced Test Parameters & Aliases
+
+The test suite supports custom CLI flags for precise control:
+
+| Flag | Alias | Description | Example |
+|------|-------|-------------|---------|
+| `--full-tests` | `-F` | Run **ALL** tests (including slow E2E/Integration) | `pytest -F` |
+| `--full-benchmarks` | `-G` | Run **ALL** benchmarks (Global) | `pytest -G` |
+| `--test` | `-T` | Filter specific tests (comma-separated, alias for `-k`) | `pytest -T "sft,lora"` |
+| `--benchmark` | `-B` | Run specific benchmarks only | `pytest -B "mmlu,gsm8k"` |
+
+```bash
+# Example: Run full suite with benchmarks
+pytest -F -G
+
+# Example: Run only SFT-related tests
+pytest -T sft
+```
+
+### Test Markers (`pytest -m ...`)
+
+- `slow`: Long-running tests (skipped by default unless `-F` used).
+- `gpu`: Tests requiring GPU.
+- `real_model`: Tests loading actual weights.
+- `omni`: Tests specific to Omni-modal features.
 
 ---
 
