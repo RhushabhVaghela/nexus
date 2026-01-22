@@ -389,5 +389,23 @@ All training methods are available via `run_universal_pipeline.sh`:
 |------|-------------|
 | `src/training_methods.py` | Training method configurations |
 | `src/stages/base.py` | Base stage with distillation support |
+| `src/stages/reasoning_sft.py` | Reasoning SFT training stage |
+| `src/stages/reasoning_grpo.py` | GRPO training stage for reasoning |
+| `src/reasoning/` | Reasoning module (CoT, rewards, context) |
 | `src/multimodal/distillation.py` | Distillation engine |
 | `run_universal_pipeline.sh` | Main orchestration script |
+| `run_reasoning_pipeline.sh` | Reasoning training pipeline |
+
+---
+
+## Advanced Reasoning Training
+
+For training models with advanced reasoning capabilities (like DeepSeek-R1 or Claude Thinking), see:
+
+- **[REASONING_TRAINING.md](./REASONING_TRAINING.md)** - Complete reasoning training guide
+- **`run_reasoning_pipeline.sh`** - Dedicated reasoning training pipeline
+
+```bash
+# Train with CoT + GRPO for reasoning capabilities
+./run_reasoning_pipeline.sh --base-model /path/to/model --enable-cot --enable-grpo
+```

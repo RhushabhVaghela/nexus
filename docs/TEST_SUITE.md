@@ -1,6 +1,6 @@
 # Test Suite Documentation
 
-Complete reference for the Nexus Model test suite covering **346 tests** across unit, integration, multimodal, and E2E test categories.
+Complete reference for the Nexus Model test suite covering **~400 tests** across unit, integration, multimodal, reasoning, and E2E test categories.
 
 ---
 
