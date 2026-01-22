@@ -2493,7 +2493,7 @@ You have everything needed to implement the **hybrid approach** (real data groun
 
 for repetitive dataset - I was following this research paper - [https://arxiv.org/html/2512.14982v1](https://arxiv.org/html/2512.14982v1)
 
-also 200M for each is sufficient for openai/gpt-oss-20b, right?
+also 200M for each is sufficient for /mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4, right?
 
 and in the script make a hardlimit of 200M only and give equal weights to each type/category in the dataset for all the datasets
 
@@ -2504,7 +2504,7 @@ Based on my analysis of your existing scripts and the prompt repetition research
 3. **Prompt repetition techniques** for the repetitive dataset (following arXiv 2512.14982) ✅
 4. All best practices from our discussion ✅
 
-**Yes, 200M samples per generator is sufficient for openai/gpt-oss-20b**  - research shows optimal synthetic data mixing is 30-50%, so with your 7 existing + 10 new generators = **3.4B total samples**, you'd train with ~1B synthetic + 2B real data mix.[^8_2]
+**Yes, 200M samples per generator is sufficient for /mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4**  - research shows optimal synthetic data mixing is 30-50%, so with your 7 existing + 10 new generators = **3.4B total samples**, you'd train with ~1B synthetic + 2B real data mix.[^8_2]
 
 Here are the updated/new generator scripts:
 
@@ -4205,7 +4205,7 @@ python 13_download_benchmarks.py
 
 ## **Data Mixing Strategy for 20B Model**
 
-For optimal performance with **openai/gpt-oss-20b**:[^10_10]
+For optimal performance with **/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4**:[^10_10]
 
 
 | Source | Tokens | Percentage | Purpose |

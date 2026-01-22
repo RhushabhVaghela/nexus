@@ -160,11 +160,11 @@ _metrics_collector = TestMetricsCollector()
 
 # ============== CONSTANTS ==============
 
-TEXT_MODEL_PATH = "/mnt/e/data/models/Qwen2.5-0.5B"
-OMNI_MODEL_PATH = "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
-VISION_ENCODER_PATH = "/mnt/e/data/encoders/vision-encoders/siglip2-so400m-patch16-512"
-AUDIO_ENCODER_PATH = "/mnt/e/data/encoders/audio-encoders/whisper-large-v3-turbo"
-DATASETS_PATH = "/mnt/e/data/datasets"
+TEXT_MODEL_PATH = Path("/mnt/e/data/models/Qwen2.5-0.5B")
+OMNI_MODEL_PATH = Path("/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4")
+VISION_ENCODER_PATH = Path("/mnt/e/data/encoders/vision-encoders/siglip2-so400m-patch16-512")
+AUDIO_ENCODER_PATH = Path("/mnt/e/data/encoders/audio-encoders/whisper-large-v3-turbo")
+DATASETS_PATH = Path("/mnt/e/data/datasets")
 
 
 # ============== PYTEST HOOKS ==============

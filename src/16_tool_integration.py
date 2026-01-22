@@ -110,8 +110,8 @@ def main():
     base_model_path = "./checkpoints/nexus_fine_tuning" # Stage 2 output
     # If Stage 2 hasn't finished, use the base model path and we'll init fresh
     if not os.path.exists(base_model_path) or len(os.listdir(base_model_path)) == 0:
-        logger.warning(f"⚠️  Stage 2 Checkpoint not found at {base_model_path}. Using base Qwen2.5-7B-Instruct.")
-        base_model_path = "Qwen/Qwen2.5-7B-Instruct" 
+        logger.warning(f"⚠️  Stage 2 Checkpoint not found at {base_model_path}. Using base Qwen2.5-Omni-7B-GPTQ-Int4.")
+        base_model_path = "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4" 
 
     # Load Tokenizer
     logger.info("\n📦 Loading Tokenizer...")

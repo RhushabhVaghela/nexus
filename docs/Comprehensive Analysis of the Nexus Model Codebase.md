@@ -449,7 +449,7 @@ If you want an absolutely complete table, the missing piece is to open 01/02/04 
 
 ---
 
-# since I am finetuning the basemodel (openai/gpt-oss-20b) to specific fullstack use case (just like nexus 1.6 max of nexus, lovable llm, replit llm, etc). should we add more targeted categories for repetative datasets apart from what we already have?
+# since I am finetuning the basemodel (/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4) to specific fullstack use case (just like nexus 1.6 max of nexus, lovable llm, replit llm, etc). should we add more targeted categories for repetative datasets apart from what we already have?
 
 Yes, for a focused **fullstack** model, it is worth adding more targeted repetitive categories beyond what you already have. The current repetitive set is very general (math, science, generic tech, daily life); adding **software-engineering–shaped** categories will better match Nexus-style, Lovable, Replit, etc.[^5_1][^5_2]
 
@@ -9290,7 +9290,7 @@ You have **50 new fullstack engineering categories** added to repetitive dataset
 
 ### Strategic Additions for Targeted Fullstack Fine-Tuning 🎯
 
-**I recommend adding 8-12 MORE TARGETED CATEGORIES** for openai/gpt-oss-20b fullstack use case:
+**I recommend adding 8-12 MORE TARGETED CATEGORIES** for /mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4 fullstack use case:
 
 **Tier 1 - HIGH PRIORITY (Add Now):**
 1. **fs_api_websockets** - Real-time bidirectional communication (socket.io, ws, SignalR)

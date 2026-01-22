@@ -28,15 +28,20 @@ logger = logging.getLogger(__name__)
 # Categories Configuration
 TRAINING_CATEGORIES = {
     "cot": ["cot", "chain_of_thought", "chain-of-thought", "openthoughts"],
-    "reasoning": ["reasoning", "math", "gsm8k", "theorem", "proof"], # Note: gsm8k often used for training too, but if explicit benchmark keyword exists it will go to benchmarks
+    "reasoning": ["reasoning", "math", "gsm8k", "theorem", "proof", "mmlu", "arc"],
     "thinking": ["think", "reflection", "monologue"],
     "tools": ["tool", "function", "api", "xlam", "hermes"],
+    "code": ["code", "stack", "programming", "git", "codegen"],
+    "general": ["general", "alpaca", "wizard", "instruct", "dialog", "chat", "ultrafeedback", "helpsteer", "big-bench"],
+    "long_context": ["long", "context", "book", "story", "leval"],
+    "multimodal": ["multimodal", "image-text", "emm1", "valor", "journey", "voice", "speech", "music", "audio"],
     "vision-qa": ["vision", "visual", "caption", "llava", "mathvista"],
     "video-understanding": ["video", "captioning", "msr-vtt", "vatex"],
     "image-generation": ["image-gen", "text-to-image", "laion", "diffusion"],
     "video-generation": ["video-gen", "text-to-video", "svd"],
     "podcast": ["podcast", "dialogue", "conversation", "interview"],
-    "streaming": ["streaming"]
+    "streaming": ["streaming"],
+    "uncensored": ["uncensored", "lovable", "unrefined", "liberated", "raw_capability"]
 }
 
 # Benchmarks often share keywords with training (e.g. "math"), but have specific identifiers.
@@ -119,7 +124,7 @@ def get_destination(file_path: Path, base_path: Path) -> Tuple[str, str, str]:
     is_benchmark = any(kw in filename for kw in BENCHMARK_KEYWORDS)
     
     # Determine Category
-    best_category = "uncategorized"
+    best_category = "general"
     
     # A. Content Inspection (Strong Signal)
     content_guess = inspect_content(file_path)
@@ -131,17 +136,21 @@ def get_destination(file_path: Path, base_path: Path) -> Tuple[str, str, str]:
     # Or if content detection failed.
     
     keyword_category = None
-    for cat, keywords in TRAINING_CATEGORIES.items():
-        if any(kw in filename for kw in keywords):
-            keyword_category = cat
-            break
+    # Prioritize 'uncensored' keyword above all others for future-proofing
+    if any(kw in filename for kw in TRAINING_CATEGORIES["uncensored"]):
+        keyword_category = "uncensored"
+    else:
+        for cat, keywords in TRAINING_CATEGORIES.items():
+            if any(kw in filename for kw in keywords):
+                keyword_category = cat
+                break
     
     # Decision Matrix
     if keyword_category:
         # Keywords are usually more specific about *intent* (e.g. 'math' vs generic 'chat')
         best_category = keyword_category
     elif not content_guess:
-        best_category = "uncategorized"
+        best_category = "general"
             
     if is_benchmark:
         return "benchmarks", best_category, best_category
@@ -154,7 +163,7 @@ def organize_folder(source_dir: Path, target_base: Path, move: bool, is_model_di
     """
     if not source_dir.exists():
         logger.warning(f"Source directory not found, skipping: {source_dir}")
-        return
+        return 0
 
     logger.info(f"Scanning {source_dir}...")
     
@@ -167,7 +176,7 @@ def organize_folder(source_dir: Path, target_base: Path, move: bool, is_model_di
     
     for item in items_to_process:
         # SKIP existing target directories to avoid recursive mess
-        if item.name in ["vision-encoders", "audio-encoders", "vision-decoders", "audio-decoders", "cot", "tools", "benchmarks"]:
+        if item.name in ["vision-encoders", "audio-encoders", "vision-decoders", "audio-decoders", "cot", "tools", "benchmarks", "uncensored"]:
             continue
             
         # Strategy:
@@ -220,26 +229,85 @@ def organize_folder(source_dir: Path, target_base: Path, move: bool, is_model_di
 
 def organize(base_path: str, move: bool = False):
     """
-    Scan and organize datasets AND models.
+    Deep scan and organize datasets.
+    Specifically looks for 'uncensored' data anywhere and moves to root datasets/uncensored.
     """
     root = Path(base_path)
+    datasets_root = root / "datasets"
     
-    # 1. Organize Datasets & Benchmarks
-    # We scan 'datasets' and move out benchmarks or organize into cats
-    total_moves = 0
-    total_moves += organize_folder(root / "datasets", root, move, is_model_dir=False)
+    if not datasets_root.exists():
+        logger.error(f"Datasets root not found: {datasets_root}")
+        return
+
+    logger.info(f"🚀 Starting deep organization scan at {datasets_root}...")
     
-    # 2. Organize Encoders
-    # Moves items from E:\data\encoders\*.model -> E:\data\encoders\vision-encoders\*.model
-    total_moves += organize_folder(root / "encoders", root, move, is_model_dir=True)
+    # 1. First, find all 'uncensored' items recursively
+    # We ignore the actual target folder: datasets/uncensored
+    target_uncensored = datasets_root / "uncensored"
+    target_uncensored.mkdir(parents=True, exist_ok=True)
     
-    # 3. Organize Decoders
-    total_moves += organize_folder(root / "decoders", root, move, is_model_dir=True)
+    uncensored_items = []
+    for item in datasets_root.rglob("*"):
+        # Criteria for uncensored:
+        # - Folder or file name contains "uncensored" or other keywords
+        # - Not already the target folder itself or inside it
+        if item.resolve() == target_uncensored.resolve():
+            continue
+
+        if any(kw in item.name.lower() for kw in TRAINING_CATEGORIES["uncensored"]):
+            # Check if it's already in the target hierarchy
+            if target_uncensored.resolve() not in item.resolve().parents:
+                uncensored_items.append(item)
+    
+    moves_count = 0
+    
+    # Process Uncensored Moves
+    for item in uncensored_items:
+        # If it's a file inside a folder that is also marked for move, skip the file
+        if any(p in uncensored_items for p in item.parents):
+            continue
+            
+        dest_path = target_uncensored / item.name
+        if move:
+            try:
+                if not dest_path.exists():
+                    shutil.move(str(item), str(dest_path))
+                    logger.info(f"✅ RELOCATED UNCENSORED: {item.relative_to(root)} -> datasets/uncensored/")
+                    moves_count += 1
+                else:
+                    logger.warning(f"⚠️ Skipping move: {dest_path} already exists.")
+            except Exception as e:
+                logger.error(f"❌ Failed move {item.name}: {e}")
+        else:
+            logger.info(f"🔍 [DRY-RUN] Would relocate uncensored: {item.relative_to(root)} -> datasets/uncensored/")
+            moves_count += 1
+
+    # 2. Organize direct children into categories (Baseline logic)
+    # We skip 'uncensored' since we just handled it
+    for item in datasets_root.iterdir():
+        if not item.is_dir() or item.name in TRAINING_CATEGORIES or item.name == "uncensored":
+            continue
+            
+        # Try to guess category
+        type_folder, category_desc, sub_folder = get_destination(item, root)
+        if type_folder == "datasets" and sub_folder != "general":
+            dest_parent = datasets_root / sub_folder
+            if dest_parent != item.parent: # Avoid self-nesting
+                dest_path = dest_parent / item.name
+                if move:
+                    dest_parent.mkdir(parents=True, exist_ok=True)
+                    if not dest_path.exists():
+                        shutil.move(str(item), str(dest_path))
+                        logger.info(f"✅ Categorized {item.name} -> {sub_folder}/")
+                        moves_count += 1
+                else:
+                    logger.info(f"🔍 [DRY-RUN] Would categorize: {item.name} -> {sub_folder}/")
+                    moves_count += 1
 
     if not move:
-        logger.info("\n[DRY-RUN COMPLETE] No actions executed. Use --move to apply.")
+        logger.info("\n✨ [DRY-RUN COMPLETE] Use --move to apply changes.")
     else:
-        logger.info(f"\n[COMPLETE] Moved {total_moves} items.")
+        logger.info(f"\n✨ [COMPLETE] Organized {moves_count} items.")
 
 
 def main():

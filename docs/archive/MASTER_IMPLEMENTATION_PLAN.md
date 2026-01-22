@@ -1,7 +1,7 @@
 # 🚀 Nexus Prime: Master Implementation Plan (10/10)
 
 > **Version**: 2.0 | **Last Updated**: 2026-01-17  
-> **Base Model**: `openai/gpt-oss-20b` (architecture-agnostic, easily swappable)  
+> **Base Model**: `/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4` (architecture-agnostic, easily swappable)  
 > **Storage Budget**: 500GB
 
 ---
@@ -14,7 +14,7 @@ This document provides the **complete, actionable implementation plan** for buil
 
 Instead of downloading 6TB of The Stack to train from scratch, we:
 
-1. **Use `openai/gpt-oss-20b`** as our base (already has general knowledge)
+1. **Use `/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4`** as our base (already has general knowledge)
 2. **Download filtered, high-quality datasets** (~100GB total)
 3. **Fine-tune with LoRA** on our domain-specific data
 4. **Mix 30% real + 70% synthetic** to prevent model collapse
@@ -90,7 +90,7 @@ These datasets contain **processed knowledge from massive corpuses** - download 
 ```yaml
 # config/model_config.yaml
 base_model:
-  name: "openai/gpt-oss-20b"
+  name: "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
   # Swap to any model by changing this line:
   # name: "deepseek-ai/deepseek-coder-v2-instruct"
   # name: "Qwen/Qwen2.5-Coder-32B-Instruct"
@@ -403,7 +403,7 @@ This format works with:
 ```yaml
 # config/training_config.yaml
 model:
-  base: "openai/gpt-oss-20b"
+  base: "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
   # Architecture-agnostic: Change this line to use any model
 
 lora:
@@ -484,7 +484,7 @@ Final Training Set =
 ### Week 3-4: Training Setup
 
 - [ ] Configure training environment
-- [ ] Set up model (openai/gpt-oss-20b)
+- [ ] Set up model (/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4)
 - [ ] Create LoRA configuration
 - [ ] Run small-scale training test
 

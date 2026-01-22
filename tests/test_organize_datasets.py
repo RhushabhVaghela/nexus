@@ -104,7 +104,8 @@ def test_organize_folder_integration(temp_data_env):
     # 1. Setup Files
     
     # Dataset - CoT (Content based)
-    cot_file = root / "datasets" / "my_chat_data.json"
+    # Using a neutral name to ensure content inspection works (avoiding 'chat' keyword which is now in 'general')
+    cot_file = root / "datasets" / "my_data.json"
     create_json_file(cot_file, [{"messages": []}])
     
     # Dataset - Tools (Content based)
@@ -114,6 +115,10 @@ def test_organize_folder_integration(temp_data_env):
     # Benchmark
     bench_file = root / "datasets" / "mmlu_eval.json"
     create_json_file(bench_file, {"test": True})
+
+    # Generic file (should go to general)
+    generic_file = root / "datasets" / "random_chat.json"
+    create_json_file(generic_file, [{"unknown_key": "value"}])
     
     # Encoder - Vision
     vision_enc = root / "encoders" / "siglip.model"
@@ -132,20 +137,17 @@ def test_organize_folder_integration(temp_data_env):
     # 3. Verify Moves
     
     # CoT should be in datasets/cot
-    assert (root / "datasets/cot/my_chat_data.json").exists()
+    assert (root / "datasets/cot/my_data.json").exists()
     assert not cot_file.exists()
     
     # Tools should be in datasets/tools
     assert (root / "datasets/tools/functions.jsonl").exists()
     
-    # Benchmark should be in benchmarks/uncategorized (mmlu keyword matches benchmark list, but maybe not a specific category if just 'mmlu' unless mapped)
-    # Check mappings: mmlu is in BENCHMARK_KEYWORDS. 
-    # 'mmlu' is NOT in TRAINING_CATEGORIES key list? 
-    # Wait, TRAINING_CATEGORIES has "reasoning": [..., "gsm8k",...]. 
-    # "mmlu" is only in BENCHMARK_KEYWORDS?
-    # Let's check logic: if is_benchmark=True, best_category is keyword matched from TRAINING_CATEGORIES.
-    # If "mmlu" is not in TRAINING_CATEGORIES, it returns "uncategorized".
-    assert (root / "benchmarks/uncategorized/mmlu_eval.json").exists()
+    # Benchmark should be in benchmarks/reasoning (mmlu is now in TRAINING_CATEGORIES["reasoning"])
+    assert (root / "benchmarks/reasoning/mmlu_eval.json").exists()
     
     # Vision Encoder
     assert (root / "encoders/vision-encoders/siglip.model").exists()
+
+    # Generic file should be in datasets/general
+    assert (root / "datasets/general/random_chat.json").exists()

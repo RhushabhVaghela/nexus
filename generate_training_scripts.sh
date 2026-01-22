@@ -70,7 +70,7 @@ echo ""
 source /home/rhushabh/miniconda3/etc/profile.d/conda.sh
 conda activate nexus
 
-cd "/mnt/d/Research Experiments/nexus_model"
+cd "/mnt/d/Research Experiments/nexus"
 
 mkdir -p /mnt/e/models/omni_SIZE_NAME_PLACEHOLDER_OPT_LEVEL_PLACEHOLDER
 mkdir -p logs

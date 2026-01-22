@@ -290,19 +290,19 @@ class TestRealDatasets:
     
     @pytest.fixture
     def cot_dataset_path(self):
-        return Path("/mnt/e/data/datasets/kaist-ai_CoT-Collection/data/CoT_collection_en.json")
+        return Path("/mnt/e/data/datasets/reasoning/kaist-ai_CoT-Collection/data/CoT_collection_en.json")
     
     @pytest.fixture
     def tools_dataset_path(self):
-        return Path("/mnt/e/data/datasets/Salesforce_xlam-function-calling-60k/xlam_function_calling_60k.json")
+        return Path("/mnt/e/data/datasets/tools/Salesforce_xlam-function-calling-60k/xlam_function_calling_60k.json")
     
     @pytest.fixture
     def o1_dataset_path(self):
-        return Path("/mnt/e/data/datasets/O1-OPEN_OpenO1-SFT-Pro")
+        return Path("/mnt/e/data/datasets/reasoning/O1-OPEN_OpenO1-SFT-Pro")
     
     @pytest.fixture
     def gsm8k_path(self):
-        return Path("/mnt/e/data/datasets/openai_gsm8k")
+        return Path("/mnt/e/data/datasets/reasoning/openai_gsm8k") # Likely missing, test should skip
     
     def test_load_cot_dataset(self, cot_dataset_path):
         """Test loading CoT Collection (large JSON dict)."""

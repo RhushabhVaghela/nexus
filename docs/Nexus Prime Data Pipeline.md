@@ -1012,7 +1012,7 @@ Perfect! I've successfully upgraded your training pipeline to use **Qwen3-VL wit
 - **New**: `unsloth/Qwen3-VL-72B-Instruct` ⚡
 
 ### **Low VRAM (<24GB) - Your RTX 5080:**
-- **Old**: `unsloth/Qwen2.5-7B-Instruct-bnb-4bit`
+- **Old**: `unsloth/Qwen2.5-Omni-7B-GPTQ-Int4-bnb-4bit`
 - **New**: `unsloth/Qwen3-VL-8B-Instruct-bnb-4bit` ⚡
 
 ## **Benefits You'll Get:**

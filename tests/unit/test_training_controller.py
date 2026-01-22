@@ -212,43 +212,40 @@ class TestCompressedFileExtraction:
 class TestTrainingStepHook:
     """Test training step hook integration."""
     
-    def test_hook_runs_without_error(self):
+    def test_hook_runs_without_error(self, real_text_model):
         """Test hook runs without error."""
         import src.training_controller as tc
         
         tc._paused = False
         tc._checkpoint_requested = False
         
-        mock_model = MagicMock()
         mock_optimizer = MagicMock()
         
         with patch('src.training_controller.check_pause_state'):
             with patch('src.training_controller.check_and_cooldown', return_value=False):
                 with patch('src.training_controller.check_checkpoint_request', return_value=False):
                     # Should not raise
-                    training_step_hook(mock_model, mock_optimizer, 1, "/tmp")
+                    training_step_hook(real_text_model, mock_optimizer, 1, "/tmp")
     
-    def test_hook_calls_pause_check(self):
+    def test_hook_calls_pause_check(self, real_text_model):
         """Test hook calls pause state check."""
-        mock_model = MagicMock()
         mock_optimizer = MagicMock()
         
         with patch('src.training_controller.check_pause_state') as mock_pause:
             with patch('src.training_controller.check_and_cooldown', return_value=False):
                 with patch('src.training_controller.check_checkpoint_request', return_value=False):
-                    training_step_hook(mock_model, mock_optimizer, 1, "/tmp")
+                    training_step_hook(real_text_model, mock_optimizer, 1, "/tmp")
                     
                     mock_pause.assert_called_once()
     
-    def test_hook_calls_cooldown_check(self):
+    def test_hook_calls_cooldown_check(self, real_text_model):
         """Test hook calls cooldown check."""
-        mock_model = MagicMock()
         mock_optimizer = MagicMock()
         
         with patch('src.training_controller.check_pause_state'):
             with patch('src.training_controller.check_and_cooldown') as mock_cool:
                 with patch('src.training_controller.check_checkpoint_request', return_value=False):
-                    training_step_hook(mock_model, mock_optimizer, 5, "/tmp")
+                    training_step_hook(real_text_model, mock_optimizer, 5, "/tmp")
                     
                     mock_cool.assert_called_once_with(5)
 

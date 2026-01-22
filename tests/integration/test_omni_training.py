@@ -113,22 +113,40 @@ class TestOmniTrainingIntegration:
         return Path("/mnt/e/data/datasets/kaist-ai_CoT-Collection/data/CoT_collection_en.json")
     
     def test_stage_setup_mocked(self):
-        """Test Omni training stage setup (mocked)."""
+        """Test Omni training stage setup (using real tiny model)."""
         from src.stages.stage_omni import OmniTrainingStage, OmniStageConfig
-        from unittest.mock import MagicMock, patch
-        
+        from unittest.mock import patch, MagicMock
+        from transformers import GPT2Config, GPT2LMHeadModel, GPT2Tokenizer
+        import torch
+
         config = OmniStageConfig(base_model="/fake/model")
         
-        # Mock the OmniModelLoader
-        mock_model = MagicMock()
-        mock_model.parameters.return_value = []
-        mock_tokenizer = MagicMock()
+        # Create a real tiny model
+        model_config = GPT2Config(n_layer=1, n_head=4, n_embd=32, vocab_size=100)
+        real_model = GPT2LMHeadModel(model_config)
         
-        with patch('src.omni.loader.OmniModelLoader.load_for_training', return_value=(mock_model, mock_tokenizer)):
+        # Create a real-ish tokenizer (or mock sufficient parts)
+        # Using MagicMock for tokenizer is usually safer/faster unless we need specific tokenization logic
+        # But user asked for real models. Let's try to use a real tokenizer if easy, otherwise mock strictly.
+        # Constructing a tokenizer from scratch is complex. Let's use a MagicMock that behaves like a tokenizer
+        # or use a very simple one.
+        mock_tokenizer = MagicMock(spec=GPT2Tokenizer)
+        mock_tokenizer.pad_token_id = 0
+        mock_tokenizer.eos_token_id = 0
+        
+        with patch('src.omni.loader.OmniModelLoader.load_for_training', return_value=(real_model, mock_tokenizer)):
             stage = OmniTrainingStage(config)
-            # Test the config is set correctly
+            # Initially None
+            assert stage.model is None
+            
+            # Run setup to load model
+            stage.setup()
+            
             assert stage.config.capability_name == "omni"
-            assert stage.model is None  # Not loaded yet
+            assert stage.model is not None
+            assert isinstance(stage.model, torch.nn.Module)
+            # Verify it has parameters (it's a real model)
+            assert len(list(stage.model.parameters())) > 0
     
     def test_prepare_data_mocked(self):
         """Test data preparation (mocked)."""
@@ -146,8 +164,10 @@ class TestOmniTrainingIntegration:
         config = OmniStageConfig(base_model="/fake/model", max_samples=5)
         stage = OmniTrainingStage(config)
         
-        # Mock the universal loader
-        with patch('src.data.universal_loader.load_dataset_universal', return_value=MockLoadResult()):
+        # Mock Path.exists to return True so we skip dynamic loading logic
+        # and mock the universal loader
+        with patch('src.data.universal_loader.load_dataset_universal', return_value=MockLoadResult()), \
+             patch('pathlib.Path.exists', return_value=True):
             dataset = stage.prepare_data("/fake/data")
         
         assert dataset == ["sample1", "sample2"]

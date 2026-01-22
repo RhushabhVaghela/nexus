@@ -3,6 +3,7 @@
 Reasoning SFT Training Stage
 
 Supervised Fine-Tuning on Chain-of-Thought datasets with <think>...</think> formatting.
+Integrated with Universal Dataset Manager for domain-based loading.
 """
 
 import os
@@ -21,12 +22,24 @@ logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+# Import Universal Data Management
+try:
+    from src.data.universal_manager import UniversalDatasetManager
+except ImportError:
+    logger.warning("UniversalDatasetManager not found, falling back to basic loading if needed (but strongly recommended to fix python path)")
+
 
 @dataclass
 class ReasoningSFTConfig:
     model_path: str = ""
     output_dir: str = "checkpoints/reasoning_sft"
-    dataset_path: str = ""
+    mode: str = "censored"
+    
+    # Data Config
+    dataset_path: str = "" # Legacy single path
+    dataset_categories: List[str] = field(default_factory=list) # e.g. ["reasoning", "math"]
+    dataset_names: List[str] = field(default_factory=list) # Specific datasets
+    
     max_seq_length: int = 4096
     num_epochs: int = 3
     batch_size: int = 2
@@ -53,14 +66,49 @@ class ReasoningSFTConfig:
 
 
 class ReasoningDataset(Dataset):
-    def __init__(self, data_path: str, tokenizer: Any, max_length: int = 4096):
+    def __init__(self, config: ReasoningSFTConfig, tokenizer: Any):
         self.tokenizer = tokenizer
-        self.max_length = max_length
-        self.samples = self._load_data(data_path)
+        self.max_length = config.max_seq_length
+        self.samples = self._load_data(config)
+        print(f"DEBUG: ReasoningDataset loaded {len(self.samples)} samples")
     
-    def _load_data(self, data_path: str) -> List[Dict[str, Any]]:
+    def _load_data(self, config: ReasoningSFTConfig) -> List[Dict[str, Any]]:
+        # Universal Loader Integration
+        # If legacy dataset_path is used and it's a file, load it directly
+        # Otherwise use UniversalManager
+        
+        explicit_path = Path(config.dataset_path) if config.dataset_path and config.dataset_path.strip() else None
+        
+        if explicit_path and explicit_path.exists() and explicit_path.is_file():
+            logger.info(f"Loading single dataset file: {explicit_path}")
+            return self._load_file(explicit_path)
+            
+        # Use Universal Manager
+        manager = UniversalDatasetManager(mode=config.mode) # Defaults to /mnt/e/data
+        
+        # If dataset_path was a folder name, treat as dataset name
+        names = config.dataset_names.copy()
+        if config.dataset_path and not (explicit_path and explicit_path.is_file()):
+             names.append(config.dataset_path)
+             
+        try:
+            logger.info(f"Loading data via UniversalManager. Categories={config.dataset_categories}, Names={names}")
+            hf_dataset = manager.get_unified_train_dataset(
+                enabled_categories=config.dataset_categories, 
+                included_datasets=names
+            )
+            logger.info(f"Loaded {len(hf_dataset)} samples from unified loader")
+            return hf_dataset 
+            
+        except Exception as e:
+            logger.error(f"Failed to load via UniversalManager: {e}")
+            if explicit_path:
+                 logger.warning("Universal loading failed, trying legacy path load...")
+                 return self._load_file(explicit_path)
+            raise ValueError(f"Could not load datasets. Error: {e}")
+
+    def _load_file(self, path: Path) -> List[Dict[str, Any]]:
         samples = []
-        path = Path(data_path)
         if path.suffix == ".jsonl":
             with open(path, 'r', encoding='utf-8') as f:
                 for line in f:
@@ -69,7 +117,6 @@ class ReasoningDataset(Dataset):
         elif path.suffix == ".json":
             with open(path, 'r', encoding='utf-8') as f:
                 samples = json.load(f)
-        logger.info(f"Loaded {len(samples)} samples from {data_path}")
         return samples
     
     def __len__(self) -> int:
@@ -88,6 +135,8 @@ class ReasoningDataset(Dataset):
         return {"input_ids": input_ids, "attention_mask": attention_mask, "labels": input_ids.clone()}
     
     def _format_messages(self, messages: List[Dict[str, str]]) -> str:
+         # Handle HF dataset row format often being dict behavior but let's assume dict or object
+         # HF datasets rows are dicts
         return "\n\n".join([f"{m.get('role', 'user').title()}: {m.get('content', '')}" for m in messages])
 
 
@@ -139,7 +188,7 @@ class ReasoningSFTTrainer:
     def train(self):
         from transformers import Trainer, TrainingArguments
         
-        dataset = ReasoningDataset(self.config.dataset_path, self.tokenizer, self.config.max_seq_length)
+        dataset = ReasoningDataset(self.config, self.tokenizer)
         training_args = TrainingArguments(
             output_dir=self.config.output_dir, num_train_epochs=self.config.num_epochs,
             per_device_train_batch_size=self.config.batch_size, gradient_accumulation_steps=self.config.gradient_accumulation_steps,
@@ -158,22 +207,57 @@ class ReasoningSFTTrainer:
 def main():
     parser = argparse.ArgumentParser(description="Reasoning SFT Training")
     parser.add_argument("--model", required=True, help="Base model path")
-    parser.add_argument("--dataset", required=True, help="CoT dataset path")
+    
+    # Dataset arguments (Updated)
+    parser.add_argument("--dataset", default="", help="Legacy path or specific dataset name")
+    parser.add_argument("--reasoning", action="store_true", help="Enable reasoning category datasets")
+    parser.add_argument("--math", action="store_true", help="Enable math category datasets")
+    parser.add_argument("--code", action="store_true", help="Enable code category datasets")
+    parser.add_argument("--tools", action="store_true", help="Enable tool/agent category datasets")
+    parser.add_argument("--general", action="store_true", help="Enable general category datasets")
+    
     parser.add_argument("--output", default="checkpoints/reasoning_sft", help="Output directory")
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--batch-size", type=int, default=2)
+    parser.add_argument("--gradient-accumulation-steps", type=int, default=8)
+    parser.add_argument("--save-steps", type=int, default=500)
+    parser.add_argument("--logging-steps", type=int, default=10)
     parser.add_argument("--lr", type=float, default=2e-5)
     parser.add_argument("--max-length", type=int, default=4096)
     parser.add_argument("--lora-r", type=int, default=64)
     parser.add_argument("--extend-context", action="store_true")
     parser.add_argument("--target-context", type=int, default=32768)
+    parser.add_argument("--no-bf16", action="store_true", help="Disable bf16 training")
+    parser.add_argument("--mode", choices=["censored", "uncensored"], default="censored")
+
+    # Modality Check
+    parser.add_argument("--check-modality", action="store_true", help="Check model modality and exit")
     args = parser.parse_args()
+
+    if args.check_modality:
+        from src.utils.model_utils import check_modality
+        if not check_modality(args.model, "text"):
+            sys.exit(1)
+        sys.exit(0)
+    
+    # Map flags to categories
+    categories = []
+    if args.reasoning: categories.append("reasoning")
+    if args.math: categories.append("math")
+    if args.code: categories.append("code")
+    if args.tools: categories.append("tools")
+    if args.general: categories.append("general")
     
     config = ReasoningSFTConfig(
-        model_path=args.model, dataset_path=args.dataset, output_dir=args.output,
+        model_path=args.model, 
+        dataset_path=args.dataset,
+        dataset_categories=categories,
+        output_dir=args.output,
         num_epochs=args.epochs, batch_size=args.batch_size, learning_rate=args.lr,
         max_seq_length=args.max_length, lora_r=args.lora_r,
-        extend_context=args.extend_context, target_context_length=args.target_context
+        extend_context=args.extend_context, target_context_length=args.target_context,
+        bf16=not args.no_bf16,
+        mode=args.mode
     )
     trainer = ReasoningSFTTrainer(config)
     trainer.setup()

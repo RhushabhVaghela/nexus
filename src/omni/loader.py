@@ -146,8 +146,8 @@ class OmniModelLoader:
         "Flux1ForConditionalGeneration",
     ]
     
-    def __init__(self, model_path: Union[str, Path]):
-        self.model_path = Path(model_path)
+    def __init__(self, model_path: Optional[Union[str, Path]] = None):
+        self.model_path = Path(model_path) if model_path else None
         self._model = None
         self._tokenizer = None
         self._processor = None

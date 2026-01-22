@@ -64,7 +64,7 @@ class DistributedConfig:
     """Distributed training configuration."""
     
     # Model
-    model_name: str = "Qwen/Qwen2.5-7B-Instruct"
+    model_name: str = "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
     max_seq_length: int = 4096
     
     # Distributed backend
@@ -510,7 +510,7 @@ def main():
     parser = argparse.ArgumentParser(description="Distributed training for Nexus Model")
     
     # Model
-    parser.add_argument("--model", type=str, default="Qwen/Qwen2.5-7B-Instruct")
+    parser.add_argument("--model", type=str, default="/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4")
     parser.add_argument("--max-seq-length", type=int, default=4096)
     
     # Distributed

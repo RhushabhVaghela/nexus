@@ -1,6 +1,6 @@
 <img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" style="height:64px;margin-right:32px"/>
 
-# is openai/gpt-oss-20b trained on The Stack (6TB) dataset?
+# is /mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4 trained on The Stack (6TB) dataset?
 
 **No, OpenAI's gpt-oss-20b model was not trained on The Stack (6TB) dataset.**[^1_1]
 
@@ -17,7 +17,7 @@ gpt-oss-20b is a Mixture-of-Experts (MoE) transformer with 20.9 billion total pa
 
 [^1_1]: https://openai.com/index/introducing-gpt-oss/
 
-[^1_2]: https://huggingface.co/openai/gpt-oss-20b
+[^1_2]: https://huggingface.co//mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4
 
 [^1_3]: https://cdn.openai.com/pdf/419b6906-9da6-406c-a19d-1bb078ac7637/oai_gpt-oss_model_card.pdf
 
@@ -41,7 +41,7 @@ gpt-oss-20b is a Mixture-of-Experts (MoE) transformer with 20.9 billion total pa
 
 [^1_13]: https://platform.openai.com/docs/models/gpt-oss-20b
 
-[^1_14]: https://build.nvidia.com/openai/gpt-oss-20b/modelcard
+[^1_14]: https://build.nvidia.com//mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4/modelcard
 
 [^1_15]: https://www.kaggle.com/datasets/verracodeguacas/openaigpt-oss-20b
 
@@ -173,7 +173,7 @@ Merge LoRA: `model.save_pretrained_merged("gpt-oss-20b-coder", tokenizer, save_m
 
 [^4_7]: https://www.youtube.com/watch?v=AFhDi1ACB0k
 
-[^4_8]: https://huggingface.co/openai/gpt-oss-20b/discussions/43
+[^4_8]: https://huggingface.co//mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4/discussions/43
 
 [^4_9]: https://www.firecrawl.dev/blog/fine_tune_openai_gpt_oss
 
@@ -351,7 +351,7 @@ Benchmark iteratively; expect near-match on code evals.[^7_3]
 
 [^7_8]: https://huggingface.co/datasets/bigcode/the-stack-v2
 
-[^7_9]: https://huggingface.co/openai/gpt-oss-20b
+[^7_9]: https://huggingface.co//mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4
 
 [^7_10]: https://arxiv.org/html/2508.10925v1
 

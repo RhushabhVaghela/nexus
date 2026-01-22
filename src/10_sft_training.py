@@ -57,7 +57,7 @@ yaml_config = load_config()
 # Merge with defaults
 CONFIG = {
     # Model - from YAML or default
-    "model_name": yaml_config.get("base_model", {}).get("name", "openai/gpt-oss-20b"),
+    "model_name": yaml_config.get("base_model", {}).get("name", "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"),
     "torch_dtype": yaml_config.get("base_model", {}).get("torch_dtype", "auto"),
     "trust_remote_code": yaml_config.get("base_model", {}).get("trust_remote_code", True),
     
@@ -100,12 +100,14 @@ CONFIG = {
 # ═══════════════════════════════════════════════════════════════
 import argparse
 parser = argparse.ArgumentParser(description="SFT Training Stage")
+parser.add_argument("--mode", choices=["censored", "uncensored"], default="censored", help="Training mode (safety vs capability)")
 parser.add_argument("--quick", action="store_true", help="Enable Quick Validation Mode (Tiny batch, truncated text)")
 parser.add_argument("--use_streaming", action="store_true", help="Enable Streaming Dataset Mode")
 parser.add_argument("--long-context", action="store_true", help="Enable RoPE Scaling for Long Context (128k+)")
 args, unknown = parser.parse_known_args()
 
 # Apply CLI flags to CONFIG
+CONFIG["mode"] = args.mode
 if args.long_context:
     CONFIG["long_context_scaling"] = True
     logger.info("📐 Long Context RoPE Scaling: ENABLED")
@@ -403,8 +405,22 @@ def load_datasets(use_streaming: bool = False, streaming_paths: list = None) -> 
             datasets["train"] = load_dataset("json", data_files=[str(f) for f in files], split="train")
             
     if "train" not in datasets:
+        # 1. Try Premium Mode-Specific Data First (from 03_load_premium_datasets.py)
+        # Assuming path /mnt/e/data/premium/{mode}_*
+        mode = CONFIG.get("mode", "censored")
+        premium_base = Path("/mnt/e/data/premium")
+        if premium_base.exists():
+            matches = list(premium_base.glob(f"{mode}_*"))
+            if matches:
+                # Use the latest/largest one if multiple
+                matches.sort()
+                premium_dir = matches[-1]
+                logger.info(f"📂 Found PREMIUM {mode.upper()} data at {premium_dir}")
+                datasets["train"] = load_dataset(str(premium_dir), split="train")
+
+    if "train" not in datasets:
         # Fallback to mixed if real not found (for legacy support, but warn)
-        logger.warning("⚠️ No REAL training data found in processed/train. Checking legacy paths...")
+        logger.warning("⚠️ No REAL training data found. Checking legacy paths...")
         mixed_dir = Path(CONFIG["mixed_data_dir"]) / "train"
         if mixed_dir.exists():
             files = list(mixed_dir.glob("*.jsonl"))

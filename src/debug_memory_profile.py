@@ -52,7 +52,7 @@ def test_loading():
         from transformers import AutoModelForCausalLM
         bnb_config = BitsAndBytesConfig(load_in_8bit=True)
         llm = AutoModelForCausalLM.from_pretrained(
-            "Qwen/Qwen2.5-7B-Instruct",
+            "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4",
             quantization_config=bnb_config,
             device_map="auto",
             low_cpu_mem_usage=True

@@ -156,57 +156,48 @@ class TestOmniModelLoading:
     def omni_model_path(self):
         return Path("/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4")
     
-    def test_load_thinker_only_mocked(self):
-        """Test loading Omni model in thinker_only mode (mocked)."""
+    def test_load_thinker_only_real(self, text_model_path, real_text_tokenizer):
+        """Test loading model in thinker_only mode with real weights."""
         from src.omni.loader import OmniModelLoader
-        from unittest.mock import MagicMock, patch
         
-        loader = OmniModelLoader("/fake/model/path")
+        # Ensure path is real
+        if not text_model_path.exists():
+            pytest.skip(f"Model not found: {text_model_path}")
+            
+        loader = OmniModelLoader(str(text_model_path))
         
-        # Mock the transformers imports
-        mock_model = MagicMock()
-        mock_tokenizer = MagicMock()
-        mock_tokenizer.pad_token = None
-        mock_tokenizer.eos_token = "<eos>"
-        
-        with patch('transformers.AutoTokenizer.from_pretrained', return_value=mock_tokenizer):
-            with patch('transformers.AutoModelForCausalLM.from_pretrained', return_value=mock_model):
-                model, tokenizer = loader.load(mode="thinker_only")
+        # We use the real load method
+        model, tokenizer = loader.load(mode="thinker_only")
         
         assert model is not None
+        assert tokenizer is not None
+        assert model.config.model_type == "qwen2"
     
-    def test_load_for_training_mocked(self):
-        """Test loading Omni model for training (mocked)."""
+    def test_load_for_training_real(self, text_model_path):
+        """Test loading model for training with real weights."""
         from src.omni.loader import OmniModelLoader
-        from unittest.mock import MagicMock, patch
         
-        loader = OmniModelLoader("/fake/model/path")
+        if not text_model_path.exists():
+            pytest.skip(f"Model not found: {text_model_path}")
+
+        loader = OmniModelLoader(str(text_model_path))
+        model, tokenizer = loader.load_for_training(str(text_model_path))
         
-        mock_model = MagicMock()
-        mock_tokenizer = MagicMock()
-        mock_tokenizer.pad_token = None
-        mock_tokenizer.eos_token = "<eos>"
-        
-        with patch.object(loader, 'load', return_value=(mock_model, mock_tokenizer)):
-            model, tokenizer = loader.load_for_training("/fake/path")
-        
-        assert model is mock_model
-        assert tokenizer is mock_tokenizer
+        assert model is not None
+        assert tokenizer is not None
     
-    def test_load_for_inference_mocked(self):
-        """Test loading Omni model for inference (mocked)."""
+    def test_load_for_inference_real(self, text_model_path):
+        """Test loading model for inference with real weights."""
         from src.omni.loader import OmniModelLoader
-        from unittest.mock import MagicMock, patch
         
-        # We need to fully mock the load method since it calls transformers internally
-        mock_model = MagicMock()
-        mock_tokenizer = MagicMock()
+        if not text_model_path.exists():
+            pytest.skip(f"Model not found: {text_model_path}")
+            
+        loader = OmniModelLoader(str(text_model_path))
+        model, tokenizer = loader.load_for_inference(mode="thinker_only")
         
-        with patch.object(OmniModelLoader, 'load_for_inference', return_value=(mock_model, mock_tokenizer)):
-            loader = OmniModelLoader("/fake/model/path")
-            model, tokenizer = loader.load_for_inference(mode="full")
-        
-        assert model is mock_model
+        assert model is not None
+        assert tokenizer is not None
 
 
 class TestOmniInference:

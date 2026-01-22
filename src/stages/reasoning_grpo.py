@@ -3,7 +3,7 @@
 Reasoning GRPO Training Stage
 
 Group Relative Policy Optimization for emergent reasoning capabilities.
-Based on DeepSeek-R1's approach to training reasoning without SFT.
+Integrated with Universal Dataset Manager.
 """
 
 import os
@@ -12,7 +12,7 @@ import json
 import logging
 import argparse
 from pathlib import Path
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, Dict, Any, List, Tuple
 
 import torch
@@ -23,12 +23,22 @@ logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+# Import Universal Data Management
+try:
+    from src.data.universal_manager import UniversalDatasetManager
+except ImportError:
+    pass
 
 @dataclass
 class ReasoningGRPOConfig:
     model_path: str = ""
     output_dir: str = "checkpoints/reasoning_grpo"
+    mode: str = "censored"
+    
     dataset_path: str = ""
+    dataset_categories: List[str] = field(default_factory=list)
+    dataset_names: List[str] = field(default_factory=list)
+    
     max_seq_length: int = 4096
     group_size: int = 4
     num_iterations: int = 1000
@@ -49,20 +59,59 @@ class ReasoningGRPOConfig:
 
 
 class GRPODataset(Dataset):
-    def __init__(self, data_path: str, tokenizer: Any, max_length: int = 4096):
+    def __init__(self, config: ReasoningGRPOConfig, tokenizer: Any):
         self.tokenizer = tokenizer
-        self.max_length = max_length
-        self.problems = self._load_problems(data_path)
+        self.max_length = config.max_seq_length
+        self.problems = self._load_problems(config)
     
-    def _load_problems(self, data_path: str) -> List[Dict[str, Any]]:
+    def _load_problems(self, config: ReasoningGRPOConfig) -> List[Dict[str, Any]]:
+        # Universal Loader Integration
+        # Prioritize unified loader
+        
+        manager = UniversalDatasetManager(mode=config.mode)
+        explicit_path = Path(config.dataset_path) if config.dataset_path and config.dataset_path.strip() else None
+        
+        # Load from Universal Manager if categories provided or not a file path
+        if config.dataset_categories or (config.dataset_path and not (explicit_path and explicit_path.is_file())):
+            names = config.dataset_names.copy()
+            if config.dataset_path and not (explicit_path and explicit_path.is_file()):
+                names.append(config.dataset_path)
+                
+            try:
+                logger.info(f"Loading GRPO data via UniversalManager. Categories={config.dataset_categories}")
+                hf_dataset = manager.get_unified_train_dataset(
+                    enabled_categories=config.dataset_categories, 
+                    included_datasets=names
+                )
+                
+                # Convert HF dataset to problems list
+                # GRPO expects "prompt"/"question" and "reference"/"answer"
+                problems = []
+                for item in hf_dataset:
+                    problems.append(item)
+                logger.info(f"Loaded {len(problems)} problems via UniversalManager")
+                return problems
+            except Exception as e:
+                logger.error(f"Failed universal load: {e}")
+                
+        # Fallback to single file
+        if explicit_path and explicit_path.exists():
+            return self._load_file(explicit_path)
+            
+        return []
+
+    def _load_file(self, path: Path) -> List[Dict[str, Any]]:
         problems = []
-        path = Path(data_path)
         if path.suffix == ".jsonl":
             with open(path, 'r', encoding='utf-8') as f:
                 for line in f:
                     if line.strip():
                         problems.append(json.loads(line))
-        logger.info(f"Loaded {len(problems)} problems")
+        elif path.suffix == ".json":
+            with open(path, 'r', encoding='utf-8') as f:
+                 data = json.load(f)
+                 if isinstance(data, list): problems = data
+                 else: problems = [data]
         return problems
     
     def __len__(self) -> int:
@@ -70,8 +119,14 @@ class GRPODataset(Dataset):
     
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         problem = self.problems[idx]
-        prompt = problem.get("question", problem.get("problem", problem.get("input", str(problem))))
-        reference = str(problem.get("answer", problem.get("solution", "")))
+        # Robust prompt extraction
+        prompt = problem.get("question", problem.get("problem", problem.get("input", problem.get("prompt", ""))))
+        # If no explicit prompt, maybe it's in messages format?
+        if not prompt and "messages" in problem:
+            # Extract last user message or construct prompt
+             prompt = "\n".join([m['content'] for m in problem['messages'] if m['role'] == 'user'])
+             
+        reference = str(problem.get("answer", problem.get("solution", problem.get("reference", ""))))
         return {"prompt": prompt, "reference": reference}
 
 
@@ -112,6 +167,7 @@ class GRPOTrainer:
         self.model.eval()
         with torch.no_grad():
             for prompt in prompts:
+                if not prompt: continue 
                 responses = []
                 inputs = self.tokenizer(prompt, return_tensors="pt", truncation=True, max_length=self.config.max_seq_length // 2).to(self.model.device)
                 for _ in range(num_responses):
@@ -137,6 +193,8 @@ class GRPOTrainer:
     def train_step(self, batch: Dict[str, Any]) -> Dict[str, float]:
         prompts, references = batch["prompts"], batch["references"]
         responses = self.generate_responses(prompts, self.config.group_size)
+        if not responses: return {"loss": 0.0, "mean_reward": 0.0, "max_reward": 0.0}
+        
         rewards = self.compute_rewards(prompts, responses, references)
         advantages = self.compute_advantages(rewards)
         
@@ -149,6 +207,10 @@ class GRPOTrainer:
                 outputs = self.model(**inputs)
                 logits = outputs.logits
                 prompt_len = len(self.tokenizer.encode(prompt))
+                
+                # Safety check for prompt/response split
+                if prompt_len >= inputs.input_ids.shape[1]: continue
+                
                 log_probs = F.log_softmax(logits[:, prompt_len-1:-1], dim=-1)
                 token_log_probs = torch.gather(log_probs, 2, inputs.input_ids[:, prompt_len:].unsqueeze(-1)).squeeze(-1)
                 advantage = advantages[i, j].to(self.model.device)
@@ -164,7 +226,11 @@ class GRPOTrainer:
     def train(self):
         from tqdm import tqdm
         
-        dataset = GRPODataset(self.config.dataset_path, self.tokenizer, self.config.max_seq_length)
+        dataset = GRPODataset(self.config, self.tokenizer)
+        if len(dataset) == 0:
+            logger.error("No data found for GRPO training!")
+            return
+
         dataloader = DataLoader(dataset, batch_size=self.config.batch_size, shuffle=True, collate_fn=lambda b: {"prompts": [x["prompt"] for x in b], "references": [x["reference"] for x in b]})
         
         global_step = 0
@@ -206,19 +272,43 @@ class GRPOTrainer:
 def main():
     parser = argparse.ArgumentParser(description="Reasoning GRPO Training")
     parser.add_argument("--model", required=True)
-    parser.add_argument("--dataset", required=True)
+    
+    # Dataset Args
+    parser.add_argument("--dataset", default="")
+    parser.add_argument("--reasoning", action="store_true")
+    parser.add_argument("--math", action="store_true")
+    parser.add_argument("--code", action="store_true")
+    
     parser.add_argument("--output", default="checkpoints/reasoning_grpo")
     parser.add_argument("--iterations", type=int, default=1000)
     parser.add_argument("--batch-size", type=int, default=4)
     parser.add_argument("--group-size", type=int, default=4)
     parser.add_argument("--lr", type=float, default=1e-6)
     parser.add_argument("--kl-coef", type=float, default=0.1)
+    parser.add_argument("--max-length", type=int, default=4096)
+    parser.add_argument("--mode", choices=["censored", "uncensored"], default="censored")
+    parser.add_argument("--check-modality", action="store_true", help="Check model modality and exit")
     args = parser.parse_args()
     
+    if args.check_modality:
+        from src.utils.model_utils import check_modality
+        if not check_modality(args.model, "text"):
+            sys.exit(1)
+        sys.exit(0)
+    
+    categories = []
+    if args.reasoning: categories.append("reasoning")
+    if args.math: categories.append("math")
+    if args.code: categories.append("code")
+    
     config = ReasoningGRPOConfig(
-        model_path=args.model, dataset_path=args.dataset, output_dir=args.output,
+        model_path=args.model, 
+        dataset_path=args.dataset,
+        dataset_categories=categories,
+        output_dir=args.output,
         num_iterations=args.iterations, batch_size=args.batch_size, group_size=args.group_size,
-        learning_rate=args.lr, kl_coef=args.kl_coef
+        learning_rate=args.lr, kl_coef=args.kl_coef,
+        mode=args.mode
     )
     trainer = GRPOTrainer(config)
     trainer.setup()

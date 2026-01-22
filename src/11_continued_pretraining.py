@@ -52,7 +52,7 @@ yaml_config = load_config()
 
 CONFIG = {
     # Model
-    "model_name": yaml_config.get("base_model", {}).get("name", "openai/gpt-oss-20b"),
+    "model_name": yaml_config.get("base_model", {}).get("name", "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"),
     
     # Continued Pretraining Specific
     "target_tokens": 50_000_000_000,  # 50B tokens target

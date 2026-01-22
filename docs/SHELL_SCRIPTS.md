@@ -6,7 +6,7 @@ Complete documentation for all shell scripts in the Nexus Model pipeline.
 
 ## run_universal_pipeline.sh
 
-**Location:** `/mnt/d/Research Experiments/nexus_model/run_universal_pipeline.sh`
+**Location:** `/mnt/d/Research Experiments/nexus/run_universal_pipeline.sh`
 
 The main orchestrator script for training any combination of capabilities.
 
@@ -315,7 +315,7 @@ python -c "import torch; print(torch.cuda.is_available())"
 All scripts log to:
 
 ```
-/mnt/d/Research Experiments/nexus_model/logs/
+/mnt/d/Research Experiments/nexus/logs/
 ├── train_cot.log
 ├── train_reasoning.log
 ├── train_omni.log

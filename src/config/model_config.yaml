@@ -13,7 +13,7 @@
 
 base_model:
   # Current selection - easily swappable
-  name: "openai/gpt-oss-20b"
+  name: "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
   
   # Alternative options (uncomment to use):
   # name: "deepseek-ai/deepseek-coder-v2-instruct"

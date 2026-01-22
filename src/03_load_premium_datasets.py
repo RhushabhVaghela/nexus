@@ -36,7 +36,7 @@ except ImportError:
 # ═══════════════════════════════════════════════════════════════
 
 CONFIG = {
-    "output_base_dir": "/mnt/e/data/premium",
+    "output_base_dir": "/mnt/e/data/datasets",
 }
 
 logger = setup_logger(__name__, "logs/load_premium_datasets.log")
@@ -366,7 +366,12 @@ def main():
         return
     
     # Set output dir
-    output_dir = args.output_dir or f"{CONFIG['output_base_dir']}/{args.mode}_{args.target_samples}"
+    if args.mode == "uncensored":
+        # Save into the specialized 'uncensored' group folder
+        output_dir = args.output_dir or f"{CONFIG['output_base_dir']}/uncensored/{args.mode}_{args.target_samples}"
+    else:
+        # Save into a general 'premium' category folder (which is censored by default)
+        output_dir = args.output_dir or f"{CONFIG['output_base_dir']}/premium/{args.mode}_{args.target_samples}"
     
     log_header(logger, "PREMIUM DATASET LOADER", {
         "Mode": args.mode,
