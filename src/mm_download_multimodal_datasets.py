@@ -183,8 +183,8 @@ def fetch_vision_dataset(
     images_dir.mkdir(exist_ok=True)
     
     if not HAS_DATASETS:
-        logger.warning("Using mock mode - no real data fetched")
-        return _generate_mock_vision_samples(output_dir, sample_limit)
+        logger.error("❌ 'datasets' library missing. Cannot fetch real data.")
+        raise RuntimeError("Missing dependencies for multimodal download.")
     
     try:
         ds = load_dataset(
@@ -195,8 +195,7 @@ def fetch_vision_dataset(
         )
     except Exception as e:
         logger.error(f"Failed to load dataset {config['source']}: {e}")
-        logger.info("Falling back to mock mode")
-        return _generate_mock_vision_samples(output_dir, sample_limit)
+        raise e
     
     count = 0
     jsonl_file = output_dir / "data.jsonl"
@@ -253,30 +252,6 @@ def fetch_vision_dataset(
     return count
 
 
-def _generate_mock_vision_samples(output_dir: Path, sample_limit: int) -> int:
-    """Generate mock vision samples for testing."""
-    jsonl_file = output_dir / "data.jsonl"
-    count = min(sample_limit, 100)  # Limit mock samples
-    
-    with open(jsonl_file, 'w', encoding='utf-8') as f:
-        for i in range(count):
-            record = MultimodalSample(
-                id=f"vision_mock_{i:07d}",
-                messages=[
-                    {"role": "user", "content": "Analyze this UI screenshot."},
-                    {"role": "assistant", "content": f"This is a mock UI description #{i}."},
-                ],
-                domain="multimodal_vision",
-                category="ui_screenshot_mock",
-                modalities={"image": [], "audio": [], "video": []},
-                source="mock",
-            )
-            f.write(json.dumps(record.to_dict(), ensure_ascii=False) + "\n")
-    
-    logger.info(f"Generated {count} mock vision samples")
-    return count
-
-
 # ═══════════════════════════════════════════════════════════════
 # AUDIO FETCHER
 # ═══════════════════════════════════════════════════════════════
@@ -308,8 +283,8 @@ def fetch_audio_dataset(
     audio_dir.mkdir(exist_ok=True)
     
     if not HAS_DATASETS:
-        logger.warning("Using mock mode - no real data fetched")
-        return _generate_mock_audio_samples(output_dir, sample_limit, language)
+        logger.error("❌ 'datasets' library missing. Cannot fetch real data.")
+        raise RuntimeError("Missing dependencies for multimodal download.")
     
     try:
         # Use config if specified (e.g., LibriSpeech clean/other)
@@ -332,8 +307,7 @@ def fetch_audio_dataset(
             )
     except Exception as e:
         logger.error(f"Failed to load dataset {config['source']}: {e}")
-        logger.info("Falling back to mock mode")
-        return _generate_mock_audio_samples(output_dir, sample_limit, language)
+        raise e
     
     count = 0
     jsonl_file = output_dir / "data.jsonl"
@@ -413,30 +387,6 @@ def fetch_audio_dataset(
     return count
 
 
-def _generate_mock_audio_samples(output_dir: Path, sample_limit: int, language: str) -> int:
-    """Generate mock audio samples for testing."""
-    jsonl_file = output_dir / "data.jsonl"
-    count = min(sample_limit, 100)
-    
-    with open(jsonl_file, 'w', encoding='utf-8') as f:
-        for i in range(count):
-            record = MultimodalSample(
-                id=f"audio_{language}_mock_{i:07d}",
-                messages=[
-                    {"role": "user", "content": "Transcribe this audio: [AUDIO]"},
-                    {"role": "assistant", "content": f"This is a mock transcript #{i} in {language}."},
-                ],
-                domain="multimodal_audio",
-                category="speech_mock",
-                modalities={"image": [], "audio": [], "video": []},
-                source="mock",
-            )
-            f.write(json.dumps(record.to_dict(), ensure_ascii=False) + "\n")
-    
-    logger.info(f"Generated {count} mock audio samples for {language}")
-    return count
-
-
 # ═══════════════════════════════════════════════════════════════
 # VIDEO FETCHER
 # ═══════════════════════════════════════════════════════════════
@@ -466,8 +416,8 @@ def fetch_video_dataset(
     frames_dir.mkdir(exist_ok=True)
     
     if not HAS_DATASETS:
-        logger.warning("Using mock mode - no real data fetched")
-        return _generate_mock_video_samples(output_dir, sample_limit)
+        logger.error("❌ 'datasets' library missing. Cannot fetch real data.")
+        raise RuntimeError("Missing dependencies for multimodal download.")
     
     try:
         ds = load_dataset(
@@ -478,8 +428,7 @@ def fetch_video_dataset(
         )
     except Exception as e:
         logger.error(f"Failed to load dataset {config['source']}: {e}")
-        logger.info("Falling back to mock mode")
-        return _generate_mock_video_samples(output_dir, sample_limit)
+        raise e
     
     count = 0
     jsonl_file = output_dir / "data.jsonl"
@@ -586,31 +535,8 @@ def _extract_keyframes(sample: Dict, frames_dir: Path, sample_id: str, num_frame
     return frame_paths
 
 
-def _generate_mock_video_samples(output_dir: Path, sample_limit: int) -> int:
-    """Generate mock video samples for testing."""
-    jsonl_file = output_dir / "data.jsonl"
-    count = min(sample_limit, 50)
-    
-    with open(jsonl_file, 'w', encoding='utf-8') as f:
-        for i in range(count):
-            record = MultimodalSample(
-                id=f"video_mock_{i:07d}",
-                messages=[
-                    {"role": "user", "content": "Describe what happens in this video."},
-                    {"role": "assistant", "content": f"This is a mock video description #{i}."},
-                ],
-                domain="multimodal_video",
-                category="video_mock",
-                modalities={"image": [], "audio": [], "video": []},
-                source="mock",
-            )
-            f.write(json.dumps(record.to_dict(), ensure_ascii=False) + "\n")
-    
-    logger.info(f"Generated {count} mock video samples")
-    return count
-
-
 # ═══════════════════════════════════════════════════════════════
+
 # BENCHMARK FETCHER
 # ═══════════════════════════════════════════════════════════════
 
@@ -639,8 +565,8 @@ def fetch_benchmark_dataset(
     images_dir.mkdir(exist_ok=True)
     
     if not HAS_DATASETS:
-        logger.warning("Using mock mode - no real data fetched")
-        return _generate_mock_benchmark_samples(output_dir, sample_limit, dataset_name)
+        logger.error("❌ 'datasets' library missing. Cannot fetch real data.")
+        raise RuntimeError("Missing dependencies for multimodal download.")
     
     try:
         # Handle different dataset configurations
@@ -659,7 +585,7 @@ def fetch_benchmark_dataset(
             )
     except Exception as e:
         logger.error(f"Failed to load benchmark {config['source']}: {e}")
-        return _generate_mock_benchmark_samples(output_dir, sample_limit, dataset_name)
+        raise e
     
     count = 0
     jsonl_file = output_dir / "data.jsonl"
@@ -720,30 +646,6 @@ def fetch_benchmark_dataset(
                 continue
     
     logger.info(f"✅ Benchmark-{dataset_name}: {count} samples saved to {output_dir}")
-    return count
-
-
-def _generate_mock_benchmark_samples(output_dir: Path, sample_limit: int, dataset_name: str) -> int:
-    """Generate mock benchmark samples for testing."""
-    jsonl_file = output_dir / "data.jsonl"
-    count = min(sample_limit, 50)
-    
-    with open(jsonl_file, 'w', encoding='utf-8') as f:
-        for i in range(count):
-            record = MultimodalSample(
-                id=f"benchmark_{dataset_name.lower()}_mock_{i:07d}",
-                messages=[
-                    {"role": "user", "content": f"Mock benchmark question #{i}"},
-                    {"role": "assistant", "content": f"Answer: A"},
-                ],
-                domain="benchmark",
-                category=f"{dataset_name.lower()}_mock",
-                modalities={"image": [], "audio": [], "video": []},
-                source="mock",
-            )
-            f.write(json.dumps(record.to_dict(), ensure_ascii=False) + "\n")
-    
-    logger.info(f"Generated {count} mock benchmark samples for {dataset_name}")
     return count
 
 

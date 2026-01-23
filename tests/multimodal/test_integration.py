@@ -25,15 +25,15 @@ class TestOmniIntegration(unittest.TestCase):
 
     def test_decoders_sota_format(self):
         """Test proper SOTA processor IDs"""
-        from multimodal.decoders import ImageDecoder, AudioDecoder
+        from src.multimodal.decoders import ImageDecoder, AudioDecoder
         
         img_decoder = ImageDecoder()
         res = img_decoder.decode("test.png")
-        self.assertEqual(res["processor_id"], "/mnt/e/data/encoders/vision encoders/siglip2-so400m-patch16-512")
+        self.assertEqual(res["processor_id"], "/mnt/e/data/encoders/vision-encoders/siglip2-so400m-patch16-512")
         
         aud_decoder = AudioDecoder()
         res = aud_decoder.decode("test.mp3")
-        self.assertEqual(res["processor_id"], "/mnt/e/data/encoders/audio encoders/whisper-large-v3-turbo")
+        self.assertEqual(res["processor_id"], "/mnt/e/data/encoders/audio-encoders/whisper-large-v3-turbo")
 
 if __name__ == '__main__':
     unittest.main()

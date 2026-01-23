@@ -236,13 +236,22 @@ class DatasetManager:
         self.output_dir = base_dir
         
         self.kaggle_api = None
-        if KAGGLE_AVAILABLE:
+        # Check availability at runtime to allow easier testing
+        try:
+            from kaggle.api.kaggle_api_extended import KaggleApi
+            kaggle_available = True
+        except ImportError:
+            kaggle_available = False
+            
+        if kaggle_available:
             try:
                 self.kaggle_api = KaggleApi()
                 self.kaggle_api.authenticate()
                 logger.info("✅ Kaggle API authenticated")
             except Exception as e:
                 logger.warning(f"⚠️ Kaggle API authentication failed: {e}")
+        else:
+            logger.debug("Kaggle API not available (import failed)")
 
     def download_and_process(
         self, 
@@ -281,11 +290,14 @@ class DatasetManager:
             except Exception as e:
                 logger.warning(f"⚠️ HuggingFace download failed for {name}: {e}")
 
-        # 2. Try Kaggle
         if self.kaggle_api and config.get("kaggle_id"):
             logger.info(f"Falling back to Kaggle for {name} ({config['kaggle_id']})...")
             try:
                 dataset_kaggle_path = self.kaggle_dir / name
+                # Mock check
+                if hasattr(self.kaggle_api, 'is_mock'):
+                     logger.info("Using MOCK Kaggle API")
+                     
                 if not dataset_kaggle_path.exists():
                      self.kaggle_api.dataset_download_files(config["kaggle_id"], path=str(dataset_kaggle_path), unzip=True, quiet=False)
                 

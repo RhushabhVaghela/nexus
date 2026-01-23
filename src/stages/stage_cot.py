@@ -31,11 +31,15 @@ class CoTStage(TextCapabilityStage):
         # Load base model
         if not super().prepare():
             return False
-        
+            
         if self.config.dry_run:
             self.logger.info("[DRY-RUN] Would load CoT datasets")
             return True
-        
+            
+        # Initialize optimizer
+        if self.model:
+            self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.config.learning_rate)
+            
         # Load CoT datasets
         self.logger.info("Loading Chain-of-Thought datasets dynamic...")
         self.train_dataset = self.load_dynamic_datasets()
@@ -55,11 +59,28 @@ class CoTStage(TextCapabilityStage):
         if self.train_dataset is None or len(self.train_dataset) == 0:
             self.logger.warning("No training data, skipping training")
             return {"success": True, "steps": 0, "skipped": True}
-        
+            
         self.logger.info("Starting CoT training...")
+        
+        # Tokenize dataset once (if small)
+        self.logger.info("Tokenizing dataset...")
+        def tokenize_function(sample):
+            if "text" in sample:
+                text = sample["text"]
+            elif "messages" in sample:
+                text = str(sample["messages"])
+            else:
+                text = ""
+            return self.tokenizer(text, truncation=True, max_length=2048, padding="max_length")
+            
+        tokenized_dataset = self.train_dataset.map(tokenize_function, batched=False)
+        tokenized_dataset.set_format(type='torch', columns=['input_ids', 'attention_mask'])
         
         # Training loop integration with training_controller
         from src.training_controller import training_step_hook
+        from torch.utils.data import DataLoader
+        
+        train_dataloader = DataLoader(tokenized_dataset, batch_size=self.config.batch_size, shuffle=True)
         
         total_steps = 0
         total_loss = 0.0
@@ -67,8 +88,7 @@ class CoTStage(TextCapabilityStage):
         for epoch in range(self.config.epochs):
             self.logger.info(f"Epoch {epoch + 1}/{self.config.epochs}")
             
-            # Simple training loop
-            for i, sample in enumerate(self.train_dataset):
+            for batch in train_dataloader:
                 self.current_step = total_steps
                 
                 # Training controller hook (pause/checkpoint/cooldown)
@@ -79,22 +99,8 @@ class CoTStage(TextCapabilityStage):
                     str(self.checkpoint_dir),
                 )
                 
-                # Tokenize and process sample
-                if "text" in sample:
-                    text = sample["text"]
-                elif "messages" in sample:
-                    text = str(sample["messages"])
-                else:
-                    continue
-                
-                inputs = self.tokenizer(
-                    text,
-                    return_tensors="pt",
-                    truncation=True,
-                    max_length=2048,
-                    padding=True,
-                )
-                inputs = {k: v.to(self.model.device) for k, v in inputs.items()}
+                # Move to device
+                inputs = {k: v.to(self.model.device) for k, v in batch.items()}
                 inputs["labels"] = inputs["input_ids"].clone()
                 
                 # Forward pass
@@ -102,18 +108,20 @@ class CoTStage(TextCapabilityStage):
                 loss = outputs.loss
                 total_loss += loss.item()
                 
-                # Backward (simplified - real impl would use optimizer)
+                # Backward and optimize
+                self.optimizer.zero_grad()
                 loss.backward()
+                self.optimizer.step()
                 
                 total_steps += 1
                 
-                if total_steps % 100 == 0:
+                if total_steps % 10 == 0:
                     avg_loss = total_loss / total_steps
                     self.logger.info(f"Step {total_steps}, Avg Loss: {avg_loss:.4f}")
                 
                 if total_steps % self.config.save_steps == 0:
                     self.save_checkpoint()
-        
+                    
         return {
             "success": True,
             "steps": total_steps,

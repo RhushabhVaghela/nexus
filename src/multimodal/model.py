@@ -107,7 +107,7 @@ class FeedForward(nn.Module):
 
 class VisionEncoder(nn.Module):
     """SigLIP 2 Vision Encoder (Feb 2025)"""
-    def __init__(self, model_name="/mnt/e/data/encoders/vision encoders/siglip2-so400m-patch16-512", output_dim=1152, load_in_8bit=False, device_map=None):
+    def __init__(self, model_name="/mnt/e/data/encoders/vision-encoders/siglip2-so400m-patch16-512", output_dim=1152, load_in_8bit=False, device_map=None):
         super().__init__()
         print(f"Loading Vision Encoder: {model_name}")
         if load_in_8bit:
@@ -137,7 +137,7 @@ class VisionEncoder(nn.Module):
 
 class AudioEncoder(nn.Module):
     """Whisper Large V3 Turbo Audio Encoder"""
-    def __init__(self, model_name="/mnt/e/data/encoders/audio encoders/whisper-large-v3-turbo", output_dim=1280, load_in_8bit=False, device_map=None):
+    def __init__(self, model_name="/mnt/e/data/encoders/audio-encoders/whisper-large-v3-turbo", output_dim=1280, load_in_8bit=False, device_map=None):
         super().__init__()
         print(f"Loading Audio Encoder: {model_name}")
         if load_in_8bit:
@@ -189,10 +189,16 @@ class VideoDecoder(nn.Module):
 
 class SpeechDecoder(nn.Module):
     """Parakeet TDT Speech Decoder"""
-    def __init__(self, model_name="/mnt/e/data/models/parakeet-tdt-0.6b-v3"):
+    def __init__(self, model_name="/mnt/e/data/encoders/audio-encoders/parakeet-tdt-0.6b-v3"):
         super().__init__()
         print(f"Loading Speech Decoder: {model_name}")
-        self.decoder = AutoModel.from_pretrained(model_name, trust_remote_code=True)
+        # Parakeet-TDT usually requires NeMo, but if loading via HF is possible we try
+        # Otherwise this should raise an error if NeMo is missing
+        try:
+            self.decoder = AutoModel.from_pretrained(model_name, trust_remote_code=True)
+        except Exception as e:
+            print(f"❌ Failed to load Speech Decoder from {model_name} via Transformers. NeMo might be required.")
+            raise e
         self.hidden_dim = self.decoder.config.hidden_size if hasattr(self.decoder.config, 'hidden_size') else 768
         # Freeze initially
         for param in self.decoder.parameters():
@@ -221,8 +227,8 @@ class ModularMultimodalWrapper(nn.Module):
         base_model,
         inject_vision: bool = False,
         inject_audio: bool = False,
-        vision_name: str = "/mnt/e/data/encoders/vision encoders/siglip2-so400m-patch16-512",
-        audio_name: str = "/mnt/e/data/encoders/audio encoders/whisper-large-v3-turbo",
+        vision_name: str = "/mnt/e/data/encoders/vision-encoders/siglip2-so400m-patch16-512",
+        audio_name: str = "/mnt/e/data/encoders/audio-encoders/whisper-large-v3-turbo",
         llm_dim: int = 4096,
         num_latents: int = 64,
         use_dfm: bool = True,
@@ -285,7 +291,19 @@ class ModularMultimodalWrapper(nn.Module):
         else:
             print("  ✅ Base model handles Audio natively. Skipping injection.")
 
-        # 3. Output Decoders (Optional / Any-to-Any)
+        # 3. Report & Persona Injection (Universal Architecture Additions)
+        self.report_proj = nn.Linear(4096, self.llm_dim).to(device, dtype=torch.float16)
+        self.persona_proj = nn.Linear(4096, self.llm_dim).to(device, dtype=torch.float16)
+        
+        # 4. Adaptive Modality Router (OLA-based)
+        self.router = nn.Sequential(
+            nn.Linear(self.llm_dim, self.llm_dim // 2),
+            nn.GELU(),
+            nn.Linear(self.llm_dim // 2, 3), # Scores for [Base, Report, Persona]
+            nn.Softmax(dim=-1)
+        ).to(device, dtype=torch.float16)
+
+        # 5. Output Decoders (Optional / Any-to-Any)
         # Assuming if we inject encoders, we probably need decoders, OR if user explicitly asks.
         # But if base model is Omni, it might have talker heads?
         # For safety/consistency with user request, we inject these if enabled.
@@ -319,28 +337,39 @@ class ModularMultimodalWrapper(nn.Module):
             tokens = self.audio_connector(features)
         return tokens
 
-    def forward(self, input_ids, pixel_values=None, audio_features=None, output_modality="text", **kwargs):
+    def forward(self, input_ids, pixel_values=None, audio_features=None, report_state=None, persona_state=None, output_modality="text", **kwargs):
         text_embeds = self.llm.get_input_embeddings()(input_ids)
         multimodal_embeds = []
         
-        # Only encode if injected AND provided
+        # 1. Standard Modalities
         if self.inject_vision and pixel_values is not None:
             multimodal_embeds.append(self.encode_vision(pixel_values))
         
         if self.inject_audio and audio_features is not None:
             multimodal_embeds.append(self.encode_audio(audio_features))
             
+        # 2. Universal Architecture Modalities (Report/Persona)
+        if report_state is not None:
+            # Map AgentCPM hidden states to LLM space
+            report_embeds = self.report_proj(report_state.to(dtype=torch.float16))
+            multimodal_embeds.append(report_embeds)
+            
+        if persona_state is not None:
+            # Map PersonaPlex embeddings to LLM space
+            persona_embeds = self.persona_proj(persona_state.to(dtype=torch.float16))
+            multimodal_embeds.append(persona_embeds)
+            
         if multimodal_embeds:
             all_embeds = torch.cat(multimodal_embeds + [text_embeds], dim=1)
         else:
             all_embeds = text_embeds
         
-        # For Native models (not injected), inputs like 'pixel_values' might need to be passed kwargs?
-        # But here we assume if NOT injected, the Base LLM handles it via its own forward() logic?
-        # Actually, if we wrap it, we usually control the embedding concatenation.
-        # If Base is Native, we shouldn't be doing embedding concat here manually unless we are MIXING native + custom.
-        # For now, simplistic concat logic for injected modalities.
+        # 3. Apply Adaptive Router
+        # The router decides the weighting for each token's contribution to the final logic
+        routing_scores = self.router(all_embeds)
         
+        # In a full OLA implementation, we'd use these scores to mask/scale attention.
+        # For this unified pass, we ensure the embeddings are pass-through to the backbone.
         llm_outputs = self.llm(inputs_embeds=all_embeds, **kwargs)
         
         if output_modality == "text":
@@ -377,8 +406,8 @@ class OmniMultimodalLM(nn.Module):
         self.native_input_keys = {"vision": "images", "audio": "audios"} # Defaults for Qwen
         
         # Default to local encoder paths (user's refactored folder structure)
-        vision_name = kwargs.pop("vision_name", "/mnt/e/data/encoders/vision encoders/siglip2-so400m-patch16-512")
-        audio_name = kwargs.pop("audio_name", "/mnt/e/data/encoders/audio encoders/whisper-large-v3-turbo")
+        vision_name = kwargs.pop("vision_name", "/mnt/e/data/encoders/vision-encoders/siglip2-so400m-patch16-512")
+        audio_name = kwargs.pop("audio_name", "/mnt/e/data/encoders/audio-encoders/whisper-large-v3-turbo")
         
         # Extract wrapper-specific flags to prevent pollution of Base Model init
         wrapper_enable_decoders = kwargs.pop("enable_decoders", True)
@@ -594,10 +623,14 @@ class OmniMultimodalLM(nn.Module):
         Used by the Trainer to prepare batches dynamically.
         """
         schema = {
-            "requires_vision_input": True, # We always want vision data available
-            "requires_audio_input": True,  # We always want audio data available
+            "requires_vision_input": True, 
+            "requires_audio_input": True,  
+            "requires_report_input": True, # AgentCPM integration
+            "requires_persona_input": True, # PersonaPlex integration
             "vision_key": "pixel_values" if getattr(self.wrapper, "inject_vision", False) else self.native_input_keys["vision"],
             "audio_key": "audio_features" if getattr(self.wrapper, "inject_audio", False) else self.native_input_keys["audio"],
+            "report_key": "report_state",
+            "persona_key": "persona_state",
             "text_key": "input_ids"
         }
         return schema

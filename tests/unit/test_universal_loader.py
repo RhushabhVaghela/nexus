@@ -297,12 +297,12 @@ class TestRealDatasets:
         return Path("/mnt/e/data/datasets/tools/Salesforce_xlam-function-calling-60k/xlam_function_calling_60k.json")
     
     @pytest.fixture
-    def o1_dataset_path(self):
+    def o1_dataset_path(self, text_model_path):
         return Path("/mnt/e/data/datasets/reasoning/O1-OPEN_OpenO1-SFT-Pro")
-    
+
     @pytest.fixture
     def gsm8k_path(self):
-        return Path("/mnt/e/data/datasets/reasoning/openai_gsm8k") # Likely missing, test should skip
+        return Path("/mnt/e/data/datasets/reasoning/openai_gsm8k")
     
     def test_load_cot_dataset(self, cot_dataset_path):
         """Test loading CoT Collection (large JSON dict)."""

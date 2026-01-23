@@ -157,8 +157,9 @@ class BaseStage(ABC):
         Looks up paths in ALL_DATASETS and combines them.
         """
         from datasets import concatenate_datasets
+        from src.metrics_tracker import get_capability_datasets
         
-        paths = ALL_DATASETS.get(self.config.capability_name, [])
+        paths = get_capability_datasets(self.config.capability_name)
         if not paths:
             self.logger.warning(f"No dynamic datasets found for capability: {self.config.capability_name}")
             return None

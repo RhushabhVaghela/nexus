@@ -126,8 +126,43 @@ python src/capability_registry.py
 | `--enable-tri-streaming` | ALL | Gemini Live-style |
 | `--enable-image-generation` | SD3 decoder | Text→Image |
 | `--enable-video-generation` | SVD decoder | Text→Video |
+| `--enable-remotion-explainer`| text | 3B1B-style Video |
 | `--enable-all-text` | text | All text capabilities |
 | `--enable-full-omni` | text | Everything |
+
+### NexusLib Components
+*   `NexusMath`: Animated LaTeX formulas.
+*   `NexusGraph`: Dynamic function plotting.
+*   `NexusFlow`: Animated flowcharts.
+*   `NexusAnnotator`: Image annotation and labeling.
+*   `NexusAudio`: Synchronized narration support.
+*   `Nexus3D`: Three.js-powered 3D math visualizations.
+
+---
+
+## 🖥️ Interactive Dashboard & API
+
+The project includes a web-based dashboard and a FastAPI backend for real-time video generation.
+
+### 1. Start the API Server
+```bash
+python src/api/explainer_api.py
+```
+The server will be available at `http://localhost:8000`.
+
+### 2. Start the Dashboard (Frontend)
+```bash
+cd dashboard
+npm run dev
+```
+
+### 3. Generate via API
+You can also trigger generation via `curl`:
+```bash
+curl -X POST http://localhost:8000/generate \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Explain the Pythagorean Theorem"}'
+```
 
 ---
 
@@ -212,6 +247,7 @@ The tool also organizes model components:
 | Podcast | ~12GB | 4h |
 | Tri-Streaming | ~14GB | 6h |
 | Image Gen | ~14GB | 6h |
+| Remotion Explainer | ~12GB | 8h |
 
 ---
 
@@ -245,6 +281,7 @@ ps aux | grep python
 | **Podcast** | OleSpeech-IV, SPoRC, Cornell |
 | **Image Gen** | JourneyDB-GoT, Laion-GoT, OmniEdit-GoT |
 | **Video Gen** | VideoCoF-50k, MSR-VTT, VaTeX |
+| **Remotion Explainer** | Remotion-1M-Synthetic |
 
 ---
 

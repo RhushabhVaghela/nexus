@@ -18,7 +18,7 @@ class EMM1Dataset(torch.utils.data.IterableDataset):
     
     def __init__(
         self,
-        data_dir: str = "/mnt/e/data/datasets/E-MM1-100M/data",
+        data_dir: str = "/mnt/e/data/datasets/multimodal/E-MM1-100M/data",
         shard_indices: Optional[List[int]] = None,
         modalities: List[str] = ["image", "audio", "video", "text"],
         sample_limit: int = 0

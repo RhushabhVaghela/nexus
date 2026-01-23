@@ -62,6 +62,9 @@ def inspect_content(file_path: Path) -> Optional[str]:
     Inspect file content to guess category based on schema keys.
     Returns suggested category name or None.
     """
+    if file_path.is_dir():
+        return None
+        
     try:
         keys = set()
         # Read first few lines/records
@@ -241,30 +244,46 @@ def organize(base_path: str, move: bool = False):
 
     logger.info(f"🚀 Starting deep organization scan at {datasets_root}...")
     
-    # 1. First, find all 'uncensored' items recursively
-    # We ignore the actual target folder: datasets/uncensored
+    # 1. First, find all 'uncensored' items with a depth-limited scan
     target_uncensored = datasets_root / "uncensored"
     target_uncensored.mkdir(parents=True, exist_ok=True)
     
     uncensored_items = []
-    for item in datasets_root.rglob("*"):
-        # Criteria for uncensored:
-        # - Folder or file name contains "uncensored" or other keywords
-        # - Not already the target folder itself or inside it
-        if item.resolve() == target_uncensored.resolve():
+    max_depth = 3
+    base_sep_count = str(datasets_root).count(os.sep)
+    
+    for root_dir, dirs, files in os.walk(datasets_root):
+        current_depth = root_dir.count(os.sep) - base_sep_count
+        if current_depth > max_depth:
+            dirs[:] = []
             continue
-
-        if any(kw in item.name.lower() for kw in TRAINING_CATEGORIES["uncensored"]):
-            # Check if it's already in the target hierarchy
-            if target_uncensored.resolve() not in item.resolve().parents:
-                uncensored_items.append(item)
+            
+        root_path = Path(root_dir)
+        if root_path.resolve() == target_uncensored.resolve() or \
+           target_uncensored.resolve() in root_path.resolve().parents:
+            dirs[:] = [] # Skip target folder and its children
+            continue
+            
+        # Check files in this directory
+        for f in files:
+            if any(kw in f.lower() for kw in TRAINING_CATEGORIES["uncensored"]):
+                uncensored_items.append(root_path / f)
+                
+        # Check directory names
+        for d in dirs[:]: # Use slice to allow removal
+            if any(kw in d.lower() for kw in TRAINING_CATEGORIES["uncensored"]):
+                uncensored_items.append(root_path / d)
+                # If we move the whole directory, don't descend into it
+                dirs.remove(d)
     
     moves_count = 0
+
     
     # Process Uncensored Moves
+    uncensored_items_set = set(uncensored_items)
     for item in uncensored_items:
         # If it's a file inside a folder that is also marked for move, skip the file
-        if any(p in uncensored_items for p in item.parents):
+        if any(p in uncensored_items_set for p in item.parents):
             continue
             
         dest_path = target_uncensored / item.name

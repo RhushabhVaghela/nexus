@@ -43,20 +43,28 @@ class TestDetectModalitiesWithRealModel:
     
     @pytest.mark.real_model
     @pytest.mark.slow
-    def test_detect_omni_model(self, omni_model_path):
-        """Test detection on Qwen2.5-Omni model."""
+    def test_detect_omni_model(self, omni_model_path, request):
+        """Test detection on Qwen2.5-Omni model (or small model if requested)."""
         if not Path(omni_model_path).exists():
             pytest.skip("Omni model not found")
         
         result = detect_modalities(omni_model_path)
         
+        is_small = request.config.getoption("--small-model")
+        
         mods = result["modalities"]
         assert mods["text"] is True
-        assert mods["vision"] is True
-        assert mods["audio_input"] is True
-        assert mods["audio_output"] is True
-        assert mods["video"] is True
-        assert result.get("is_omni") is True
+        
+        if is_small:
+            # If using small model for omni fixture, it shouldn't be omni
+            assert mods["vision"] is False
+            assert result.get("is_omni", False) is False
+        else:
+            assert mods["vision"] is True
+            assert mods["audio_input"] is True
+            assert mods["audio_output"] is True
+            assert mods["video"] is True
+            assert result.get("is_omni") is True
 
 
 class TestAnalyzeConfig:

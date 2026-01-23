@@ -172,6 +172,12 @@ DATASETS_PATH = Path("/mnt/e/data/datasets")
 def pytest_addoption(parser):
     """Add custom CLI options for Nexus Model test suite."""
     parser.addoption(
+        "--small-model", "-S",
+        action="store_true",
+        default=False,
+        help="Use small model (Qwen2.5-0.5B) for ALL tests to avoid timeouts and save memory."
+    )
+    parser.addoption(
         "--full-tests", "-F", 
         action="store_true", 
         default=False,
@@ -207,7 +213,7 @@ def pytest_addoption(parser):
         default=False,
         help="Force run ALL tests and benchmarks, including those that would normally be "
              "skipped due to missing models/files. Implies --full-tests and --full-benchmarks. "
-             "Use for 100% coverage testing with real models. Default: False"
+             "Use for 100%% coverage testing with real models. Default: False"
     )
 
 
@@ -331,24 +337,37 @@ def has_gpu():
     return torch.cuda.is_available()
 
 @pytest.fixture(scope="session")
-def text_model_path():
+def text_model_path(request):
+    if request.config.getoption("--small-model"):
+        return Path("/mnt/e/data/models/Qwen2.5-0.5B")
     return TEXT_MODEL_PATH
 
 @pytest.fixture(scope="session")
-def omni_model_path():
+def omni_model_path(request):
+    if request.config.getoption("--small-model"):
+        return Path("/mnt/e/data/models/Qwen2.5-0.5B")
     return OMNI_MODEL_PATH
 
 @pytest.fixture(scope="session")
-def real_text_model(text_model_path, device):
+def real_text_model(text_model_path, device, request):
     import torch
     from transformers import AutoModelForCausalLM
     if not Path(text_model_path).exists():
         pytest.skip(f"Model not found: {text_model_path}")
+        
+    model_kwargs = {
+        "torch_dtype": torch.float16 if device == "cuda" else torch.float32,
+        "device_map": "auto" if device == "cuda" else None,
+        "trust_remote_code": True,
+    }
+    
+    # Force small model loading params if requested
+    if request.config.getoption("--small-model"):
+        model_kwargs["low_cpu_mem_usage"] = True
+        
     model = AutoModelForCausalLM.from_pretrained(
-        text_model_path,
-        torch_dtype=torch.float16 if device == "cuda" else torch.float32,
-        device_map="auto" if device == "cuda" else None,
-        trust_remote_code=True,
+        str(text_model_path),
+        **model_kwargs
     )
     model.eval()
     yield model

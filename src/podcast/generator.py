@@ -11,6 +11,7 @@ This module is model-agnostic: it calls a generic `call_llm()` function that
 you can wire to your local Nexus model, OpenAI-compatible endpoint, etc.
 """
 
+import os
 import json
 from dataclasses import dataclass
 from typing import List, Dict, Any, Optional, Literal, Callable
@@ -23,6 +24,7 @@ Role = Literal["Host A", "Host B", "User"]
 class Turn:
     speaker: Role
     text: str
+    vibe: str = "neutral"  # neutral, excited, thoughtful, curious, skeptical, etc.
 
 
 @dataclass
@@ -107,8 +109,8 @@ Output strictly as JSON with this structure:
 
 {
   "turns": [
-    {"speaker": "Host A", "text": "..." },
-    {"speaker": "Host B", "text": "..." }
+    {"speaker": "Host A", "text": "...", "vibe": "thoughtful" },
+    {"speaker": "Host B", "text": "...", "vibe": "excited" }
   ]
 }
 """.strip()
@@ -135,8 +137,8 @@ Output strictly as JSON with:
 
 {
   "turns": [
-    {"speaker": "Host A", "text": "..."},
-    {"speaker": "Host B", "text": "..."}
+    {"speaker": "Host A", "text": "...", "vibe": "supportive"},
+    {"speaker": "Host B", "text": "...", "vibe": "curious"}
   ]
 }
 """.strip()

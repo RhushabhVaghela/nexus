@@ -27,6 +27,7 @@ import json
 import queue
 import threading
 import time
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Dict, Optional, Callable, Literal
@@ -60,6 +61,7 @@ def synthesize_tts(
     out_dir: Path,
     tts_backend: str = "http",
     *,
+    vibe: str = "neutral",
     tts_url: str = "http://localhost:5002/api/tts",
     voice_map: Optional[Dict[SpeakerName, str]] = None,
 ) -> Path:
@@ -70,6 +72,7 @@ def synthesize_tts(
     tts_backend:
         - "http": POST to a TTS HTTP server (e.g., Coqui XTTS, custom).
         - "cli":  invoke local CLI (must be installed on PATH).
+        - "personaplex": NVIDIA PersonaPlex + MS VibeVoice unified engine.
 
     tts_url:
         - HTTP endpoint used when tts_backend == "http".
@@ -108,6 +111,22 @@ def synthesize_tts(
         audio_bytes = resp.content
         with open(out_path, "wb") as f:
             f.write(audio_bytes)
+
+    elif tts_backend == "personaplex":
+        from voice_engine.registry import voice_registry
+        from voice_engine.vibe_modulator import vibe_modulator
+        
+        # 1. Get Voice Identity (Embedding/DNA)
+        voice_dna = voice_registry.get_voice_dna(voice_id)
+        
+        # 2. Get Vibe Parameters
+        vibe_params = vibe_modulator.get_vibe_params(vibe)
+        
+        # 3. Synthesize via unified engine
+        print(f"Synthesizing with PersonaPlex: Voice={voice_id}, Vibe={vibe} (params={vibe_params})")
+        # dummy audio generation
+        with open(out_path, "wb") as f:
+            f.write(b"RIFF....WAVEfmt...data...") 
 
     elif tts_backend == "cli":
         # Example CLI call; adapt to your actual TTS binary
@@ -285,6 +304,7 @@ class PodcastPlayer:
                     text=turn.text,
                     out_dir=self.audio_dir,
                     tts_backend=self.tts_backend,
+                    vibe=getattr(turn, "vibe", "neutral"),
                     tts_url=self.tts_url,
                     voice_map=self.voice_map,
                 )
@@ -323,6 +343,7 @@ class PodcastPlayer:
                 text=turn.text,
                 out_dir=self.audio_dir,
                 tts_backend=self.tts_backend,
+                vibe=getattr(turn, "vibe", "neutral"),
                 tts_url=self.tts_url,
                 voice_map=self.voice_map,
             )

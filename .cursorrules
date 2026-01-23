@@ -1,0 +1,15 @@
+# Opencode Cursor Rules
+# This file directs Cursor to use the project-specific Agent Guidelines.
+
+# Always refer to AGENTS.md for build, test, and style instructions.
+# Use .agent/ directory for specialist personas and workflows.
+
+rule_files:
+  - AGENTS.md
+  - .agent/rules/GEMINI.md
+  - ARCHITECTURE.md
+
+# Behavioral defaults
+preferred_language: python
+testing_framework: pytest
+style_guide: snake_case, type_hints, pathlib

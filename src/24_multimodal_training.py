@@ -14,67 +14,26 @@ import sys
 import random
 import itertools
 from typing import Dict, Any, List
-# Mock imports for standalone execution if modules missing
-try:
-    from torch.utils.data import Dataset
-    from torchvision.io import read_image
-    from transformers import Trainer, TrainingArguments
-except ImportError:
-    print("⚠️  MISSING DEPENDENCIES. RUNNING IN SIMULATION MODE.")
-    import random
-    
-    # Mock Torch
-    class MockTensor:
-        def __init__(self, *args, **kwargs): pass
-        def requires_grad(self, val): pass
-        
-    class MockTorch:
-        def randn(self, *args): return MockTensor()
-        def randint(self, *args): return MockTensor()
-        class utils:
-            class data:
-                class Dataset: pass
-    torch = MockTorch()
+from torch.utils.data import Dataset
+from transformers import Trainer, TrainingArguments, AutoProcessor
 
-    # Mock Transformers
-    class TrainingArguments:
-        def __init__(self, **kwargs): pass
-        
-    class Trainer:
-        def __init__(self, **kwargs): pass
-        def train(self): print("   [SIMULATION] Training loop executed successfully (5 steps).")
-        def save_model(self, path): print(f"   [SIMULATION] Model saved to {path}")
-        
-    # Mock Dataset
-    class Dataset: pass 
-    def read_image(path): return MockTensor()
-    
-    # Mock OmniMultimodalLM
-    class OmniMultimodalLM:
-        def __init__(self, **kwargs):
-            self.llm = self.MockLayer()
-            self.vision_projector = self.MockLayer()
-            self.audio_projector = self.MockLayer()
-        def parameters(self): return []
-        def save_pretrained(self, path): print(f"   [SIMULATION] Model weights saved to {path}")
-        class MockLayer:
-            def parameters(self): return [MockTensor()]
+# Add project root to sys.path to allow absolute imports from 'src'
+PROJECT_ROOT = Path(__file__).parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
-sys.path.insert(0, str(Path(__file__).parent))
-# Only import if not already simulated above, or wrap the import
-try:
-    from multimodal.model import OmniMultimodalLM
-except ImportError:
-    pass # Use the mock defined above if real one imports torch and fails
+from src.multimodal.model import OmniMultimodalLM
+from src.multimodal.decoders import OmniDecoder
+from src.data.universal_loader import UniversalDataLoader
+from src.utils.logging_config import setup_logger, log_header, log_completion
 
-from utils.logging_config import setup_logger, log_header, log_completion
 
 logger = setup_logger(__name__, "logs/multimodal_training.log")
 
 CONFIG = {
     "base_model": "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4",
-    "vision_model": "/mnt/e/data/encoders/vision encoders/siglip2-so400m-patch16-512",
-    "audio_model": "/mnt/e/data/encoders/audio encoders/whisper-large-v3-turbo",
+    "vision_model": "/mnt/e/data/encoders/vision-encoders/siglip2-so400m-patch16-512",
+    "audio_model": "/mnt/e/data/encoders/audio-encoders/whisper-large-v3-turbo",
     "output_dir": "/mnt/e/data/models/omnimodal_any2any",
     "use_emm1": False, 
     "emm1_shards": [], 
@@ -370,45 +329,86 @@ class OmniDataset(torch.utils.data.IterableDataset):
             "text": text_prompt,
             "image_path": image_path,
             "audio_path": audio_path,
+            "report_state": sample.get("report_state"), # Already processed hidden states
+            "persona_state": sample.get("persona_state"), # Already processed embeddings
             "label": assistant_msg["content"]
         }
 
 class DynamicDataCollator:
     """
     Collator that adapts to the model's specific schema requirements.
-    (e.g., 'pixel_values' vs 'images', 'audio_features' vs 'audios')
+    Uses real processors to generate tensors from paths.
     """
     def __init__(self, schema):
         self.schema = schema
         self.vision_key = schema["vision_key"]
         self.audio_key = schema["audio_key"]
+        self.report_key = schema["report_key"]
+        self.persona_key = schema["persona_key"]
         self.text_key = schema["text_key"]
+        self.decoder = OmniDecoder()
         
     def __call__(self, batch):
         batch = [b for b in batch if b is not None]
         if not batch: return {}
         
-        # In a real scenario, this would handle tokenization and stacking.
-        # For simulation, we map the keys dynamically.
+        # Tokenize text
+        # In production, we'd use model.tokenizer here. 
+        # For this implementation, we simulate the stacking for now but use real modality data
         
         bs = len(batch)
         
-        # Base generic output
         out = {
-            self.text_key: torch.randint(0, 1000, (bs, 10)),
-            "labels": torch.randint(0, 1000, (bs, 10))
+            self.text_key: torch.stack([torch.tensor(b.get("input_ids", [0]*10)) for b in batch]),
+            "labels": torch.stack([torch.tensor(b.get("labels", [0]*10)) for b in batch])
         }
         
-        # Dynamic Modality keys
+        # Process Modalities
         if self.schema["requires_vision_input"]:
-            # standard SigLIP shape (SigLIP2-512 uses 512x512)
-            out[self.vision_key] = torch.randn(bs, 3, 512, 512)
+            pixel_values = []
+            for b in batch:
+                path = b.get("image_path")
+                if path and os.path.exists(path):
+                    res = self.decoder.decode(path, "vision")
+                    pixel_values.append(res["pixel_values"].squeeze(0))
+                else:
+                    # Dummy for shape consistency if path missing (should be handled by loader)
+                    pixel_values.append(torch.zeros(3, 512, 512))
+            out[self.vision_key] = torch.stack(pixel_values)
             
         if self.schema["requires_audio_input"]:
-            # standard Whisper shape or Native shape
-            out[self.audio_key] = torch.randn(bs, 128, 3000)
+            audio_features = []
+            for b in batch:
+                path = b.get("audio_path")
+                if path and os.path.exists(path):
+                    res = self.decoder.decode(path, "audio")
+                    audio_features.append(res["input_features"].squeeze(0))
+                else:
+                    audio_features.append(torch.zeros(128, 3000))
+            out[self.audio_key] = torch.stack(audio_features)
+            
+        if self.schema.get("requires_report_input"):
+            reports = []
+            for b in batch:
+                state = b.get("report_state")
+                if state is not None:
+                    reports.append(torch.tensor(state))
+                else:
+                    reports.append(torch.zeros(1, 4096))
+            out[self.report_key] = torch.stack(reports)
+            
+        if self.schema.get("requires_persona_input"):
+            personas = []
+            for b in batch:
+                state = b.get("persona_state")
+                if state is not None:
+                    personas.append(torch.tensor(state))
+                else:
+                    personas.append(torch.zeros(1, 4096))
+            out[self.persona_key] = torch.stack(personas)
             
         return out
+
 
 def main():
     parser = argparse.ArgumentParser()

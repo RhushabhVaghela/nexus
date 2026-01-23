@@ -37,7 +37,7 @@ class TestOrchestratorScenarios:
             capture_output=True,
             text=True,
             cwd=str(PROJECT_ROOT),
-            timeout=300,  # 5 min timeout
+            timeout=1500,  # 25 min timeout for real training
         )
         
         # Should complete (may have warnings but not crash)

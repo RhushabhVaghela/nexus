@@ -197,7 +197,7 @@ class ReasoningSFTTrainer:
             bf16=self.config.bf16, gradient_checkpointing=self.config.gradient_checkpointing,
             optim="adamw_torch", report_to=["tensorboard"], save_total_limit=3
         )
-        trainer = Trainer(model=self.model, args=training_args, train_dataset=dataset, tokenizer=self.tokenizer)
+        trainer = Trainer(model=self.model, args=training_args, train_dataset=dataset, processing_class=self.tokenizer)
         trainer.train()
         trainer.save_model(self.config.output_dir)
         self.tokenizer.save_pretrained(self.config.output_dir)

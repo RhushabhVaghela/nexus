@@ -22,46 +22,100 @@ class ImageDecoder(ContentDecoder):
     """
     SigLIP 2 Processor (512px)
     """
-    def __init__(self, model_id: str = "/mnt/e/data/encoders/vision encoders/siglip2-so400m-patch16-512"):
+    def __init__(self, model_id: str = "/mnt/e/data/encoders/vision-encoders/siglip2-so400m-patch16-512"):
         self.processor = None
+        self.model_id = model_id
         if AutoProcessor:
             try:
                 self.processor = AutoProcessor.from_pretrained(model_id)
-            except:
-                pass
+            except Exception as e:
+                print(f"⚠️ Failed to load Image Processor from {model_id}: {e}")
 
     def decode(self, file_path: str) -> Dict[str, Any]:
+        if not Path(file_path).exists():
+             return {
+                "modality": "image",
+                "tensor_type": "pixel_values",
+                "processor_id": self.model_id,
+                "warning": f"File not found: {file_path}"
+            }
+            
+        from PIL import Image
+        try:
+            image = Image.open(file_path).convert("RGB")
+            if self.processor:
+                inputs = self.processor(images=image, return_tensors="pt")
+                return {
+                    "modality": "image",
+                    "tensor_type": "pixel_values",
+                    "processor_id": self.model_id,
+                    "pixel_values": inputs["pixel_values"]
+                }
+        except Exception as e:
+            raise RuntimeError(f"Failed to process image {file_path}: {e}")
+        
         return {
             "modality": "image",
             "tensor_type": "pixel_values",
-            "processor_id": "/mnt/e/data/encoders/vision encoders/siglip2-so400m-patch16-512",
-            # "tensor": ... (Done in pipeline)
+            "processor_id": self.model_id,
         }
 
 class AudioDecoder(ContentDecoder):
     """
     Whisper V3 Turbo
     """
-    def __init__(self, model_id: str = "/mnt/e/data/encoders/audio encoders/whisper-large-v3-turbo"):
+    def __init__(self, model_id: str = "/mnt/e/data/encoders/audio-encoders/whisper-large-v3-turbo"):
         self.processor = None
+        self.model_id = model_id
         if AutoProcessor:
             try:
                 self.processor = AutoProcessor.from_pretrained(model_id)
-            except:
-                pass
+            except Exception as e:
+                print(f"⚠️ Failed to load Audio Processor from {model_id}: {e}")
 
     def decode(self, file_path: str) -> Dict[str, Any]:
+        if not Path(file_path).exists():
+             return {
+                "modality": "audio",
+                "tensor_type": "input_features",
+                "processor_id": self.model_id,
+                "warning": f"File not found: {file_path}"
+            }
+            
+        import torchaudio
+        try:
+            waveform, sample_rate = torchaudio.load(file_path)
+            # Resample if needed (Whisper expects 16000Hz)
+            if sample_rate != 16000:
+                resampler = torchaudio.transforms.Resample(sample_rate, 16000)
+                waveform = resampler(waveform)
+            
+            # Convert to mono if needed
+            if waveform.shape[0] > 1:
+                waveform = torch.mean(waveform, dim=0, keepdim=True)
+            
+            if self.processor:
+                inputs = self.processor(waveform.squeeze().numpy(), sampling_rate=16000, return_tensors="pt")
+                return {
+                    "modality": "audio",
+                    "tensor_type": "input_features",
+                    "processor_id": self.model_id,
+                    "input_features": inputs["input_features"]
+                }
+        except Exception as e:
+            raise RuntimeError(f"Failed to process audio {file_path}: {e}")
+
         return {
             "modality": "audio",
             "tensor_type": "input_features",
-            "processor_id": "/mnt/e/data/encoders/audio encoders/whisper-large-v3-turbo"
+            "processor_id": self.model_id
         }
 
 class VideoDecoder(ContentDecoder):
     """
     SigLIP 2 (Temporal Pooling)
     """
-    def __init__(self, model_id: str = "/mnt/e/data/encoders/vision encoders/siglip2-so400m-patch16-512"):
+    def __init__(self, model_id: str = "/mnt/e/data/encoders/vision-encoders/siglip2-so400m-patch16-512"):
         pass
 
     def decode(self, file_path: str) -> Dict[str, Any]:

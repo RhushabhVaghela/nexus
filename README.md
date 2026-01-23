@@ -46,6 +46,7 @@ pytest tests/unit/ tests/integration/ tests/e2e/ -v
 | **tri-streaming** | Real-time multimodal streaming | ALL |
 | **image-generation** | Text-to-image (SD3 projector) | text, vision_output |
 | **video-generation** | Text-to-video (SVD projector) | text, video_output |
+| **remotion-explainer** | 3Blue1Brown-style explanatory video generation | text |
 
 ### Training Safety Features
 
@@ -426,6 +427,7 @@ Individual training stages in `src/stages/`:
 | streaming | `stage_streaming.py` | (runtime feature) |
 | image-gen | `stage_image_gen.py` | naruto-blip-captions |
 | video-gen | `stage_video_gen.py` | webvid |
+| remotion-explainer | `stage_remotion_gen.py` | remotion_explainer_dataset |
 
 ### Run Individual Stage
 
@@ -447,6 +449,7 @@ python src/stages/stage_cot.py \
 | Omni conversion | 14GB | Adds encoders |
 | Image generation | 14GB | SD3 projector |
 | Video generation | 14GB+ | SVD projector |
+| Remotion Explainer | 12GB | Programmatic generation |
 
 ---
 

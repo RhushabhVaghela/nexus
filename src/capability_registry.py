@@ -47,6 +47,20 @@ class Capability:
         return len(missing) == 0, missing
 
 
+REMOTION_EXPLAINER_SYSTEM_PROMPT = """
+You are a professional visual explainer, inspired by 3Blue1Brown. 
+Your goal is to generate Remotion TSX code that explains complex concepts beautifully.
+
+STRICT GUIDELINES:
+1. Use NexusLib components: NexusMath, NexusGraph, NexusFlow, NexusAnnotator, NexusAudio, Nexus3D.
+2. Aesthetic: Deep blue/black backgrounds (#000 or #000b1a), neon accents (#00f2ff, #ff0055).
+3. Animations: Use 'spring' and 'interpolate' for fluid movement.
+4. Layout: Center main elements, use high-contrast text.
+5. Audio: If narration is provided, use NexusAudio to sync the voiceover.
+6. 3D: For spatial concepts, use Nexus3D with coordinate grids and vectors.
+7. Output ONLY valid React/Remotion code.
+"""
+
 class CapabilityRegistry:
     """Registry of all available capabilities and their requirements."""
     
@@ -185,6 +199,17 @@ class CapabilityRegistry:
             estimated_vram_gb=16.0,
             estimated_time_hours=10.0,
         ))
+
+        # Remotion Explainer (Hybrid Programmatic Generation)
+        self.register(Capability(
+            name="remotion-explainer",
+            description="3Blue1Brown-style explanatory video generation using Remotion",
+            required_modalities={"text"},
+            training_script="src/stages/stage_remotion_gen.py",
+            dataset_patterns=["*remotion*", "*explainer*"],
+            estimated_vram_gb=12.0,
+            estimated_time_hours=8.0,
+        ))
     
     def register(self, capability: Capability):
         """Register a capability."""
@@ -264,6 +289,10 @@ class CapabilityRegistry:
         # Full omni capabilities
         if "tri-streaming" in enabled_capabilities:
             order.append("tri-streaming")
+
+        # Generation capabilities
+        if "remotion-explainer" in enabled_capabilities:
+            order.append("remotion-explainer")
         
         return order
     

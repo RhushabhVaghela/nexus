@@ -297,7 +297,8 @@ def discover_datasets(base_path: str = "/mnt/e/data/datasets") -> Dict[str, List
     datasets = {
         "cot": [], "reasoning": [], "thinking": [], "tools": [],
         "vision-qa": [], "video-understanding": [], "image-generation": [],
-        "video-generation": [], "podcast": [], "streaming": []
+        "video-generation": [], "podcast": [], "streaming": [],
+        "remotion-explainer": []
     }
     
     base = Path(base_path)
@@ -313,29 +314,36 @@ def discover_datasets(base_path: str = "/mnt/e/data/datasets") -> Dict[str, List
         "image": "image-generation", "generation": "image-generation",
         "vid-gen": "video-generation", "text2vid": "video-generation",
         "podcast": "podcast", "dialog": "podcast",
-        "tri-streaming": "tri-streaming", "streaming": "streaming"
+        "tri-streaming": "tri-streaming", "streaming": "streaming",
+        "remotion": "remotion-explainer", "explainer": "remotion-explainer"
     }
     
     try:
-        # Optimized recursive search using a single pass (os.walk)
+        # Optimized recursive search with depth limit
         data_extensions = {".json", ".jsonl", ".parquet", ".arrow"}
+        max_depth = 3
+        base_path_str = str(base_path)
+        base_sep_count = base_path_str.count(os.sep)
         
         for root, dirs, files in os.walk(base_path):
+            current_depth = root.count(os.sep) - base_sep_count
+            
             # Check for HF dataset
             if "dataset_info.json" in files:
-                path_str = root
-                _categorize(path_str, datasets, KEYWORD_MAP)
-                continue # Skip subdirs of HF dataset
+                _categorize(root, datasets, KEYWORD_MAP)
+                dirs[:] = [] # Skip subdirs of HF dataset
+                continue
                 
             # Check for data files
-            has_data = any(Path(f).suffix.lower() in data_extensions for f in files)
+            has_data = any(f.lower().endswith(tuple(data_extensions)) for f in files)
             
             if has_data:
                 _categorize(root, datasets, KEYWORD_MAP)
                 # Once we identify a folder as a dataset, we stop descending
-                # because UniversalDataLoader will handle its subfolders recursively.
-                # This prevents duplication if subfolders also contain data files.
                 dirs[:] = [] 
+            elif current_depth >= max_depth:
+                # Stop descending if we reached max depth without finding data
+                dirs[:] = []
                 
     except Exception as e:
         logger.warning(f"Error during optimized dataset discovery: {e}")
@@ -403,11 +411,21 @@ _STATIC_DATASETS = {
     "video-generation": [
         "/mnt/e/data/datasets/fullstack__stargate_s04e01_100topkdiverse_text2vid",
     ],
+    "remotion-explainer": [
+        "/mnt/e/data/datasets/remotion/remotion_explainer_dataset.jsonl",
+    ],
 }
 
 # Final ALL_DATASETS combines Static + Dynamically discovered
+# Lazy-loaded to avoid overhead on every import
+_ALL_DATASETS_CACHE = None
+
 def get_all_datasets() -> Dict[str, List[str]]:
     """Combine static dataset list with dynamic discovery."""
+    global _ALL_DATASETS_CACHE
+    if _ALL_DATASETS_CACHE is not None:
+        return _ALL_DATASETS_CACHE
+        
     dynamic = discover_datasets()
     combined = _STATIC_DATASETS.copy()
     
@@ -421,9 +439,18 @@ def get_all_datasets() -> Dict[str, List[str]]:
                 combined[cat].append(p)
                 existing.add(p)
                 
+    _ALL_DATASETS_CACHE = combined
     return combined
 
-ALL_DATASETS = get_all_datasets()
+# We keep this for backward compatibility but it will be empty or minimal until called
+# Actually, better to just export the function and let callers call it.
+# To avoid breaking other files, we'll keep the variable but make it a proxy or just call it.
+# For now, let's just make it call the function once.
+ALL_DATASETS = {} # Will be populated by callers who need it, or we can use a property trick
+
+def get_capability_datasets(capability: str) -> List[str]:
+    """Get datasets for a specific capability."""
+    return get_all_datasets().get(capability, [])
 
 
 def print_summary_table(metrics_list: List[TrainingMetrics]):

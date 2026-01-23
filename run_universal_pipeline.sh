@@ -48,11 +48,6 @@ else
     PYTHON_CMD="python"
 fi
 
-# ============ AUTO-ORGANIZE DATASETS ============
-echo -e "\033[0;34m[INFO] Auto-organizing datasets...\033[0m"
-$PYTHON_CMD src/utils/organize_datasets.py --base-path /mnt/e/data --move || true
-echo ""
-
 # ============ COLORS ============
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -91,6 +86,7 @@ ENABLE_VIDEO_UNDERSTANDING=false
 ENABLE_TRI_STREAMING=false
 ENABLE_IMAGE_GENERATION=false
 ENABLE_VIDEO_GENERATION=false
+ENABLE_REMOTION_EXPLAINER=false
 
 # Training options
 SAMPLE_SIZE=0  # 0 = all
@@ -98,6 +94,7 @@ BATCH_SIZE=1
 GRADIENT_ACCUMULATION=8
 EPOCHS=3
 DRY_RUN=false
+SKIP_ORGANIZE=true
 TRAINING_METHOD="sft"  # sft, lora, qlora, dpo, grpo, orpo, ppo, distillation, cpt
 
 # ============ PARSE ARGUMENTS ============
@@ -117,6 +114,7 @@ print_usage() {
     echo "  --enable-tri-streaming     Real-time multimodal streaming"
     echo "  --enable-image-generation  Text-to-image (requires SD3)"
     echo "  --enable-video-generation  Text-to-video (requires SVD)"
+    echo "  --enable-remotion-explainer 3Blue1Brown-style video generation"
     echo "  --enable-all-text          Enable all text-only capabilities"
     echo "  --enable-full-omni         Enable Omni + all capabilities"
     echo ""
@@ -128,6 +126,7 @@ print_usage() {
     echo "  --epochs N                 Training epochs (default: 3)"
     echo "  --training-method METHOD   Training method: sft|lora|qlora|dpo|grpo|orpo|ppo|distillation|cpt"
     echo "  --dry-run                  Simulate training without executing"
+    echo "  --organize                 Auto-organize datasets before training"
     echo ""
     exit 1
 }
@@ -140,6 +139,7 @@ for arg in "$@"; do
         --batch-size=*) BATCH_SIZE="${arg#*=}" ;;
         --epochs=*) EPOCHS="${arg#*=}" ;;
         --training-method=*) TRAINING_METHOD="${arg#*=}" ;;
+        --organize) SKIP_ORGANIZE=false ;;
         --enable-omni) ENABLE_OMNI=true ;;
         --enable-cot) ENABLE_COT=true ;;
         --enable-reasoning) ENABLE_REASONING=true ;;
@@ -152,6 +152,7 @@ for arg in "$@"; do
         --enable-tri-streaming) ENABLE_TRI_STREAMING=true ;;
         --enable-image-generation) ENABLE_IMAGE_GENERATION=true ;;
         --enable-video-generation) ENABLE_VIDEO_GENERATION=true ;;
+        --enable-remotion-explainer) ENABLE_REMOTION_EXPLAINER=true ;;
         --enable-all-text)
             ENABLE_COT=true
             ENABLE_REASONING=true
@@ -184,7 +185,7 @@ fi
 if ! $ENABLE_OMNI && ! $ENABLE_COT && ! $ENABLE_REASONING && ! $ENABLE_THINKING && \
    ! $ENABLE_TOOLS && ! $ENABLE_STREAMING && ! $ENABLE_PODCAST && ! $ENABLE_VISION_QA && \
    ! $ENABLE_VIDEO_UNDERSTANDING && ! $ENABLE_TRI_STREAMING && \
-   ! $ENABLE_IMAGE_GENERATION && ! $ENABLE_VIDEO_GENERATION; then
+   ! $ENABLE_IMAGE_GENERATION && ! $ENABLE_VIDEO_GENERATION && ! $ENABLE_REMOTION_EXPLAINER; then
     log_error "No capabilities enabled. Use --enable-* flags."
     print_usage
 fi
@@ -280,6 +281,13 @@ fi
 log_success "All modality gates passed!"
 echo ""
 
+# ============ AUTO-ORGANIZE DATASETS ============
+if ! $DRY_RUN && ! $SKIP_ORGANIZE; then
+    log_info "Auto-organizing datasets..."
+    $PYTHON_CMD src/utils/organize_datasets.py --base-path /mnt/e/data --move || true
+    echo ""
+fi
+
 # ============ BUILD TRAINING ORDER ============
 STAGES=()
 
@@ -318,6 +326,9 @@ if $ENABLE_IMAGE_GENERATION; then
 fi
 if $ENABLE_VIDEO_GENERATION; then
     STAGES+=("video-generation")
+fi
+if $ENABLE_REMOTION_EXPLAINER; then
+    STAGES+=("remotion-explainer")
 fi
 
 log_step "Stage 2: Training Queue (${#STAGES[@]} stages)"
@@ -454,6 +465,19 @@ for stage in "${STAGES[@]}"; do
                     --output-dir "$STAGE_OUTPUT" \
                     $COMMON_ARGS \
                     2>&1 | tee "${LOG_DIR}/train_video_gen.log"
+            fi
+            CURRENT_MODEL="$STAGE_OUTPUT"
+            ;;
+        remotion-explainer)
+            log_info "Running Remotion explainer code generation training..."
+            if $DRY_RUN; then
+                log_info "[DRY-RUN] $PYTHON_CMD -m src.stages.stage_remotion_gen --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+            else
+                $PYTHON_CMD -m src.stages.stage_remotion_gen \
+                    --base-model "$CURRENT_MODEL" \
+                    --output-dir "$STAGE_OUTPUT" \
+                    $COMMON_ARGS \
+                    2>&1 | tee "${LOG_DIR}/train_remotion.log"
             fi
             CURRENT_MODEL="$STAGE_OUTPUT"
             ;;

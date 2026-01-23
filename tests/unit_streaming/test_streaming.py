@@ -11,27 +11,17 @@ sys.path.append(str(Path(__file__).parents[2] / "src"))
 class TestStreamingComponents(unittest.TestCase):
     
     def setUp(self):
-        # Create a dummy Module class to inherit from
-        class MockModule:
-            def __init__(self):
-                pass
-            def __call__(self, *args, **kwargs):
-                return self.forward(*args, **kwargs)
-
-        # Setup Mock torch
-        self.mock_torch = MagicMock()
-        self.mock_nn = MagicMock()
-        self.mock_nn.Module = MockModule
-        self.mock_torch.nn = self.mock_nn
-        
-        # Patch sys.modules safely using context manager setup
+        # Patch sound-related sys.modules only to avoid breaking torch internals
         self.patcher = patch.dict(sys.modules, {
-            "torch": self.mock_torch,
-            "torch.nn": self.mock_nn,
             "sounddevice": MagicMock(),
             "pyaudio": MagicMock()
         })
         self.patcher.start()
+
+        # Mock objects for some tests if needed
+        self.mock_torch = MagicMock()
+        # Ensure it has a version if used
+        self.mock_torch.__version__ = "2.5.1"
 
     def tearDown(self):
         self.patcher.stop()
@@ -48,9 +38,10 @@ class TestStreamingComponents(unittest.TestCase):
         # Add mock tensor
         mock_tensor = MagicMock()
         vis.add_frame(mock_tensor)
-        ctx = vis.get_context()
-        # Ensure torch.stack was called
-        self.mock_torch.stack.assert_called()
+        with patch('torch.stack') as mock_stack:
+            ctx = vis.get_context()
+            # Ensure torch.stack was called
+            mock_stack.assert_called()
 
     def test_tts_init(self):
         from streaming.tts import TTSStreamer
@@ -58,11 +49,20 @@ class TestStreamingComponents(unittest.TestCase):
         self.assertEqual(tts.model_name, "Test-Model")
         
     def test_joint_orchestrator(self):
-        from streaming.joint import JointStreamingOrchestrator
-        orch = JointStreamingOrchestrator()
-        self.assertFalse(orch.is_active)
-        self.assertIsNotNone(orch.vision)
-        self.assertIsNotNone(orch.tts)
+        from streaming.joint import JointStreamingOrchestrator, VisionStreamBuffer, AudioStreamBuffer, UserEventBuffer
+        
+        vis_buf = VisionStreamBuffer()
+        aud_buf = AudioStreamBuffer()
+        user_buf = UserEventBuffer()
+        
+        orch = JointStreamingOrchestrator(
+            vision_buffer=vis_buf,
+            audio_buffer=aud_buf,
+            user_buffer=user_buf
+        )
+        self.assertIsNotNone(orch.vision_buffer)
+        self.assertIsNotNone(orch.audio_buffer)
+        self.assertIsNotNone(orch.user_buffer)
 
     def test_podcast_generator(self):
         from podcast.generator import generate_podcast_script

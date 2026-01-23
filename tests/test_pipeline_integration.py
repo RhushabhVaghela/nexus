@@ -28,28 +28,49 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 # TEST: REPETITIVE DATASET GENERATOR
 # ═══════════════════════════════════════════════════════════════
 
+# Load Modules using importlib since names have numbers
+def load_module(name, relative_path):
+    root = Path(__file__).parent.parent / "src"
+    path = root / relative_path
+    if not path.exists():
+        raise ImportError(f"Cannot find {path}")
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(name, str(path))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+# Helper for mocking sys.path inside modules
+sys.path.append(str(Path(__file__).parent.parent / "src"))
+
+
+# ═══════════════════════════════════════════════════════════════
+# TEST: REPETITIVE DATASET GENERATOR
+# ═══════════════════════════════════════════════════════════════
+
 class TestRepetitiveDatasetGeneration:
     """Test repetitive dataset generation pipeline."""
     
     def test_generator_weights_exist(self):
         """Verify all generator weights are defined."""
         try:
-            from src.gen_05_generate_repetitive_dataset import GENERATOR_WEIGHTS
-            
-            # Check that weights exist
-            assert len(GENERATOR_WEIGHTS) > 0
-            
-            # Check fullstack categories exist
-            fs_categories = [k for k in GENERATOR_WEIGHTS if k.startswith("fs_")]
-            assert len(fs_categories) >= 50, f"Expected 50+ fs_* categories, got {len(fs_categories)}"
+            mod = load_module("mod_05", "05_generate_repetitive_dataset.py")
+            GENERATOR_WEIGHTS = mod.GENERATOR_WEIGHTS
         except ImportError:
             pytest.skip("Module not available")
+        
+        # Check that weights exist
+        assert len(GENERATOR_WEIGHTS) > 0
+        
+        # Check fullstack categories exist
+        fs_categories = [k for k in GENERATOR_WEIGHTS if k.startswith("fs_")]
+        assert len(fs_categories) >= 50, f"Expected 50+ fs_* categories, got {len(fs_categories)}"
     
     def test_prompt_repetition_engine_initialization(self):
         """Test PromptRepetitionEngine can be instantiated."""
         try:
-            from src.gen_05_generate_repetitive_dataset import PromptRepetitionEngine
-            engine = PromptRepetitionEngine()
+            mod = load_module("mod_05", "05_generate_repetitive_dataset.py")
+            engine = mod.PromptRepetitionEngine()
             assert engine is not None
             assert hasattr(engine, 'generate_trajectory')
         except ImportError:
@@ -58,8 +79,8 @@ class TestRepetitiveDatasetGeneration:
     def test_repetition_styles(self):
         """Test all repetition styles produce valid output."""
         try:
-            from src.gen_05_generate_repetitive_dataset import PromptRepetitionEngine
-            engine = PromptRepetitionEngine()
+            mod = load_module("mod_05", "05_generate_repetitive_dataset.py")
+            engine = mod.PromptRepetitionEngine()
             
             query = "What is 2+2?"
             context = "Basic arithmetic"
@@ -82,7 +103,8 @@ class TestPreferenceDatasetGeneration:
     def test_preference_weights_balanced(self):
         """Verify preference weights are properly balanced."""
         try:
-            from src.gen_06_generate_preference_dataset import PREFERENCE_WEIGHTS
+            mod = load_module("mod_06", "06_generate_preference_dataset.py")
+            PREFERENCE_WEIGHTS = mod.PREFERENCE_WEIGHTS
             
             assert len(PREFERENCE_WEIGHTS) > 0
             
@@ -95,8 +117,8 @@ class TestPreferenceDatasetGeneration:
     def test_preference_pair_structure(self):
         """Test preference pairs have required fields."""
         try:
-            from src.gen_06_generate_preference_dataset import PreferencePairEngine
-            engine = PreferencePairEngine()
+            mod = load_module("mod_06", "06_generate_preference_dataset.py")
+            engine = mod.PreferencePairEngine()
             
             pair = engine.generate_preference_pair()
             if pair:  # May be None if all quotas exhausted
@@ -193,61 +215,95 @@ class TestMultimodalDatasetGeneration:
 # ═══════════════════════════════════════════════════════════════
 
 class TestUnifiedMultimodalDownloader:
-    """Test the unified Kaggle -> HF fallback downloader strategy."""
+    """Test the unified HF -> Kaggle downloader strategy."""
     
-    @patch('src.mm_download_unified.KaggleApi')
-    def test_kaggle_priority(self, mock_kaggle_cls):
-        """Test that Kaggle is tried first."""
+    @patch('mm_download_unified.load_dataset')
+    def test_hf_priority(self, mock_load):
+        """Test that HF is tried first."""
         try:
-            from src.mm_download_unified import DatasetManager
+            from mm_download_unified import DatasetManager, MultimodalSample
             
-            mock_api = mock_kaggle_cls.return_value
             manager = DatasetManager(Path("/tmp/test"))
+            config = {"hf_id": "test/hf", "kaggle_id": "test/kaggle"}
             
-            config = {"kaggle_id": "test/dataset", "hf_id": "test/hf"}
+            # Mock HF success - must be an iterable that yields dicts
+            mock_ds = MagicMock()
+            mock_ds.__iter__.return_value = [{"text": "sample"}]
+            # If manager uses .take(sample_limit) for streaming
+            mock_ds.take.return_value = [{"text": "sample"}]
+            mock_load.return_value = mock_ds
             
-            # Mock download_dataset_files to succeed 
-            # side_effect for exists: False (download needed), True (file exists for processing)
-            with patch('pathlib.Path.exists', side_effect=[False, True, True, True]):
-                 with patch('src.mm_download_unified.DatasetManager._process_local_files', return_value=5) as mock_process:
-                    count = manager.download_and_process("vision", "test_ds", config, 5)
-                    
-                    # Should call kaggle api
-                    mock_api.dataset_download_files.assert_called_once()
-                    mock_process.assert_called_once()
-                    assert count == 5
-        except ImportError:
-            pytest.skip("Module not available")
-
-    @patch('src.mm_download_unified.KaggleApi')
-    @patch('src.mm_download_unified.load_dataset')
-    def test_hf_fallback(self, mock_load, mock_kaggle_cls):
-        """Test fallback to HF when Kaggle fails."""
-        try:
-            from src.mm_download_unified import DatasetManager
-            
-            mock_api = mock_kaggle_cls.return_value
-            mock_api.dataset_download_files.side_effect = Exception("403 Forbidden")
-            
-            # Simulate local dir not existing despite download attempt
-            with patch('pathlib.Path.exists', side_effect=[False, False, False, False]): 
-                manager = DatasetManager(Path("/tmp/test"))
-                config = {"kaggle_id": "test/dataset", "hf_id": "test/hf"}
-                
-                # Mock HF dataset iterator (needs .take method if streaming)
-                mock_ds = MagicMock()
-                mock_ds.take.return_value = [{"text": "sample"}]
-                mock_load.return_value = mock_ds
-                
+            # Use premium_text to trigger _fetch_hf_dataset
+            # Patch _normalize_hf_sample to return a valid MultimodalSample
+            sample = MultimodalSample(
+                id="test", 
+                messages=[], 
+                domain="text", 
+                category="test", 
+                modalities={"image": [], "audio": [], "video": []}
+            )
+            with patch.object(manager, '_normalize_hf_sample', return_value=sample):
                 count = manager.download_and_process("premium_text", "test_ds", config, 1)
+            
+            # Should call HF
+            mock_load.assert_called()
+            assert count == 1
+        except ImportError as e:
+            pytest.skip(f"Module not available: {e}")
+
+    def test_kaggle_fallback(self):
+        """Test fallback to Kaggle when HF fails."""
+        try:
+            # Use a smarter mock function for exists
+            # Note: When patching Path.exists, 'self' is the Path object
+            def smart_exists(path_obj):
+                p_str = str(path_obj)
+                # SYSTEM PATHS MUST BE ACCESSIBLE
+                if p_str.startswith(("/usr", "/bin", "/etc", "/lib", "/home")):
+                    return os.path.exists(p_str)
                 
-                # Kaggle called and failed
-                mock_api.dataset_download_files.assert_called_once()
-                # HF called as fallback
-                mock_load.assert_called_once()
-                assert count == 1
-        except ImportError:
-            pytest.skip("Module not available")
+                # PROJECT ROOT FILES (e.g. scripts) MUST BE ACCESSIBLE
+                if "run_universal_pipeline.sh" in p_str or "src/" in p_str:
+                    return os.path.exists(p_str)
+
+                if "kaggle_downloads" in p_str:
+                     # Initially doesn't exist to trigger download
+                     if not hasattr(self, "_kaggle_checked"):
+                         self._kaggle_checked = True
+                         return False
+                     return True
+                if "vision" in p_str or "hf" in p_str:
+                     return False
+                return True
+                if "vision" in p_str or "hf" in p_str:
+                     return False
+                return True
+
+            # Patch HF to fail
+            with patch('mm_download_unified.load_dataset', side_effect=Exception("HF Failed")):
+                # Patch KaggleApi inside the module BEFORE it is used in __init__
+                with patch('mm_download_unified.KaggleApi') as mock_kaggle_cls:
+                    mock_api = mock_kaggle_cls.return_value
+                    
+                    from mm_download_unified import DatasetManager
+                    with patch.object(Path, 'exists', autospec=True) as mock_exists:
+                        mock_exists.side_effect = smart_exists
+                        
+                        manager = DatasetManager(Path("/tmp/test"))
+                        # Ensure manager uses the mock api
+                        manager.kaggle_api = mock_api
+                        
+                        config = {"hf_id": "test/hf", "kaggle_id": "test/kaggle"}
+                        
+                        # Mock processing to return success
+                        with patch.object(manager, '_process_local_files', return_value=1):
+                            count = manager.download_and_process("vision", "test_ds", config, 1)
+                            
+                            # Both called
+                            mock_api.dataset_download_files.assert_called()
+                            assert count == 1
+        except ImportError as e:
+            pytest.skip(f"Module not available: {e}")
 
 
 

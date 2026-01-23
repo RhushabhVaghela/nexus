@@ -18,6 +18,7 @@ This is designed to sit on top of:
 """
 
 import time
+import sys
 import threading
 from dataclasses import dataclass
 from typing import List, Optional, Callable, Dict, Any
@@ -135,18 +136,34 @@ class JointStreamingOrchestrator:
         user_buffer: UserEventBuffer,
         llm_fn: LLMFn = call_llm,
         interval_sec: float = 5.0,
+        tts_engine: Optional[Any] = None,
     ) -> None:
         self.vision_buffer = vision_buffer
         self.audio_buffer = audio_buffer
         self.user_buffer = user_buffer
         self.llm_fn = llm_fn
         self.interval_sec = interval_sec
+        self.tts_engine = tts_engine
+        
+        # Voice Persona State
+        self.active_voice = "NATM1"  # Default PersonaPlex voice
+        self.active_vibe = "neutral"  # Default VibeVoice vibe
 
         self._stop_event = threading.Event()
         self._loop_thread: Optional[threading.Thread] = None
 
         # Callbacks
         self.on_llm_response: Optional[Callable[[str], None]] = None
+
+    def switch_voice(self, voice_id: str):
+        """Dynamic Voice Switching Hook."""
+        print(f"🔄 Switching voice persona to: {voice_id}")
+        self.active_voice = voice_id
+
+    def set_vibe(self, vibe_name: str):
+        """Dynamic Vibe Modulation Hook."""
+        print(f"🎚️ Setting acoustic vibe to: {vibe_name}")
+        self.active_vibe = vibe_name
 
     def start(self):
         if self._loop_thread is not None and self._loop_thread.is_alive():
@@ -210,26 +227,46 @@ class JointStreamingOrchestrator:
 
             context_text = self._build_context_text()
 
+            # The 'Brain' (Omni Model) configuration
             messages = [
                 {
                     "role": "system",
                     "content": (
                         "You are an always-on assistant observing a live session.\n"
-                        "You receive summaries of recent visual, audio, and user interaction context.\n"
-                        "Respond concisely to what is happening now and to any user questions."
+                        "Respond concisely. Include vibe markers like [excited] or [thoughtful] in your text."
                     ),
                 },
                 {"role": "user", "content": context_text},
             ]
 
             try:
+                # 1. Brain Processing
+                # In the real implementation, we would also capture the 'hidden_states' here
                 reply = self.llm_fn(messages)
+                
+                # 2. Intelligence Sharing: Parse 'Mental State' from tags
+                detected_vibe = self.active_vibe
+                if "[" in reply and "]" in reply:
+                    import re
+                    match = re.search(r"\[([a-zA-Z]+)\]", reply)
+                    if match:
+                        detected_vibe = match.group(1).lower()
+                        reply = reply.replace(f"[{match.group(1)}]", "").strip()
+
+                if self.on_llm_response:
+                    self.on_llm_response(reply)
+                    
+                # 3. Synchronized Voice Synthesis
+                if self.tts_engine and reply:
+                    # We pass the persona DNA and the detected mental 'vibe' as a single packet
+                    self.tts_engine.synthesize(
+                        text=reply,
+                        voice=self.active_voice,
+                        vibe=detected_vibe,
+                        sync_mode="high_fidelity" # Signals to use 100% model capabilities
+                    )
             except Exception as e:
                 print(f"[JointStreaming] LLM error: {e}", file=sys.stderr)
-                continue
-
-            if self.on_llm_response:
-                self.on_llm_response(reply)
 
     # Exposed helpers to push data into buffers
 
@@ -338,6 +375,16 @@ def main():
                 continue
             if text.lower() in {"quit", "exit", "q"}:
                 break
+
+            # Voice/Vibe Commands
+            if text.startswith("/voice "):
+                voice_id = text.split(" ")[1]
+                orchestrator.switch_voice(voice_id)
+                continue
+            elif text.startswith("/vibe "):
+                vibe_name = text.split(" ")[1]
+                orchestrator.set_vibe(vibe_name)
+                continue
 
             # For demo: every user text also updates vision/audio summaries
             orchestrator.add_user_event(text)

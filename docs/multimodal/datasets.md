@@ -12,7 +12,7 @@
 | **Tool-Calling** | 6 | ~150K |
 | **Podcast/Audio** | 4 | ~200K |
 | **Image Generation** | 3 | ~220K |
-| **Video Generation** | 3 | ~100K |
+| **Video Generation** | 4 | ~1.1M |
 | **Vision/Video Understanding** | 5 | ~300K |
 
 ---
@@ -73,8 +73,9 @@
 | `XiangpengYang_VideoCoF-50k` | ~50K | ~40GB | ⭐ Text-to-video |
 | `VLM2Vec_MSR-VTT` | ~10K | ~10GB | Video-text alignment |
 | `qingy2024_VaTeX` | ~40K | ~30GB | Video captioning |
+| `remotion_explainer_dataset` | ~1M | ~15GB | ⭐ Programmatic 3B1B-style |
 
-**Total:** ~100K samples, ~80GB
+**Total:** ~1.1M samples, ~95GB
 
 ---
 

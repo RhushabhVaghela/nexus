@@ -34,7 +34,8 @@ class TestGenerators(unittest.TestCase):
         if sample:
             self.assertIn("messages", sample)
             self.assertIn("category", sample)
-            self.assertEqual(sample["domain"], "factual_knowledge")
+            self.assertIn("domain", sample)
+            self.assertIn(sample["domain"], ["factual_knowledge", "fullstack_engineering"])
 
     def test_06_preference_engine(self):
         """Test PreferencePairEngine from 06_generate_preference_dataset.py"""

@@ -294,6 +294,15 @@ class OmniModelLoader:
                     raise RuntimeError(f"All loading strategies failed. AutoModel error: {e2}")
 
             logger.info(f"Model loaded successfully: {type(model).__name__}")
+            
+            # 4. Load LoRA Adapter if present
+            adapter_config = self.model_path / "adapter_config.json"
+            if adapter_config.exists():
+                logger.info("LoRA adapter detected, loading...")
+                from peft import PeftModel
+                model = PeftModel.from_pretrained(model, self.model_path)
+                logger.info("✓ LoRA adapter merged for inference")
+
             self._model = model
             
             # Store config info
@@ -484,20 +493,18 @@ class OmniModelLoader:
     
     def load_for_training(
         self,
-        model_path: Union[str, Path],
         freeze_talker: bool = True,
     ) -> Tuple[Any, Any]:
         """
         Load model configured for training.
         
         Args:
-            model_path: Path to the model
             freeze_talker: Whether to freeze talker weights (recommended)
         
         Returns:
             Tuple of (model, tokenizer)
         """
-        model, tokenizer = self.load(model_path, mode="thinker_only")
+        model, tokenizer = self.load(mode="thinker_only")
         
         # Freeze talker if present and requested
         if freeze_talker and hasattr(model, 'talker'):
@@ -529,8 +536,8 @@ def load_omni_model(
     Returns:
         Tuple of (model, tokenizer)
     """
-    loader = OmniModelLoader()
-    return loader.load(model_path, mode=mode, **kwargs)
+    loader = OmniModelLoader(model_path)
+    return loader.load(mode=mode, **kwargs)
 
 
 if __name__ == "__main__":
@@ -548,7 +555,7 @@ if __name__ == "__main__":
         print(f"Is Omni: {is_omni}")
         print(f"Info: {info}")
     else:
-        loader = OmniModelLoader()
-        model, tokenizer = loader.load(args.model_path, mode=args.mode)
+        loader = OmniModelLoader(args.model_path)
+        model, tokenizer = loader.load(mode=args.mode)
         print(f"Model loaded: {type(model)}")
         print(f"Tokenizer vocab size: {len(tokenizer)}")

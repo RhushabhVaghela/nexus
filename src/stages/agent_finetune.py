@@ -187,7 +187,7 @@ class AgentFinetuner:
             model=self.model,
             args=training_args,
             train_dataset=dataset,
-            tokenizer=self.tokenizer,
+            processing_class=self.tokenizer,
         )
         trainer.train()
         trainer.save_model(self.config.output_dir)
