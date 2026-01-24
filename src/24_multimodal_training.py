@@ -26,6 +26,7 @@ from src.multimodal.model import OmniMultimodalLM
 from src.multimodal.decoders import OmniDecoder
 from src.data.universal_loader import UniversalDataLoader
 from src.utils.logging_config import setup_logger, log_header, log_completion
+from src.utils.repetition import PromptRepetitionEngine
 
 
 logger = setup_logger(__name__, "logs/multimodal_training.log")
@@ -49,12 +50,14 @@ class OmniDataset(torch.utils.data.IterableDataset):
       - XLAM/Tool (query/answers)
       - Native (messages)
     """
-    def __init__(self, data_path: str, split: str = "train", samples_per_dataset: int = 0, balanced: bool = True):
+    def __init__(self, data_path: str, split: str = "train", samples_per_dataset: int = 0, balanced: bool = True, repetition_factor: int = 1, repetition_style: str = "baseline"):
         self.split = split
         self.limit = samples_per_dataset
         self.base_path = Path(data_path)
         self.balanced = balanced
         self.dataset_counts = {} # Tracks count per dataset identifier
+        self.repetition_factor = repetition_factor
+        self.repetition_style = repetition_style
         
         if not self.base_path.exists():
             logger.error(f"❌ Data path not found: {self.base_path}")
@@ -76,6 +79,8 @@ class OmniDataset(torch.utils.data.IterableDataset):
         logger.info(f"🌊 Initialized Streamable Dataset ({split}). Discovered {len(self.dataset_dirs)} sources across {len(self.category_map)} categories.")
         if balanced:
             logger.info("⚖️ Balanced Mode: Interleaving samples between capability categories.")
+        if self.repetition_factor > 1:
+            logger.info(f"🔁 Prompt Repetition Enabled: {self.repetition_factor}x ({self.repetition_style})")
 
     def _get_files_for_split(self):
         """Generator to yield relevant files for this split."""
@@ -324,7 +329,15 @@ class OmniDataset(torch.utils.data.IterableDataset):
                         audio_path = item.get("audio")
                 else:
                     text_prompt += str(item)
-                    
+        
+        # APPLY TEXT REPETITION
+        if self.repetition_factor > 1 and text_prompt:
+            text_prompt = PromptRepetitionEngine.apply_repetition(
+                text_prompt,
+                factor=self.repetition_factor,
+                style=self.repetition_style
+            )
+            
         return {
             "text": text_prompt,
             "image_path": image_path,
@@ -420,6 +433,10 @@ def main():
     parser.add_argument("--sample-size", type=int, default=0, help="Total samples to use (0=all)")
     parser.add_argument("--experiment-name", type=str, default="", help="Experiment name for logs")
     parser.add_argument("--log-results", action="store_true", help="Log results to CSV")
+    # Repetition args
+    parser.add_argument("--repetition-factor", type=int, default=1, help="Prompt repetition factor")
+    parser.add_argument("--repetition-style", type=str, default="baseline", help="Repetition style")
+    
     args = parser.parse_args()
     
     # Enforce 'nexus' conda environment
@@ -429,14 +446,16 @@ def main():
     log_header(logger, f"OMNI-MODAL TRAINING (Stage {args.stage})", {
         "Data": args.data_path,
         "Base": CONFIG["base_model"],
-        "Schema": "Unified Messages (Native)"
+        "Schema": "Unified Messages (Native)",
+        "Repetition": f"{args.repetition_factor}x ({args.repetition_style})"
     })
     
     # 1. Dataset - Stream from data-path
     logger.info("Initializing Streaming Datasets...")
     
     # We load 3 separate dataset objects
-    train_dataset = OmniDataset(args.data_path, split="train", samples_per_dataset=args.sample_size)
+    train_dataset = OmniDataset(args.data_path, split="train", samples_per_dataset=args.sample_size, 
+                                repetition_factor=args.repetition_factor, repetition_style=args.repetition_style)
     val_dataset = OmniDataset(args.data_path, split="val", samples_per_dataset=args.sample_size // 10 if args.sample_size > 0 else 0)
     test_dataset = OmniDataset(args.data_path, split="test", samples_per_dataset=args.sample_size // 10 if args.sample_size > 0 else 0)
     
@@ -446,13 +465,20 @@ def main():
     
     # 2. Initialize Omni Model with CPU offloading for 16GB VRAM
     logger.info("Initializing model with memory optimization (16GB VRAM + 32GB RAM)...")
+    
+    # For Omni model, visual/audio repetition implies embedding repetition
+    visual_rep = args.repetition_factor if args.repetition_factor > 1 else 1
+    audio_rep = args.repetition_factor if args.repetition_factor > 1 else 1
+    
     model = OmniMultimodalLM(
         llm_name=CONFIG["base_model"],
         vision_name=CONFIG["vision_model"],
         audio_name=CONFIG["audio_model"],
         device_map="auto",  # Hybrid CPU/GPU
         load_in_8bit=True,   # Quantize frozen models
-        enable_decoders=False # Disable output decoders during training to save VRAM
+        enable_decoders=False, # Disable output decoders during training to save VRAM
+        visual_repetition_factor=visual_rep,
+        audio_repetition_factor=audio_rep
     )
     
     logger.info("Memory allocation:")

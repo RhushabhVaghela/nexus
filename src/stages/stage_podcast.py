@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from datasets import load_dataset, concatenate_datasets
 
 from .base import BaseStage, StageConfig
+from src.utils.repetition import PromptRepetitionEngine
 
 
 @dataclass
@@ -187,10 +188,17 @@ class PodcastStage(BaseStage):
                     "How does that work in practice?",
                     "That's interesting, tell me more!",
                 ]
-                turns = self.formatter.insert_user_turn(
-                    turns, 
-                    random.choice(user_questions)
-                )
+                q = random.choice(user_questions)
+                
+                # Apply repetition to user query if enabled
+                if self.config.repetition_factor > 1:
+                    q = PromptRepetitionEngine.apply_repetition(
+                        q, 
+                        factor=self.config.repetition_factor, 
+                        style=self.config.repetition_style
+                    )
+                
+                turns = self.formatter.insert_user_turn(turns, q)
             
             return self.formatter.format_dialogue(turns)
         elif "text" in sample:
@@ -213,6 +221,8 @@ class PodcastStage(BaseStage):
         
         self.logger.info("Starting podcast training with dual hosts + user...")
         self.logger.info("Speakers: [HOST_A] [HOST_B] [USER]")
+        if self.config.repetition_factor > 1:
+            self.logger.info(f"Using Prompt Repetition: {self.config.repetition_factor}x ({self.config.repetition_style})")
         
         from src.training_controller import training_step_hook
         
@@ -354,6 +364,10 @@ def main():
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--interactive", action="store_true", 
                         help="Run interactive podcast demo")
+    # Repetition args
+    parser.add_argument("--repetition-factor", type=int, default=1, help="Prompt repetition factor")
+    parser.add_argument("--repetition-style", type=str, default="baseline", help="Repetition style")
+    
     args = parser.parse_args()
     
     if args.interactive:
@@ -371,6 +385,8 @@ def main():
         batch_size=args.batch_size,
         epochs=args.epochs,
         dry_run=args.dry_run,
+        repetition_factor=args.repetition_factor,
+        repetition_style=args.repetition_style,
     )
     stage = PodcastStage(config)
     return 0 if stage.run().get("success") else 1

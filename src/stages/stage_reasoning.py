@@ -11,6 +11,7 @@ from typing import Dict, Any
 from datasets import load_dataset, concatenate_datasets
 
 from .base import BaseStage, StageConfig
+from src.utils.repetition import PromptRepetitionEngine
 
 
 class ReasoningStage(BaseStage):
@@ -79,16 +80,31 @@ class ReasoningStage(BaseStage):
     
     def _format_reasoning(self, sample: Dict) -> str:
         """Format sample with explicit reasoning structure."""
+        problem = ""
+        solution = ""
+        
         if "problem" in sample and "solution" in sample:
             problem = sample["problem"]
             solution = sample["solution"]
-            return f"[PROBLEM]\n{problem}\n\n[REASONING]\n{solution}"
         elif "question" in sample and "answer" in sample:
-            return f"[PROBLEM]\n{sample['question']}\n\n[REASONING]\n{sample['answer']}"
+            problem = sample["question"]
+            solution = sample["answer"]
         elif "text" in sample:
             return sample["text"]
         elif "messages" in sample:
             return str(sample["messages"])
+            
+        if problem and solution:
+            # Apply Repetition
+            if self.config.repetition_factor > 1:
+                problem = PromptRepetitionEngine.apply_repetition(
+                    problem, 
+                    factor=self.config.repetition_factor,
+                    style=self.config.repetition_style
+                )
+                
+            return f"[PROBLEM]\n{problem}\n\n[REASONING]\n{solution}"
+            
         return ""
     
     def train(self) -> Dict[str, Any]:
@@ -107,6 +123,8 @@ class ReasoningStage(BaseStage):
         
         self.logger.info("Starting multi-level reasoning training...")
         self.logger.info(f"Levels: {list(self.LEVELS.keys())}")
+        if self.config.repetition_factor > 1:
+            self.logger.info(f"Using Prompt Repetition: {self.config.repetition_factor}x ({self.config.repetition_style})")
         
         from src.training_controller import training_step_hook
         
@@ -169,6 +187,9 @@ def main():
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--sample-size", type=int, default=0)
     parser.add_argument("--dry-run", action="store_true")
+    # Repetition args
+    parser.add_argument("--repetition-factor", type=int, default=1, help="Prompt repetition factor (arXiv:2512.14982)")
+    parser.add_argument("--repetition-style", type=str, default="baseline", help="Repetition style: baseline, 2x, verbose, 3x")
     
     args = parser.parse_args()
     
@@ -180,6 +201,8 @@ def main():
         epochs=args.epochs,
         sample_size=args.sample_size,
         dry_run=args.dry_run,
+        repetition_factor=args.repetition_factor,
+        repetition_style=args.repetition_style,
     )
     
     stage = ReasoningStage(config)

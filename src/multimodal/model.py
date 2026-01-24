@@ -232,7 +232,9 @@ class ModularMultimodalWrapper(nn.Module):
         llm_dim: int = 4096,
         num_latents: int = 64,
         use_dfm: bool = True,
-        enable_decoders: bool = True
+        enable_decoders: bool = True,
+        visual_repetition_factor: int = 1,
+        audio_repetition_factor: int = 1
     ):
         super().__init__()
         self.llm = base_model
@@ -241,6 +243,8 @@ class ModularMultimodalWrapper(nn.Module):
         self.inject_audio = inject_audio
         self.use_dfm = use_dfm and DFM_AVAILABLE
         self.enable_decoders = enable_decoders
+        self.visual_repetition_factor = visual_repetition_factor
+        self.audio_repetition_factor = audio_repetition_factor
         
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -323,6 +327,11 @@ class ModularMultimodalWrapper(nn.Module):
             tokens, _ = self.vision_connector(features)
         else:
             tokens = self.vision_connector(features)
+        
+        # PROMPT REPETITION (Embedding Level)
+        if self.visual_repetition_factor > 1:
+            tokens = tokens.repeat(1, self.visual_repetition_factor, 1)
+            
         return tokens
 
     def encode_audio(self, audio_features):
@@ -335,6 +344,11 @@ class ModularMultimodalWrapper(nn.Module):
             tokens, _ = self.audio_connector(features)
         else:
             tokens = self.audio_connector(features)
+            
+        # PROMPT REPETITION (Embedding Level)
+        if self.audio_repetition_factor > 1:
+            tokens = tokens.repeat(1, self.audio_repetition_factor, 1)
+            
         return tokens
 
     def forward(self, input_ids, pixel_values=None, audio_features=None, report_state=None, persona_state=None, output_modality="text", **kwargs):
@@ -399,7 +413,7 @@ from transformers import Qwen2Config
 class OmniMultimodalLM(nn.Module):
     def __init__(self, llm_name: str, inject_vision: bool = None, inject_audio: bool = None, **kwargs):
         super().__init__()
-        print(f"\\n🧠 INTELLIGENT MODEL LOAD: {llm_name}")
+        print(f"\n🧠 INTELLIGENT MODEL LOAD: {llm_name}")
         
         # 1. Analyze Config for Capabilities
         self.capabilities = {"vision": False, "audio": False}
@@ -413,6 +427,10 @@ class OmniMultimodalLM(nn.Module):
         wrapper_enable_decoders = kwargs.pop("enable_decoders", True)
         wrapper_num_latents = kwargs.pop("num_latents", 64)
         wrapper_use_dfm = kwargs.pop("use_dfm", True)
+        
+        # Extract repetition factors
+        wrapper_visual_repetition = kwargs.pop("visual_repetition_factor", 1)
+        wrapper_audio_repetition = kwargs.pop("audio_repetition_factor", 1)
         
         try:
             config = AutoConfig.from_pretrained(llm_name, trust_remote_code=True)
@@ -589,7 +607,6 @@ class OmniMultimodalLM(nn.Module):
         print(f"      - Audio:  Native={self.capabilities['audio']}  -> Inject={final_inject_audio}")
 
         # 4. Wrap
-        # 4. Wrap
         # Clean kwargs of model-loading specific args that Wrapper doesn't accept
         for key in ["device_map", "load_in_8bit", "load_in_4bit", "quantization_config", "trust_remote_code", "torch_dtype", "attn_implementation"]:
             kwargs.pop(key, None)
@@ -608,6 +625,8 @@ class OmniMultimodalLM(nn.Module):
             enable_decoders=wrapper_enable_decoders,
             num_latents=wrapper_num_latents,
             use_dfm=wrapper_use_dfm,
+            visual_repetition_factor=wrapper_visual_repetition,
+            audio_repetition_factor=wrapper_audio_repetition,
             **kwargs
         )
         

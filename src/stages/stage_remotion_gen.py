@@ -8,6 +8,7 @@ from transformers import TrainingArguments, Trainer
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 
 from .base import TextCapabilityStage, StageConfig
+from src.utils.repetition import PromptRepetitionEngine
 
 class RemotionGenStage(TextCapabilityStage):
     """Remotion explanatory video generation training with LoRA support."""
@@ -63,13 +64,25 @@ class RemotionGenStage(TextCapabilityStage):
             return {"success": True, "steps": 0, "skipped": True}
             
         self.logger.info("Starting Remotion explainer training (LoRA SFT)...")
+        if self.config.repetition_factor > 1:
+            self.logger.info(f"Using Prompt Repetition: {self.config.repetition_factor}x ({self.config.repetition_style})")
         
         from src.capability_registry import REMOTION_EXPLAINER_SYSTEM_PROMPT
 
         def tokenize_function(sample):
             # Format with 3B1B System Prompt
+            instruction = sample['instruction']
+            
+            # Apply Prompt Repetition to the user instruction
+            if self.config.repetition_factor > 1:
+                instruction = PromptRepetitionEngine.apply_repetition(
+                    instruction,
+                    factor=self.config.repetition_factor,
+                    style=self.config.repetition_style
+                )
+            
             prompt = f"<|im_start|>system\n{REMOTION_EXPLAINER_SYSTEM_PROMPT}<|im_end|>\n"
-            prompt += f"<|im_start|>user\n{sample['instruction']}<|im_end|>\n"
+            prompt += f"<|im_start|>user\n{instruction}<|im_end|>\n"
             prompt += f"<|im_start|>assistant\n"
             
             full_text = prompt + sample['output'] + self.tokenizer.eos_token
@@ -145,6 +158,9 @@ def main():
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--sample-size", type=int, default=0)
     parser.add_argument("--dry-run", action="store_true")
+    # Repetition args
+    parser.add_argument("--repetition-factor", type=int, default=1, help="Prompt repetition factor")
+    parser.add_argument("--repetition-style", type=str, default="baseline", help="Repetition style")
     
     args = parser.parse_args()
     
@@ -156,6 +172,8 @@ def main():
         epochs=args.epochs,
         sample_size=args.sample_size,
         dry_run=args.dry_run,
+        repetition_factor=args.repetition_factor,
+        repetition_style=args.repetition_style,
     )
     
     stage = RemotionGenStage(config)

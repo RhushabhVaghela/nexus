@@ -157,43 +157,30 @@ class OmniModelLoader:
     def is_omni_model(model_path: Union[str, Path]) -> bool:
         """
         Check if the model at model_path is an Omni-compatible model.
-        
-        Now supports UNIVERSAL detection - checks for specific Omni markers 
-        but defaults to treating any valid model path as potentially compatible 
-        if explicitly requested via the Omni loader.
         """
         path = Path(model_path)
         if not path.exists():
             return False
             
-        # If it contains "omni" in the name, we treat it as an Omni model
         if "omni" in path.name.lower():
             return True
             
-        # Otherwise, check config for specifics if needed, but be permissive
-        # We assume if the user is using OmniModelLoader, they intend to load it as such
-        # or we will fallback to standard AutoModel in load().
         try:
              import json
              config_path = path / "config.json"
              if config_path.exists():
                  with open(config_path) as f:
                      config = json.load(f)
-                 # Check for explicit architecture or just 'auto_map' presence which implies custom code
                  if "architectures" in config:
                      archs = config["architectures"]
-                     # Permissive check: if it's ANY known Omni variant OR just a standard LLM we can extend
                      for arch in archs:
                          if "omni" in arch.lower() or "qwen" in arch.lower():
                              return True
-                         # Also support standard models that we might want to "Omni-fy" via adapter
                          if "llama" in arch.lower() or "mistral" in arch.lower():
                              return True
         except Exception:
             pass
             
-        # Default: If we can't disprove it, and the folder exists, we allow it.
-        # The loader will fail gracefully later if it's truly incompatible.
         return True
 
     @staticmethod
@@ -220,7 +207,6 @@ class OmniModelLoader:
                 if "quantization_config" in config:
                     info["is_quantized"] = True
                     
-                # Check for talker keys
                 if any(k for k in config.keys() if "talker" in k or "audio" in k):
                     info["has_talker"] = True
                     
@@ -230,14 +216,18 @@ class OmniModelLoader:
         return info
 
     def load(self, mode: str = "full", **kwargs) -> Any:
-        """Load the model (wrapper for load_for_inference)."""
+        """Load the model."""
         return self.load_for_inference(mode=mode, **kwargs)
 
     def load_for_inference(self, mode: str = "full", **kwargs) -> Any:
         """
         Load model for inference with UNIVERSAL support.
         """
-        logger.info(f"Loading Model from {self.model_path} (Mode: {mode})")
+        model_path = self.model_path
+        if "model_path" in kwargs:
+            model_path = Path(kwargs.pop("model_path"))
+
+        logger.info(f"Loading Model from {model_path} (Mode: {mode})")
         
         trust_remote_code = kwargs.get("trust_remote_code", True)
         
@@ -247,20 +237,20 @@ class OmniModelLoader:
             # 1. Load Tokenizer
             try:
                 tokenizer = AutoTokenizer.from_pretrained(
-                    str(self.model_path),
+                    str(model_path),
                     trust_remote_code=trust_remote_code,
                 )
                 if tokenizer.pad_token is None:
                     tokenizer.pad_token = tokenizer.eos_token
                 self._tokenizer = tokenizer
             except Exception as e:
-                logger.error(f"Failed to load tokenizer from {self.model_path}: {e}")
+                logger.error(f"Failed to load tokenizer from {model_path}: {e}")
                 raise RuntimeError(f"Tokenizer dependency missing: {e}")
 
             # 2. Load Processor (Multimodal)
             try:
                 processor = AutoProcessor.from_pretrained(
-                    str(self.model_path),
+                    str(model_path),
                     trust_remote_code=trust_remote_code,
                 )
                 self._processor = processor
@@ -271,24 +261,45 @@ class OmniModelLoader:
             device_map = kwargs.get("device_map", "auto")
             torch_dtype = kwargs.get("torch_dtype", "auto")
             
+            # Check for Prompt Repetition factors in kwargs
+            # If present and > 1, we might want to use the OmniMultimodalLM wrapper
+            # from src.multimodal.model if this is a base model.
+            visual_rep = kwargs.pop("visual_repetition_factor", 1)
+            audio_rep = kwargs.pop("audio_repetition_factor", 1)
+            
+            if visual_rep > 1 or audio_rep > 1:
+                logger.info(f"Prompt Repetition requested (V:{visual_rep}, A:{audio_rep}). Loading via OmniMultimodalLM wrapper.")
+                from src.multimodal.model import OmniMultimodalLM
+                model = OmniMultimodalLM(
+                    llm_name=str(model_path),
+                    visual_repetition_factor=visual_rep,
+                    audio_repetition_factor=audio_rep,
+                    device_map=device_map,
+                    **kwargs
+                )
+                self._model = model
+                return model, self._tokenizer
+
             logger.info("Attempting load with AutoModelForCausalLM...")
             try:
                 model = AutoModelForCausalLM.from_pretrained(
-                    self.model_path,
+                    str(model_path),
                     device_map=device_map,
                     trust_remote_code=trust_remote_code,
                     torch_dtype=torch_dtype,
-                    low_cpu_mem_usage=True
+                    low_cpu_mem_usage=True,
+                    **kwargs
                 )
             except Exception as e1:
                 logger.warning(f"AutoModelForCausalLM failed ({e1}), falling back to AutoModel...")
                 try:
                     model = AutoModel.from_pretrained(
-                        self.model_path,
+                        str(model_path),
                         device_map=device_map,
                         trust_remote_code=trust_remote_code,
                         torch_dtype=torch_dtype,
-                        low_cpu_mem_usage=True
+                        low_cpu_mem_usage=True,
+                        **kwargs
                     )
                 except Exception as e2:
                     raise RuntimeError(f"All loading strategies failed. AutoModel error: {e2}")
@@ -296,17 +307,15 @@ class OmniModelLoader:
             logger.info(f"Model loaded successfully: {type(model).__name__}")
             
             # 4. Load LoRA Adapter if present
-            adapter_config = self.model_path / "adapter_config.json"
+            adapter_config = model_path / "adapter_config.json"
             if adapter_config.exists():
                 logger.info("LoRA adapter detected, loading...")
                 from peft import PeftModel
-                model = PeftModel.from_pretrained(model, self.model_path)
+                model = PeftModel.from_pretrained(model, model_path)
                 logger.info("✓ LoRA adapter merged for inference")
 
             self._model = model
-            
-            # Store config info
-            self._config = self.get_model_info(self.model_path)
+            self._config = self.get_model_info(model_path)
             
             return model, self._tokenizer
 
@@ -314,208 +323,39 @@ class OmniModelLoader:
             logger.error(f"Critical error loading model: {e}")
             raise
             
-
-    
-    def _load_thinker_only(
-        self,
-        model_path: Path,
-        info: Dict[str, Any],
-        device_map: str,
-        torch_dtype: torch.dtype,
-        trust_remote_code: bool,
-    ):
-        """Load only the thinker component for text training."""
-        from transformers import AutoModel, AutoModelForCausalLM
-        
-        # For GPTQ models, use AutoModel with trust_remote_code
-        if info["is_quantized"] and info["quantization_method"] == "gptq":
-            logger.info("Loading GPTQ quantized Omni model...")
-            try:
-                # Try AutoModel first (handles Omni architecture)
-                model = AutoModel.from_pretrained(
-                    str(model_path),
-                    device_map=device_map,
-                    torch_dtype=torch_dtype,
-                    trust_remote_code=trust_remote_code,
-                )
-            except Exception as e:
-                logger.warning(f"AutoModel failed: {e}, trying direct import...")
-                # Fall back to direct import
-                model = self._load_with_direct_import(model_path, device_map, torch_dtype)
-        else:
-            # Standard loading
-            model = AutoModel.from_pretrained(
-                str(model_path),
-                device_map=device_map,
-                torch_dtype=torch_dtype,
-                trust_remote_code=trust_remote_code,
-            )
-        
-        return model
-    
-    def _load_full_model(
-        self,
-        model_path: Path,
-        info: Dict[str, Any],
-        device_map: str,
-        torch_dtype: torch.dtype,
-        trust_remote_code: bool,
-    ):
-        """Load full model with thinker and talker."""
-        from transformers import AutoModel
-        
-        try:
-            model = AutoModel.from_pretrained(
-                str(model_path),
-                device_map=device_map,
-                torch_dtype=torch_dtype,
-                trust_remote_code=trust_remote_code,
-            )
-        except Exception as e:
-            logger.warning(f"AutoModel failed: {e}, trying direct import...")
-            # Fall back to direct import
-            model = self._load_with_direct_import(model_path, device_map, torch_dtype)
-        
-        return model
-    
-    def _load_with_direct_import(
-        self,
-        model_path: Path,
-        device_map: str,
-        torch_dtype: torch.dtype,
-    ):
-        """Load model using direct import or AutoModelForCausalLM fallback."""
-        # Method 1: Try specific architecture class directly (matches config.json)
-        try:
-            from transformers.models.qwen2_5_omni.modeling_qwen2_5_omni import Qwen2_5OmniForConditionalGeneration
-            logger.info("Directly loading Qwen2_5OmniForConditionalGeneration...")
-            model = Qwen2_5OmniForConditionalGeneration.from_pretrained(
-                str(model_path),
-                device_map=device_map,
-                torch_dtype=torch_dtype,
-                trust_remote_code=True,
-            )
-            return model
-        except ImportError:
-            logger.debug("Could not direct import Qwen2_5OmniForConditionalGeneration")
-        except Exception as e:
-            logger.warning(f"Failed loading via Qwen2_5OmniForConditionalGeneration: {e}")
-
-        # Method 2: Try specific base model class
-        try:
-            from transformers.models.qwen2_5_omni.modeling_qwen2_5_omni import Qwen2_5OmniModel
-            logger.info("Directly loading Qwen2_5OmniModel...")
-            model = Qwen2_5OmniModel.from_pretrained(
-                str(model_path),
-                device_map=device_map,
-                torch_dtype=torch_dtype,
-                trust_remote_code=True,
-            )
-            return model
-        except ImportError:
-            logger.debug("Could not direct import Qwen2_5OmniModel")
-        except Exception as e:
-             logger.warning(f"Failed loading via Qwen2_5OmniModel: {e}")
-
-        # Method 3: AutoModel/AutoModelForCausalLM with explicit config
-        try:
-            from transformers import AutoConfig, AutoModel, AutoModelForCausalLM
-            
-            logger.info("Falling back to AutoConfig loading...")
-            config = AutoConfig.from_pretrained(str(model_path), trust_remote_code=True)
-            
-            # Try AutoModelForCausalLM first
-            try:
-                return AutoModelForCausalLM.from_pretrained(
-                    str(model_path),
-                    config=config,
-                    device_map=device_map,
-                    torch_dtype=torch_dtype,
-                    trust_remote_code=True,
-                )
-            except Exception as e:
-                logger.warning(f"AutoModelForCausalLM failed: {e}")
-
-            # Try AutoModel
-            logger.warning("Falling back to AutoModel...")
-            return AutoModel.from_pretrained(
-                str(model_path),
-                config=config,
-                device_map=device_map,
-                torch_dtype=torch_dtype,
-                trust_remote_code=True,
-            )
-            
-        except Exception as e:
-            logger.warning(f"AutoModel fallback failed: {e}")
-            
-        # Method 4: Standard CAUSAL LM fallback (Most robust for 7B)
-        try:
-            logger.info("Falling back to standard AutoModelForCausalLM...")
-            return AutoModelForCausalLM.from_pretrained(
-                str(model_path),
-                device_map=device_map,
-                torch_dtype=torch_dtype,
-                trust_remote_code=True,
-            )
-        except Exception as e:
-             logger.error(f"Critical error loading Omni model: {e}")
-             raise
-    
-    def _load_standard_model(
-        self,
-        model_path: Path,
-        device_map: str,
-        torch_dtype: Optional[torch.dtype],
-        trust_remote_code: bool,
-    ):
-        """Load a standard (non-Omni) model."""
-        from transformers import AutoModelForCausalLM, AutoTokenizer
-        
-        if torch_dtype is None:
-            torch_dtype = torch.float16
-        
-        tokenizer = AutoTokenizer.from_pretrained(
-            str(model_path),
-            trust_remote_code=trust_remote_code,
-        )
-        if tokenizer.pad_token is None:
-            tokenizer.pad_token = tokenizer.eos_token
-        
-        model = AutoModelForCausalLM.from_pretrained(
-            str(model_path),
-            device_map=device_map,
-            torch_dtype=torch_dtype,
-            trust_remote_code=trust_remote_code,
-        )
-        
-        return model, tokenizer
-    
     def load_for_training(
         self,
+        model_path: Optional[str] = None,
         freeze_talker: bool = True,
+        **kwargs
     ) -> Tuple[Any, Any]:
         """
         Load model configured for training.
-        
-        Args:
-            freeze_talker: Whether to freeze talker weights (recommended)
-        
-        Returns:
-            Tuple of (model, tokenizer)
         """
-        model, tokenizer = self.load(mode="thinker_only")
+        if model_path:
+            self.model_path = Path(model_path)
+            
+        model, tokenizer = self.load(mode="thinker_only", **kwargs)
         
         # Freeze talker if present and requested
-        if freeze_talker and hasattr(model, 'talker'):
-            for param in model.talker.parameters():
-                param.requires_grad = False
-            logger.info("Talker parameters frozen for training")
+        if freeze_talker:
+            if hasattr(model, 'talker'):
+                for param in model.talker.parameters():
+                    param.requires_grad = False
+                logger.info("Talker parameters frozen for training")
+            elif hasattr(model, 'wrapper') and hasattr(model.wrapper, 'speech_decoder'):
+                # Handle our wrapper-based talker
+                for param in model.wrapper.speech_decoder.parameters():
+                    param.requires_grad = False
+                logger.info("Wrapped speech decoder frozen for training")
         
         # Enable gradient checkpointing to save memory
         if hasattr(model, 'gradient_checkpointing_enable'):
             model.gradient_checkpointing_enable()
             logger.info("Gradient checkpointing enabled")
+        elif hasattr(model, 'wrapper') and hasattr(model.wrapper.llm, 'gradient_checkpointing_enable'):
+            model.wrapper.llm.gradient_checkpointing_enable()
+            logger.info("Wrapped LLM gradient checkpointing enabled")
         
         return model, tokenizer
 
@@ -525,17 +365,7 @@ def load_omni_model(
     mode: str = "thinker_only",
     **kwargs
 ) -> Tuple[Any, Any]:
-    """
-    Convenience function to load Omni model.
-    
-    Args:
-        model_path: Path to model
-        mode: Loading mode ("thinker_only", "full")
-        **kwargs: Additional arguments for loader
-    
-    Returns:
-        Tuple of (model, tokenizer)
-    """
+    """Convenience function."""
     loader = OmniModelLoader(model_path)
     return loader.load(mode=mode, **kwargs)
 

@@ -12,6 +12,7 @@ from pathlib import Path
 from datasets import load_dataset
 
 from .base import BaseStage, StageConfig
+from src.utils.repetition import PromptRepetitionEngine
 
 
 class TriStreamingStage(BaseStage):
@@ -52,9 +53,6 @@ class TriStreamingStage(BaseStage):
             if self.tokenizer.pad_token is None:
                 self.tokenizer.pad_token = self.tokenizer.eos_token
             
-            # Tri-streaming typically combines multiple data sources
-            self.logger.info("Loading multimodal streaming datasets...")
-            
             # Load Tri-streaming dataset
             self.logger.info("Loading Tri-streaming datasets dynamic...")
             self.train_dataset = self.load_dynamic_datasets()
@@ -90,7 +88,8 @@ class TriStreamingStage(BaseStage):
             return {"success": True, "steps": 0, "skipped": True}
         
         self.logger.info("Starting tri-streaming training...")
-        self.logger.info("Note: Full tri-streaming requires audio/video encoders")
+        if self.config.repetition_factor > 1:
+            self.logger.info(f"Using Prompt Repetition: {self.config.repetition_factor}x ({self.config.repetition_style})")
         
         from src.training_controller import training_step_hook
         
@@ -114,6 +113,15 @@ class TriStreamingStage(BaseStage):
                     text = ""
                     for i, turn in enumerate(turns[:5]):  # Limit turns
                         speaker = "[USER]" if i % 2 == 0 else "[ASSISTANT]"
+                        
+                        # Apply Prompt Repetition to the USER prompt
+                        if speaker == "[USER]" and self.config.repetition_factor > 1:
+                            turn = PromptRepetitionEngine.apply_repetition(
+                                turn,
+                                factor=self.config.repetition_factor,
+                                style=self.config.repetition_style
+                            )
+                            
                         text += f"{speaker} {turn}\n"
                 elif "text" in sample:
                     text = sample["text"]
@@ -158,6 +166,10 @@ def main():
     parser.add_argument("--sample-size", type=int, default=0)
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--epochs", type=int, default=3)
+    # Repetition args
+    parser.add_argument("--repetition-factor", type=int, default=1, help="Prompt repetition factor")
+    parser.add_argument("--repetition-style", type=str, default="baseline", help="Repetition style")
+    
     args = parser.parse_args()
     
     config = StageConfig(
@@ -168,6 +180,8 @@ def main():
         batch_size=args.batch_size,
         epochs=args.epochs,
         dry_run=args.dry_run,
+        repetition_factor=args.repetition_factor,
+        repetition_style=args.repetition_style,
     )
     stage = TriStreamingStage(config)
     return 0 if stage.run().get("success") else 1

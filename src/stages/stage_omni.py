@@ -27,26 +27,18 @@ import torch
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.stages.base import BaseStage
+from src.stages.base import BaseStage, StageConfig
+from src.utils.repetition import PromptRepetitionEngine
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass
-class OmniStageConfig:
+class OmniStageConfig(StageConfig):
     """Configuration for Omni training stage."""
     
     # Required settings (BaseStage compatibility)
-    capability_name: str = "omni"
-    base_model_path: str = ""  # Alias for base_model
-    output_dir: str = "/mnt/e/data/output/trained"
-    
-    # Omni alias
-    base_model: str = ""
-    
-    # Training settings
-    max_samples: int = 1000
-    epochs: int = 3
+    # capability_name is inherited from StageConfig
     
     # Omni-specific settings
     freeze_talker: bool = True
@@ -54,9 +46,7 @@ class OmniStageConfig:
     enable_multimodal: bool = False
     
     # Training settings optimized for large models
-    learning_rate: float = 1e-6
     warmup_ratio: float = 0.1
-    gradient_accumulation_steps: int = 4
     max_seq_length: int = 2048
     
     # Memory optimization
@@ -89,14 +79,17 @@ class OmniTrainingStage(BaseStage):
         from src.omni.loader import OmniModelLoader
         
         logger.info(f"Setting up Omni training stage")
-        logger.info(f"Base model: {self.config.base_model}")
+        logger.info(f"Base model: {self.config.base_model_path}")
         
         loader = OmniModelLoader()
         
         # Load for training (freezes talker)
+        # Pass repetition factors if supported by loader/model
         self.model, self.tokenizer = loader.load_for_training(
-            self.config.base_model,
+            self.config.base_model_path,
             freeze_talker=self.config.freeze_talker,
+            visual_repetition_factor=self.config.repetition_factor,
+            audio_repetition_factor=self.config.repetition_factor
         )
         
         # Enable gradient checkpointing
@@ -131,7 +124,7 @@ class OmniTrainingStage(BaseStage):
             
         from src.data.universal_loader import load_dataset_universal
         logger.info(f"Loading data from {data_path}")
-        result = load_dataset_universal(data_path, sample_size=self.config.max_samples)
+        result = load_dataset_universal(data_path, sample_size=self.config.sample_size)
         
         if result.error:
             raise ValueError(f"Failed to load data: {result.error}")
@@ -158,16 +151,9 @@ class OmniTrainingStage(BaseStage):
         
         return loss.item() * self.config.gradient_accumulation_steps
     
-    def run(self, data_path: str, output_dir: str) -> Dict[str, Any]:
+    def run(self, data_path: str = "dynamic") -> Dict[str, Any]:
         """
         Run Omni training stage.
-        
-        Args:
-            data_path: Path to training data
-            output_dir: Output directory for checkpoints
-        
-        Returns:
-            Training results dict
         """
         import time
         from tqdm import tqdm
@@ -176,13 +162,19 @@ class OmniTrainingStage(BaseStage):
         logger.info("OMNI TRAINING STAGE")
         logger.info("="*60)
         
+        if self.config.repetition_factor > 1:
+            logger.info(f"Using Prompt Repetition: {self.config.repetition_factor}x ({self.config.repetition_style})")
+        
         start_time = time.time()
         
-        # Setup
-        self.setup()
-        
+        # Phase 1: Prepare
+        if not self.prepare():
+            return {"success": False, "error": "Preparation failed"}
+            
         # Prepare data
         dataset = self.prepare_data(data_path)
+        if not dataset:
+             return {"success": False, "error": "No data found"}
         
         # Setup optimizer
         optimizer = torch.optim.AdamW(
@@ -190,6 +182,7 @@ class OmniTrainingStage(BaseStage):
             lr=self.config.learning_rate,
             weight_decay=0.01,
         )
+        self.optimizer = optimizer
         
         # Setup scheduler
         total_steps = len(dataset) // self.config.gradient_accumulation_steps
@@ -203,8 +196,19 @@ class OmniTrainingStage(BaseStage):
         progress = tqdm(enumerate(dataset), total=len(dataset), desc="Training")
         
         for idx, sample in progress:
-            # Tokenize
-            text = str(sample)[:self.config.max_seq_length * 4]  # Rough char to token estimate
+            # Tokenize and process sample
+            text = str(sample)
+            
+            # Apply Repetition if enabled
+            if self.config.repetition_factor > 1:
+                text = PromptRepetitionEngine.apply_repetition(
+                    text,
+                    factor=self.config.repetition_factor,
+                    style=self.config.repetition_style
+                )
+            
+            text = text[:self.config.max_seq_length * 4]  # Rough char to token estimate
+            
             inputs = self.tokenizer(
                 text,
                 return_tensors="pt",
@@ -231,22 +235,12 @@ class OmniTrainingStage(BaseStage):
                         param_group['lr'] = self.config.learning_rate * lr_scale
                 
                 global_step += 1
+                self.current_step = global_step
                 
                 progress.set_postfix(loss=f"{loss:.4f}", step=global_step)
         
-        # Final gradient step
-        if (len(dataset) % self.config.gradient_accumulation_steps) != 0:
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
-            optimizer.step()
-            optimizer.zero_grad()
-        
-        # Save checkpoint
-        output_path = Path(output_dir) / "omni"
-        output_path.mkdir(parents=True, exist_ok=True)
-        
-        logger.info(f"Saving checkpoint to {output_path}")
-        self.model.save_pretrained(str(output_path))
-        self.tokenizer.save_pretrained(str(output_path))
+        # Save final checkpoint
+        output_path = self.save_checkpoint(is_final=True)
         
         duration = time.time() - start_time
         avg_loss = sum(losses) / len(losses) if losses else 0.0
@@ -259,10 +253,10 @@ class OmniTrainingStage(BaseStage):
         metrics = TrainingMetrics(
             capability="omni",
             dataset=data_path,
-            base_model=self.config.base_model,
+            base_model=self.config.base_model_path,
             samples=len(dataset),
             steps=global_step,
-            epochs=self.config.epochs, # Note: logic above doesn't explicitly loop epochs but iterates dataset once, implying 1 epoch or partial. Assuming 1 for now or config.
+            epochs=self.config.epochs,
             duration_seconds=round(duration, 2),
             samples_per_second=len(dataset)/duration if duration > 0 else 0,
             initial_loss=losses[0] if losses else 0.0,
@@ -290,29 +284,39 @@ def main():
     parser.add_argument("--base-model", required=True, help="Path to Omni model")
     parser.add_argument("--data-dir", required=True, help="Path to training data")
     parser.add_argument("--output-dir", default="/mnt/e/data/output/trained", help="Output directory")
-    parser.add_argument("--max-samples", type=int, default=1000, help="Max training samples")
+    parser.add_argument("--sample-size", type=int, default=1000, help="Max training samples")
     parser.add_argument("--learning-rate", type=float, default=1e-6, help="Learning rate")
-    parser.add_argument("--quick-validation", action="store_true", help="Enable quick validation mode (tiny batch, aggressive LR)")
+    parser.add_argument("--epochs", type=int, default=3)
+    parser.add_argument("--batch-size", type=int, default=1)
+    parser.add_argument("--quick-validation", action="store_true", help="Enable quick validation mode")
+    
+    # Repetition args
+    parser.add_argument("--repetition-factor", type=int, default=1, help="Prompt repetition factor")
+    parser.add_argument("--repetition-style", type=str, default="baseline", help="Repetition style")
+    
     args = parser.parse_args()
     
     # Apply quick validation overrides
     if args.quick_validation:
         print("⚡ QUICK VALIDATION MODE ENABLED")
-        args.max_samples = 10  # Very small sample
-        args.learning_rate = 1e-5  # High LR for quick signal
-        # Note: batch size is hardcoded to 1 in TrainingMetrics default, 
-        # and gradient accumulation handles the effective batch size.
+        args.sample_size = 10
+        args.learning_rate = 1e-5
     
     config = OmniStageConfig(
-        base_model=args.base_model,
-        max_samples=args.max_samples,
+        capability_name="omni",
+        base_model_path=args.base_model,
+        output_dir=args.output_dir,
+        sample_size=args.sample_size,
+        batch_size=args.batch_size,
+        epochs=args.epochs,
         learning_rate=args.learning_rate,
-        # Force these for quick validation if needed, essentially override defaults
         max_seq_length=500 if args.quick_validation else 2048,
+        repetition_factor=args.repetition_factor,
+        repetition_style=args.repetition_style,
     )
     
     stage = OmniTrainingStage(config)
-    results = stage.run(args.data_dir, args.output_dir)
+    results = stage.run(args.data_dir)
     
     print("\nTraining Results:")
     for k, v in results.items():

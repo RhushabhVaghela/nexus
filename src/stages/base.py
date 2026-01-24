@@ -53,6 +53,8 @@ class StageConfig:
     enable_distillation: bool = False
     teacher_model_path: Optional[str] = None
     distillation_alpha: float = 0.5  # Weight for soft targets vs hard labels
+    repetition_factor: int = 1  # 1 = Baseline, 2 = 2x, 3 = 3x
+    repetition_style: str = "baseline"
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -64,6 +66,8 @@ class StageConfig:
             "epochs": self.epochs,
             "learning_rate": self.learning_rate,
             "sample_size": self.sample_size,
+            "repetition_factor": self.repetition_factor,
+            "repetition_style": self.repetition_style,
         }
 
 

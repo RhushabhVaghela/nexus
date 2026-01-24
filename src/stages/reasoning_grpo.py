@@ -19,6 +19,8 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 
+from src.utils.repetition import PromptRepetitionEngine
+
 logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -56,12 +58,18 @@ class ReasoningGRPOConfig:
     bf16: bool = True
     logging_steps: int = 10
     save_steps: int = 100
+    
+    # Repetition Config (arXiv:2512.14982)
+    repetition_factor: int = 1
+    repetition_style: str = "baseline"
 
 
 class GRPODataset(Dataset):
     def __init__(self, config: ReasoningGRPOConfig, tokenizer: Any):
         self.tokenizer = tokenizer
         self.max_length = config.max_seq_length
+        self.repetition_factor = config.repetition_factor
+        self.repetition_style = config.repetition_style
         self.problems = self._load_problems(config)
     
     def _load_problems(self, config: ReasoningGRPOConfig) -> List[Dict[str, Any]]:
@@ -125,6 +133,14 @@ class GRPODataset(Dataset):
         if not prompt and "messages" in problem:
             # Extract last user message or construct prompt
              prompt = "\n".join([m['content'] for m in problem['messages'] if m['role'] == 'user'])
+             
+        # Apply Prompt Repetition
+        if self.repetition_factor > 1 and prompt:
+            prompt = PromptRepetitionEngine.apply_repetition(
+                prompt,
+                factor=self.repetition_factor,
+                style=self.repetition_style
+            )
              
         reference = str(problem.get("answer", problem.get("solution", problem.get("reference", ""))))
         return {"prompt": prompt, "reference": reference}
@@ -287,6 +303,11 @@ def main():
     parser.add_argument("--kl-coef", type=float, default=0.1)
     parser.add_argument("--max-length", type=int, default=4096)
     parser.add_argument("--mode", choices=["censored", "uncensored"], default="censored")
+
+    # Repetition args
+    parser.add_argument("--repetition-factor", type=int, default=1, help="Prompt repetition factor")
+    parser.add_argument("--repetition-style", type=str, default="baseline", help="Repetition style")
+
     parser.add_argument("--check-modality", action="store_true", help="Check model modality and exit")
     args = parser.parse_args()
     
@@ -308,7 +329,9 @@ def main():
         output_dir=args.output,
         num_iterations=args.iterations, batch_size=args.batch_size, group_size=args.group_size,
         learning_rate=args.lr, kl_coef=args.kl_coef,
-        mode=args.mode
+        mode=args.mode,
+        repetition_factor=args.repetition_factor,
+        repetition_style=args.repetition_style
     )
     trainer = GRPOTrainer(config)
     trainer.setup()

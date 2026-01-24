@@ -15,6 +15,8 @@ import sys
 import torch
 from torch import Tensor
 
+from src.utils.repetition import PromptRepetitionEngine
+
 logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -64,6 +66,10 @@ class AgentFinetuneConfig:
     lora_target_modules: List[str] = field(default_factory=lambda: [
         "q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"
     ])
+    
+    # Repetition Config (arXiv:2512.14982)
+    repetition_factor: int = 1
+    repetition_style: str = "baseline"
 
 
 class AgentDataset:
@@ -71,6 +77,8 @@ class AgentDataset:
         self.config = config
         self.tokenizer = tokenizer
         self.max_length = config.max_seq_length
+        self.repetition_factor = config.repetition_factor
+        self.repetition_style = config.repetition_style
         self.samples = self._load_data()
     
     def _load_data(self):
@@ -100,10 +108,25 @@ class AgentDataset:
     
     def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
         sample = self.samples[idx]
+        
+        text = ""
         if "messages" in sample:
             text = self._format_messages(sample["messages"])
         else:
-            text = sample.get("text", str(sample))
+            prompt = sample.get("prompt", sample.get("instruction", ""))
+            response = sample.get("response", sample.get("output", ""))
+            
+            if prompt and response:
+                # Apply Prompt Repetition
+                if self.repetition_factor > 1:
+                    prompt = PromptRepetitionEngine.apply_repetition(
+                        prompt,
+                        factor=self.repetition_factor,
+                        style=self.repetition_style
+                    )
+                text = f"User: {prompt}\n\nAssistant: {response}"
+            else:
+                text = sample.get("text", str(sample))
         
         encoding = self.tokenizer(text, max_length=self.max_length, padding="max_length", truncation=True, return_tensors="pt")
         input_ids = encoding["input_ids"].squeeze(0)
@@ -111,12 +134,23 @@ class AgentDataset:
         return {"input_ids": input_ids, "attention_mask": attention_mask, "labels": input_ids.clone()}
     
     def _format_messages(self, messages: List[Dict[str, str]]) -> str:
-        return "\n\n".join([f"{m.get('role', 'user').title()}: {m.get('content', '')}" for m in messages])
+        # Handle Prompt Repetition in message format
+        formatted = []
+        for i, m in enumerate(messages):
+            role = m.get('role', 'user').title()
+            content = m.get('content', '')
+            
+            if i == 0 and m.get('role') == 'user' and self.repetition_factor > 1:
+                content = PromptRepetitionEngine.apply_repetition(
+                    content,
+                    factor=self.repetition_factor,
+                    style=self.repetition_style
+                )
+            
+            formatted.append(f"{role}: {content}")
+            
+        return "\n\n".join(formatted)
 
-
-# ... (AgentFinetuner classes remain similar, just need to update usage example mostly)
-# For brevity, I'm replacing the whole file to ensure clean config integration
-# but reusing the Trainer/Finetuner implementations as they were mostly method-based.
 
 class AgentFinetuner:
     def __init__(self, config: AgentFinetuneConfig):
@@ -205,6 +239,11 @@ def main():
     parser.add_argument("--batch-size", type=int, default=4)
     parser.add_argument("--max-length", type=int, default=2048)
     parser.add_argument("--mode", choices=["censored", "uncensored"], default="censored")
+
+    # Repetition args
+    parser.add_argument("--repetition-factor", type=int, default=1, help="Prompt repetition factor")
+    parser.add_argument("--repetition-style", type=str, default="baseline", help="Repetition style")
+
     parser.add_argument("--check-modality", action="store_true", help="Check model modality and exit")
     
     args = parser.parse_args()
@@ -227,7 +266,9 @@ def main():
         num_epochs=args.num_epochs,
         batch_size=args.batch_size,
         max_seq_length=args.max_length,
-        mode=args.mode
+        mode=args.mode,
+        repetition_factor=args.repetition_factor,
+        repetition_style=args.repetition_style
     )
     
     finetuner = AgentFinetuner(config)

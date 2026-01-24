@@ -12,6 +12,7 @@ from typing import Dict, Any, List
 from datasets import load_dataset, concatenate_datasets
 
 from .base import TextCapabilityStage, StageConfig
+from src.utils.repetition import PromptRepetitionEngine
 
 
 class CoTStage(TextCapabilityStage):
@@ -51,6 +52,30 @@ class CoTStage(TextCapabilityStage):
             
         return True
     
+    def _format_cot(self, sample: Dict) -> str:
+        """Format sample with repetition support."""
+        text = ""
+        if "text" in sample:
+            text = sample["text"]
+        elif "messages" in sample:
+            text = str(sample["messages"])
+        
+        # In actual CoT datasets, 'question' is usually the key prompt.
+        if "question" in sample:
+            question = sample["question"]
+            if self.config.repetition_factor > 1:
+                question = PromptRepetitionEngine.apply_repetition(
+                    question, 
+                    factor=self.config.repetition_factor,
+                    style=self.config.repetition_style
+                )
+            # Reconstruct if possible, otherwise rely on text
+            if "answer" in sample:
+                return f"Question: {question}\nAnswer: {sample['answer']}"
+            # Fallback if structure unknown but text exists: process text
+            
+        return text
+
     def train(self) -> Dict[str, Any]:
         """Run CoT training."""
         if self.config.dry_run:
@@ -61,16 +86,13 @@ class CoTStage(TextCapabilityStage):
             return {"success": True, "steps": 0, "skipped": True}
             
         self.logger.info("Starting CoT training...")
+        if self.config.repetition_factor > 1:
+            self.logger.info(f"Using Prompt Repetition: {self.config.repetition_factor}x ({self.config.repetition_style})")
         
         # Tokenize dataset once (if small)
         self.logger.info("Tokenizing dataset...")
         def tokenize_function(sample):
-            if "text" in sample:
-                text = sample["text"]
-            elif "messages" in sample:
-                text = str(sample["messages"])
-            else:
-                text = ""
+            text = self._format_cot(sample)
             return self.tokenizer(text, truncation=True, max_length=2048, padding="max_length")
             
         tokenized_dataset = self.train_dataset.map(tokenize_function, batched=False)
@@ -141,6 +163,9 @@ def main():
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--sample-size", type=int, default=0)
     parser.add_argument("--dry-run", action="store_true", help="Dry run mode")
+    # Repetition args
+    parser.add_argument("--repetition-factor", type=int, default=1, help="Prompt repetition factor")
+    parser.add_argument("--repetition-style", type=str, default="baseline", help="Repetition style")
     
     args = parser.parse_args()
     
@@ -152,6 +177,8 @@ def main():
         epochs=args.epochs,
         sample_size=args.sample_size,
         dry_run=args.dry_run,
+        repetition_factor=args.repetition_factor,
+        repetition_style=args.repetition_style,
     )
     
     stage = CoTStage(config)

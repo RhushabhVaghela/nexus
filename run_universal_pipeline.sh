@@ -19,8 +19,8 @@
 #   # Full Omni with tri-streaming
 #   ./run_universal_pipeline.sh --base-model /path/to/omni-model --enable-tri-streaming
 #
-#   # Image generation (requires vision_output decoder)
-#   ./run_universal_pipeline.sh --base-model /path/to/model --enable-omni --enable-image-generation
+#   # Image generation with 2x Prompt Repetition (arXiv:2512.14982)
+#   ./run_universal_pipeline.sh --base-model /path/to/model --enable-image-generation --repetition-image-generation=2
 #
 # =============================================================================
 
@@ -97,6 +97,22 @@ DRY_RUN=false
 SKIP_ORGANIZE=true
 TRAINING_METHOD="sft"  # sft, lora, qlora, dpo, grpo, orpo, ppo, distillation, cpt
 
+# Repetition options (arXiv:2512.14982)
+REP_GLOBAL=1
+REP_STYLE="baseline"
+REP_OMNI=""
+REP_COT=""
+REP_REASONING=""
+REP_THINKING=""
+REP_STREAMING=""
+REP_PODCAST=""
+REP_VISION_QA=""
+REP_VIDEO_UNDERSTANDING=""
+REP_TRI_STREAMING=""
+REP_IMAGE_GENERATION=""
+REP_VIDEO_GENERATION=""
+REP_REMOTION_EXPLAINER=""
+
 # ============ PARSE ARGUMENTS ============
 print_usage() {
     echo "Usage: ./run_universal_pipeline.sh --base-model PATH [CAPABILITIES] [OPTIONS]"
@@ -117,6 +133,22 @@ print_usage() {
     echo "  --enable-remotion-explainer 3Blue1Brown-style video generation"
     echo "  --enable-all-text          Enable all text-only capabilities"
     echo "  --enable-full-omni         Enable Omni + all capabilities"
+    echo ""
+    echo "Repetition Control (arXiv:2512.14982):"
+    echo "  --repetition-factor N      Global default repetition factor (1, 2, 3)"
+    echo "  --repetition-style STYLE   Global style (baseline, 2x, verbose, 3x)"
+    echo "  --repetition-omni N        Override for Omni"
+    echo "  --repetition-cot N         Override for CoT"
+    echo "  --repetition-reasoning N    Override for Reasoning"
+    echo "  --repetition-thinking N     Override for Thinking"
+    echo "  --repetition-streaming N    Override for Streaming"
+    echo "  --repetition-podcast N      Override for Podcast"
+    echo "  --repetition-vision-qa N    Override for Vision-QA"
+    echo "  --repetition-video-understanding N"
+    echo "  --repetition-tri-streaming N"
+    echo "  --repetition-image-generation N"
+    echo "  --repetition-video-generation N"
+    echo "  --repetition-remotion-explainer N"
     echo ""
     echo "Options:"
     echo "  --base-model PATH          Base model path (required)"
@@ -170,6 +202,20 @@ for arg in "$@"; do
             ENABLE_VISION_QA=true
             ENABLE_TRI_STREAMING=true
             ;;
+        --repetition-factor=*) REP_GLOBAL="${arg#*=}" ;;
+        --repetition-style=*) REP_STYLE="${arg#*=}" ;;
+        --repetition-omni=*) REP_OMNI="${arg#*=}" ;;
+        --repetition-cot=*) REP_COT="${arg#*=}" ;;
+        --repetition-reasoning=*) REP_REASONING="${arg#*=}" ;;
+        --repetition-thinking=*) REP_THINKING="${arg#*=}" ;;
+        --repetition-streaming=*) REP_STREAMING="${arg#*=}" ;;
+        --repetition-podcast=*) REP_PODCAST="${arg#*=}" ;;
+        --repetition-vision-qa=*) REP_VISION_QA="${arg#*=}" ;;
+        --repetition-video-understanding=*) REP_VIDEO_UNDERSTANDING="${arg#*=}" ;;
+        --repetition-tri-streaming=*) REP_TRI_STREAMING="${arg#*=}" ;;
+        --repetition-image-generation=*) REP_IMAGE_GENERATION="${arg#*=}" ;;
+        --repetition-video-generation=*) REP_VIDEO_GENERATION="${arg#*=}" ;;
+        --repetition-remotion-explainer=*) REP_REMOTION_EXPLAINER="${arg#*=}" ;;
         --dry-run) DRY_RUN=true ;;
         --help|-h) print_usage ;;
     esac
@@ -200,6 +246,7 @@ echo -e "${CYAN}╚════════════════════�
 echo ""
 echo -e "  Base Model:  ${GREEN}$(basename "$BASE_MODEL")${NC}"
 echo -e "  Output:      ${OUTPUT_DIR}"
+echo -e "  Repetition:  Global Factor=${REP_GLOBAL}, Style=${REP_STYLE}"
 if $DRY_RUN; then
     echo -e "  Mode:        ${YELLOW}DRY-RUN (no actual training)${NC}"
 fi
@@ -340,8 +387,18 @@ echo ""
 # ============ EXECUTE TRAINING STAGES ============
 CURRENT_MODEL="$BASE_MODEL"
 
+# Helper to get repetition factor for a specific stage
+get_rep_factor() {
+    local stage_val="$1"
+    if [ -n "$stage_val" ]; then
+        echo "$stage_val"
+    else
+        echo "$REP_GLOBAL"
+    fi
+}
+
 # Build common args
-COMMON_ARGS="--sample-size $SAMPLE_SIZE --batch-size $BATCH_SIZE --epochs $EPOCHS"
+COMMON_ARGS="--sample-size $SAMPLE_SIZE --batch-size $BATCH_SIZE --epochs $EPOCHS --repetition-style $REP_STYLE"
 if $DRY_RUN; then
     COMMON_ARGS="$COMMON_ARGS --dry-run"
 fi
@@ -351,19 +408,39 @@ for stage in "${STAGES[@]}"; do
     STAGE_OUTPUT="${OUTPUT_DIR}/${stage}"
     mkdir -p "$STAGE_OUTPUT"
     
+    # Calculate repetition factor for this specific stage
+    case $stage in
+        omni) CUR_REP=$(get_rep_factor "$REP_OMNI") ;;
+        cot) CUR_REP=$(get_rep_factor "$REP_COT") ;;
+        reasoning) CUR_REP=$(get_rep_factor "$REP_REASONING") ;;
+        thinking) CUR_REP=$(get_rep_factor "$REP_THINKING") ;;
+        streaming) CUR_REP=$(get_rep_factor "$REP_STREAMING") ;;
+        podcast) CUR_REP=$(get_rep_factor "$REP_PODCAST") ;;
+        vision-qa) CUR_REP=$(get_rep_factor "$REP_VISION_QA") ;;
+        video-understanding) CUR_REP=$(get_rep_factor "$REP_VIDEO_UNDERSTANDING") ;;
+        tri-streaming) CUR_REP=$(get_rep_factor "$REP_TRI_STREAMING") ;;
+        image-generation) CUR_REP=$(get_rep_factor "$REP_IMAGE_GENERATION") ;;
+        video-generation) CUR_REP=$(get_rep_factor "$REP_VIDEO_GENERATION") ;;
+        remotion-explainer) CUR_REP=$(get_rep_factor "$REP_REMOTION_EXPLAINER") ;;
+        *) CUR_REP="$REP_GLOBAL" ;;
+    esac
+    
+    REP_ARGS="--repetition-factor $CUR_REP"
+    
     if $DRY_RUN; then
-        log_info "[DRY-RUN] Would train $stage"
+        log_info "[DRY-RUN] Would train $stage with repetition factor $CUR_REP"
     fi
     
     case $stage in
         omni)
             if $DRY_RUN; then
-                log_info "[DRY-RUN] python ${SRC_DIR}/24_multimodal_training.py --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+                log_info "[DRY-RUN] python ${SRC_DIR}/24_multimodal_training.py --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT $REP_ARGS"
             else
                 python "${SRC_DIR}/24_multimodal_training.py" \
                     --base-model "$CURRENT_MODEL" \
                     --output-dir "$STAGE_OUTPUT" \
                     --sample-size "$SAMPLE_SIZE" \
+                    $REP_ARGS \
                     2>&1 | tee "${LOG_DIR}/train_omni.log"
             fi
             CURRENT_MODEL="$STAGE_OUTPUT"
@@ -382,48 +459,52 @@ for stage in "${STAGES[@]}"; do
             ;;
         cot)
             if $DRY_RUN; then
-                log_info "[DRY-RUN] $PYTHON_CMD -m src.stages.stage_cot --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+                log_info "[DRY-RUN] $PYTHON_CMD -m src.stages.stage_cot --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT $REP_ARGS"
             else
                 $PYTHON_CMD -m src.stages.stage_cot \
                     --base-model "$CURRENT_MODEL" \
                     --output-dir "$STAGE_OUTPUT" \
                     $COMMON_ARGS \
+                    $REP_ARGS \
                     2>&1 | tee "${LOG_DIR}/train_cot.log"
             fi
             CURRENT_MODEL="$STAGE_OUTPUT"
             ;;
         reasoning)
             if $DRY_RUN; then
-                log_info "[DRY-RUN] $PYTHON_CMD -m src.stages.stage_reasoning --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+                log_info "[DRY-RUN] $PYTHON_CMD -m src.stages.stage_reasoning --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT $REP_ARGS"
             else
                 $PYTHON_CMD -m src.stages.stage_reasoning \
                     --base-model "$CURRENT_MODEL" \
                     --output-dir "$STAGE_OUTPUT" \
                     $COMMON_ARGS \
+                    $REP_ARGS \
                     2>&1 | tee "${LOG_DIR}/train_reasoning.log"
             fi
             CURRENT_MODEL="$STAGE_OUTPUT"
             ;;
         thinking)
             if $DRY_RUN; then
-                log_info "[DRY-RUN] $PYTHON_CMD -m src.stages.stage_thinking --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+                log_info "[DRY-RUN] $PYTHON_CMD -m src.stages.stage_thinking --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT $REP_ARGS"
             else
                 $PYTHON_CMD -m src.stages.stage_thinking \
                     --base-model "$CURRENT_MODEL" \
                     --output-dir "$STAGE_OUTPUT" \
                     $COMMON_ARGS \
+                    $REP_ARGS \
                     2>&1 | tee "${LOG_DIR}/train_thinking.log"
             fi
             CURRENT_MODEL="$STAGE_OUTPUT"
             ;;
         streaming)
             if $DRY_RUN; then
-                log_info "[DRY-RUN] $PYTHON_CMD -m src.stages.stage_streaming --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+                log_info "[DRY-RUN] $PYTHON_CMD -m src.stages.stage_streaming --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT $REP_ARGS"
             else
                 $PYTHON_CMD -m src.stages.stage_streaming \
                     --base-model "$CURRENT_MODEL" \
                     --output-dir "$STAGE_OUTPUT" \
                     $COMMON_ARGS \
+                    $REP_ARGS \
                     2>&1 | tee "${LOG_DIR}/train_streaming.log"
             fi
             CURRENT_MODEL="$STAGE_OUTPUT"
@@ -431,13 +512,14 @@ for stage in "${STAGES[@]}"; do
         podcast|vision-qa|video-understanding|tri-streaming)
             log_info "Running multimodal $stage training..."
             if $DRY_RUN; then
-                log_info "[DRY-RUN] $PYTHON_CMD ${SRC_DIR}/24_multimodal_training.py --capability $stage"
+                log_info "[DRY-RUN] $PYTHON_CMD ${SRC_DIR}/24_multimodal_training.py --capability $stage $REP_ARGS"
             else
                 $PYTHON_CMD "${SRC_DIR}/24_multimodal_training.py" \
                     --base-model "$CURRENT_MODEL" \
                     --output-dir "$STAGE_OUTPUT" \
                     --capability "$stage" \
                     --sample-size "$SAMPLE_SIZE" \
+                    $REP_ARGS \
                     2>&1 | tee "${LOG_DIR}/train_${stage}.log"
             fi
             CURRENT_MODEL="$STAGE_OUTPUT"
@@ -445,12 +527,13 @@ for stage in "${STAGES[@]}"; do
         image-generation)
             log_info "Running image generation projector training..."
             if $DRY_RUN; then
-                log_info "[DRY-RUN] $PYTHON_CMD -m src.stages.stage_image_gen --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+                log_info "[DRY-RUN] $PYTHON_CMD -m src.stages.stage_image_gen --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT $REP_ARGS"
             else
                 $PYTHON_CMD -m src.stages.stage_image_gen \
                     --base-model "$CURRENT_MODEL" \
                     --output-dir "$STAGE_OUTPUT" \
                     $COMMON_ARGS \
+                    $REP_ARGS \
                     2>&1 | tee "${LOG_DIR}/train_image_gen.log"
             fi
             CURRENT_MODEL="$STAGE_OUTPUT"
@@ -458,12 +541,13 @@ for stage in "${STAGES[@]}"; do
         video-generation)
             log_info "Running video generation projector training..."
             if $DRY_RUN; then
-                log_info "[DRY-RUN] $PYTHON_CMD -m src.stages.stage_video_gen --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+                log_info "[DRY-RUN] $PYTHON_CMD -m src.stages.stage_video_gen --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT $REP_ARGS"
             else
                 $PYTHON_CMD -m src.stages.stage_video_gen \
                     --base-model "$CURRENT_MODEL" \
                     --output-dir "$STAGE_OUTPUT" \
                     $COMMON_ARGS \
+                    $REP_ARGS \
                     2>&1 | tee "${LOG_DIR}/train_video_gen.log"
             fi
             CURRENT_MODEL="$STAGE_OUTPUT"
@@ -471,12 +555,13 @@ for stage in "${STAGES[@]}"; do
         remotion-explainer)
             log_info "Running Remotion explainer code generation training..."
             if $DRY_RUN; then
-                log_info "[DRY-RUN] $PYTHON_CMD -m src.stages.stage_remotion_gen --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT"
+                log_info "[DRY-RUN] $PYTHON_CMD -m src.stages.stage_remotion_gen --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT $REP_ARGS"
             else
                 $PYTHON_CMD -m src.stages.stage_remotion_gen \
                     --base-model "$CURRENT_MODEL" \
                     --output-dir "$STAGE_OUTPUT" \
                     $COMMON_ARGS \
+                    $REP_ARGS \
                     2>&1 | tee "${LOG_DIR}/train_remotion.log"
             fi
             CURRENT_MODEL="$STAGE_OUTPUT"

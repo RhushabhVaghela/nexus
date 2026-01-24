@@ -3,33 +3,28 @@ import sys
 import os
 import torch
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 # Add src to path - dynamically relative to project root
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.append(str(PROJECT_ROOT / "src"))
 
 from multimodal.reasoning import ReasoningWrapper, ReasoningLevel
-# from multimodal.model import OmniMultimodalLM # Removed if not needed for prompt test
-from transformers import AutoTokenizer, AutoModelForCausalLM
 
 def test_reasoning():
-    print("🧪 Testing Reasoning Engine with Real Model...")
+    print("🧪 Testing Reasoning Engine with MOCK Model...")
     
-    # 1. Load Real Model (Qwen2.5-0.5B for efficiency)
-    model_name = "/mnt/e/data/models/Qwen2.5-0.5B"
-    if not os.path.exists(model_name):
-        print(f"⚠️ Model path not found: {model_name}. Skipping test.")
-        return
-
-    print(f"Loading tokenizer and model from {model_name}...")
-    tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name, 
-        trust_remote_code=True, 
-        torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
-        device_map="auto" if torch.cuda.is_available() else None
-    )
-    model.eval()
+    # 1. Mock Tokenizer and Model
+    tokenizer = MagicMock()
+    tokenizer.return_value = {
+        "input_ids": torch.zeros((1, 10), dtype=torch.long),
+        "attention_mask": torch.ones((1, 10), dtype=torch.long)
+    }
+    tokenizer.decode.return_value = "Mocked response about quantum entanglement"
+    
+    model = MagicMock()
+    model.device = torch.device("cpu")
+    model.generate.return_value = torch.zeros((1, 20), dtype=torch.long)
     
     wrapper = ReasoningWrapper(model, tokenizer)
     
@@ -50,18 +45,19 @@ def test_reasoning():
             # High level should inject CoT thought prompt
             has_cot_instruction = any("<think>" in m['content'] for m in enhanced if m['role'] == 'system')
             print(f"✅ CoT Instruction Injected: {has_cot_instruction}")
+            assert has_cot_instruction, "CoT instruction should be injected for HIGH level"
         else:
             has_system = any(m['role'] == 'system' for m in enhanced)
             print(f"ℹ️  System Prompt Present: {has_system} (Expected: False/Minimal)")
         
-        # Verify actual generation doesn't crash
-        inputs = tokenizer(query, return_tensors="pt").to(model.device)
+        # Verify actual generation logic (mocked)
+        inputs = tokenizer(query, return_tensors="pt")
         with torch.no_grad():
             output = model.generate(**inputs, max_new_tokens=20)
             response = tokenizer.decode(output[0], skip_special_tokens=True)
-            print(f"   Generated (truncated): {response[:50]}...")
+            print(f"   Generated (mocked): {response[:50]}...")
             
-    print("\n✅ Reasoning Wrapper Verified with REAL MODEL.")
+    print("\n✅ Reasoning Wrapper Verified with MOCK MODEL.")
 
 if __name__ == "__main__":
     test_reasoning()

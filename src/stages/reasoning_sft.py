@@ -18,6 +18,8 @@ from typing import Optional, Dict, Any, List
 import torch
 from torch.utils.data import Dataset
 
+from src.utils.repetition import PromptRepetitionEngine
+
 logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -63,12 +65,18 @@ class ReasoningSFTConfig:
     bf16: bool = True
     logging_steps: int = 10
     save_steps: int = 500
+    
+    # Repetition Config (arXiv:2512.14982)
+    repetition_factor: int = 1
+    repetition_style: str = "baseline"
 
 
 class ReasoningDataset(Dataset):
     def __init__(self, config: ReasoningSFTConfig, tokenizer: Any):
         self.tokenizer = tokenizer
         self.max_length = config.max_seq_length
+        self.repetition_factor = config.repetition_factor
+        self.repetition_style = config.repetition_style
         self.samples = self._load_data(config)
         print(f"DEBUG: ReasoningDataset loaded {len(self.samples)} samples")
     
@@ -124,10 +132,26 @@ class ReasoningDataset(Dataset):
     
     def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
         sample = self.samples[idx]
+        
+        text = ""
         if "messages" in sample:
             text = self._format_messages(sample["messages"])
         else:
-            text = sample.get("text", str(sample))
+            # For non-message samples, we check if we can extract prompt/response
+            prompt = sample.get("prompt", sample.get("instruction", ""))
+            response = sample.get("response", sample.get("output", ""))
+            
+            if prompt and response:
+                # Apply Repetition to prompt
+                if self.repetition_factor > 1:
+                    prompt = PromptRepetitionEngine.apply_repetition(
+                        prompt, 
+                        factor=self.repetition_factor,
+                        style=self.repetition_style
+                    )
+                text = f"User: {prompt}\n\nAssistant: {response}"
+            else:
+                text = sample.get("text", str(sample))
         
         encoding = self.tokenizer(text, max_length=self.max_length, padding="max_length", truncation=True, return_tensors="pt")
         input_ids = encoding["input_ids"].squeeze(0)
@@ -135,9 +159,22 @@ class ReasoningDataset(Dataset):
         return {"input_ids": input_ids, "attention_mask": attention_mask, "labels": input_ids.clone()}
     
     def _format_messages(self, messages: List[Dict[str, str]]) -> str:
-         # Handle HF dataset row format often being dict behavior but let's assume dict or object
-         # HF datasets rows are dicts
-        return "\n\n".join([f"{m.get('role', 'user').title()}: {m.get('content', '')}" for m in messages])
+        # Handle Prompt Repetition in message format (repeat first user message)
+        formatted = []
+        for i, m in enumerate(messages):
+            role = m.get('role', 'user').title()
+            content = m.get('content', '')
+            
+            if i == 0 and m.get('role') == 'user' and self.repetition_factor > 1:
+                content = PromptRepetitionEngine.apply_repetition(
+                    content,
+                    factor=self.repetition_factor,
+                    style=self.repetition_style
+                )
+            
+            formatted.append(f"{role}: {content}")
+            
+        return "\n\n".join(formatted)
 
 
 class ReasoningSFTTrainer:
@@ -230,6 +267,10 @@ def main():
     parser.add_argument("--no-bf16", action="store_true", help="Disable bf16 training")
     parser.add_argument("--mode", choices=["censored", "uncensored"], default="censored")
 
+    # Repetition args
+    parser.add_argument("--repetition-factor", type=int, default=1, help="Prompt repetition factor")
+    parser.add_argument("--repetition-style", type=str, default="baseline", help="Repetition style")
+
     # Modality Check
     parser.add_argument("--check-modality", action="store_true", help="Check model modality and exit")
     args = parser.parse_args()
@@ -257,7 +298,9 @@ def main():
         max_seq_length=args.max_length, lora_r=args.lora_r,
         extend_context=args.extend_context, target_context_length=args.target_context,
         bf16=not args.no_bf16,
-        mode=args.mode
+        mode=args.mode,
+        repetition_factor=args.repetition_factor,
+        repetition_style=args.repetition_style
     )
     trainer = ReasoningSFTTrainer(config)
     trainer.setup()

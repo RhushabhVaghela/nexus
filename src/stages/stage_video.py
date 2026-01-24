@@ -12,6 +12,7 @@ from pathlib import Path
 from datasets import load_dataset
 
 from .base import BaseStage, StageConfig
+from src.utils.repetition import PromptRepetitionEngine
 
 
 class VideoUnderstandingStage(BaseStage):
@@ -87,6 +88,8 @@ class VideoUnderstandingStage(BaseStage):
             return {"success": True, "steps": 0, "skipped": True}
         
         self.logger.info("Starting video understanding training...")
+        if self.config.repetition_factor > 1:
+            self.logger.info(f"Using Prompt Repetition: {self.config.repetition_factor}x ({self.config.repetition_style})")
         
         from src.training_controller import training_step_hook
         
@@ -108,8 +111,17 @@ class VideoUnderstandingStage(BaseStage):
                 if not caption:
                     continue
                 
+                # Apply Prompt Repetition
+                q = "Describe this video:"
+                if self.config.repetition_factor > 1:
+                    q = PromptRepetitionEngine.apply_repetition(
+                        q,
+                        factor=self.config.repetition_factor,
+                        style=self.config.repetition_style
+                    )
+                
                 # Add temporal framing
-                text = f"[VIDEO] Describe this video:\n{caption}"
+                text = f"[VIDEO] {q}\n{caption}"
                 
                 inputs = self.tokenizer(
                     text,
@@ -149,6 +161,10 @@ def main():
     parser.add_argument("--sample-size", type=int, default=0)
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--epochs", type=int, default=3)
+    # Repetition args
+    parser.add_argument("--repetition-factor", type=int, default=1, help="Prompt repetition factor")
+    parser.add_argument("--repetition-style", type=str, default="baseline", help="Repetition style")
+    
     args = parser.parse_args()
     
     config = StageConfig(
@@ -159,6 +175,8 @@ def main():
         batch_size=args.batch_size,
         epochs=args.epochs,
         dry_run=args.dry_run,
+        repetition_factor=args.repetition_factor,
+        repetition_style=args.repetition_style,
     )
     stage = VideoUnderstandingStage(config)
     return 0 if stage.run().get("success") else 1

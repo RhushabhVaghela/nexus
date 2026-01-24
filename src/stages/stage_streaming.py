@@ -6,6 +6,7 @@ Token streaming output training stage.
 
 from typing import Dict, Any
 from .base import TextCapabilityStage, StageConfig
+from src.utils.repetition import PromptRepetitionEngine
 
 
 class StreamingStage(TextCapabilityStage):
@@ -31,6 +32,9 @@ class StreamingStage(TextCapabilityStage):
         
         # Streaming is mostly runtime - minimal training needed
         self.logger.info("Streaming capability configured")
+        if self.config.repetition_factor > 1:
+            self.logger.info(f"Using Prompt Repetition for streaming simulation: {self.config.repetition_factor}x")
+            
         return {"success": True, "steps": 0, "note": "Runtime feature"}
 
 
@@ -43,6 +47,10 @@ def main():
     parser.add_argument("--sample-size", type=int, default=0)
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--epochs", type=int, default=3)
+    # Repetition args
+    parser.add_argument("--repetition-factor", type=int, default=1, help="Prompt repetition factor")
+    parser.add_argument("--repetition-style", type=str, default="baseline", help="Repetition style")
+    
     args = parser.parse_args()
     
     config = StageConfig(
@@ -53,6 +61,8 @@ def main():
         batch_size=args.batch_size,
         epochs=args.epochs,
         dry_run=args.dry_run,
+        repetition_factor=args.repetition_factor,
+        repetition_style=args.repetition_style,
     )
     stage = StreamingStage(config)
     return 0 if stage.run().get("success") else 1
