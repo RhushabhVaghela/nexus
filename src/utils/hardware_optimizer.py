@@ -26,7 +26,7 @@ def optimize_for_hardware():
 
     return {
         "device": "cuda" if torch.cuda.is_available() else "cpu",
-        "flash_attention": True if torch.cuda.get_device_capability()[0] >= 8 else False
+        "flash_attention": True if torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 8 else False
     }
 
 if __name__ == "__main__":
