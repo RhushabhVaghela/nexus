@@ -1,0 +1,31 @@
+{
+  "recipes": [
+    {
+      "topic": "Classic Carbonara",
+      "steps": [
+        {"title": "Boil Pasta", "detail": "Salted water, al dente"},
+        {"title": "Fry Guanciale", "detail": "Render fat slowly"},
+        {"title": "Mix Eggs & Cheese", "detail": "Pecorino Romano + Yolks"},
+        {"title": "Combine", "detail": "Off heat to avoid scrambling"}
+      ]
+    },
+    {
+      "topic": "Avocado Toast",
+      "steps": [
+        {"title": "Toast Bread", "detail": "Sourdough is best"},
+        {"title": "Mash Avocado", "detail": "Add lime and salt"},
+        {"title": "Assemble", "detail": "Top with chili flakes"}
+      ]
+    }
+  ],
+  "routines": [
+    {
+      "topic": "Morning Productivity",
+      "steps": [
+        {"title": "Hydrate", "detail": "500ml water immediately"},
+        {"title": "Deep Work", "detail": "90 minutes focus block"},
+        {"title": "Exercise", "detail": "Light cardio or yoga"}
+      ]
+    }
+  ]
+}

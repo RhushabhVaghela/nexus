@@ -19,20 +19,16 @@ from typing import Optional
 sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger, log_header, log_completion
 
-# ═══════════════════════════════════════════════════════════════
-# CONFIGURATION
-# ═══════════════════════════════════════════════════════════════
+def check_env():
+    """Verify environment dependencies."""
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        print("[ERROR] Must be run in 'nexus' conda environment.")
+        return False
+    return True
 
-CONFIG = {
-    "model_checkpoint": "checkpoints/stage3_grpo_censored",
-    "safety_dataset": "/mnt/e/data/safety-alignment",
-    "output_dir": "checkpoints/stage4_safety",
-    "max_steps": 1000,
-    "learning_rate": 1e-5,
-    "batch_size": 4,
-}
-
-logger = setup_logger(__name__, "logs/safety_finetuning.log")
+# Globals to be initialized in main()
+CONFIG = None
+logger = None
 
 # ═══════════════════════════════════════════════════════════════
 # MODE DETECTION
@@ -170,6 +166,20 @@ def run_safety_finetuning():
 # ═══════════════════════════════════════════════════════════════
 
 def main():
+    if not check_env():
+        sys.exit(1)
+        
+    global CONFIG, logger
+    CONFIG = {
+        "model_checkpoint": "checkpoints/stage3_grpo_censored",
+        "safety_dataset": "/mnt/e/data/safety-alignment",
+        "output_dir": "checkpoints/stage4_safety",
+        "max_steps": 1000,
+        "learning_rate": 1e-5,
+        "batch_size": 4,
+    }
+    logger = setup_logger(__name__, "logs/safety_finetuning.log")
+
     mode = detect_training_mode()
     
     if mode != "censored":

@@ -24,7 +24,7 @@ import sys
 import json
 import argparse
 from pathlib import Path
-from typing import Dict, List, Optional, Callable
+from typing import Dict, List, Optional, Callable, Any
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 import random
@@ -339,13 +339,20 @@ class MultipleChoiceEvaluator(BaseEvaluator):
         output_clean = model_output.strip().upper()
         correct_clean = sample.correct_answer.strip().upper()
         
-        # Check for letter match (A, B, C, D)
-        for i, choice in enumerate(sample.choices):
-            letter = chr(ord('A') + i)
-            if output_clean.startswith(letter) or output_clean == letter:
+        # 1. Exact match with any choice text
+        for choice in sample.choices:
+            if output_clean == choice.strip().upper():
                 return choice.strip().upper() == correct_clean
         
-        # Direct match
+        # 2. Match with letter (A, B, C...)
+        for i, choice in enumerate(sample.choices):
+            letter = chr(ord('A') + i)
+            # Check for exact letter or letter followed by separator
+            if output_clean == letter or output_clean.startswith(f"{letter} ") or \
+               output_clean.startswith(f"{letter}:") or output_clean.startswith(f"{letter}."):
+                return choice.strip().upper() == correct_clean
+        
+        # Direct match with correct answer
         return output_clean == correct_clean
 
 
@@ -572,10 +579,10 @@ class ExpandedEvalSuite:
             "total_benchmarks": len(self.results),
             "benchmarks": {},
             "aggregate": {
-                "knowledge": 0,
-                "math": 0,
-                "code": 0,
-                "reasoning": 0,
+                "knowledge": 0.0,
+                "math": 0.0,
+                "code": 0.0,
+                "reasoning": 0.0,
             },
         }
         
@@ -583,6 +590,8 @@ class ExpandedEvalSuite:
         math_benchmarks = ["gsm8k", "math", "math_hard"]
         code_benchmarks = ["humaneval", "mbpp", "bigcodebench", "swe_bench_lite"]
         reasoning_benchmarks = ["hellaswag", "winogrande", "arc_easy"]
+        
+        counts = {"knowledge": 0, "math": 0, "code": 0, "reasoning": 0}
         
         for result in self.results:
             summary["benchmarks"][result.benchmark] = {
@@ -593,34 +602,22 @@ class ExpandedEvalSuite:
             
             # Aggregate scores
             if result.benchmark in knowledge_benchmarks:
-                count = summary["aggregate"].get("knowledge_count", 0)
-                summary["aggregate"]["knowledge"] = (
-                    summary["aggregate"]["knowledge"] * count + result.score
-                ) / (count + 1)
-                summary["aggregate"]["knowledge_count"] = count + 1
+                summary["aggregate"]["knowledge"] += result.score
+                counts["knowledge"] += 1
             elif result.benchmark in math_benchmarks:
-                count = summary["aggregate"].get("math_count", 0)
-                summary["aggregate"]["math"] = (
-                    summary["aggregate"]["math"] * count + result.score
-                ) / (count + 1)
-                summary["aggregate"]["math_count"] = count + 1
+                summary["aggregate"]["math"] += result.score
+                counts["math"] += 1
             elif result.benchmark in code_benchmarks:
-                count = summary["aggregate"].get("code_count", 0)
-                summary["aggregate"]["code"] = (
-                    summary["aggregate"]["code"] * count + result.score
-                ) / (count + 1)
-                summary["aggregate"]["code_count"] = count + 1
+                summary["aggregate"]["code"] += result.score
+                counts["code"] += 1
             elif result.benchmark in reasoning_benchmarks:
-                count = summary["aggregate"].get("reasoning_count", 0)
-                summary["aggregate"]["reasoning"] = (
-                    summary["aggregate"]["reasoning"] * count + result.score
-                ) / (count + 1)
-                summary["aggregate"]["reasoning_count"] = count + 1
+                summary["aggregate"]["reasoning"] += result.score
+                counts["reasoning"] += 1
         
-        # Clean up count fields
-        for key in list(summary["aggregate"].keys()):
-            if key.endswith("_count"):
-                del summary["aggregate"][key]
+        # Calculate averages
+        for key in summary["aggregate"]:
+            if counts[key] > 0:
+                summary["aggregate"][key] /= counts[key]
         
         return summary
     
@@ -690,11 +687,11 @@ def main():
     
     suite.save_results(Path(args.output))
     
-    log_completion(
-        logger,
-        "Evaluation Complete",
-        {"Benchmarks": len(summary["benchmarks"]), "Output": args.output},
-    )
+    logger.info("=" * 60)
+    logger.info("✅ EVALUATION COMPLETE")
+    logger.info(f"   Benchmarks run: {len(summary['benchmarks'])}")
+    logger.info(f"   Output: {args.output}")
+    logger.info("=" * 60)
 
 
 if __name__ == "__main__":

@@ -53,6 +53,80 @@ class TestBenchmarkBaseline:
             pytest.skip("Multimodal module not available")
 
 
+class TestBenchmarkRunnerMocked:
+    """Detailed tests for BenchmarkRunner using mocks."""
+    
+    @patch("src.omni.loader.OmniModelLoader.load")
+    def test_runner_setup(self, mock_load):
+        from src.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig
+        mock_model = MagicMock()
+        mock_tokenizer = MagicMock()
+        mock_load.return_value = (mock_model, mock_tokenizer)
+        
+        config = BenchmarkConfig(model_path="/fake/path")
+        runner = BenchmarkRunner(config)
+        runner.setup()
+        
+        assert runner.model == mock_model
+        assert runner.tokenizer == mock_tokenizer
+        assert mock_model.eval.called
+
+    @patch("src.omni.loader.OmniModelLoader.load")
+    def test_generation_benchmark_logic(self, mock_load):
+        from src.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig
+        import torch
+        
+        mock_model = MagicMock()
+        mock_model.device = "cpu"
+        mock_tokenizer = MagicMock()
+        mock_load.return_value = (mock_model, mock_tokenizer)
+        
+        # Mock tokenizer outputs
+        mock_tokenizer.return_value = {"input_ids": torch.zeros((1, 10), dtype=torch.long)}
+        
+        # Mock model generate output
+        mock_gen_output = MagicMock()
+        mock_gen_output.sequences = torch.zeros((1, 20), dtype=torch.long)
+        mock_model.generate.return_value = mock_gen_output
+        
+        config = BenchmarkConfig(model_path="/fake/path", warmup_runs=0, benchmark_runs=1)
+        runner = BenchmarkRunner(config)
+        
+        result = runner.benchmark_generation("Test prompt")
+        
+        assert result.success
+        assert result.input_tokens == 10
+        assert result.output_tokens == 10 # 20 - 10
+        assert result.tokens_per_second > 0
+        assert mock_model.generate.called
+
+    @patch("src.omni.loader.OmniModelLoader.load")
+    def test_perplexity_benchmark_logic(self, mock_load):
+        from src.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig
+        import torch
+        
+        mock_model = MagicMock()
+        mock_model.device = "cpu"
+        mock_tokenizer = MagicMock()
+        mock_load.return_value = (mock_model, mock_tokenizer)
+        
+        # Mock tokenizer outputs
+        mock_tokenizer.return_value = {"input_ids": torch.zeros((1, 10), dtype=torch.long)}
+        
+        # Mock model forward output
+        mock_output = MagicMock()
+        mock_output.loss = torch.tensor(1.0)
+        mock_model.return_value = mock_output
+        
+        config = BenchmarkConfig(model_path="/fake/path")
+        runner = BenchmarkRunner(config)
+        
+        result = runner.benchmark_perplexity("Test text")
+        
+        assert result.success
+        assert result.loss == 1.0
+        assert result.perplexity == pytest.approx(2.71828, abs=0.01)
+
 class TestExpandedEvalSuite:
     """Tests for expanded evaluation suite."""
     

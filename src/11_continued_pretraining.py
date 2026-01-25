@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-15_continued_pretraining.py
+11_continued_pretraining.py
 Optional Step 2: Continued Pretraining on Code Corpus
 
 Purpose: Transfer The Stack knowledge to gpt-oss-20b without downloading 6TB
@@ -22,6 +22,13 @@ import logging
 from pathlib import Path
 from typing import Dict, Any, Optional, Iterator
 from itertools import islice
+try:
+    from datasets import load_dataset, IterableDataset
+    from transformers import Trainer, TrainingArguments, AutoModelForCausalLM, AutoTokenizer, DataCollatorForLanguageModeling
+    from peft import get_peft_model, LoraConfig, prepare_model_for_kbit_training
+    _ML_LIBS_AVAILABLE = True
+except ImportError:
+    _ML_LIBS_AVAILABLE = False
 
 # ═══════════════════════════════════════════════════════════════
 # LOGGING
@@ -80,29 +87,16 @@ CONFIG = {
     "dataset_name": "bigcode/the-stack-dedup",
 }
 
-# ═══════════════════════════════════════════════════════════════
-# IMPORTS
-# ═══════════════════════════════════════════════════════════════
-
-try:
-    from unsloth import FastLanguageModel, is_bfloat16_supported
-    UNSLOTH_AVAILABLE = True
-except ImportError:
-    UNSLOTH_AVAILABLE = False
-
-try:
-    from transformers import (
-        AutoModelForCausalLM,
-        AutoTokenizer,
-        TrainingArguments,
-        Trainer,
-        DataCollatorForLanguageModeling
-    )
-    from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-    from datasets import load_dataset, IterableDataset
-except ImportError as e:
-    logger.error(f"Missing dependency: {e}")
-    sys.exit(1)
+def check_env():
+    """Verify environment dependencies and GPU availability."""
+    if not _ML_LIBS_AVAILABLE:
+        logger.error("❌ Missing core ML dependencies (transformers, datasets, peft). Please install them.")
+        return False
+        
+    if not torch.cuda.is_available():
+        logger.warning("⚠️ No CUDA GPU detected. CPT requires significant GPU power.")
+        return False
+    return True
 
 # ═══════════════════════════════════════════════════════════════
 # STREAMING DATA LOADER
@@ -242,7 +236,17 @@ def load_model_for_cpt():
 # MAIN
 # ═══════════════════════════════════════════════════════════════
 
+try:
+    from unsloth import FastLanguageModel, is_bfloat16_supported
+    UNSLOTH_AVAILABLE = True
+except ImportError:
+    UNSLOTH_AVAILABLE = False
+
 def main():
+    if not check_env():
+         logger.error("❌ Environment check failed (missing dependencies or GPU).")
+         sys.exit(1)
+    
     logger.info("=" * 60)
     logger.info("🔬 NEXUS PRIME: Continued Pretraining (CPT)")
     logger.info("=" * 60)

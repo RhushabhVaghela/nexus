@@ -171,8 +171,6 @@ class TestPipelineStageSequencing:
 class TestIntegrationWithRealModel:
     """Test full integration with real model."""
     
-    @pytest.mark.real_model
-    @pytest.mark.slow
     def test_full_detection_to_validation_flow(self, text_model_path):
         """Test complete flow from detection to validation."""
         from src.detect_modalities import detect_modalities

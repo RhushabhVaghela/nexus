@@ -11,10 +11,16 @@ def main():
     parser.add_argument("--model", default="/mnt/e/data/output/trained/remotion-explainer", help="Path to trained explainer model")
     parser.add_argument("--output", default="explanation.mp4", help="Output filename")
     parser.add_argument("--narrate", action="store_true", help="Generate audio narration")
+    parser.add_argument("--dry-run", action="store_true", help="Simulate run without loading models")
     
     args = parser.parse_args()
 
     print(f"\033[94m🚀 Nexus Explainer:\033[0m {args.prompt}")
+
+    if args.dry_run:
+        print("Dry run mode: Engine initialization skipped.")
+        print(f"Would generate explanation for: {args.prompt}")
+        return
 
     # 1. Initialize Engine
     from src.inference.remotion_engine import RemotionExplainerEngine

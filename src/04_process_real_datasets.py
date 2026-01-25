@@ -28,20 +28,16 @@ import random
 sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger, log_header, log_completion
 
-# ═══════════════════════════════════════════════════════════════
-# CONFIGURATION
-# ═══════════════════════════════════════════════════════════════
+def check_env():
+    """Verify environment dependencies."""
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        print("[ERROR] Must be run in 'nexus' conda environment.")
+        return False
+    return True
 
-CONFIG = {
-    "data_base_dir": "/mnt/e/data",
-    "output_base_dir": "/mnt/e/data/processed",
-    "samples_per_file": 100_000,
-    "min_content_length": 50,
-    "max_content_length": 100_000,
-    "num_workers": multiprocessing.cpu_count(),
-}
-
-logger = setup_logger(__name__, "logs/process_real_datasets.log")
+# Globals to be initialized in main()
+CONFIG = None
+logger = None
 
 # ═══════════════════════════════════════════════════════════════
 # DATA CATEGORIES AND MAPPINGS
@@ -382,6 +378,20 @@ class RealDataProcessor:
 # ═══════════════════════════════════════════════════════════════
 
 def main():
+    if not check_env():
+        sys.exit(1)
+        
+    global CONFIG, logger
+    CONFIG = {
+        "data_base_dir": "/mnt/e/data",
+        "output_base_dir": "/mnt/e/data/processed",
+        "samples_per_file": 100_000,
+        "min_content_length": 50,
+        "max_content_length": 100_000,
+        "num_workers": multiprocessing.cpu_count(),
+    }
+    logger = setup_logger(__name__, "logs/process_real_datasets.log")
+
     log_header(logger, "REAL DATA PROCESSOR", {
         "Data Dir": CONFIG["data_base_dir"],
         "Output Dir": CONFIG["output_base_dir"],

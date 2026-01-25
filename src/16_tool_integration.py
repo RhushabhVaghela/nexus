@@ -4,31 +4,23 @@ import torch
 import logging
 from pathlib import Path
 from typing import List, Dict, Optional
+try:
+    from datasets import Dataset
+    from src.multimodal.model import OmniMultimodalLM
+except ImportError:
+    pass
 import os
 import gc
 
-from transformers import TrainingArguments, AutoTokenizer, BitsAndBytesConfig
-from trl import SFTTrainer
-from datasets import Dataset
+def check_env():
+    """Verify environment dependencies."""
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        print("[ERROR] Must be run in 'nexus' conda environment.")
+        return False
+    return True
 
-# Import our custom architecture
-from multimodal.model import OmniMultimodalLM
-
-# Create logs directory if it doesn't exist
-try:
-    os.makedirs('logs', exist_ok=True)
-except Exception:
-    pass
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('logs/tool_integration.log'),
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger(__name__)
+# Globals to be initialized in main()
+logger = None
 
 # Enhanced Tool Trajectories
 TOOL_TRAJECTORIES = [
@@ -99,6 +91,24 @@ def create_tool_dataset(tokenizer) -> Dataset:
     })
 
 def main():
+    if not check_env():
+        return
+        
+    global logger
+    os.makedirs('logs', exist_ok=True)
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler('logs/tool_integration.log'),
+            logging.StreamHandler()
+        ]
+    )
+    logger = logging.getLogger(__name__)
+
+    from transformers import TrainingArguments, AutoTokenizer, BitsAndBytesConfig
+    from trl import SFTTrainer
+
     logger.info("="*70)
     logger.info("🔧 STAGE 5: TOOL INTEGRATION (OMNI ARCHITECTURE)")
     logger.info("="*70)

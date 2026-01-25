@@ -34,14 +34,29 @@ logger = logging.getLogger(__name__)
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.training_methods import TrainingMethod, get_training_config
 
+def check_env():
+    """Verify environment dependencies."""
+    try:
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        from trl import ORPOConfig, ORPOTrainer
+        from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+        from datasets import load_dataset, Dataset
+    except ImportError as e:
+        logger.error(f"Missing dependency: {e}")
+        return False
+        
+    if not torch.cuda.is_available():
+        logger.warning("⚠️ No CUDA GPU detected. ORPO requires GPU.")
+        return False
+    return True
+
 try:
     from transformers import AutoModelForCausalLM, AutoTokenizer
     from trl import ORPOConfig, ORPOTrainer
     from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
     from datasets import load_dataset, Dataset
-except ImportError as e:
-    logger.error(f"Missing dependency: {e}")
-    sys.exit(1)
+except ImportError:
+    pass
 
 CONFIG = {
     "checkpoint": "/mnt/e/data/models/Qwen2.5-0.5B",
@@ -113,6 +128,10 @@ def load_model():
 
 
 def main():
+    if not check_env():
+         logger.error("❌ Environment check failed (missing dependencies or GPU).")
+         sys.exit(1)
+         
     logger.info("=" * 60)
     logger.info("🎓 ORPO TRAINING - Odds Ratio Preference Optimization")
     logger.info("=" * 60)

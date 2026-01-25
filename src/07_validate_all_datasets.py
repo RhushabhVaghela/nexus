@@ -28,21 +28,16 @@ from concurrent.futures import ProcessPoolExecutor
 sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger, log_header, log_completion
 
-# ═══════════════════════════════════════════════════════════════
-# CONFIGURATION
-# ═══════════════════════════════════════════════════════════════
+def check_env():
+    """Verify environment dependencies."""
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        print("[ERROR] Must be run in 'nexus' conda environment.")
+        return False
+    return True
 
-CONFIG = {
-    "data_base_dir": "/mnt/e/data",
-    "output_suffix": "_validated",
-    "min_content_length": 50,
-    "max_content_length": 100000,
-    "min_messages": 2,
-    "max_messages": 50,
-    "num_workers": multiprocessing.cpu_count(),
-}
-
-logger = setup_logger(__name__, "logs/validation.log")
+# Globals to be initialized in main()
+CONFIG = None
+logger = None
 
 # ═══════════════════════════════════════════════════════════════
 # VALIDATORS
@@ -324,6 +319,21 @@ def validate_benchmarks() -> Dict:
 # ═══════════════════════════════════════════════════════════════
 
 def main():
+    if not check_env():
+        sys.exit(1)
+        
+    global CONFIG, logger
+    CONFIG = {
+        "data_base_dir": "/mnt/e/data",
+        "output_suffix": "_validated",
+        "min_content_length": 50,
+        "max_content_length": 100000,
+        "min_messages": 2,
+        "max_messages": 50,
+        "num_workers": multiprocessing.cpu_count(),
+    }
+    logger = setup_logger(__name__, "logs/validation.log")
+    
     log_header(logger, "UNIVERSAL DATASET VALIDATOR", {
         "Base Dir": CONFIG["data_base_dir"],
         "Workers": CONFIG["num_workers"]

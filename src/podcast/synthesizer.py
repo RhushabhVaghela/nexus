@@ -33,7 +33,7 @@ from pathlib import Path
 from typing import List, Dict, Optional, Callable, Literal
 
 # Import generator utilities
-from podcast.generator import (
+from .generator import (
     PodcastScript,
     Turn,
     handle_user_interrupt,

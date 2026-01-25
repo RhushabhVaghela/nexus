@@ -8,21 +8,43 @@ Usage:
   python 23_multimodal_distillation.py --input-dir /path/to/raw
 """
 
-import argparse
+import os
 import sys
+import argparse
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent))
-from multimodal import MultimodalDataProcessor
-from utils.logging_config import setup_logger, log_header, log_completion
+# Add project root to sys.path to allow absolute imports from 'src'
+PROJECT_ROOT = Path(__file__).parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
-logger = setup_logger(__name__, "logs/multimodal_distillation.log")
+from src.utils.logging_config import setup_logger, log_header, log_completion
+try:
+    from src.multimodal import MultimodalDataProcessor
+except ImportError:
+    MultimodalDataProcessor = None
+
+def check_env():
+    """Verify environment dependencies."""
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        print("[ERROR] Must be run in 'nexus' conda environment.")
+        return False
+    return True
+
+# Globals to be initialized in main()
+logger = None
 
 CONFIG = {
     "default_input_base": "/mnt/e/data/multimodal",
 }
 
 def main():
+    if not check_env():
+         sys.exit(1)
+         
+    global logger
+    logger = setup_logger(__name__, "logs/multimodal_distillation.log")
+
     parser = argparse.ArgumentParser()
     # Modality arg is optional now as processor handles all found in dir, 
     # but we keep args for compatibility or specific targeting if we want to expand processor later.
@@ -61,7 +83,7 @@ def main():
         # Run all found
         processor.run()
     
-    log_completion(logger, "Multimodal Processing", 0, 0, 0, 0, 0, 0.0)
+    log_completion(logger, "Multimodal Processing", 0, 0, 0, 0, 0.0)
 
 if __name__ == "__main__":
     main()

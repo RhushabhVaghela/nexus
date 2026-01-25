@@ -53,3 +53,26 @@ class TestRemotionEngine:
         assert "test.mp4" in output
         assert (engine.remotion_dir / "src" / "GeneratedScene.tsx").exists()
         assert engine.inference.chat.called
+
+    @patch("subprocess.run")
+    @patch("src.inference.remotion_engine.RemotionExplainerEngine._save_narration")
+    def test_generate_video_with_narration(self, mock_save, mock_run, engine):
+        # Mock model response with audio
+        engine.inference.chat_with_audio.return_value = {
+            "text": "import React from 'react';\nexport const Scene = () => (\n  <div>\n    <h1>Hello</h1>\n  </div>\n);",
+            "audio": [0.1, 0.2, 0.3]
+        }
+        
+        mock_run.return_value = MagicMock(returncode=0)
+        
+        output = engine.generate_video("test prompt", "narrated.mp4", narrate=True)
+        
+        assert "narrated.mp4" in output
+        assert engine.inference.chat_with_audio.called
+        assert mock_save.called
+        
+        # Verify TSX injection
+        with open(engine.remotion_dir / "src" / "GeneratedScene.tsx", "r") as f:
+            content = f.read()
+            assert "NexusAudio" in content
+            assert "narration.wav" in content

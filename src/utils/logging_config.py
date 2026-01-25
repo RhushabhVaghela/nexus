@@ -34,15 +34,6 @@ def setup_logger(
 ) -> logging.Logger:
     """
     Create a configured logger for data generation scripts.
-    
-    Args:
-        name: Logger name (usually __name__)
-        log_file: Path to log file (relative to project root)
-        level: Logging level
-        console_output: Whether to also output to console
-        
-    Returns:
-        Configured logger instance
     """
     # Ensure logs directory exists
     log_path = Path(log_file)
@@ -77,25 +68,15 @@ def setup_logger(
 def log_progress(
     logger: logging.Logger,
     total: int,
-    rate: float,
-    train: int,
-    val: int,
-    test: int,
-    dedup: int,
-    eta: float
+    rate: float = 0,
+    train: int = 0,
+    val: int = 0,
+    test: int = 0,
+    dedup: int = 0,
+    eta: float = 0
 ):
     """
     Log generation progress in consistent format.
-    
-    Args:
-        logger: Logger instance
-        total: Total samples generated
-        rate: Samples per second
-        train: Train split count
-        val: Validation split count
-        test: Test split count
-        dedup: Duplicates skipped
-        eta: Estimated time remaining in hours
     """
     msg = PROGRESS_TEMPLATE.format(
         total=total,
@@ -116,11 +97,6 @@ def log_header(
 ):
     """
     Log generation header with configuration.
-    
-    Args:
-        logger: Logger instance
-        title: Generation title (e.g., "FINETUNED DATASET GENERATION")
-        config: Configuration dictionary
     """
     logger.info("=" * 60)
     logger.info(f"🚀 {title}")
@@ -136,24 +112,37 @@ def log_header(
 
 def log_completion(
     logger: logging.Logger,
-    total: int,
-    train: int,
-    val: int,
-    test: int,
-    dedup: int,
-    elapsed_hours: float
+    title: Any, # Can be str or total int (compatibility)
+    train: Any = None,
+    val: Any = None,
+    test: Any = None,
+    dedup: Any = None,
+    elapsed_hours: float = 0
 ):
     """
     Log generation completion summary.
+    Supports both (logger, title, results_dict) and (logger, total, train, val, test, dedup, time)
     """
     logger.info("=" * 60)
     logger.info("✅ GENERATION COMPLETE")
-    logger.info(f"   Total samples: {total:,}")
-    logger.info(f"   Train: {train:,}")
-    logger.info(f"   Val: {val:,}")
-    logger.info(f"   Test: {test:,}")
-    logger.info(f"   Duplicates skipped: {dedup:,}")
-    logger.info(f"   Time: {elapsed_hours:.2f} hours")
+    
+    if isinstance(title, str) and isinstance(train, dict):
+        # Format: log_completion(logger, "Title", {"Total": 100, ...})
+        logger.info(f"   Task: {title}")
+        for k, v in train.items():
+            if isinstance(v, int):
+                logger.info(f"   {k}: {v:,}")
+            else:
+                logger.info(f"   {k}: {v}")
+    else:
+        # Format: log_completion(logger, total, train, val, test, dedup, elapsed)
+        logger.info(f"   Total samples: {title:,}" if isinstance(title, int) else f"   {title}")
+        if train is not None: logger.info(f"   Train: {train:,}")
+        if val is not None: logger.info(f"   Val: {val:,}")
+        if test is not None: logger.info(f"   Test: {test:,}")
+        if dedup is not None: logger.info(f"   Duplicates skipped: {dedup:,}")
+        if elapsed_hours: logger.info(f"   Time: {elapsed_hours:.2f} hours")
+        
     logger.info("=" * 60)
 
 

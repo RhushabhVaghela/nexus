@@ -5,8 +5,8 @@ Train the Omni-Modal Projectors (Stage 1) or Fine-tune full model (Stage 2).
 SUPPORTS UNIFIED MESSAGES SCHEMA (Native Format).
 """
 
-import argparse
 import torch
+from transformers import TrainingArguments, Trainer
 import json
 import os
 from pathlib import Path
@@ -14,22 +14,42 @@ import sys
 import random
 import itertools
 from typing import Dict, Any, List
-from torch.utils.data import Dataset
-from transformers import Trainer, TrainingArguments, AutoProcessor
+from src.utils.logging_config import setup_logger, log_header, log_completion
+# torch and transformers will be imported in main or check_env
 
 # Add project root to sys.path to allow absolute imports from 'src'
 PROJECT_ROOT = Path(__file__).parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.multimodal.model import OmniMultimodalLM
-from src.multimodal.decoders import OmniDecoder
-from src.data.universal_loader import UniversalDataLoader
-from src.utils.logging_config import setup_logger, log_header, log_completion
-from src.utils.repetition import PromptRepetitionEngine
+# Utility imports will be moved to main
 
+# Globals to be initialized in main()
+logger = None
+OmniMultimodalLM = None
+OmniDecoder = None
+UniversalDataLoader = None
+parser = None
 
-logger = setup_logger(__name__, "logs/multimodal_training.log")
+def check_env():
+    """Verify environment dependencies."""
+    global OmniMultimodalLM, OmniDecoder, UniversalDataLoader
+    try:
+        from src.multimodal.model import OmniMultimodalLM as _OmniMultimodalLM
+        from src.multimodal.decoders import OmniDecoder as _OmniDecoder
+        from src.data.universal_loader import UniversalDataLoader as _UniversalDataLoader
+        OmniMultimodalLM = _OmniMultimodalLM
+        OmniDecoder = _OmniDecoder
+        UniversalDataLoader = _UniversalDataLoader
+    except ImportError as e:
+        print(f"[ERROR] Missing dependency: {e}")
+        return False
+        
+    if not torch.cuda.is_available():
+        print("⚠️ No CUDA GPU detected. Multimodal training requires a GPU.")
+        return False
+    return True
+
 
 CONFIG = {
     "base_model": "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4",
@@ -39,6 +59,7 @@ CONFIG = {
     "use_emm1": False, 
     "emm1_shards": [], 
 }
+
 
 class OmniDataset(torch.utils.data.IterableDataset):
     """
@@ -60,7 +81,8 @@ class OmniDataset(torch.utils.data.IterableDataset):
         self.repetition_style = repetition_style
         
         if not self.base_path.exists():
-            logger.error(f"❌ Data path not found: {self.base_path}")
+            if logger:
+                logger.error(f"❌ Data path not found: {self.base_path}")
             
         # 1. Discover Datasets (recursive discovery)
         from src.metrics_tracker import discover_datasets
@@ -76,276 +98,101 @@ class OmniDataset(torch.utils.data.IterableDataset):
             # Fallback to direct path
             self.dataset_dirs = [self.base_path]
         
-        logger.info(f"🌊 Initialized Streamable Dataset ({split}). Discovered {len(self.dataset_dirs)} sources across {len(self.category_map)} categories.")
-        if balanced:
-            logger.info("⚖️ Balanced Mode: Interleaving samples between capability categories.")
+        if logger:
+            logger.info(f"🌊 Initialized Streamable Dataset ({split}). Discovered {len(self.dataset_dirs)} sources across {len(self.category_map)} categories.")
+            if balanced:
+                logger.info("⚖️ Balanced Mode: Interleaving samples between capability categories.")
+            if self.repetition_factor > 1:
+                logger.info(f"🔁 Repetition Engine: Active (Factor={self.repetition_factor}, Style={self.repetition_style})")
+        
         if self.repetition_factor > 1:
-            logger.info(f"🔁 Prompt Repetition Enabled: {self.repetition_factor}x ({self.repetition_style})")
-
-    def _get_files_for_split(self):
-        """Generator to yield relevant files for this split."""
-        
-        # Define Aliases
-        ALIASES = {
-            "train": ["train", "training", "train_data"],
-            "val": ["val", "validation", "eval", "evaluation", "dev"],
-            "test": ["test", "testing"]
-        }
-        
-        # flattened list of all known folder names to check for structure
-        ALL_KNOWN_FOLDERS = set([name for sublist in ALIASES.values() for name in sublist])
-        
-        for ds_dir in self.dataset_dirs:
-            # 1. Detect if this dataset has ANY explicit structure
-            try:
-                # Scan immediate subdirectories
-                subdirs = {d.name.lower() for d in ds_dir.iterdir() if d.is_dir()}
-            except Exception:
-                subdirs = set()
-                
-            has_explicit_structure = not subdirs.isdisjoint(ALL_KNOWN_FOLDERS)
-            target_folders = []
+            from src.utils.repetition import PromptRepetitionEngine
+            self.repetition_engine = PromptRepetitionEngine(self.repetition_factor, self.repetition_style)
             
-            # 2. Strategy Selection
-            if has_explicit_structure:
-                # STRICT MODE: Use only explicit folders matching the requested split aliases
-                # PREVENTS LEAKAGE: Do not fall back to scanning root if 'val' is missing but 'train' exists.
-                
-                possible_names = ALIASES.get(self.split, [])
-                for name in possible_names:
-                    # Check against detected subdirs to handle casing if needed, or just path check
-                    candidate = ds_dir / name
-                    if candidate.exists():
-                        target_folders.append(candidate)
-                        
-                # Yield files from matched folders (if any)
-                if target_folders:
-                    for folder in target_folders:
-                         # Lazy iterator for efficiency
-                         files_gen = itertools.chain(folder.rglob("*.jsonl"), folder.rglob("*.json"))
-                         for p in files_gen: 
-                             yield p
-                             
-            else:
-                 # AUTO SPLIT MODE: No standard folders found.
-                 # Apply Hash-based 90/5/5 splitting on the root
-                 
-                all_files_gen = itertools.chain(ds_dir.rglob("*.jsonl"), ds_dir.rglob("*.json"))
-                
-                for p in all_files_gen:
-                    # Deterministic hash of relative path
-                    h = hash(p.name) % 100 # 0-99
-                    
-                    is_train = h < 90
-                    is_val = 90 <= h < 95
-                    is_test = h >= 95
-                    
-                    if self.split == "train" and is_train:
-                        yield p
-                    elif self.split == "val" and is_val:
-                        yield p
-                    elif self.split == "test" and is_test:
-                        yield p
-
-
-
-    def __iter__(self):
-        """Streaming iterator over data."""
-        if self.balanced and len(self.category_map) > 1:
-            yield from self._iter_balanced()
-        else:
-            yield from self._iter_sequential()
-
-    def _iter_sequential(self):
-        """Traditional sequential file-by-file streaming."""
-        file_iterator = self._get_files_for_split()
-        
-        for file_path in file_iterator:
-            yield from self._parse_file(file_path)
-
-    def _iter_balanced(self):
-        """Interleaved streaming to balance between categories."""
-        # Setup iterators for each category
-        iterators = {}
-        for cat, paths in self.category_map.items():
-            # Get files for this category only
-            cat_dirs = [Path(p) for p in paths]
-            
-            def cat_file_gen(dirs):
-                orig_dirs = self.dataset_dirs
-                self.dataset_dirs = dirs
-                files = list(self._get_files_for_split())
-                random.shuffle(files)
-                self.dataset_dirs = orig_dirs
-                for f in files:
-                    yield from self._parse_file(f)
-            
-            iterators[cat] = cat_file_gen(cat_dirs)
-        
-        if not iterators:
-            return
-
-        while iterators:
-            cats = list(iterators.keys())
-            for cat in cats:
-                try:
-                    sample = next(iterators[cat])
-                    yield sample
-                except StopIteration:
-                    del iterators[cat]
-
-    def _parse_file(self, file_path: Path):
-        """Parse a single data file and yield samples with limit tracking."""
-        try:
-            # Identify dataset name for limit tracking
-            dataset_name = next((d.name for d in self.dataset_dirs if d in file_path.parents), file_path.parent.name)
-        except:
-            dataset_name = file_path.parent.name
-            
-        # Check Global Dataset Limit
-        if self.limit > 0 and self.dataset_counts.get(dataset_name, 0) >= self.limit:
-            return
-            
+    def _get_stream(self, file_path: Path):
+        """Yield items from JSON/JSONL file."""
         try:
             if file_path.suffix == ".jsonl":
-                with open(file_path, 'r', encoding='utf-8') as f:
+                with open(file_path, "r", encoding="utf-8") as f:
                     for line in f:
-                        if not line.strip(): continue
-                        try:
-                            sample = json.loads(line)
-                            if self._yield_sample(sample, dataset_name):
-                                yield self._process_sample(sample)
-                            else:
-                                break # Limit hit
-                        except json.JSONDecodeError: continue
-            elif file_path.suffix == ".json":
-                # Handle hybrid JSON/JSONL
-                is_jsonl = False
-                try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        data = json.load(f)
-                        if isinstance(data, list):
-                            for sample in data:
-                                if self._yield_sample(sample, dataset_name):
-                                    yield self._process_sample(sample)
-                                else:
-                                    break
-                except json.JSONDecodeError as e:
-                    if "Extra data" in str(e): is_jsonl = True
-                    else: logger.warning(f"Error reading {file_path}: {e}")
-                
-                if is_jsonl:
-                    # Fallback to line-by-line for mislabeled JSONL
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        for line in f:
-                            if not line.strip(): continue
-                            try:
-                                sample = json.loads(line)
-                                if self._yield_sample(sample, dataset_name):
-                                    yield self._process_sample(sample)
-                                else: break
-                            except json.JSONDecodeError: continue
+                        if line.strip():
+                            yield json.loads(line)
+            else:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if isinstance(data, list):
+                        for item in data:
+                            yield item
+                    else:
+                        yield data
         except Exception as e:
-            logger.warning(f"Error processing {file_path}: {e}")
+            if logger:
+                logger.warning(f"Error reading {file_path}: {e}")
 
-    def _yield_sample(self, sample, dataset_name):
-        """Returns True if sample should be yielded (updates count), False if limit reached."""
-        if self.limit > 0 and self.dataset_counts.get(dataset_name, 0) >= self.limit:
-            return False
-        self.dataset_counts[dataset_name] = self.dataset_counts.get(dataset_name, 0) + 1
-        return True
+    def _normalize(self, item: dict):
+        """Convert any format to Native Messages Schema."""
+        # 1. Alpaca
+        if "instruction" in item:
+            instruction = item["instruction"]
+            input_text = item.get("input", "")
+            prompt = f"{instruction}\n{input_text}" if input_text else instruction
+            return [{"role": "user", "content": prompt}, {"role": "assistant", "content": item["output"]}]
+        
+        # 2. CoT / Simple QA
+        if "prompt" in item and "response" in item:
+            return [{"role": "user", "content": item["prompt"]}, {"role": "assistant", "content": item["response"]}]
+            
+        # 3. Tool / XLAM (Query based)
+        if "query" in item:
+            return [{"role": "user", "content": item["query"]}, {"role": "assistant", "content": item.get("answers") or item.get("response")}]
+            
+        # 4. Native (already correct)
+        if "messages" in item:
+            return item["messages"]
+            
+        return None
 
-    def _process_sample(self, sample):
-        """Parse raw JSON into normalized model input format"""
-        # 1. Normalize Schema
-        messages = []
-        
-        # A. Native Messages
-        if "messages" in sample:
-            messages = sample["messages"]
-            
-        # B. CoT (prompt/response) or Alpaca (instruction/output)
-        elif "prompt" in sample and "response" in sample:
-            messages = [
-                {"role": "user", "content": sample["prompt"]},
-                {"role": "assistant", "content": sample["response"]}
-            ]
-        elif "instruction" in sample and "output" in sample:
-             # Handle Alpaca 'input' field if present
-            content = sample["instruction"]
-            if sample.get("input"): content += f"\nInput: {sample['input']}"
-            messages = [
-                {"role": "user", "content": content},
-                {"role": "assistant", "content": sample["output"]}
-            ]
-            
-        # C. XLAM (query/answers)
-        elif "query" in sample and "answers" in sample:
-            messages = [
-                {"role": "user", "content": sample["query"]},
-                {"role": "assistant", "content": sample["answers"]} # Typically JSON string
-            ]
-            
-        # D. Math (problem/answer or question/answer)
-        elif ("problem" in sample or "question" in sample) and ("answer" in sample or "solution" in sample):
-            q = sample.get("problem") or sample.get("question")
-            a = sample.get("answer") or sample.get("solution")
-            messages = [
-                {"role": "user", "content": q},
-                {"role": "assistant", "content": a}
-            ]
-            
-        if not messages: return None # Unmatched schema
-        
-        # 2. Extract Modalities (Native only for now)
-        modalities = sample.get("modalities", {})
-        
-        user_msg = next((m for m in messages if m["role"] == "user"), None)
-        assistant_msg = next((m for m in messages if m["role"] == "assistant"), None)
-        
-        if not user_msg or not assistant_msg: return None
-            
-        content_items = user_msg["content"]
-        image_path = None
-        audio_path = None
-        text_prompt = ""
-        
-        if modalities:
-            if "image" in modalities and modalities["image"]:
-                image_path = modalities["image"][0].get("path")
-            if "audio" in modalities and modalities["audio"]:
-                audio_path = modalities["audio"][0].get("path")
+    def __iter__(self):
+        """Interleave samples from dataset sources."""
+        # Create generator for each dataset
+        generators = []
+        for ddir in self.dataset_dirs:
+            files = list(ddir.glob("*.json")) + list(ddir.glob("*.jsonl"))
+            for f in files:
+                generators.append(self._get_stream(f))
                 
-        if isinstance(content_items, str):
-            text_prompt = content_items
-        elif isinstance(content_items, list):
-            for item in content_items:
-                if isinstance(item, dict):
-                    if item.get("type") == "text":
-                        text_prompt += item.get("text", "")
-                    elif item.get("type") == "image" and not image_path:
-                        image_path = item.get("image")
-                    elif item.get("type") == "audio" and not audio_path:
-                        audio_path = item.get("audio")
-                else:
-                    text_prompt += str(item)
-        
-        # APPLY TEXT REPETITION
-        if self.repetition_factor > 1 and text_prompt:
-            text_prompt = PromptRepetitionEngine.apply_repetition(
-                text_prompt,
-                factor=self.repetition_factor,
-                style=self.repetition_style
-            )
+        if not generators:
+            return
             
-        return {
-            "text": text_prompt,
-            "image_path": image_path,
-            "audio_path": audio_path,
-            "report_state": sample.get("report_state"), # Already processed hidden states
-            "persona_state": sample.get("persona_state"), # Already processed embeddings
-            "label": assistant_msg["content"]
-        }
+        # Interleave
+        gen_cycle = itertools.cycle(generators)
+        exhausted = set()
+        count = 0
+        
+        while len(exhausted) < len(generators):
+            if self.limit > 0 and count >= self.limit:
+                break
+                
+            try:
+                gen = next(gen_cycle)
+            except StopIteration:
+                break
+
+            if gen in exhausted:
+                continue
+                
+            try:
+                item = next(gen)
+                normalized = self._normalize(item)
+                if normalized:
+                    # Apply Repetition 
+                    if self.repetition_factor > 1:
+                        normalized = self.repetition_engine.process_messages(normalized)
+                    
+                    count += 1
+                    yield {"messages": normalized}
+            except StopIteration:
+                exhausted.add(gen)
 
 class DynamicDataCollator:
     """
@@ -359,6 +206,7 @@ class DynamicDataCollator:
         self.report_key = schema["report_key"]
         self.persona_key = schema["persona_key"]
         self.text_key = schema["text_key"]
+        from src.multimodal.decoders import OmniDecoder
         self.decoder = OmniDecoder()
         
     def __call__(self, batch):
@@ -419,12 +267,16 @@ class DynamicDataCollator:
                 else:
                     personas.append(torch.zeros(1, 4096))
             out[self.persona_key] = torch.stack(personas)
-            
         return out
 
-
+# DynamicDataCollator class moved to main()
 def main():
+    global parser, logger
+    import argparse
     parser = argparse.ArgumentParser()
+    
+    # Initialize logger
+    logger = setup_logger(__name__, "logs/multimodal_training.log")
     parser.add_argument("--stage", type=int, choices=[1, 2], default=1, help="1=Projectors Only, 2=Full Model")
     parser.add_argument("--data-path", required=True)
     parser.add_argument("--output-dir", default=CONFIG["output_dir"])
@@ -442,6 +294,9 @@ def main():
     # Enforce 'nexus' conda environment
     if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
         sys.exit("\033[0;31m[ERROR] Must be run in 'nexus' conda environment.\033[0m")
+        
+    if not check_env():
+        sys.exit(1)
         
     log_header(logger, f"OMNI-MODAL TRAINING (Stage {args.stage})", {
         "Data": args.data_path,
@@ -530,7 +385,7 @@ def main():
             
     # 4.5. Detect Schema & Initialize Dynamic Collator
     schema = model.get_input_schema()
-    logger.info(f"📋 Detected Model Schema: {json.dumps(schema, indent=2)}")
+    logger.info(f"📋 Detected Model Schema: {schema}")
     
     data_collator = DynamicDataCollator(schema)
             

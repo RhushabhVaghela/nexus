@@ -185,6 +185,7 @@ class OmniInference:
         self,
         prompt: str,
         config: Optional[GenerationConfig] = None,
+        **kwargs
     ) -> Dict[str, Any]:
         """
         Generate text and audio response.
@@ -192,6 +193,7 @@ class OmniInference:
         Args:
             prompt: Input text prompt
             config: Generation configuration
+            **kwargs: Additional audio generation parameters (e.g. voice)
         
         Returns:
             Dict with "text" and "audio" (if enabled)
@@ -209,17 +211,11 @@ class OmniInference:
 
         # Audio Generation Logic
         try:
-            # 1. Tokenize text for speech generation (if separated)
-            # Some models use the same tokens, some need specific text-to-speech tokens
-            
-            # 2. Invoke Talker/Speech Generator
-            # We support two common interfaces: .talker() and .generate_speech()
+            # 1. Invoke Talker/Speech Generator
             audio_data = None
             
             if hasattr(self.model, 'talker'):
                 # Interface A: Qwen-Omni style 'talker' submodule
-                # Expects hidden states or text input
-                # This is a hypothetical interface implementation based on common multimodal patterns
                 logger.info("Generating audio with .talker component...")
                 audio_out = self.model.talker.generate(
                     text_input=text_output, 
@@ -253,9 +249,24 @@ class OmniInference:
         Returns:
             Generated assistant response
         """
-        # Format messages using chat template
+        prompt = self._format_chat_prompt(messages)
+        return self.generate(prompt, config)
+
+    def chat_with_audio(
+        self,
+        messages: list[Dict[str, str]],
+        config: Optional[GenerationConfig] = None,
+    ) -> Dict[str, Any]:
+        """
+        Chat interface for text and audio response.
+        """
+        prompt = self._format_chat_prompt(messages)
+        return self.generate_with_audio(prompt, config)
+
+    def _format_chat_prompt(self, messages: list[Dict[str, str]]) -> str:
+        """Helper to format chat messages into a prompt."""
         if hasattr(self.tokenizer, 'apply_chat_template'):
-            prompt = self.tokenizer.apply_chat_template(
+            return self.tokenizer.apply_chat_template(
                 messages,
                 tokenize=False,
                 add_generation_prompt=True,
@@ -273,8 +284,7 @@ class OmniInference:
                 elif role == "assistant":
                     prompt += f"<|im_start|>assistant\n{content}<|im_end|>\n"
             prompt += "<|im_start|>assistant\n"
-        
-        return self.generate(prompt, config)
+            return prompt
 
 
 if __name__ == "__main__":

@@ -1,0 +1,27 @@
+{
+  "timelines": [
+    {
+      "topic": "The Roman Empire",
+      "events": [
+        {"year": "753 BC", "title": "Founding of Rome", "color": "#d4af37"},
+        {"year": "44 BC", "title": "Assassination of Julius Caesar", "color": "#c0392b"},
+        {"year": "27 BC", "title": "Pax Romana Begins", "color": "#27ae60"},
+        {"year": "476 AD", "title": "Fall of Western Rome", "color": "#2c3e50"}
+      ]
+    },
+    {
+      "topic": "Evolution of Computing",
+      "events": [
+        {"year": "1837", "title": "Analytical Engine", "color": "#8e44ad"},
+        {"year": "1945", "title": "ENIAC", "color": "#2980b9"},
+        {"year": "1976", "title": "Apple I", "color": "#ecf0f1"},
+        {"year": "1991", "title": "World Wide Web", "color": "#27ae60"}
+      ]
+    }
+  ],
+  "figures": [
+    {"name": "Napoleon Bonaparte", "role": "Emperor", "era": "19th Century"},
+    {"name": "Ada Lovelace", "role": "Programmer", "era": "19th Century"},
+    {"name": "Albert Einstein", "role": "Physicist", "era": "20th Century"}
+  ]
+}

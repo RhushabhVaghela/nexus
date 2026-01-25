@@ -300,7 +300,7 @@ After 2 weeks of training, you will have:
 
 ---
 
-**Advanced Nexus 1.6 Max - Complete & Ready to Execute**
+**Advanced Nexus - Complete & Ready to Execute**
 
 **Start Date**: January 16, 2026  
 **Expected Completion**: January 30, 2026  

@@ -56,16 +56,18 @@ class SchemaNormalizer:
         
         # Modality handling
         modality = mapping.get("modality", "text")
+        media_key = mapping.get("media_key")
+        
         if modality == "image" or "image_path" in sample:
-            path = sample.get("image_path", sample.get("path", ""))
+            path = sample.get(media_key) if media_key else sample.get("image_path", sample.get("path"))
             if path:
                 normalized["modalities"]["image"] = [{"path": str(path)}]
         elif modality == "audio" or "audio_path" in sample:
-            path = sample.get("audio_path", sample.get("path", ""))
+            path = sample.get(media_key) if media_key else sample.get("audio_path", sample.get("path"))
             if path:
                 normalized["modalities"]["audio"] = [{"path": str(path)}]
         elif modality == "video" or "video_path" in sample:
-            path = sample.get("video_path", sample.get("path", ""))
+            path = sample.get(media_key) if media_key else sample.get("video_path", sample.get("path"))
             if path:
                 normalized["modalities"]["video"] = [{"path": str(path)}]
                 

@@ -11,7 +11,21 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from datasets import load_dataset
+try:
+    from datasets import load_dataset
+    DATASETS_AVAILABLE = True
+except ImportError:
+    DATASETS_AVAILABLE = False
+
+def check_env():
+    """Verify environment dependencies."""
+    if not DATASETS_AVAILABLE:
+        logger.error("Missing dependency: datasets")
+        return False
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        logger.error("Must be run in 'nexus' conda environment.")
+        return False
+    return True
 import json
 import uuid
 from typing import Dict, Any
@@ -140,14 +154,13 @@ class BenchmarkNormalizer:
         return {"id": f"{name}_unknown", "original": str(sample)}
 
 def main():
+    if not check_env():
+        sys.exit(1)
+        
     import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--limit", type=int, default=1000000, help="Max samples per benchmark")
+    parser = argparse.ArgumentParser(description="Download benchmarks")
+    parser.add_argument("--limit", type=int, default=100, help="Max samples")
     args = parser.parse_args()
-
-    # Enforce 'nexus' conda environment
-    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
-        sys.exit("\033[0;31m[ERROR] Must be run in 'nexus' conda environment.\033[0m")
         
     output_dir = Path("/mnt/e/data/benchmarks")
     normalizer = BenchmarkNormalizer(output_dir)

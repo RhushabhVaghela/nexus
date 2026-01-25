@@ -22,20 +22,16 @@ from typing import Dict, List
 sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger, log_header, log_completion
 
-# ═══════════════════════════════════════════════════════════════
-# CONFIGURATION
-# ═══════════════════════════════════════════════════════════════
+def check_env():
+    """Verify environment dependencies."""
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        print("[ERROR] Must be run in 'nexus' conda environment.")
+        return False
+    return True
 
-CONFIG = {
-    "benchmarks_dir": "/mnt/e/data/benchmarks",
-    "output_dir": "/mnt/e/data/benchmarks/validated",
-}
-
-logger = setup_logger(__name__, "logs/validate_benchmarks.log")
-
-# ═══════════════════════════════════════════════════════════════
-# BENCHMARK VALIDATORS
-# ═══════════════════════════════════════════════════════════════
+# Globals to be initialized in main()
+CONFIG = None
+logger = None
 
 class BenchmarkValidator:
     """Validates specific benchmark formats."""
@@ -208,6 +204,16 @@ def validate_benchmark_file(input_file: Path, output_dir: Path) -> Dict:
 # ═══════════════════════════════════════════════════════════════
 
 def main():
+    if not check_env():
+        sys.exit(1)
+        
+    global CONFIG, logger
+    CONFIG = {
+        "benchmarks_dir": "/mnt/e/data/benchmarks",
+        "output_dir": "/mnt/e/data/benchmarks/validated",
+    }
+    logger = setup_logger(__name__, "logs/validate_benchmarks.log")
+    
     log_header(logger, "BENCHMARK VALIDATION", {
         "Input": CONFIG["benchmarks_dir"],
         "Output": CONFIG["output_dir"]

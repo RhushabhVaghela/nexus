@@ -54,7 +54,7 @@ def get_system_info() -> Dict[str, str]:
     except Exception: pass
     return info
 
-from src.metrics_tracker import MetricsTracker, TestDetailMetrics, ValidationMetrics
+from src.metrics_tracker import MetricsTracker, ExecutionDetailMetrics, ValidationMetrics
 
 class TestMetricsCollector:
     def __init__(self):
@@ -70,7 +70,7 @@ class TestMetricsCollector:
         parts = nodeid.split("::")
         test_file = parts[0] if len(parts) > 0 else ""
         test_name = parts[-1] if parts else nodeid
-        metrics = TestDetailMetrics(
+        metrics = ExecutionDetailMetrics(
             test_id=nodeid, name=test_name, outcome=outcome,
             duration_s=round(duration, 6), duration_ms=round(duration * 1000, 3),
             gpu_memory_mb=round(memory_stats.get("gpu_memory_mb", 0) if memory_stats else 0, 2),
@@ -188,7 +188,10 @@ def pytest_sessionfinish(session, exitstatus):
 
 # ============== FIXTURES ==============
 @pytest.fixture(scope="session")
-def device(): return "cuda" if torch.cuda.is_available() else "cpu"
+def device(request): 
+    if not request.config.getoption("--use-real-models"):
+        return "cpu"
+    return "cuda" if torch.cuda.is_available() else "cpu"
 
 @pytest.fixture(scope="session")
 def fake_model_path(tmp_path_factory):
@@ -223,7 +226,10 @@ def real_text_model(text_model_path, device, request):
         mock_model.device = torch.device(device)
         mock_model.config = MagicMock(vocab_size=151936, hidden_size=4096, model_type="qwen2")
         mock_model.return_value = MagicMock(loss=torch.tensor(0.5), logits=torch.randn(1, 10, 151936))
-        mock_model.generate.return_value = torch.randint(0, 1000, (1, 20))
+        # Return an object with sequences attribute to mimic transformers output
+        mock_output = MagicMock()
+        mock_output.sequences = torch.randint(0, 1000, (1, 20))
+        mock_model.generate.return_value = mock_output
         mock_model.training = False
         mock_model.eval.return_value = mock_model
         mock_model.parameters.return_value = [torch.nn.Parameter(torch.randn(1))]

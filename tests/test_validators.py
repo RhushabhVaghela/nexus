@@ -19,6 +19,13 @@ mod_07 = load_module("mod_07", "07_validate_all_datasets.py")
 class TestValidators(unittest.TestCase):
 
     def setUp(self):
+        # Initialize CONFIG for the module
+        mod_07.CONFIG = {
+            "min_messages": 2,
+            "max_messages": 50,
+            "min_content_length": 50,
+            "max_content_length": 100000,
+        }
         self.validator = mod_07.DatasetValidator()
 
     def test_schema_valid(self):

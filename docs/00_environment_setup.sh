@@ -10,7 +10,7 @@ Output: Conda environment 'nexus_training' with all dependencies
 set -e
 
 echo "═════════════════════════════════════════════════════════════════"
-echo "🔧 Advanced Nexus 1.6 Max - Environment Setup for RTX 5080"
+echo "🔧 Advanced Nexus - Environment Setup for RTX 5080"
 echo "═════════════════════════════════════════════════════════════════"
 echo ""
 

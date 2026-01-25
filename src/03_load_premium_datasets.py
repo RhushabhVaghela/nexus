@@ -21,25 +21,33 @@ import argparse
 import random
 from pathlib import Path
 from typing import Dict, List
+try:
+    from datasets import load_dataset, concatenate_datasets, Dataset
+except ImportError:
+    pass
 
 sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger, log_header, log_completion
 
-try:
-    from datasets import load_dataset, concatenate_datasets, Dataset
-except ImportError:
-    print("Install: pip install datasets")
-    sys.exit(1)
+DATASETS_AVAILABLE = False
+def check_env():
+    """Verify environment dependencies."""
+    global DATASETS_AVAILABLE
+    try:
+        from datasets import load_dataset
+        DATASETS_AVAILABLE = True
+    except ImportError:
+        print("[ERROR] Missing dependency: datasets")
+        return False
+        
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        print("[ERROR] Must be run in 'nexus' conda environment.")
+        return False
+    return True
 
-# ═══════════════════════════════════════════════════════════════
-# CONFIGURATION
-# ═══════════════════════════════════════════════════════════════
-
-CONFIG = {
-    "output_base_dir": "/mnt/e/data/datasets",
-}
-
-logger = setup_logger(__name__, "logs/load_premium_datasets.log")
+# Globals to be initialized in main()
+CONFIG = None
+logger = None
 
 # ═══════════════════════════════════════════════════════════════
 # DATASET RATIOS (Based on new documentt.md)
@@ -342,6 +350,15 @@ def show_breakdown(mode: str, target_samples: int):
 # ═══════════════════════════════════════════════════════════════
 
 def main():
+    if not check_env():
+        sys.exit(1)
+        
+    global CONFIG, logger
+    CONFIG = {
+        "output_base_dir": "/mnt/e/data/datasets",
+    }
+    logger = setup_logger(__name__, "logs/load_premium_datasets.log")
+    
     parser = argparse.ArgumentParser(description="Load premium datasets with ratio-based sampling")
     parser.add_argument("--mode", choices=["censored", "uncensored"], required=True)
     parser.add_argument("--target-samples", type=int, default=100000)

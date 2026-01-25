@@ -8,19 +8,36 @@ Combines:
 - TTSStreamer (Speech Output)
 """
 import time
-import torch
+# torch will be imported in main or check_env
 import sys
 from pathlib import Path
+
+import os
 
 # Add src to path
 sys.path.append(str(Path(__file__).parent))
 
-from streaming.memory import StreamingMemory
-from streaming.tts import TTSStreamer
-from streaming.vision import VisionStreamBuffer
-from multimodal.model import OmniMultimodalLM
+# local streaming and multimodal imports will be moved to main
+
+def check_env():
+    """Verify environment dependencies."""
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        print("[ERROR] Must be run in 'nexus' conda environment.")
+        return False
+    return True
+
+# Globals to be initialized in main()
+logger = None
 
 def main():
+    if not check_env():
+         return
+         
+    from streaming.memory import StreamingMemory
+    from streaming.tts import TTSStreamer
+    from streaming.vision import VisionStreamBuffer
+    from multimodal.model import OmniMultimodalLM
+
     print("🚀 Starting Real-Time Omni-Streaming Session...")
     print("---------------------------------------------")
     

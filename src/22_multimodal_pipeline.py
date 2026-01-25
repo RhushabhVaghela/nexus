@@ -12,22 +12,43 @@ Usage:
   python 22_multimodal_pipeline.py --phase test
 """
 
-import argparse
+import os
 import sys
-from pathlib import Path
+import argparse
 import json
+from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent))
-from multimodal import get_test_prompts
-from utils.logging_config import setup_logger, log_header, log_completion
-from mm_download_unified import DatasetManager, DATASET_REGISTRY
+# Add project root to sys.path to allow absolute imports from 'src'
+PROJECT_ROOT = Path(__file__).parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from src.utils.logging_config import setup_logger, log_header
+try:
+    from src.capability_registry import DATASET_REGISTRY
+    from src.data.universal_loader import DatasetManager
+    from src.benchmarks.ruler_tasks import get_test_prompts
+except ImportError:
+    DATASET_REGISTRY = {}
+    DatasetManager = None
+    get_test_prompts = lambda: {}
+
+def check_env():
+    """Verify environment dependencies."""
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        print("[ERROR] Must be run in 'nexus' conda environment.")
+        return False
+    return True
+
+# Globals to be initialized in main()
+logger = None
 
 CONFIG = {
     "output_dir": "/mnt/e/data/datasets",
     "test_dir": "tests/multimodal_assets"
 }
 
-logger = setup_logger(__name__, "logs/multimodal.log")
+# logger will be initialized in main()
 
 def run_download(limit: int):
     """Download all multimodal datasets using Unified Strategy (Kaggle -> HF)"""
@@ -73,13 +94,22 @@ def run_test_setup():
         for item in items:
             logger.info(f"  - {item['input']}")
 
-if __name__ == "__main__":
+def main():
+    if not check_env():
+         sys.exit(1)
+         
+    global logger
+    logger = setup_logger(__name__, "logs/multimodal.log")
+
     parser = argparse.ArgumentParser()
-    parser.add_argument("--phase", choices=["download", "test"], default="download")
-    parser.add_argument("--limit", type=int, default=1000, help="Max samples to download per modality")
+    parser.add_argument("--phase", choices=["download", "test"], required=True)
+    parser.add_argument("--limit", type=int, default=10, help="Max samples per dataset")
     args = parser.parse_args()
     
     if args.phase == "download":
         run_download(args.limit)
     elif args.phase == "test":
         run_test_setup()
+
+if __name__ == "__main__":
+    main()

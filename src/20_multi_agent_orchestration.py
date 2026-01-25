@@ -4,11 +4,20 @@ OPTIONAL Stage: Multi-Agent Orchestration
 Planning → Backend → Frontend → Testing → Deployment
 """
 
+import os
+import sys
 import logging
 from typing import Dict, List
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+def check_env():
+    """Verify environment dependencies."""
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        print("[ERROR] Must be run in 'nexus' conda environment.")
+        return False
+    return True
+
+# Globals to be initialized in main()
+logger = None
 
 class Agent:
     """Base agent class"""
@@ -77,6 +86,13 @@ CMD ["uvicorn", "main:app"]
 """
 
 def main():
+    if not check_env():
+        return
+        
+    global logger
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+
     logger.info("="*70)
     logger.info("🤖 MULTI-AGENT ORCHESTRATION")
     logger.info("="*70)

@@ -1,0 +1,40 @@
+{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "nexus-model"
+  },
+  "spec": {
+    "replicas": 1,
+    "selector": {
+      "matchLabels": {
+        "app": "nexus"
+      }
+    },
+    "template": {
+      "metadata": {
+        "labels": {
+          "app": "nexus"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "model",
+            "image": "nexus:latest",
+            "ports": [
+              {
+                "containerPort": 8000
+              }
+            ],
+            "resources": {
+              "limits": {
+                "nvidia.com/gpu": "1"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

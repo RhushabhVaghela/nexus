@@ -21,7 +21,6 @@ from src.detect_modalities import detect_modalities, format_report, _analyze_con
 class TestDetectModalitiesWithRealModel:
     """Test modality detection using real models."""
     
-    @pytest.mark.real_model
     def test_detect_text_only_model(self, text_model_path):
         """Test detection on text-only Qwen2.5-0.5B."""
         result = detect_modalities(text_model_path)
@@ -41,8 +40,6 @@ class TestDetectModalitiesWithRealModel:
         # Should not be Omni
         assert result.get("is_omni", False) is False
     
-    @pytest.mark.real_model
-    @pytest.mark.slow
     def test_detect_omni_model(self, omni_model_path, request):
         """Test detection on Qwen2.5-Omni model (or small model if requested)."""
         if not Path(omni_model_path).exists():

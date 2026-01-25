@@ -318,8 +318,14 @@ class TestDatasetValidation:
     def test_validator_accepts_valid_sample(self):
         """Test that valid samples pass validation."""
         try:
-            from src.gen_07_validate_all_datasets import DatasetValidator
-            validator = DatasetValidator()
+            mod = load_module("mod_07", "07_validate_all_datasets.py")
+            # Initialize config if needed
+            if hasattr(mod, "CONFIG") and not mod.CONFIG:
+                mod.CONFIG = {
+                    "min_messages": 2, "max_messages": 50,
+                    "min_content_length": 10, "max_content_length": 10000
+                }
+            validator = mod.DatasetValidator()
             
             valid_sample = {
                 "id": "test_001",
@@ -338,8 +344,14 @@ class TestDatasetValidation:
     def test_validator_rejects_empty_messages(self):
         """Test that samples with empty messages are rejected."""
         try:
-            from src.gen_07_validate_all_datasets import DatasetValidator
-            validator = DatasetValidator()
+            mod = load_module("mod_07", "07_validate_all_datasets.py")
+            # Initialize config if needed
+            if hasattr(mod, "CONFIG") and not mod.CONFIG:
+                mod.CONFIG = {
+                    "min_messages": 2, "max_messages": 50,
+                    "min_content_length": 10, "max_content_length": 10000
+                }
+            validator = mod.DatasetValidator()
             
             invalid_sample = {
                 "id": "test_002",
@@ -355,8 +367,10 @@ class TestDatasetValidation:
     def test_modalities_validation(self):
         """Test multimodal validation handles missing files gracefully."""
         try:
-            from src.gen_07_validate_all_datasets import DatasetValidator
-            validator = DatasetValidator()
+            mod = load_module("mod_07", "07_validate_all_datasets.py")
+            if hasattr(mod, "CONFIG") and not mod.CONFIG:
+                mod.CONFIG = {"min_messages": 2, "min_content_length": 10}
+            validator = mod.DatasetValidator()
             
             # Sample with modalities but non-existent file
             sample = {
@@ -456,10 +470,10 @@ class TestBenchmarks:
     def test_fullstack_eval_has_evaluators(self):
         """Test FullstackEval has all required evaluators."""
         try:
-            from src.benchmarks.fullstack_eval import FullstackEvalBenchmark
-            benchmark = FullstackEvalBenchmark()
+            from src.benchmarks.fullstack_eval import FullstackEval
+            benchmark = FullstackEval()
             
-            test_cases = benchmark.get_test_cases()
+            test_cases = benchmark.get_all_cases()
             assert len(test_cases) > 0
         except ImportError:
             pytest.skip("Module not available")

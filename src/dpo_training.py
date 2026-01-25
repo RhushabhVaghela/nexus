@@ -36,16 +36,29 @@ logger = logging.getLogger(__name__)
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.training_methods import TrainingMethod, get_training_config
 
-# Import with error handling
+def check_env():
+    """Verify environment dependencies."""
+    try:
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        from trl import DPOConfig, DPOTrainer
+        from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+        from datasets import load_dataset
+    except ImportError as e:
+        logger.error(f"Missing dependency: {e}")
+        return False
+        
+    if not torch.cuda.is_available():
+        logger.warning("⚠️ No CUDA GPU detected. DPO requires GPU.")
+        return False
+    return True
+
 try:
     from transformers import AutoModelForCausalLM, AutoTokenizer
     from trl import DPOConfig, DPOTrainer
     from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
     from datasets import load_dataset
-except ImportError as e:
-    logger.error(f"Missing dependency: {e}")
-    logger.error("Install: pip install transformers trl peft datasets")
-    sys.exit(1)
+except ImportError:
+    pass
 
 # Configuration
 CONFIG = {
@@ -145,6 +158,10 @@ def load_model_for_dpo():
 
 
 def main():
+    if not check_env():
+         logger.error("❌ Environment check failed (missing dependencies or GPU).")
+         sys.exit(1)
+         
     logger.info("=" * 60)
     logger.info("🎓 DPO TRAINING - Direct Preference Optimization")
     logger.info("=" * 60)

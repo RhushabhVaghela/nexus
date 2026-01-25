@@ -4,9 +4,15 @@ Deployment Configurations for Production
 vLLM, Docker, Kubernetes
 """
 
-import json
-from pathlib import Path
 import os
+import sys
+
+def check_env():
+    """Verify environment dependencies."""
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        print("[ERROR] Must be run in 'nexus' conda environment.")
+        return False
+    return True
 
 def create_vllm_config():
     """Create vLLM server config"""
@@ -93,6 +99,11 @@ def create_k8s_deployment():
     return k8s
 
 def main():
+    if not check_env():
+        return
+        
+    import json
+    from pathlib import Path
     output_dir = Path("deployment")
     output_dir.mkdir(exist_ok=True)
     

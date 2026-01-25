@@ -449,7 +449,7 @@ If you want an absolutely complete table, the missing piece is to open 01/02/04 
 
 ---
 
-# since I am finetuning the basemodel (/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4) to specific fullstack use case (just like nexus 1.6 max of nexus, lovable llm, replit llm, etc). should we add more targeted categories for repetative datasets apart from what we already have?
+# since I am finetuning the basemodel (/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4) to specific fullstack use case (just like Nexus of nexus, lovable llm, replit llm, etc). should we add more targeted categories for repetative datasets apart from what we already have?
 
 Yes, for a focused **fullstack** model, it is worth adding more targeted repetitive categories beyond what you already have. The current repetitive set is very general (math, science, generic tech, daily life); adding **software-engineering–shaped** categories will better match Nexus-style, Lovable, Replit, etc.[^5_1][^5_2]
 

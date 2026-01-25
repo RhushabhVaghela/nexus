@@ -10,17 +10,53 @@ Evaluates:
 - DevOps (Configuration Validity)
 """
 
-import logging
-import re
 import json
-import torch
+import logging
+from typing import Dict
 from pathlib import Path
-from typing import List, Dict, Any
-import tqdm
 
-# Setup logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
-logger = logging.getLogger(__name__)
+# Globals to be initialized in main()
+logger = None
+torch = None
+tqdm = None
+os = None # Added for check_env
+
+def check_env():
+    """Verify environment dependencies and import conditional libraries."""
+    global torch, tqdm, os
+    try:
+        import os as _os
+        os = _os
+    except ImportError:
+        print("[ERROR] Missing dependency: os (should be built-in)")
+        return False
+
+    try:
+        import torch as _torch
+        torch = _torch
+    except ImportError:
+        print("[ERROR] Missing dependency: torch")
+        return False
+
+    try:
+        from tqdm import tqdm as _tqdm
+        tqdm = _tqdm
+    except ImportError:
+        print("[ERROR] Missing dependency: tqdm")
+        return False
+
+    # Check for unsloth, but don't fail if not present, just warn.
+    # Unsloth is only needed for actual model loading.
+    try:
+        from unsloth import FastLanguageModel
+    except ImportError:
+        print("[WARNING] Unsloth not found. Model generation will be disabled.")
+        # We don't return False here, as dry run is still possible.
+
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        print("[ERROR] Must be run in 'nexus' conda environment.")
+        return False
+    return True
 
 # ═══════════════════════════════════════════════════════════════
 # TEST CASES
@@ -133,6 +169,18 @@ class ReplicaEvaluator:
         return True
 
 def main():
+    if not check_env():
+        return
+        
+    global logger
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
+    logger = logging.getLogger(__name__)
+
+    # Import locally
+    import torch
+    import tqdm
+    from unsloth import FastLanguageModel
+
     logger.info("="*60)
     logger.info("🧪 REPLICAEVAL - ADVANCED SUITE BENCHMARK")
     logger.info("="*60)

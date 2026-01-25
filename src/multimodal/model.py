@@ -6,6 +6,7 @@ Connector: Perceiver Resampler
 """
 import torch
 import torch.nn as nn
+from typing import Optional, List, Dict, Any, Union
 from transformers import (
     AutoModel,
     AutoProcessor,
@@ -234,7 +235,8 @@ class ModularMultimodalWrapper(nn.Module):
         use_dfm: bool = True,
         enable_decoders: bool = True,
         visual_repetition_factor: int = 1,
-        audio_repetition_factor: int = 1
+        audio_repetition_factor: int = 1,
+        device: Optional[str] = None
     ):
         super().__init__()
         self.llm = base_model
@@ -246,7 +248,9 @@ class ModularMultimodalWrapper(nn.Module):
         self.visual_repetition_factor = visual_repetition_factor
         self.audio_repetition_factor = audio_repetition_factor
         
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        if device is None:
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = torch.device(device)
 
         # 1. Vision Injection
         import gc
@@ -261,16 +265,16 @@ class ModularMultimodalWrapper(nn.Module):
                 load_in_8bit=False, 
                 device_map={'': 'cpu'}
             )
-            # Move to GPU explicitly
-            print(f"  ➡️  Moving Vision to {device}...")
-            self.vision_encoder.to(device)
+            # Move to Device explicitly
+            print(f"  ➡️  Moving Vision to {self.device}...")
+            self.vision_encoder.to(self.device)
             
-            self.vision_proj = nn.Linear(self.vision_encoder.output_dim, self.llm_dim).to(device, dtype=torch.float16)
+            self.vision_proj = nn.Linear(self.vision_encoder.output_dim, self.llm_dim).to(self.device, dtype=torch.float16)
             
             if self.use_dfm:
-                self.vision_connector = DFMConnector(dim=self.llm_dim, num_latents=num_latents).to(device, dtype=torch.float16)
+                self.vision_connector = DFMConnector(dim=self.llm_dim, num_latents=num_latents).to(self.device, dtype=torch.float16)
             else:
-                self.vision_connector = PerceiverResampler(dim=self.llm_dim, num_latents=num_latents).to(device, dtype=torch.float16)
+                self.vision_connector = PerceiverResampler(dim=self.llm_dim, num_latents=num_latents).to(self.device, dtype=torch.float16)
         else:
             print("  ✅ Base model handles Vision natively. Skipping injection.")
 
@@ -283,21 +287,21 @@ class ModularMultimodalWrapper(nn.Module):
                 load_in_8bit=False, 
                 device_map={'': 'cpu'}
             )
-            print(f"  ➡️  Moving Audio to {device}...")
-            self.audio_encoder.to(device)
+            print(f"  ➡️  Moving Audio to {self.device}...")
+            self.audio_encoder.to(self.device)
             
-            self.audio_proj = nn.Linear(self.audio_encoder.output_dim, self.llm_dim).to(device, dtype=torch.float16)
+            self.audio_proj = nn.Linear(self.audio_encoder.output_dim, self.llm_dim).to(self.device, dtype=torch.float16)
             
             if self.use_dfm:
-                self.audio_connector = DFMConnector(dim=self.llm_dim, num_latents=num_latents).to(device, dtype=torch.float16)
+                self.audio_connector = DFMConnector(dim=self.llm_dim, num_latents=num_latents).to(self.device, dtype=torch.float16)
             else:
-                self.audio_connector = PerceiverResampler(dim=self.llm_dim, num_latents=num_latents).to(device, dtype=torch.float16)
+                self.audio_connector = PerceiverResampler(dim=self.llm_dim, num_latents=num_latents).to(self.device, dtype=torch.float16)
         else:
             print("  ✅ Base model handles Audio natively. Skipping injection.")
 
         # 3. Report & Persona Injection (Universal Architecture Additions)
-        self.report_proj = nn.Linear(4096, self.llm_dim).to(device, dtype=torch.float16)
-        self.persona_proj = nn.Linear(4096, self.llm_dim).to(device, dtype=torch.float16)
+        self.report_proj = nn.Linear(4096, self.llm_dim).to(self.device, dtype=torch.float16)
+        self.persona_proj = nn.Linear(4096, self.llm_dim).to(self.device, dtype=torch.float16)
         
         # 4. Adaptive Modality Router (OLA-based)
         self.router = nn.Sequential(
@@ -305,7 +309,7 @@ class ModularMultimodalWrapper(nn.Module):
             nn.GELU(),
             nn.Linear(self.llm_dim // 2, 3), # Scores for [Base, Report, Persona]
             nn.Softmax(dim=-1)
-        ).to(device, dtype=torch.float16)
+        ).to(self.device, dtype=torch.float16)
 
         # 5. Output Decoders (Optional / Any-to-Any)
         # Assuming if we inject encoders, we probably need decoders, OR if user explicitly asks.
@@ -314,8 +318,8 @@ class ModularMultimodalWrapper(nn.Module):
         if self.enable_decoders:
              self.video_decoder = VideoDecoder()
              self.speech_decoder = SpeechDecoder()
-             self.video_proj_out = nn.Linear(self.llm_dim, self.video_decoder.hidden_dim).to(device, dtype=torch.float16)
-             self.speech_proj_out = nn.Linear(self.llm_dim, self.speech_decoder.hidden_dim).to(device, dtype=torch.float16)
+             self.video_proj_out = nn.Linear(self.llm_dim, self.video_decoder.hidden_dim).to(self.device, dtype=torch.float16)
+             self.speech_proj_out = nn.Linear(self.llm_dim, self.speech_decoder.hidden_dim).to(self.device, dtype=torch.float16)
 
     def encode_vision(self, images):
         if not self.inject_vision: return None
@@ -411,7 +415,7 @@ class ModularMultimodalWrapper(nn.Module):
 from transformers import Qwen2Config
 
 class OmniMultimodalLM(nn.Module):
-    def __init__(self, llm_name: str, inject_vision: bool = None, inject_audio: bool = None, **kwargs):
+    def __init__(self, llm_name: str, inject_vision: bool = None, inject_audio: bool = None, device: Optional[str] = None, **kwargs):
         super().__init__()
         print(f"\n🧠 INTELLIGENT MODEL LOAD: {llm_name}")
         
@@ -431,6 +435,10 @@ class OmniMultimodalLM(nn.Module):
         # Extract repetition factors
         wrapper_visual_repetition = kwargs.pop("visual_repetition_factor", 1)
         wrapper_audio_repetition = kwargs.pop("audio_repetition_factor", 1)
+        
+        if device is None:
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device_str = device # Keep as string for wrapper
         
         try:
             config = AutoConfig.from_pretrained(llm_name, trust_remote_code=True)
@@ -627,6 +635,7 @@ class OmniMultimodalLM(nn.Module):
             use_dfm=wrapper_use_dfm,
             visual_repetition_factor=wrapper_visual_repetition,
             audio_repetition_factor=wrapper_audio_repetition,
+            device=self.device_str,
             **kwargs
         )
         

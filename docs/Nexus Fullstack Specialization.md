@@ -100,7 +100,7 @@ add more complex stuff, like really complex may be add more entries like 1 milli
 
 also here is the remianing stuff@[docs/FILES_5-11_COMPLETE_IMPLEMENTATIONS.md]@[docs/FILE_INDEX_AND_REFERENCE.md]@[docs/04_sft_training.py] 
 
-also plesae finetune the training data for fullstack, since we are make the model equicalent to nexus models like nexus 1.6 max and lovable to achive the same but locally
+also plesae finetune the training data for fullstack, since we are make the model equicalent to nexus models like Nexus and lovable to achive the same but locally
 
 *Viewed [FILES_5-11_COMPLETE_IMPLEMENTATIONS.md](file:///mnt/d/Research%20Experiments/nexus_model/docs/FILES_5-11_COMPLETE_IMPLEMENTATIONS.md) *
 

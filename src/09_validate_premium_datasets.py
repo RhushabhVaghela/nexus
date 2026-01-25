@@ -23,15 +23,20 @@ from collections import defaultdict
 sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger, log_header, log_completion
 
+def check_env():
+    """Verify environment dependencies."""
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        print("[ERROR] Must be run in 'nexus' conda environment.")
+        return False
+    return True
+
 # ═══════════════════════════════════════════════════════════════
 # CONFIGURATION
 # ═══════════════════════════════════════════════════════════════
 
-CONFIG = {
-    "premium_base_dir": "/mnt/e/data/premium",
-}
-
-logger = setup_logger(__name__, "logs/validate_premium.log")
+# Globals to be initialized in main()
+CONFIG = None
+logger = None
 
 # Expected datasets per mode
 EXPECTED_CENSORED = [
@@ -170,6 +175,15 @@ class PremiumDatasetValidator:
 
 def main():
     import argparse
+    
+    if not check_env():
+        sys.exit(1)
+        
+    global CONFIG, logger
+    CONFIG = {
+        "premium_base_dir": "/mnt/e/data/premium",
+    }
+    logger = setup_logger(__name__, "logs/validate_premium.log")
     
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=["censored", "uncensored"], default="censored")

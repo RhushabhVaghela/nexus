@@ -22,32 +22,45 @@ from pathlib import Path
 from typing import Dict, Optional, Any
 from dataclasses import dataclass, field, asdict
 
-try:
-    import torch
-    import torch.distributed as dist
-    from torch.utils.data import DataLoader, DistributedSampler
-    TORCH_AVAILABLE = True
-except ImportError:
-    TORCH_AVAILABLE = False
+# Globals to be initialized in main()
+logger = None
+TORCH_AVAILABLE = False
+TRANSFORMERS_AVAILABLE = False
+DEEPSPEED_AVAILABLE = False
 
-try:
-    from transformers import (
-        AutoModelForCausalLM,
-        AutoTokenizer,
-        TrainingArguments,
-        Trainer,
-        BitsAndBytesConfig,
-    )
-    from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-    TRANSFORMERS_AVAILABLE = True
-except ImportError:
-    TRANSFORMERS_AVAILABLE = False
-
-try:
-    import deepspeed
-    DEEPSPEED_AVAILABLE = True
-except ImportError:
-    DEEPSPEED_AVAILABLE = False
+def check_env():
+    """Verify environment dependencies and import conditional libraries."""
+    global TORCH_AVAILABLE, TRANSFORMERS_AVAILABLE, DEEPSPEED_AVAILABLE
+    try:
+        import torch
+        import torch.distributed as _dist
+        TORCH_AVAILABLE = True
+    except ImportError:
+        TORCH_AVAILABLE = False
+        return False
+        
+    try:
+        from transformers import Trainer
+        TRANSFORMERS_AVAILABLE = True
+    except ImportError:
+        TRANSFORMERS_AVAILABLE = False
+        return False
+        
+    try:
+        import deepspeed
+        DEEPSPEED_AVAILABLE = True
+    except ImportError:
+        DEEPSPEED_AVAILABLE = False
+        # Deepspeed is optional for some modes
+        
+    if not TORCH_AVAILABLE:
+        print("[ERROR] PyTorch not available.")
+        return False
+        
+    if not torch.cuda.is_available():
+        print("⚠️ No CUDA GPU detected.")
+        return False
+    return True
 
 sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger, log_header, log_completion
@@ -376,7 +389,7 @@ def load_model_distributed(config: DistributedConfig, local_rank: int):
     return model
 
 
-def get_training_arguments(config: DistributedConfig) -> TrainingArguments:
+def get_training_arguments(config: DistributedConfig) -> Any:
     """Build HuggingFace TrainingArguments."""
     
     args = TrainingArguments(
@@ -507,6 +520,16 @@ echo "Training complete!"
 # ═══════════════════════════════════════════════════════════════
 
 def main():
+    if not check_env():
+         sys.exit(1)
+         
+    global logger
+    logger = setup_logger(__name__, "logs/distributed_training.log")
+
+    import torch
+    import torch.distributed as dist
+    from transformers import TrainingArguments
+
     parser = argparse.ArgumentParser(description="Distributed training for Nexus Model")
     
     # Model

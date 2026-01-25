@@ -6,7 +6,8 @@ Output: checkpoints/stage3_grpo/final/ (PRODUCTION MODEL)
 """
 
 import os
-import torch
+import sys
+# torch will be imported in main or check_env
 import logging
 from pathlib import Path
 
@@ -16,25 +17,34 @@ try:
 except Exception:
     pass
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('logs/grpo_training.log'),
-        logging.StreamHandler()
-    ]
-)
 logger = logging.getLogger(__name__)
 
-# Import with error handling for missing libs
+def check_env():
+    """Verify environment dependencies."""
+    try:
+        from unsloth import FastLanguageModel, is_bfloat16_supported
+        from trl import GRPOConfig, GRPOTrainer
+        from datasets import load_dataset
+        from transformers import TrainingArguments
+    except ImportError as e:
+        logger.error(f"Missing dependency: {e}")
+        return False
+        
+    if torch and not torch.cuda.is_available():
+        if logger:
+            logger.warning("⚠️ No CUDA GPU detected. GRPO requires significant VRAM.")
+        else:
+            print("⚠️ No CUDA GPU detected. GRPO requires significant VRAM.")
+        return False
+    return True
+
 try:
     from unsloth import FastLanguageModel, is_bfloat16_supported
     from trl import GRPOConfig, GRPOTrainer
     from datasets import load_dataset
     from transformers import TrainingArguments
-except ImportError as e:
-    logger.error(f"Missing dependency: {e}")
-    exit(1)
+except ImportError:
+    pass
 
 CONFIG = {
     "checkpoint": "checkpoints/stage1_sft/final",
@@ -48,16 +58,7 @@ CONFIG = {
     "output_dir": "checkpoints/stage3_grpo",
 }
 
-# Auto-Switch for Colab / Low VRAM
-import torch
-if torch.cuda.is_available():
-    vram_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
-    if vram_gb < 24: # Colab T4 (16GB)
-        print(f"⚠️ Low VRAM detected ({vram_gb:.1f}GB). Optimizing GRPO for Colab.")
-        # GRPO involves generating multiple samples, which is VRAM heavy.
-        # We must lower params aggressively.
-        CONFIG["num_generations"] = 2
-        CONFIG["batch_size"] = 1
+
 
 
 def correctness_reward(completions: list, answers: list, **kwargs) -> list:
@@ -158,6 +159,10 @@ def combined_reward(completions: list, answers: list = None, **kwargs) -> list:
     return combined
 
 def main():
+    if not check_env():
+         logger.error("❌ Environment check failed (missing dependencies or GPU).")
+         sys.exit(1)
+         
     logger.info("="*70)
     logger.info("🎓 STAGE 3: GRPO TRAINING (MAIN TRAINING)")
     logger.info("="*70)

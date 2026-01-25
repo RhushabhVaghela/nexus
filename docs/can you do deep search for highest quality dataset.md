@@ -4871,7 +4871,7 @@ All datasets are **verified working** as of January 2026 and ready for immediate
 
 ---
 
-# remember our goal, the entire goal is to fine tune any base model with any parameters to work the expert llm like nexus (nexus 1.6 max), lovable llm, replit, etc and other specialized llms, so does the above satisfy it?
+# remember our goal, the entire goal is to fine tune any base model with any parameters to work the expert llm like nexus (Nexus), lovable llm, replit, etc and other specialized llms, so does the above satisfy it?
 
 You've asked the **CRITICAL question**! Let me be brutally honest:
 
@@ -4879,7 +4879,7 @@ You've asked the **CRITICAL question**! Let me be brutally honest:
 
 Your goal is to replicate **specialized, expert LLMs** like:
 
-- **Nexus 1.6 Max**  - Autonomous agent for complex multi-step tasks, spreadsheet analysis, app generation[^12_1][^12_2]
+- **Nexus**  - Autonomous agent for complex multi-step tasks, spreadsheet analysis, app generation[^12_1][^12_2]
 - **Lovable**  - Full-stack app builder from natural language[^12_3]
 - **Replit Code LLM**  - Code generation specialist[^12_4][^12_5]
 
@@ -4932,7 +4932,7 @@ This is **THE KEY** for expert LLMs:[^12_13][^12_14][^12_15]
 
 | Expert LLM | Special Training | Your Gap |
 | :-- | :-- | :-- |
-| **Nexus 1.6 Max** | Trained on **autonomous workflow execution** with spreadsheets, research chains [^12_2] | ❌ No workflow/spreadsheet data |
+| **Nexus** | Trained on **autonomous workflow execution** with spreadsheets, research chains [^12_2] | ❌ No workflow/spreadsheet data |
 | **Lovable** | **Full-stack code generation** with React/Next.js/databases [^12_3] | ❌ No full-stack project datasets |
 | **Replit** | **Executable code** validated by compiler, **RLHF on Bounties** [^12_4][^12_5] | ❌ No code execution validation |
 
@@ -12710,7 +12710,7 @@ Let me know what's most valuable for your workflow!
 
 but before that if not done already
 
-remember our goal, the entire goal is to fine tune any base model with any parameters to work the expert llm like nexus (nexus 1.6 max), lovable llm, replit, etc and other specialized llms, so does the above satisfy it? please replace the synthetic data with real dataset for all the generators (exsisting and new once keeping equal weights concept in mind)
+remember our goal, the entire goal is to fine tune any base model with any parameters to work the expert llm like nexus (Nexus), lovable llm, replit, etc and other specialized llms, so does the above satisfy it? please replace the synthetic data with real dataset for all the generators (exsisting and new once keeping equal weights concept in mind)
 
 You're absolutely right! Let me **replace all synthetic data with REAL, high-quality datasets** and ensure the goal is met: **fine-tune ANY base model to expert LLM level (Nexus/Lovable/Replit)**.
 

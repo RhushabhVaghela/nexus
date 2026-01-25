@@ -711,7 +711,7 @@ if __name__ == "__main__":
 set -e
 
 echo "═══════════════════════════════════════════════════════════════"
-echo "🚀 ADVANCED NEXUS 1.6 MAX - FULL PIPELINE"
+echo "🚀 ADVANCED Nexus - FULL PIPELINE"
 echo "═══════════════════════════════════════════════════════════════"
 
 GREEN='\033[0;32m'

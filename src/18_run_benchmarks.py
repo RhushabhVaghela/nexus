@@ -13,23 +13,42 @@ from pathlib import Path
 from typing import Dict, Any, List
 import time
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('logs/benchmarks.log'),
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger(__name__)
+# Globals to be initialized in main()
+logger = None
+FastLanguageModel = None # Will be set by check_env if successful
+torch = None # Will be set by check_env if successful
+tqdm = None # Will be set by check_env if successful
 
+def check_env():
+    """Verify environment dependencies and import conditional libraries."""
+    global FastLanguageModel, torch, tqdm # Declare globals to be modified
+    
+    try:
+        import torch as _torch
+        torch = _torch
+    except ImportError:
+        print("[ERROR] Missing dependency: torch")
+        return False
 
-import torch
-from tqdm import tqdm
-try:
-    from unsloth import FastLanguageModel
-except ImportError:
-    FastLanguageModel = None
+    try:
+        from tqdm import tqdm as _tqdm
+        tqdm = _tqdm
+    except ImportError:
+        print("[ERROR] Missing dependency: tqdm")
+        return False
+
+    try:
+        from unsloth import FastLanguageModel as _FastLanguageModel
+        FastLanguageModel = _FastLanguageModel
+    except ImportError:
+        print("[ERROR] Missing dependency: unsloth")
+        return False
+        
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        print("[ERROR] Must be run in 'nexus' conda environment.")
+        return False
+    return True
+
 
 class BenchmarkRunner:
     """Run benchmarks against a trained model."""
@@ -144,6 +163,27 @@ class BenchmarkRunner:
 
 
 def main():
+    if not check_env():
+        return
+        
+    global logger
+    os.makedirs('logs', exist_ok=True)
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler('logs/benchmarks.log'),
+            logging.StreamHandler()
+        ]
+    )
+    logger = logging.getLogger(__name__)
+
+    # Import locally
+    global FastLanguageModel
+    from unsloth import FastLanguageModel
+    import torch
+    from tqdm import tqdm
+    
     parser = argparse.ArgumentParser(description="Run benchmarks on trained model")
     parser.add_argument("--model", type=str, default="checkpoints/stage1_sft/final",
                         help="Path to trained model")

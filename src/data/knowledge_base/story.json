@@ -1,0 +1,22 @@
+{
+  "scenarios": [
+    {
+      "genre": "Sci-Fi",
+      "setting": "Mars Colony",
+      "characters": ["Commander", "AI System"],
+      "dialogue": ["Oxygen levels critical.", "Initiating emergency protocols."]
+    },
+    {
+      "genre": "Mystery",
+      "setting": "London Fog",
+      "characters": ["Detective", "Suspect"],
+      "dialogue": ["Where were you last night?", "I have nothing to say."]
+    },
+    {
+      "genre": "Fantasy",
+      "setting": "Ancient Ruins",
+      "characters": ["Mage", "Warrior"],
+      "dialogue": ["The seal is broken.", "Prepare for battle!"]
+    }
+  ]
+}

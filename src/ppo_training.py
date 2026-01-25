@@ -33,14 +33,29 @@ logger = logging.getLogger(__name__)
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.training_methods import TrainingMethod, get_training_config
 
+def check_env():
+    """Verify environment dependencies."""
+    try:
+        from transformers import AutoModelForCausalLM, AutoTokenizer, AutoModelForSequenceClassification
+        from trl import PPOConfig, PPOTrainer, AutoModelForCausalLMWithValueHead
+        from peft import LoraConfig, get_peft_model
+        from datasets import load_dataset, Dataset
+    except ImportError as e:
+        logger.error(f"Missing dependency: {e}")
+        return False
+        
+    if not torch.cuda.is_available():
+        logger.warning("⚠️ No CUDA GPU detected. PPO requires GPU.")
+        return False
+    return True
+
 try:
     from transformers import AutoModelForCausalLM, AutoTokenizer, AutoModelForSequenceClassification
     from trl import PPOConfig, PPOTrainer, AutoModelForCausalLMWithValueHead
     from peft import LoraConfig, get_peft_model
     from datasets import load_dataset, Dataset
-except ImportError as e:
-    logger.error(f"Missing dependency: {e}")
-    sys.exit(1)
+except ImportError:
+    pass
 
 CONFIG = {
     "model_checkpoint": "/mnt/e/data/models/Qwen2.5-0.5B",
@@ -134,6 +149,10 @@ def rule_based_reward(responses):
 
 
 def main():
+    if not check_env():
+         logger.error("❌ Environment check failed (missing dependencies or GPU).")
+         sys.exit(1)
+         
     logger.info("=" * 60)
     logger.info("🎓 PPO TRAINING - Proximal Policy Optimization (RLHF)")
     logger.info("=" * 60)

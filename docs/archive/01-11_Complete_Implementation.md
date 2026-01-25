@@ -1,4 +1,4 @@
-# Complete Implementation Files: Advanced Nexus 1.6 Max Pipeline
+# Complete Implementation Files: Advanced Nexus Pipeline
 
 This document contains the **complete, production-ready source code** for all 11 implementation files. Each file is ready to use on your RTX 5080.
 

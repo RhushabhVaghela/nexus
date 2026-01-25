@@ -102,7 +102,8 @@ class BenchmarkRunner:
         )
         
         try:
-            inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
+            inputs = self.tokenizer(prompt, return_tensors="pt")
+            inputs = {k: v.to(self.model.device) for k, v in inputs.items()}
             result.input_tokens = inputs["input_ids"].shape[1]
             
             self._clear_memory()
@@ -172,7 +173,8 @@ class BenchmarkRunner:
         )
         
         try:
-            inputs = self.tokenizer(text, return_tensors="pt").to(self.model.device)
+            inputs = self.tokenizer(text, return_tensors="pt")
+            inputs = {k: v.to(self.model.device) for k, v in inputs.items()}
             result.input_tokens = inputs["input_ids"].shape[1]
             
             with torch.no_grad():

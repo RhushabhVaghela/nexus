@@ -27,19 +27,16 @@ from typing import Dict, Tuple, Set
 sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger, log_progress, log_header, log_completion
 
-# ═══════════════════════════════════════════════════════════════
-# CONFIGURATION
-# ═══════════════════════════════════════════════════════════════
-CONFIG = {
-    "target_samples": 200_000_000,  # HARD LIMIT
-    "samples_per_file": 1_000_000,
-    "output_dir": "/mnt/e/data/repetitive-prompt-dataset",
-    "train_ratio": 0.95,
-    "val_ratio": 0.025,
-    "test_ratio": 0.025,
-}
+def check_env():
+    """Verify environment dependencies."""
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        print("[ERROR] Must be run in 'nexus' conda environment.")
+        return False
+    return True
 
-logger = setup_logger(__name__, "logs/gen_repetitive.log")
+# logger will be initialized in main()
+logger = None
+CONFIG = {}
 
 # ═══════════════════════════════════════════════════════════════
 # DEDUPLICATION
@@ -1600,7 +1597,24 @@ class PromptRepetitionEngine:
 # ═══════════════════════════════════════════════════════════════
 # MAIN
 # ═══════════════════════════════════════════════════════════════
+
+CONFIG = {
+    "target_samples": 200_000_000,  # HARD LIMIT
+    "samples_per_file": 1_000_000,
+    "output_dir": "/mnt/e/data/repetitive-prompt-dataset",
+    "train_ratio": 0.95,
+    "val_ratio": 0.025,
+    "test_ratio": 0.025,
+}
+
 def main():
+    global logger
+    
+    if not check_env():
+         sys.exit(1)
+         
+    logger = setup_logger(__name__, "logs/gen_repetitive.log")
+
     log_header(logger, "PROMPT REPETITION DATASET (arXiv 2512.14982)", {
         "Target": CONFIG["target_samples"],
         "Categories": len(GENERATOR_WEIGHTS),

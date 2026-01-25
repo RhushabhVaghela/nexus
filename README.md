@@ -181,9 +181,9 @@ The pipeline supports **10 distinct training methodologies**, covering the full 
 
 ---
 
-## 🚀 "Nexus 1.6 Max" Training Recipe (CoT + RL + Long Context)
+## 🚀 "Nexus" Training Recipe (CoT + RL + Long Context)
 
-To replicate a high-reasoning, long-context model like Nexus 1.6 Max or Gemini 3 Pro:
+To replicate a high-reasoning, long-context model like Nexus or Gemini 3 Pro:
 
 ### 1. SFT Stage (Thinking & Long Context)
 

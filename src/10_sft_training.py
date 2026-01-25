@@ -5,13 +5,6 @@ Stage 1: Supervised Fine-Tuning (SFT)
 
 ARCHITECTURE-AGNOSTIC: Works with ANY HuggingFace model.
 Configure via config/model_config.yaml
-
-Features:
-- Universal model loading (GPT, LLaMA, Qwen, DeepSeek, etc.)
-- LoRA/QLoRA fine-tuning
-- Mixed data training (30% real + 70% synthetic)
-- Gradient checkpointing for memory efficiency
-- WandB integration (optional)
 """
 
 import os
@@ -23,20 +16,30 @@ import glob
 from pathlib import Path
 from typing import Dict, Any, Optional
 
-# ═══════════════════════════════════════════════════════════════
-# LOGGING SETUP
-# ═══════════════════════════════════════════════════════════════
-
-os.makedirs('logs', exist_ok=True)
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('logs/sft_training.log'),
-        logging.StreamHandler()
-    ]
-)
+# Initialize logger immediately to avoid NoneType errors on import
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+try:
+    from datasets import Dataset, load_dataset
+    from trl import SFTTrainer
+    from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer
+    from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+except ImportError:
+    pass
+
+# Globals to be initialized in main()
+CONFIG = {}
+# logger = None  <-- Removed to preserve module-level logger
+PREFERENCE_WEIGHTS = {}
+
+def check_env():
+    """Verify environment and adjust config based on GPU."""
+    if torch.cuda.is_available():
+        vram_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
+        if logger:
+            logger.info(f"✅ GPU detected: {torch.cuda.get_device_name(0)} ({vram_gb:.1f}GB VRAM)")
+    return True
 
 # ═══════════════════════════════════════════════════════════════
 # CONFIGURATION LOADING

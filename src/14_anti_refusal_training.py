@@ -20,20 +20,16 @@ from typing import Optional
 sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger, log_header, log_completion
 
-# ═══════════════════════════════════════════════════════════════
-# CONFIGURATION
-# ═══════════════════════════════════════════════════════════════
+def check_env():
+    """Verify environment dependencies."""
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        print("[ERROR] Must be run in 'nexus' conda environment.")
+        return False
+    return True
 
-CONFIG = {
-    "model_checkpoint": "checkpoints/stage3_grpo_uncensored",
-    "anti_refusal_dataset": "/mnt/e/data/anti-refusal",
-    "output_dir": "checkpoints/stage4_anti_refusal",
-    "max_steps": 500,
-    "learning_rate": 5e-6,
-    "batch_size": 4,
-}
-
-logger = setup_logger(__name__, "logs/anti_refusal_training.log")
+# Globals to be initialized in main()
+CONFIG = None
+logger = None
 
 # ═══════════════════════════════════════════════════════════════
 # ANTI-REFUSAL EXAMPLES
@@ -207,6 +203,20 @@ def run_anti_refusal_training():
 # ═══════════════════════════════════════════════════════════════
 
 def main():
+    if not check_env():
+        sys.exit(1)
+        
+    global CONFIG, logger
+    CONFIG = {
+        "model_checkpoint": "checkpoints/stage3_grpo_uncensored",
+        "anti_refusal_dataset": "/mnt/e/data/anti-refusal",
+        "output_dir": "checkpoints/stage4_anti_refusal",
+        "max_steps": 500,
+        "learning_rate": 5e-6,
+        "batch_size": 4,
+    }
+    logger = setup_logger(__name__, "logs/anti_refusal_training.log")
+
     mode = detect_training_mode()
     
     if mode != "uncensored":

@@ -13,35 +13,36 @@ from typing import List, Dict, Any
 from collections import defaultdict
 import numpy as np
 import os
-
-from unsloth import FastLanguageModel
-from datasets import load_dataset
-import tqdm
-
-# Create logs directory if it doesn't exist
+import sys
+import json
+import random
+import logging
+from pathlib import Path
+from typing import List
 try:
-    os.makedirs('logs', exist_ok=True)
-except Exception:
-    pass
+    from unsloth import FastLanguageModel
+except ImportError:
+    FastLanguageModel = None
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('logs/rejection_sampling.log'),
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger(__name__)
+UNSLOTH_AVAILABLE = False
+def check_env():
+    """Verify environment dependencies."""
+    global UNSLOTH_AVAILABLE
+    try:
+        pass
+        UNSLOTH_AVAILABLE = True
+    except ImportError:
+        print("[ERROR] Missing dependency: unsloth")
+        return False
+        
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        print("[ERROR] Must be run in 'nexus' conda environment.")
+        return False
+    return True
 
-CONFIG = {
-    "checkpoint": "checkpoints/stage1_sft/final",
-    "num_questions": 1000,
-    "samples_per_question": 3,
-    "keep_top_k": 2,
-    "max_new_tokens": 512,
-    "temperature": 0.8,
-}
+# Globals to be initialized in main()
+CONFIG = None
+logger = None
 
 def parse_json_response(response: str) -> List[Dict[str, Any]]:
     """Attempt to parse model's JSON response"""
@@ -165,6 +166,34 @@ def sample_responses(model, tokenizer, question: str, num_samples: int) -> List[
     return responses
 
 def main():
+    if not check_env():
+        return
+        
+    global CONFIG, logger
+    CONFIG = {
+        "checkpoint": "checkpoints/stage1_sft/final",
+        "num_questions": 1000,
+        "samples_per_question": 3,
+        "keep_top_k": 2,
+        "max_new_tokens": 512,
+        "temperature": 0.8,
+    }
+    
+    # Setup logger
+    os.makedirs('logs', exist_ok=True)
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler('logs/rejection_sampling.log'),
+            logging.StreamHandler()
+        ]
+    )
+    logger = logging.getLogger(__name__)
+
+    from datasets import load_dataset
+    import tqdm
+
     logger.info("="*70)
     logger.info("🎲 STAGE 2: REJECTION SAMPLING")
     logger.info("="*70)

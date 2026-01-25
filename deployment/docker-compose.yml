@@ -1,0 +1,17 @@
+{
+  "version": "3.8",
+  "services": {
+    "nexus-model": {
+      "build": ".",
+      "ports": [
+        "8000:8000"
+      ],
+      "environment": {
+        "CUDA_VISIBLE_DEVICES": "0"
+      },
+      "volumes": [
+        "./checkpoints:/app/checkpoints"
+      ]
+    }
+  }
+}

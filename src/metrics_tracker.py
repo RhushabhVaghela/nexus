@@ -126,7 +126,7 @@ class BenchmarkMetrics:
 
 
 @dataclass
-class TestDetailMetrics:
+class ExecutionDetailMetrics:
     """Metrics for a single test execution."""
     timestamp: str = ""
     test_id: str = ""
@@ -154,8 +154,6 @@ class MetricsTracker:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
         self.training_file = self.output_dir / "training_metrics.csv"
-        self.training_file = self.output_dir / "training_metrics.csv"
-        self.training_file = self.output_dir / "training_metrics.csv"
         self.validation_file = self.output_dir / "validation_metrics.csv"
         self.benchmark_file = self.output_dir / "benchmark_metrics.csv"
         self.test_details_file = self.output_dir / "test_details.csv"
@@ -168,7 +166,7 @@ class MetricsTracker:
             self.training_file: TrainingMetrics,
             self.validation_file: ValidationMetrics,
             self.benchmark_file: BenchmarkMetrics,
-            self.test_details_file: TestDetailMetrics,
+            self.test_details_file: ExecutionDetailMetrics,
         }
         
         for path, dataclass_type in files_map.items():
@@ -207,12 +205,12 @@ class MetricsTracker:
         
         logger.info(f"Logged benchmark metrics: {metrics.name}")
     
-    def log_test_detail(self, metrics: TestDetailMetrics):
+    def log_test_detail(self, metrics: ExecutionDetailMetrics):
         """Append test detail metrics to CSV."""
         metrics.timestamp = datetime.now().isoformat()
         
         with open(self.test_details_file, 'a', newline='') as f:
-            writer = csv.DictWriter(f, fieldnames=list(TestDetailMetrics.__annotations__.keys()))
+            writer = csv.DictWriter(f, fieldnames=list(ExecutionDetailMetrics.__annotations__.keys()))
             writer.writerow(asdict(metrics))
     
     def get_gpu_metrics(self) -> Dict[str, float]:

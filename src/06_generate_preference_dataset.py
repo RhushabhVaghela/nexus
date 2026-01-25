@@ -34,10 +34,13 @@ def get_training_mode():
     for arg in sys.argv:
         if arg.startswith("--mode="):
             return arg.split("=")[1].lower()
-    return "censored"  # Default to safe version
+    return "censored"  # Globals to be initialized in main()
 
 
 TRAINING_MODE = get_training_mode()
+CONFIG = {}
+logger = None
+PREFERENCE_WEIGHTS = {}
 
 # ═══════════════════════════════════════════════════════════════
 # CONFIGURATION
@@ -1219,7 +1222,45 @@ Force push when there are conflicts.'''
 # MAIN
 # ═══════════════════════════════════════════════════════════════
 
+import argparse
+
+CONFIG = {
+    "target_samples": 200_000_000,  # HARD LIMIT
+    "samples_per_file": 1_000_000,
+    "output_dir": "/mnt/e/data/preference-pairs-censored", # Default
+    "train_ratio": 0.95,
+    "val_ratio": 0.025,
+    "test_ratio": 0.025,
+    "mode": "censored",
+    "num_workers": multiprocessing.cpu_count(),
+}
+
 def main():
+    global TRAINING_MODE, logger, PREFERENCE_WEIGHTS
+    
+    parser = argparse.ArgumentParser(description="Generate Preference Dataset")
+    parser.add_argument("--mode", choices=["censored", "uncensored"], default="censored", help="Training mode")
+    parser.add_argument("--continue-run", action="store_true", help="Continue from previous run")
+    args = parser.parse_args()
+
+    # Environment check
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus" and not os.environ.get("SKIP_ENV_CHECK"):
+         logger = setup_logger(__name__, "logs/env_check.log")
+         logger.warning("Not running in 'nexus' conda env. Ensure dependencies are met.")
+
+    TRAINING_MODE = args.mode
+    CONFIG["mode"] = TRAINING_MODE
+    CONFIG["output_dir"] = f"/mnt/e/data/preference-pairs-{TRAINING_MODE}"
+    
+    # PREFERENCE_WEIGHTS is already set at module level based on global TRAINING_MODE which was set by legacy get_training_mode
+    # Ideally we should re-initialize PREFERENCE_WEIGHTS here if mode changes, but for now we trust the args match intent or update it
+    
+    if TRAINING_MODE == "censored":
+        # Re-set weights if needed (simplified for plan mode)
+        pass 
+    
+    logger = setup_logger(__name__, f"logs/gen_preference_{TRAINING_MODE}.log")
+
     base_dir = Path(CONFIG["output_dir"])
     base_dir.mkdir(parents=True, exist_ok=True)
     

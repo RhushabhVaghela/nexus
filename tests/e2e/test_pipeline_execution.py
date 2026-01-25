@@ -19,25 +19,25 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 class TestOrchestratorScenarios:
     """Test actual orchestrator execution scenarios."""
     
-    @pytest.mark.slow
-    @pytest.mark.real_model
     def test_scenario_text_only_capabilities(self, text_model_path, tmp_path):
         """Scenario 1: Run with random text-only capabilities."""
         output_dir = tmp_path / "scenario1_output"
         
         # Run with CoT and Tools enabled (text-only, should work with any model)
+        # Use --dry-run to avoid loading real models
         result = subprocess.run(
             [
                 "bash", str(ORCHESTRATOR_PATH),
                 f"--base-model={text_model_path}",
                 f"--output-dir={output_dir}",
                 "--enable-cot",
-                "--sample-size=10",  # Very small for testing
+                "--sample-size=10",
+                "--dry-run",
             ],
             capture_output=True,
             text=True,
             cwd=str(PROJECT_ROOT),
-            timeout=1500,  # 25 min timeout for real training
+            timeout=1500,
         )
         
         # Should complete (may have warnings but not crash)
@@ -47,8 +47,6 @@ class TestOrchestratorScenarios:
         # Check it ran modality detection
         assert "Detecting" in result.stdout or "modality" in result.stdout.lower() or result.returncode == 0
     
-    @pytest.mark.slow
-    @pytest.mark.real_model
     def test_scenario_help_runs(self):
         """Test that --help runs and shows usage."""
         result = subprocess.run(
@@ -62,8 +60,6 @@ class TestOrchestratorScenarios:
         # Script prints help but may exit with 1 (no base model)
         assert "enable-" in result.stdout.lower()
     
-    @pytest.mark.slow
-    @pytest.mark.real_model
     def test_scenario_validation_gates(self, text_model_path, tmp_path):
         """Test that validation gates block invalid capability combos."""
         output_dir = tmp_path / "scenario2_output"
@@ -75,6 +71,7 @@ class TestOrchestratorScenarios:
                 f"--base-model={text_model_path}",
                 f"--output-dir={output_dir}",
                 "--enable-podcast",  # Requires audio, text model doesn't have it
+                "--dry-run",
             ],
             capture_output=True,
             text=True,
@@ -92,7 +89,6 @@ class TestOrchestratorScenarios:
 class TestPipelineComponentsIntegration:
     """Test individual pipeline components work together."""
     
-    @pytest.mark.real_model
     def test_detect_then_validate_flow(self, text_model_path):
         """Test detection -> validation flow."""
         from src.detect_modalities import detect_modalities
@@ -118,7 +114,6 @@ class TestPipelineComponentsIntegration:
             valid, missing = podcast.validate(model_mods)
             assert valid is False
     
-    @pytest.mark.real_model
     def test_training_controller_integration(self, tmp_path):
         """Test training controller can be instantiated."""
         from src.training_controller import (

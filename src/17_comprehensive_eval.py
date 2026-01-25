@@ -13,25 +13,28 @@ from typing import Dict, List
 from collections import defaultdict
 import os
 
-from unsloth import FastLanguageModel
+# unsloth will be conditionally imported in check_env
 from datasets import load_dataset
 import tqdm
 
-# Create logs directory if it doesn't exist
-try:
-    os.makedirs('logs', exist_ok=True)
-except Exception:
-    pass
+UNSLOTH_AVAILABLE = False
+def check_env():
+    """Verify environment dependencies."""
+    global UNSLOTH_AVAILABLE
+    try:
+        from unsloth import FastLanguageModel
+        UNSLOTH_AVAILABLE = True
+    except ImportError:
+        print("[ERROR] Missing dependency: unsloth")
+        return False
+        
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        print("[ERROR] Must be run in 'nexus' conda environment.")
+        return False
+    return True
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('logs/evaluation.log'),
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger(__name__)
+# Globals to be initialized in main()
+logger = None
 
 BENCHMARKS = {
     "mmlu": {
@@ -107,6 +110,25 @@ def evaluate_benchmark(model, tokenizer, benchmark_name: str, dataset, max_sampl
     }
 
 def main():
+    if not check_env():
+        return
+        
+    global logger
+    os.makedirs('logs', exist_ok=True)
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler('logs/evaluation.log'),
+            logging.StreamHandler()
+        ]
+    )
+    logger = logging.getLogger(__name__)
+
+    from unsloth import FastLanguageModel
+    from datasets import load_dataset
+    import tqdm
+
     logger.info("="*70)
     logger.info("📊 STAGE 5: COMPREHENSIVE EVALUATION")
     logger.info("="*70)
