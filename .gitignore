@@ -1,7 +1,37 @@
+# Standard Python/IDE ignores
 .pytest_cache/
 .venv/
 __pycache__/
+*.pyc
+*.pyo
+.DS_Store
+Thumbs.db
+
+# Project-specific ignores
 logs/
-offload-cache/node_modules/
+results/
+checkpoints/
+offload-cache/
+llm-dataset-resources/
+research-papers/
+*.log
+.coverage
+.benchmarks/
+
+# Large artifacts and session logs
+session-ses_*.md
+unit_tests_detailed_report.txt
+*report.txt
+Nexus-Ultimate.md
+Finalizing Reasoning Infrastructure.md
+dataset and performance suggestions.md
+universal-architecture.md
+rejection_sampled.jsonl
+nexus_agent_mix.jsonl
+new-plan-conversation-files/
+
+
+# Node modules
+node_modules/
 dashboard/node_modules/
 remotion/node_modules/
