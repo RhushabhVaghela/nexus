@@ -17,9 +17,11 @@ import textwrap
 from typing import Dict, Any, Optional
 
 class NeuralArchitect:
-    def __init__(self, registry_path: str = "configs/teacher_registry.json"):
+    def __init__(self, output_dir: str = "architect_output", registry_path: str = "configs/teacher_registry.json"):
+        self.output_dir = output_dir
         self.registry_path = registry_path
-        self.default_base_model = "gpt2" # Fallback small model
+        self.default_base_model = "meta-llama/Meta-Llama-3-8B" # Realistic default for 4096-dim
+        os.makedirs(output_dir, exist_ok=True)
     
     def load_profiling_data(self, profile_path: str) -> Dict[str, Any]:
         """
@@ -160,25 +162,22 @@ class NexusStudent(nn.Module):
             **kwargs
         )
         
+        # Router Diversity (Entropy) Calculation
+        entropy_loss = None
+        if output_router_logits and hasattr(outputs, "router_logits") and outputs.router_logits is not None:
+            # probs shape: (batch * seq, num_experts)
+            probs = torch.softmax(outputs.router_logits, dim=-1)
+            entropy_loss = -torch.sum(probs * torch.log(probs + 1e-9), dim=-1).mean()
+
         if projected_latents is not None:
-            # We attach the projected latents to the output object for the Trainer to use
-            # This is a bit of a hack since CausalLMOutputWithPast is immutable usually,
-            # but usually it's a python object we can attach attributes to or return a dict.
-            # Safer to return a dict wrapper if we are training.
-            if isinstance(outputs, dict):
-                outputs["projected_teacher_latents"] = projected_latents
-            else:
-                # If it's a Dataclass, we can't easily add. 
-                # Let's assume for our trainer we access it differently or
-                # we just return tuple.
-                # Actually, the Trainer calls this. Let's return a custom dict if training.
-                return {{
-                    "loss": outputs.loss,
-                    "logits": outputs.logits,
-                    "hidden_states": outputs.hidden_states,
-                    "router_logits": getattr(outputs, "router_logits", None),
-                    "projected_teacher_latents": projected_latents
-                }}
+            return {{
+                "loss": outputs.loss,
+                "logits": outputs.logits,
+                "hidden_states": outputs.hidden_states,
+                "router_logits": getattr(outputs, "router_logits", None),
+                "entropy_loss": entropy_loss,
+                "projected_teacher_latents": projected_latents
+            }}
             
         return outputs
 
@@ -228,6 +227,3 @@ if __name__ == "__main__":
         self.synthesize_student_model(output_src_path, base_model, adapter_config)
 
 # Example usage
-if __name__ == "__main__":
-    architect = NeuralArchitect()
-    # architect.execute_design_process("teacher_v1", "configs/pca_profile.json", "src/nexus_final/nexus_student.py")

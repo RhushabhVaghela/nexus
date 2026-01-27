@@ -342,13 +342,11 @@ class StreamingPCAProfiler:
         self.save_results()
         self.save_profile_summary(causal_scores=causal_scores)
 
-    def _calculate_intrinsic_dimension(self, explained_variance_ratio: np.ndarray, threshold: float = 0.95) -> int:
+    def _calculate_intrinsic_dimension(self, explained_variance_ratio: np.ndarray, threshold: float = 0.99) -> int:
         """
-        Determines the number of components needed to explain 'threshold' variance.
+        Determines the number of components needed to explain 'threshold' variance (default 99%).
         """
         cumulative_variance = np.cumsum(explained_variance_ratio)
-        # Find index where cumulative sum >= threshold
-        # np.argmax returns the first index where condition is true
         if cumulative_variance[-1] < threshold:
             return len(explained_variance_ratio)
             
@@ -358,25 +356,32 @@ class StreamingPCAProfiler:
     def compute_optimal_batch_size(self, vram_free_mb: float) -> int:
         """
         Calculates optimal batch size based on available VRAM.
-        Heuristic for 7B/8B class models in 4-bit quantization.
+        Heuristic for 7B/8B class models in 4-bit quantization on RTX 5080 (16GB).
         """
-        # Constants for estimation
-        MODEL_overhead_MB = 6000  # Base model weights (approx 5-6GB for 7B @ 4-bit + overhead)
-        ACT_PER_SAMPLE_MB = 600   # Activation memory per sample (Seq len 2048 estimate)
-        SAFETY_MARGIN_MB = 2000   # Buffer for peak usage/fragmentation
+        # Dynamic check for available VRAM if not provided
+        if vram_free_mb is None and torch.cuda.is_available():
+            vram_free_mb = (torch.cuda.mem_get_info()[0]) / 1024**2
 
-        # Calculate available memory for data
-        available_mem = vram_free_mb - MODEL_overhead_MB - SAFETY_MARGIN_MB
+        # Constants for estimation (RTX 5080 optimized)
+        MODEL_overhead_MB = 6500  # 7B model in 4-bit ~5GB + CUDA context
+        ACT_PER_SAMPLE_MB = 450   # Optimized activation estimate for seq_len 1024/2048
+        SAFETY_MARGIN_MB = 1500   # Buffer for fragmentation
         
-        if available_mem <= 0:
-            print("Warning: Low VRAM detected. Defaulting to batch_size=1")
+        if vram_free_mb < (MODEL_overhead_MB + SAFETY_MARGIN_MB):
             return 1
 
-        # Calculate capacity
+        available_mem = vram_free_mb - MODEL_overhead_MB - SAFETY_MARGIN_MB
         optimal_bs = int(available_mem / ACT_PER_SAMPLE_MB)
         
-        # Clamping
-        return max(1, min(optimal_bs, 32)) # Cap at 32 to avoid CPU bottlenecks
+        # Clamp to reasonable bounds for GPU utilization
+        if optimal_bs >= 16:
+            return 16
+        elif optimal_bs >= 8:
+            return 8
+        elif optimal_bs >= 4:
+            return 4
+        else:
+            return 1
 
     def save_profile_summary(self, summary_path: str = "", causal_scores: Dict[str, float] = None):
         """
@@ -421,16 +426,8 @@ class StreamingPCAProfiler:
                 components=pca.components_,
                 mean=pca.mean_,
                 explained_variance_ratio=pca.explained_variance_ratio_,
-                singular_values=pca.singular_values_
+                singular_values=getattr(pca, "singular_values_", np.array([]))
             )
             print(f"Saved {name} profile to {file_path}")
 
 # Example usage (commented out)
-# if __name__ == "__main__":
-#     dataset = ["Example text for profiling " * 10 for _ in range(50)]
-#     profiler = StreamingPCAProfiler(
-#         model_id="facebook/opt-125m", # Small model for test
-#         layer_names=["model.decoder.layers.10", "model.decoder.layers.11"],
-#         output_dir="./profiles/opt-125m"
-#     )
-#     profiler.profile(dataset)

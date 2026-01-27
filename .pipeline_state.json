@@ -1,0 +1,13 @@
+{
+  "current_stage": "done",
+  "completed_stages": [
+    "profiling",
+    "knowledge_extraction",
+    "training",
+    "router_training",
+    "evaluation",
+    "export",
+    "cleanup"
+  ],
+  "config": {}
+}

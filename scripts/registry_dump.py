@@ -1,165 +1,9 @@
-"""
-Nexus Specialist Tower Registry.
-Defines the Teacher Models, Encoders, and Decoders used in the ecosystem.
-"""
-
-import os
-
-BASE_PATH = "/mnt/d/Research Experiments/nexus"
-
-TEACHER_REGISTRY = {
-    # --- REASONING & AGENTIC (Language) ---
-    "reasoning_core": {
-        "model": "openbmb/AgentCPM-Explore",
-        "path": os.path.join(BASE_PATH, "models/AgentCPM-Explore"),
-        "type": "causal",
-        "desc": "Long-horizon planning, tool use",
-        "tags": ["reasoning", "agent", "language"]
-    },
-    "logic_heavy": {
-        "model": "zai-org/GLM-4.7-Flash",
-        "path": os.path.join(BASE_PATH, "models/zai-org_GLM-4.7-Flash"),
-        "type": "causal", 
-        "desc": "Deep logic, math, coding",
-        "tags": ["logic", "math", "code", "language"]
-    },
-    "interpretability": {
-        "model": "google/gemma-scope-2-27b-pt",
-        "path": os.path.join(BASE_PATH, "models/google_gemma-scope-2-27b-pt"),
-        "type": "causal",
-        "desc": "Feature verification",
-        "tags": ["interpretability", "language"]
-    },
-    "translation": {
-        "model": "google/translategemma-4b-it",
-        "path": os.path.join(BASE_PATH, "models/google_translategemma-4b-it"),
-        "type": "causal",
-        "desc": "Translation specialist",
-        "tags": ["translation", "language"]
-    },
-    "base_small": {
-        "model": "Qwen/Qwen2.5-0.5B",
-        "path": os.path.join(BASE_PATH, "models/Qwen2.5-0.5B"),
-        "type": "causal",
-        "desc": "Efficient base model",
-        "tags": ["base", "language", "small"]
-    },
-    "coder": {
-        "model": "Qwen/Qwen2.5-Coder-7B-Instruct",
-        "path": os.path.join(BASE_PATH, "models/Qwen_Qwen2.5-Coder-7B-Instruct"),
-        "type": "causal",
-        "desc": "Code generation",
-        "tags": ["code", "language"]
-    },
-    "omni_base": {
-        "model": "Qwen/Qwen2.5-Omni-7B-GPTQ-Int4",
-        "path": os.path.join(BASE_PATH, "models/Qwen2.5-Omni-7B-GPTQ-Int4"),
-        "type": "multimodal",
-        "desc": "Omni-modal base (Quantized)",
-        "tags": ["omni", "multimodal", "quantized"]
-    },
-    "omni_large": {
-        "model": "Qwen/Qwen3-Omni-30B-A3B-Instruct",
-        "path": os.path.join(BASE_PATH, "models/Qwen_Qwen3-Omni-30B-A3B-Instruct"),
-        "type": "multimodal",
-        "desc": "Large scale omni model",
-        "tags": ["omni", "multimodal", "large"]
-    },
-
-    # --- VISION ---
-    "vision_main": {
-        "model": "stepfun-ai/Step3-VL-10B",
-        "path": os.path.join(BASE_PATH, "models/stepfun-ai_Step3-VL-10B"),
-        "type": "vision",
-        "desc": "General Visual Understanding",
-        "tags": ["vision", "multimodal"]
-    },
-    "object_detection": {
-        "model": "PaDT/OVD-3B",
-        "path": os.path.join(BASE_PATH, "models/PaDT_OVD_3B"),
-        "type": "vision",
-        "desc": "Object detection (Open Vocabulary)",
-        "tags": ["vision", "detection"]
-    },
-    "vision_enc": {
-        "model": "google/siglip2-so400m-patch16-512",
-        "path": os.path.join(BASE_PATH, "encoders/image-encoders/siglip2-so400m-patch16-512"),
-        "type": "encoder",
-        "desc": "High-res feature extraction",
-        "tags": ["vision", "encoder"]
-    },
-    "video_enc": {
-        "model": "MCG-NJU/videomae-large",
-        "path": os.path.join(BASE_PATH, "encoders/vision-encoders/MCG-NJU_videomae-large"),
-        "type": "encoder",
-        "desc": "Temporal understanding",
-        "tags": ["video", "encoder", "vision"]
-    },
-    "video_gen": {
-        "model": "stabilityai/stable-video-diffusion-img2vid-xt-1-1",
-        "path": os.path.join(BASE_PATH, "decoders/vision-decoders/stabilityai_stable-video-diffusion-img2vid-xt-1-1"),
-        "type": "generation",
-        "desc": "Video Generation",
-        "tags": ["video", "generation", "vision"]
-    },
-
-    # --- AUDIO ---
-    "omni_speech": {
-        "model": "nvidia/personaplex-7b-v1",
-        "path": os.path.join(BASE_PATH, "models/nvidia_personaplex-7b-v1"),
-        "type": "audio",
-        "desc": "Conversational audio",
-        "tags": ["audio", "speech"]
-    },
-    "asr_long": {
-        "model": "microsoft/VibeVoice-ASR",
-        "path": os.path.join(BASE_PATH, "models/microsoft_VibeVoice-ASR"),
-        "type": "audio",
-        "desc": "Long-form transcription",
-        "tags": ["audio", "asr"]
-    },
-    "asr_fast": {
-        "model": "nvidia/parakeet-tdt-0.6b-v3",
-        "path": os.path.join(BASE_PATH, "encoders/audio-encoders/parakeet-tdt-0.6b-v3"),
-        "type": "audio",
-        "desc": "Low-latency ASR",
-        "tags": ["audio", "asr", "fast"]
-    },
-    "tts_custom": {
-        "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
-        "path": os.path.join(BASE_PATH, "decoders/audio-decoders/Qwen_Qwen3-TTS-12Hz-1.7B-CustomVoice"),
-        "type": "audio",
-        "desc": "Voice Cloning TTS",
-        "tags": ["audio", "tts", "custom"]
-    },
-    "tts_design": {
-        "model": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
-        "path": os.path.join(BASE_PATH, "decoders/audio-decoders/Qwen_Qwen3-TTS-12Hz-1.7B-VoiceDesign"),
-        "type": "audio",
-        "desc": "Voice Design TTS",
-        "tags": ["audio", "tts"]
-    },
-    "audio_tokenizer": {
-        "model": "Qwen/Qwen3-TTS-Tokenizer-12Hz",
-        "path": os.path.join(BASE_PATH, "encoders/audio-encoders/Qwen_Qwen3-TTS-Tokenizer-12Hz"),
-        "type": "tokenizer",
-        "desc": "Audio Tokenizer",
-        "tags": ["audio", "tokenizer"]
-    },
-    
-    # --- GENERATION ---
-    "image_gen": {
-        "model": "stabilityai/stable-diffusion-3-medium-diffusers",
-        "path": os.path.join(BASE_PATH, "decoders/image-decoders/stabilityai_stable-diffusion-3-medium-diffusers"),
-        "type": "vision",
-        "desc": "Image Synthesis",
-        "tags": ["vision", "generation", "image"]
-    }
-}
+Scanning Datasets at /mnt/e/data/datasets...
+Scanning Benchmarks at /mnt/e/data/benchmarks...
 
 DATASET_REGISTRY = {
 
-    # --- REASONING (19) ---
+    # --- REASONING (17) ---
     "ai4math_ineqmath": {"path": "AI4Math/IneqMath", "local_path": "/mnt/e/data/datasets/reasoning/AI4Math_IneqMath", "desc": "Dataset: AI4Math/IneqMath", "tags": ["math", "reasoning"]},
     "ai4math_mathverse": {"path": "AI4Math/MathVerse", "local_path": "/mnt/e/data/datasets/reasoning/AI4Math_MathVerse", "desc": "Dataset: AI4Math/MathVerse", "tags": ["math", "reasoning"]},
     "ai4math_mathvista": {"path": "AI4Math/MathVista", "local_path": "/mnt/e/data/datasets/reasoning/AI4Math_MathVista", "desc": "Dataset: AI4Math/MathVista", "tags": ["math", "reasoning"]},
@@ -169,14 +13,12 @@ DATASET_REGISTRY = {
     "o1-open_openo1-sft-ultra": {"path": "O1-OPEN/OpenO1-SFT-Ultra", "local_path": "/mnt/e/data/datasets/reasoning/O1-OPEN_OpenO1-SFT-Ultra", "desc": "Dataset: O1-OPEN/OpenO1-SFT-Ultra", "tags": ["reasoning"]},
     "teichai_claude-4": {"path": "TeichAI/claude-4", "local_path": "/mnt/e/data/datasets/reasoning/TeichAI_claude-4.5-opus-high-reasoning-250x", "desc": "Dataset: TeichAI/claude-4", "tags": ["reasoning"]},
     "teichai_claude-haiku-4": {"path": "TeichAI/claude-haiku-4", "local_path": "/mnt/e/data/datasets/reasoning/TeichAI_claude-haiku-4.5-high-reasoning-1700x", "desc": "Dataset: TeichAI/claude-haiku-4", "tags": ["reasoning"]},
-    "teichai_claude-haiku-4-1700x": {"path": "TeichAI/claude-haiku-4.5-1700x", "local_path": "/mnt/e/data/datasets/reasoning/TeichAI_claude-haiku-4.5-1700x", "desc": "Dataset: TeichAI/claude-haiku-4.5-1700x", "tags": ["reasoning"]},
     "teichai_claude-sonnet-4": {"path": "TeichAI/claude-sonnet-4", "local_path": "/mnt/e/data/datasets/reasoning/TeichAI_claude-sonnet-4.5-high-reasoning-250x", "desc": "Dataset: TeichAI/claude-sonnet-4", "tags": ["reasoning"]},
     "teichai_deepseek-v3": {"path": "TeichAI/deepseek-v3", "local_path": "/mnt/e/data/datasets/reasoning/TeichAI_deepseek-v3.2-speciale-1000x", "desc": "Dataset: TeichAI/deepseek-v3", "tags": ["reasoning"]},
     "teichai_gemini-3-flash-preview": {"path": "TeichAI/gemini-3-flash-preview", "local_path": "/mnt/e/data/datasets/reasoning/TeichAI_gemini-3-flash-preview", "desc": "Dataset: TeichAI/gemini-3-flash-preview", "tags": ["reasoning"]},
     "teichai_gemini-3-pro-preview-high-reasoning-1000x": {"path": "TeichAI/gemini-3-pro-preview-high-reasoning-1000x", "local_path": "/mnt/e/data/datasets/reasoning/TeichAI_gemini-3-pro-preview-high-reasoning-1000x", "desc": "Dataset: TeichAI/gemini-3-pro-preview-high-reasoning-1000x", "tags": ["reasoning"]},
     "teichai_glm-4": {"path": "TeichAI/glm-4", "local_path": "/mnt/e/data/datasets/reasoning/TeichAI_glm-4.7-2000x", "desc": "Dataset: TeichAI/glm-4", "tags": ["reasoning"]},
     "teichai_gpt-5": {"path": "TeichAI/gpt-5", "local_path": "/mnt/e/data/datasets/reasoning/TeichAI_gpt-5.1-high-reasoning-1000x", "desc": "Dataset: TeichAI/gpt-5", "tags": ["reasoning"]},
-    "teichai_gpt-5-codex": {"path": "TeichAI/gpt-5.1-codex-max-1000x", "local_path": "/mnt/e/data/datasets/reasoning/TeichAI_gpt-5.1-codex-max-1000x", "desc": "Dataset: TeichAI/gpt-5.1-codex-max-1000x", "tags": ["reasoning"]},
     "teichai_kimi-k2-thinking-1000x": {"path": "TeichAI/kimi-k2-thinking-1000x", "local_path": "/mnt/e/data/datasets/reasoning/TeichAI_kimi-k2-thinking-1000x", "desc": "Dataset: TeichAI/kimi-k2-thinking-1000x", "tags": ["reasoning"]},
     "teichai_minimax-m2": {"path": "TeichAI/MiniMax-M2", "local_path": "/mnt/e/data/datasets/reasoning/TeichAI_MiniMax-M2.1-8800x", "desc": "Dataset: TeichAI/MiniMax-M2", "tags": ["reasoning"]},
 
@@ -214,14 +56,14 @@ DATASET_REGISTRY = {
     "nlpdata_dialogre": {"path": "nlpdata/dialogre", "local_path": "/mnt/e/data/datasets/general/nlpdata_dialogre", "desc": "Dataset: nlpdata/dialogre", "tags": ["general"]},
     "nvidia_helpsteer2": {"path": "nvidia/HelpSteer2", "local_path": "/mnt/e/data/datasets/general/nvidia_HelpSteer2", "desc": "Dataset: nvidia/HelpSteer2", "tags": ["general"]},
     "openbmb_ultrafeedback": {"path": "openbmb/UltraFeedback", "local_path": "/mnt/e/data/datasets/general/openbmb_UltraFeedback", "desc": "Dataset: openbmb/UltraFeedback", "tags": ["general"]},
-    "sojuL/RubricHub_v1": {"path": "sojuL/RubricHub_v1", "local_path": "/mnt/e/data/datasets/general/sojuL_RubricHub_v1", "desc": "Dataset: sojuL/RubricHub_v1", "tags": ["general"]},
+    "sojul_rubrichub_v1": {"path": "sojuL/RubricHub_v1", "local_path": "/mnt/e/data/datasets/general/sojuL_RubricHub_v1", "desc": "Dataset: sojuL/RubricHub_v1", "tags": ["general"]},
     "spawn99_cornellmoviedialogcorpus": {"path": "spawn99/CornellMovieDialogCorpus", "local_path": "/mnt/e/data/datasets/general/spawn99_CornellMovieDialogCorpus", "desc": "Dataset: spawn99/CornellMovieDialogCorpus", "tags": ["general"]},
     "tatsu-lab_alpaca": {"path": "tatsu-lab/alpaca", "local_path": "/mnt/e/data/datasets/general/tatsu-lab_alpaca", "desc": "Dataset: tatsu-lab/alpaca", "tags": ["general"]},
     "tiger-lab_webinstructsub": {"path": "TIGER-Lab/WebInstructSub", "local_path": "/mnt/e/data/datasets/general/TIGER-Lab_WebInstructSub", "desc": "Dataset: TIGER-Lab/WebInstructSub", "tags": ["general"]},
     "vlm2vec_msr-vtt": {"path": "VLM2Vec/MSR-VTT", "local_path": "/mnt/e/data/datasets/general/VLM2Vec_MSR-VTT", "desc": "Dataset: VLM2Vec/MSR-VTT", "tags": ["general"]},
     "wizardlmteam_wizardlm_evol_instruct_70k": {"path": "WizardLMTeam/WizardLM_evol_instruct_70k", "local_path": "/mnt/e/data/datasets/general/WizardLMTeam_WizardLM_evol_instruct_70k", "desc": "Dataset: WizardLMTeam/WizardLM_evol_instruct_70k", "tags": ["general"]},
 
-    # --- MULTIMODAL (15) ---
+    # --- MULTIMODAL (16) ---
     "birgermoell_ravdess": {"path": "birgermoell/ravdess", "local_path": "/mnt/e/data/datasets/multimodal/birgermoell_ravdess", "desc": "Dataset: birgermoell/ravdess", "tags": ["multimodal"]},
     "casia-iva-lab_valor-32k-annotations": {"path": "CASIA-IVA-Lab/valor-32k-annotations", "local_path": "/mnt/e/data/datasets/multimodal/CASIA-IVA-Lab_valor-32k-annotations", "desc": "Dataset: CASIA-IVA-Lab/valor-32k-annotations", "tags": ["multimodal"]},
     "crema-d-1": {"path": "CREMA-D-1", "local_path": "/mnt/e/data/datasets/multimodal/CREMA-D-1.0", "desc": "Dataset: CREMA-D-1", "tags": ["multimodal"]},
@@ -229,6 +71,7 @@ DATASET_REGISTRY = {
     "google_musiccaps": {"path": "google/MusicCaps", "local_path": "/mnt/e/data/datasets/multimodal/google_MusicCaps", "desc": "Dataset: google/MusicCaps", "tags": ["multimodal"]},
     "google_speech_commands": {"path": "google/speech_commands", "local_path": "/mnt/e/data/datasets/multimodal/google_speech_commands", "desc": "Dataset: google/speech_commands", "tags": ["audio", "multimodal"]},
     "lucasfang_journeydb-got": {"path": "LucasFang/JourneyDB-GoT", "local_path": "/mnt/e/data/datasets/multimodal/LucasFang_JourneyDB-GoT", "desc": "Dataset: LucasFang/JourneyDB-GoT", "tags": ["multimodal"]},
+    "makki2104_difference_images_cloth-nude": {"path": "Makki2104/difference_images_Cloth-Nude", "local_path": "/mnt/e/data/datasets/uncensored/Makki2104_difference_images_Cloth-Nude", "desc": "Dataset: Makki2104/difference_images_Cloth-Nude", "tags": ["uncensored", "multimodal"]},
     "mozilla_common-voice": {"path": "Mozilla/Common-Voice", "local_path": "/mnt/e/data/datasets/multimodal/Mozilla_Common-Voice", "desc": "Dataset: Mozilla/Common-Voice", "tags": ["multimodal"]},
     "mvp-lab_llava-onevision-1": {"path": "mvp-lab/LLaVA-OneVision-1", "local_path": "/mnt/e/data/datasets/multimodal/mvp-lab_LLaVA-OneVision-1.5-RL-Data", "desc": "Dataset: mvp-lab/LLaVA-OneVision-1", "tags": ["multimodal"]},
     "nvidia_audioskills": {"path": "nvidia/AudioSkills", "local_path": "/mnt/e/data/datasets/multimodal/nvidia_AudioSkills", "desc": "Dataset: nvidia/AudioSkills", "tags": ["audio", "multimodal"]},
@@ -265,7 +108,7 @@ DATASET_REGISTRY = {
     # --- REMOTION (1) ---
     "remotion_explainer_dataset": {"path": "remotion/explainer_dataset", "local_path": "/mnt/e/data/datasets/remotion/remotion_explainer_dataset.jsonl", "desc": "Dataset: remotion/explainer_dataset", "tags": ["remotion"]},
 
-    # --- UNCENSORED (26) ---
+    # --- UNCENSORED (25) ---
     "arafatar_toxic_uncensored_lgbtq_csv": {"path": "arafatar/toxic_uncensored_LGBTQ_csv", "local_path": "/mnt/e/data/datasets/uncensored/arafatar_toxic_uncensored_LGBTQ_csv", "desc": "Dataset: arafatar/toxic_uncensored_LGBTQ_csv", "tags": ["uncensored"]},
     "arielace_nsfw-lora": {"path": "ArielACE/NSFW-Lora", "local_path": "/mnt/e/data/datasets/uncensored/ArielACE_NSFW-Lora", "desc": "Dataset: ArielACE/NSFW-Lora", "tags": ["uncensored"]},
     "chilanxsw___xr_uncensored____zhizhi_-_r18_xiurenwangmote_aichijituideguniang": {"path": "chilanxsw/__XR_Uncensored____zhizhi_-_R18_xiurenwangmote_aichijituideguniang", "local_path": "/mnt/e/data/datasets/uncensored/chilanxsw___XR_Uncensored____zhizhi_-_R18_xiurenwangmote_aichijituideguniang", "desc": "Dataset: chilanxsw/__XR_Uncensored____zhizhi_-_R18_xiurenwangmote_aichijituideguniang", "tags": ["uncensored"]},
@@ -276,7 +119,6 @@ DATASET_REGISTRY = {
     "jondurbin_airoboros-uncensored": {"path": "jondurbin/airoboros-uncensored", "local_path": "/mnt/e/data/datasets/uncensored/jondurbin_airoboros-uncensored", "desc": "Dataset: jondurbin/airoboros-uncensored", "tags": ["uncensored"]},
     "karanxa_llama2-uncensored-jailbreak-dataset-finetuning": {"path": "karanxa/llama2-uncensored-jailbreak-dataset-finetuning", "local_path": "/mnt/e/data/datasets/uncensored/karanxa_llama2-uncensored-jailbreak-dataset-finetuning", "desc": "Dataset: karanxa/llama2-uncensored-jailbreak-dataset-finetuning", "tags": ["uncensored"]},
     "ldjnr_pure-dove": {"path": "LDJnr/Pure-Dove", "local_path": "/mnt/e/data/datasets/uncensored/LDJnr_Pure-Dove", "desc": "Dataset: LDJnr/Pure-Dove", "tags": ["uncensored"]},
-    "makki2104_difference_images_cloth-nude": {"path": "Makki2104/difference_images_Cloth-Nude", "local_path": "/mnt/e/data/datasets/uncensored/Makki2104_difference_images_Cloth-Nude", "desc": "Dataset: Makki2104/difference_images_Cloth-Nude", "tags": ["uncensored", "multimodal"]},
     "meandyou200175_data_new_no_hentai": {"path": "meandyou200175/data_new_no_hentai", "local_path": "/mnt/e/data/datasets/uncensored/meandyou200175_data_new_no_hentai", "desc": "Dataset: meandyou200175/data_new_no_hentai", "tags": ["uncensored"]},
     "nitral-ai_reddit-nsfw-writing_prompts_sharegpt": {"path": "Nitral-AI/Reddit-NSFW-Writing_Prompts_ShareGPT", "local_path": "/mnt/e/data/datasets/uncensored/Nitral-AI_Reddit-NSFW-Writing_Prompts_ShareGPT", "desc": "Dataset: Nitral-AI/Reddit-NSFW-Writing_Prompts_ShareGPT", "tags": ["uncensored"]},
     "player1537_bloom-560m-trained-on-wizard-vicuna-uncensored": {"path": "player1537/Bloom-560m-trained-on-Wizard-Vicuna-Uncensored", "local_path": "/mnt/e/data/datasets/uncensored/player1537_Bloom-560m-trained-on-Wizard-Vicuna-Uncensored", "desc": "Dataset: player1537/Bloom-560m-trained-on-Wizard-Vicuna-Uncensored", "tags": ["uncensored"]},
@@ -292,4 +134,6 @@ DATASET_REGISTRY = {
     "wenaka_uncensored_anime": {"path": "Wenaka/uncensored_anime", "local_path": "/mnt/e/data/datasets/uncensored/Wenaka_uncensored_anime", "desc": "Dataset: Wenaka/uncensored_anime", "tags": ["uncensored"]},
     "wizardlm-7b-uncensored": {"path": "WizardLM-7B-Uncensored", "local_path": "/mnt/e/data/datasets/uncensored/WizardLM-7B-Uncensored", "desc": "Dataset: WizardLM-7B-Uncensored", "tags": ["uncensored"]},
     "zxbsmk_nsfw-t2i": {"path": "zxbsmk/NSFW-T2I", "local_path": "/mnt/e/data/datasets/uncensored/zxbsmk_NSFW-T2I", "desc": "Dataset: zxbsmk/NSFW-T2I", "tags": ["uncensored"]},
+
+    # --- BENCHMARKS (12) ---
 }

@@ -21,57 +21,44 @@ class ActivationAnchoringLoss(nn.Module):
                 student_logits, teacher_logits, 
                 student_states, teacher_states, 
                 anchoring_layer_indices=None):
+        """
+        Calculates the multi-objective distillation loss.
+        student_states: (Batch, Seq, Dim) - Current student representation
+        teacher_states: (Batch, NumLayers, Seq, Dim) - Full teacher activation stack
+        anchoring_layer_indices: List[int] - Indices of critical layers to anchor against
+        """
         
         # 1. KL/CE Divergence (Output Distillation)
+        # Use log_softmax for student (log-probs) and softmax for teacher (probs)
         loss_ce = F.kl_div(
             F.log_softmax(student_logits, dim=-1),
-            F.softmax(teacher_logits, dim=-1),
+            F.softmax(teacher_logits / 2.0, dim=-1), # Temperature 2.0 for softer targets
             reduction='batchmean'
-        ) * self.alpha_ce
+        ) * (self.alpha_ce * 4.0) # Scale by T^2
         
         # 2. Hidden State Matching (The 'Bridge')
-        # Student projects 4096 -> Teacher Dim? Or Teacher projects to Student 4096?
-        # NIWT 'Assignment-Guided Dimension Reduction' says we align to Student space.
-        # Assume inputs are already projected to same dim.
-        loss_hidden = F.mse_loss(student_states, teacher_states) * self.alpha_hidden
+        # We assume student_states and teacher_states (if single layer) are aligned.
+        # If teacher_states is multi-layer, we use the mean of the selected layers as the target.
+        if teacher_states.dim() == 4: # [Batch, Layers, Seq, Dim]
+            if anchoring_layer_indices is not None:
+                target_states = teacher_states[:, anchoring_layer_indices, :, :].mean(dim=1)
+            else:
+                target_states = teacher_states.mean(dim=1)
+        else:
+            target_states = teacher_states
+
+        loss_hidden = F.mse_loss(student_states, target_states) * self.alpha_hidden
         
-        # 3. ACTIVATION ANCHORING (The Innovation)
+        # 3. ACTIVATION ANCHORING (Surgical Precision)
         loss_surgical = 0.0
-        if anchoring_layer_indices is not None and len(anchoring_layer_indices) > 0:
-            # anchoring_layer_indices: List[int] or Tensor of active layer indices
-            # teacher_states: Tensor (Batch, NumLayers, Seq, Dim) OR (NumLayers, Batch, Seq, Dim)
-            # We assume (Batch, NumLayers, ...) for standard pipelining
+        if anchoring_layer_indices is not None and len(anchoring_layer_indices) > 0 and teacher_states.dim() == 4:
+            # We enforce that the student CORE representation doesn't drift from 
+            # the specific "soul" layers of the teacher.
+            for idx in anchoring_layer_indices:
+                layer_target = teacher_states[:, idx, :, :]
+                loss_surgical += F.mse_loss(student_states, layer_target)
             
-            # For each critical layer, we extract the corresponding state and add penalty
-            # if the student's *projection* for that layer drifts.
-            # However, `student_states` is typically the *output* state (final).
-            # If we want detailed surgery, we need student to output a stack too. 
-            # Assuming here that `student_states` corresponds to the mapped latent of the specific layer
-            # OR that we are comparing the 'Bridge' representation.
-            
-            # Simplified Logic: We penalize the distance between the Student's "Bridge State"
-            # and the *subset* of Teacher states marked as critical, averaged.
-            # This forces the Student Bridge to align with the "Reasoning Center" of the teacher.
-            
-            # Identify which dimension represents layers
-            # Heuristic: teacher_states.shape[1] == num_layers logic
-            # Let's assume teacher_states is [Batch, Layers, Seq, Dim]
-            
-            try:
-                # Select critical layers: (Batch, n_crit, Seq, Dim)
-                crit_states = teacher_states[:, anchoring_layer_indices, :, :]
-                
-                # Average them to get the "Critical Center"
-                target_center = crit_states.mean(dim=1) # (Batch, Seq, Dim)
-                
-                # Penalize Student Deviation from this center
-                # This aligns the Student Core with the aggregate "Reasoning Hub"
-                loss_surgical = F.mse_loss(student_states, target_center) * self.alpha_critical
-                
-            except Exception as e:
-                # Fallback if shapes don't match (e.g. standard distillation pass)
-                print(f"[Warn] Activation Anchoring Loss skipped due to shape mismatch: {e}")
-                loss_surgical = 0.0 
+            loss_surgical = (loss_surgical / len(anchoring_layer_indices)) * self.alpha_critical
         
         return loss_ce + loss_hidden + loss_surgical
 

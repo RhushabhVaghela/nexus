@@ -1,204 +1,217 @@
-# Nexus Prime: Dataset Configuration
-# All real data sources for 17 generators
-# 100% Real Data - No Synthetic
+# Nexus Dataset Configuration
+# Source of Truth: src/nexus_core/towers/registry.py (DATASET_REGISTRY)
 
 # ═══════════════════════════════════════════════════════════════
-# STORAGE CONFIGURATION
+# REASONING DATASETS
 # ═══════════════════════════════════════════════════════════════
-
-storage:
-  base_dir: "/mnt/e/data"
-  budget_gb: 500
-
-# ═══════════════════════════════════════════════════════════════
-# PRIORITY 0: PRE-DISTILLED KNOWLEDGE (~20GB)
-# These contain concentrated knowledge from massive corpuses
-# ═══════════════════════════════════════════════════════════════
-
-predistilled:
-  - name: "Magicoder-OSS-Instruct"
-    source: "ise-uiuc/Magicoder-OSS-Instruct-75K"
-    type: huggingface
-    size_gb: 3
-    description: "The Stack (6TB) → 75K code instructions"
-    output_dir: "predistilled/magicoder-oss"
-    
-  - name: "Magicoder-Evol-Instruct"
-    source: "ise-uiuc/Magicoder-Evol-Instruct-110K"
-    type: huggingface
-    size_gb: 2
-    description: "Evolved code instructions"
-    output_dir: "predistilled/magicoder-evol"
-    
-  - name: "OpenMathInstruct"
-    source: "nvidia/OpenMathInstruct-1"
-    type: huggingface
-    size_gb: 5
-    description: "MATH/GSM8K → 1M samples"
-    output_dir: "predistilled/openmath"
-    
-  - name: "SlimOrca"
-    source: "Open-Orca/SlimOrca"
-    type: huggingface
-    size_gb: 5
-    description: "GPT-4 reasoning chains"
-    output_dir: "predistilled/slimorca"
-    
-  - name: "Dolphin"
-    source: "cognitivecomputations/dolphin"
-    type: huggingface
-    size_gb: 5
-    description: "Multi-domain instructions"
-    output_dir: "predistilled/dolphin"
-
-# ═══════════════════════════════════════════════════════════════
-# PRIORITY 1: CODE INSTRUCTION DATASETS (~40GB)
-# ═══════════════════════════════════════════════════════════════
-
-code:
-  - name: "Code-Feedback"
-    source: "m-a-p/Code-Feedback"
-    type: huggingface
-    size_gb: 15
-    output_dir: "code/code-feedback"
-    
-  - name: "CodeAlpaca"
-    source: "sahil2801/CodeAlpaca-20k"
-    type: huggingface
-    size_gb: 1
-    output_dir: "code/code-alpaca"
-    
-  - name: "Glaive-Code-Assistant"
-    source: "glaiveai/glaive-code-assistant-v2"
-    type: huggingface
-    size_gb: 10
-    output_dir: "code/glaive"
-    
-  - name: "CommitPackFT-Filtered"
-    source: "bigcode/commitpackft"
-    type: huggingface
-    size_gb: 5
-    filter:
-      languages: ["Python", "JavaScript", "TypeScript", "CSS"]
-    output_dir: "code/commitpack"
+reasoning_datasets:
+  - name: "AI4Math/IneqMath"
+    path: "/mnt/e/data/datasets/reasoning/AI4Math_IneqMath"
+    tags: ["math", "reasoning"]
+  - name: "AI4Math/MathVerse"
+    path: "/mnt/e/data/datasets/reasoning/AI4Math_MathVerse"
+    tags: ["math", "reasoning"]
+  - name: "AI4Math/MathVista"
+    path: "/mnt/e/data/datasets/reasoning/AI4Math_MathVista"
+    tags: ["math", "reasoning"]
+  - name: "Alibaba/ApsaraSuperior-Reasoning-SFT-gpt-oss-120b"
+    path: "/mnt/e/data/datasets/reasoning/Alibaba_ApsaraSuperior-Reasoning-SFT-gpt-oss-120b"
+    tags: ["reasoning"]
+  - name: "cais/mmlu"
+    path: "/mnt/e/data/datasets/reasoning/cais_mmlu"
+    tags: ["reasoning"]
+  - name: "kaist-ai/CoT-Collection"
+    path: "/mnt/e/data/datasets/reasoning/kaist-ai_CoT-Collection"
+    tags: ["reasoning"]
+  - name: "openai/gsm8k"
+    path: "/mnt/e/data/datasets/reasoning/openai_gsm8k"
+    tags: ["reasoning"]
+  - name: "O1-OPEN/OpenO1-SFT-Pro"
+    path: "/mnt/e/data/datasets/reasoning/O1-OPEN_OpenO1-SFT-Pro"
+    tags: ["reasoning"]
+  - name: "O1-OPEN/OpenO1-SFT-Ultra"
+    path: "/mnt/e/data/datasets/reasoning/O1-OPEN_OpenO1-SFT-Ultra"
+    tags: ["reasoning"]
+  - name: "TeichAI/claude-4.5-opus-high-reasoning-250x"
+    path: "/mnt/e/data/datasets/reasoning/TeichAI_claude-4.5-opus-high-reasoning-250x"
+    tags: ["reasoning"]
+  - name: "TeichAI/claude-haiku-4.5-1700x"
+    path: "/mnt/e/data/datasets/reasoning/TeichAI_claude-haiku-4.5-1700x"
+    tags: ["reasoning"]
+  - name: "TeichAI/claude-haiku-4.5-high-reasoning-1700x"
+    path: "/mnt/e/data/datasets/reasoning/TeichAI_claude-haiku-4.5-high-reasoning-1700x"
+    tags: ["reasoning"]
+  - name: "TeichAI/claude-sonnet-4.5-high-reasoning-250x"
+    path: "/mnt/e/data/datasets/reasoning/TeichAI_claude-sonnet-4.5-high-reasoning-250x"
+    tags: ["reasoning"]
+  - name: "TeichAI/gpt-5.1-codex-max-1000x"
+    path: "/mnt/e/data/datasets/reasoning/TeichAI_gpt-5.1-codex-max-1000x"
+    tags: ["reasoning"]
+  - name: "TeichAI/gpt-5.1-high-reasoning-1000x"
+    path: "/mnt/e/data/datasets/reasoning/TeichAI_gpt-5.1-high-reasoning-1000x"
+    tags: ["reasoning"]
+  - name: "TeichAI/deepseek-v3.2-speciale-1000x"
+    path: "/mnt/e/data/datasets/reasoning/TeichAI_deepseek-v3.2-speciale-1000x"
+    tags: ["reasoning"]
+  - name: "TeichAI/glm-4.7-2000x"
+    path: "/mnt/e/data/datasets/reasoning/TeichAI_glm-4.7-2000x"
+    tags: ["reasoning"]
 
 # ═══════════════════════════════════════════════════════════════
-# PRIORITY 2: DOMAIN-SPECIFIC REPOSITORIES
+# CODE DATASETS
 # ═══════════════════════════════════════════════════════════════
-
-domains:
-  # API Design
-  - name: "OpenAPI-Directory"
-    source: "https://github.com/APIs-guru/openapi-directory"
-    type: github
-    output_dir: "domain/openapi"
-    
-  # Mobile
-  - name: "Flutter-Samples"
-    source: "https://github.com/flutter/samples"
-    type: github
-    output_dir: "domain/flutter"
-    
-  - name: "Android-Architecture"
-    source: "https://github.com/android/architecture-samples"
-    type: github
-    output_dir: "domain/android-arch"
-    
-  # DevOps
-  - name: "Awesome-Compose"
-    source: "https://github.com/docker/awesome-compose"
-    type: github
-    output_dir: "domain/docker-compose"
-    
-  # Platform Engineering
-  - name: "Backstage"
-    source: "https://github.com/backstage/backstage"
-    type: github
-    output_dir: "domain/backstage"
-    
-  # Data Engineering
-  - name: "Airflow-Examples"
-    source: "https://github.com/astronomer/airflow-quickstart"
-    type: github
-    output_dir: "domain/airflow"
-    
-  # Observability
-  - name: "OpenTelemetry-Demo"
-    source: "https://github.com/open-telemetry/opentelemetry-demo"
-    type: github
-    output_dir: "domain/otel"
-    
-  - name: "Grafana"
-    source: "https://github.com/grafana/grafana"
-    type: github
-    output_dir: "domain/grafana"
-    
-  # MLOps
-  - name: "MLflow"
-    source: "https://github.com/mlflow/mlflow"
-    type: github
-    output_dir: "domain/mlflow"
-    
-  # Security
-  - name: "OWASP-CheatSheet"
-    source: "https://github.com/OWASP/CheatSheetSeries"
-    type: github
-    output_dir: "domain/owasp"
-    
-  # Edge/WASM
-  - name: "Cloudflare-Workers"
-    source: "https://github.com/cloudflare/workers-sdk"
-    type: github
-    output_dir: "domain/cloudflare-workers"
-    
-  # Low-Code
-  - name: "n8n"
-    source: "https://github.com/n8n-io/n8n"
-    type: github
-    output_dir: "domain/n8n"
+code_datasets:
+  - name: "bigcode/commitpackft"
+    path: "/mnt/e/data/datasets/code/bigcode_commitpackft"
+    tags: ["code"]
+  - name: "bigcode/the-stack-smol"
+    path: "/mnt/e/data/datasets/code/bigcode_the-stack-smol"
+    tags: ["code"]
+  - name: "ethanker/agentic_coding_dataset"
+    path: "/mnt/e/data/datasets/code/ethanker_agentic_coding_dataset"
+    tags: ["code"]
+  - name: "fullstack/_stargate_s04e01_100topkdiverse_text2vid"
+    path: "/mnt/e/data/datasets/code/fullstack__stargate_s04e01_100topkdiverse_text2vid"
+    tags: ["code"]
+  - name: "imoore/60k-stack-overflow-questions-with-quality-rateing"
+    path: "/mnt/e/data/datasets/code/imoore_60k-stack-overflow-questions-with-quality-rateing"
+    tags: ["code"]
+  - name: "pacovaldez/stackoverflow-questions"
+    path: "/mnt/e/data/datasets/code/pacovaldez_stackoverflow-questions"
+    tags: ["code"]
+  - name: "samiyasamiya/codegenrate3"
+    path: "/mnt/e/data/datasets/code/samiyasamiya_codegenrate3"
+    tags: ["code"]
 
 # ═══════════════════════════════════════════════════════════════
-# PRIORITY 3: BENCHMARKS
+# GENERAL & INSTRUCTION TUNING
 # ═══════════════════════════════════════════════════════════════
-
-benchmarks:
-  - name: "HumanEval"
-    source: "openai_humaneval"
-    type: huggingface
-    output_dir: "benchmarks/humaneval"
-    
-  - name: "MBPP"
-    source: "mbpp"
-    type: huggingface
-    output_dir: "benchmarks/mbpp"
-    
-  - name: "GSM8K"
-    source: "gsm8k"
-    type: huggingface
-    output_dir: "benchmarks/gsm8k"
-    
-  - name: "MMLU"
-    source: "cais/mmlu"
-    type: huggingface
-    output_dir: "benchmarks/mmlu"
+general_datasets:
+  - name: "allenai/ai2_arc"
+    path: "/mnt/e/data/datasets/general/allenai_ai2_arc"
+    tags: ["general"]
+  - name: "blitt/SPoRC"
+    path: "/mnt/e/data/datasets/general/blitt_SPoRC"
+    tags: ["general"]
+  - name: "google/deepsearchqa"
+    path: "/mnt/e/data/datasets/general/google_deepsearchqa"
+    tags: ["general"]
+  - name: "google/smol"
+    path: "/mnt/e/data/datasets/general/google_smol"
+    tags: ["general"]
+  - name: "InnerI/Diverse-Nous-Hermes-Llama2-7b"
+    path: "/mnt/e/data/datasets/general/InnerI_Diverse-Nous-Hermes-Llama2-7b"
+    tags: ["general"]
+  - name: "IVLLab/MultiDialog"
+    path: "/mnt/e/data/datasets/general/IVLLab_MultiDialog"
+    tags: ["general"]
+  - name: "mrm8488/WebSight_70k"
+    path: "/mnt/e/data/datasets/general/mrm8488_WebSight_70k"
+    tags: ["general"]
+  - name: "nlpdata/dialogre"
+    path: "/mnt/e/data/datasets/general/nlpdata_dialogre"
+    tags: ["general"]
+  - name: "nvidia/HelpSteer2"
+    path: "/mnt/e/data/datasets/general/nvidia_HelpSteer2"
+    tags: ["general"]
+  - name: "openbmb/UltraFeedback"
+    path: "/mnt/e/data/datasets/general/openbmb_UltraFeedback"
+    tags: ["general"]
+  - name: "sojuL/RubricHub_v1"
+    path: "/mnt/e/data/datasets/general/sojuL_RubricHub_v1"
+    tags: ["general"]
+  - name: "spawn99/CornellMovieDialogCorpus"
+    path: "/mnt/e/data/datasets/general/spawn99_CornellMovieDialogCorpus"
+    tags: ["general"]
+  - name: "tatsu-lab/alpaca"
+    path: "/mnt/e/data/datasets/general/tatsu-lab_alpaca"
+    tags: ["general"]
 
 # ═══════════════════════════════════════════════════════════════
-# PROCESSING CONFIGURATION
+# TOOLS & FUNCTION CALLING
 # ═══════════════════════════════════════════════════════════════
+tool_datasets:
+  - name: "argilla/apigen-function-calling"
+    path: "/mnt/e/data/datasets/tools/argilla_apigen-function-calling"
+    tags: ["tools"]
+  - name: "dipta007/APIGen-MT-5k-with-think"
+    path: "/mnt/e/data/datasets/tools/dipta007_APIGen-MT-5k-with-think"
+    tags: ["tools"]
+  - name: "gorilla-llm/gorilla-openfunctions-v2"
+    path: "/mnt/e/data/datasets/tools/gorilla-llm_gorilla-openfunctions-v2"
+    tags: ["tools"]
+  - name: "hiyouga/glaive-function-calling-v2-sharegpt"
+    path: "/mnt/e/data/datasets/tools/hiyouga_glaive-function-calling-v2-sharegpt"
+    tags: ["tools"]
+  - name: "minpeter/xlam-function-calling-60k-parsed"
+    path: "/mnt/e/data/datasets/tools/minpeter_xlam-function-calling-60k-parsed"
+    tags: ["tools"]
+  - name: "NousResearch/hermes-function-calling-v1"
+    path: "/mnt/e/data/datasets/tools/NousResearch_hermes-function-calling-v1"
+    tags: ["tools"]
+  - name: "osunlp/Multimodal-Mind2Web"
+    path: "/mnt/e/data/datasets/tools/osunlp_Multimodal-Mind2Web"
+    tags: ["tools"]
+  - name: "Salesforce/APIGen-MT-5k"
+    path: "/mnt/e/data/datasets/tools/Salesforce_APIGen-MT-5k"
+    tags: ["tools"]
+  - name: "webarena-verified-main"
+    path: "/mnt/e/data/datasets/tools/webarena-verified-main"
+    tags: ["tools"]
+  - name: "zai-org/AgentInstruct"
+    path: "/mnt/e/data/datasets/tools/zai-org_AgentInstruct"
+    tags: ["tools"]
 
-processing:
-  # Sequential processing of datasets, multicore within each
-  mode: "sequential"
-  workers_per_dataset: 4
-  
-  # Output format
-  format: "messages"  # OpenAI-compatible
-  
-  # Splits
-  train_ratio: 0.95
-  val_ratio: 0.025
-  test_ratio: 0.025
-  
-  # Deduplication
-  deduplicate: true
-  hash_algorithm: "md5"
+# ═══════════════════════════════════════════════════════════════
+# LONG CONTEXT
+# ═══════════════════════════════════════════════════════════════
+long_context_datasets:
+  - name: "L4NLP/LEval"
+    path: "/mnt/e/data/datasets/long_context/L4NLP_LEval"
+    tags: ["long_context"]
+  - name: "Pageshift/Entertainment_LongPage"
+    path: "/mnt/e/data/datasets/long_context/Pageshift_Entertainment_LongPage"
+    tags: ["long_context"]
+  - name: "zai-org/LongBench"
+    path: "/mnt/e/data/datasets/long_context/zai-org_LongBench"
+    tags: ["long_context"]
+  - name: "zai-org/LongBench-v2"
+    path: "/mnt/e/data/datasets/long_context/zai-org_LongBench-v2"
+    tags: ["long_context"]
+
+# ═══════════════════════════════════════════════════════════════
+# REMOTION
+# ═══════════════════════════════════════════════════════════════
+remotion_datasets:
+  - name: "remotion/explainer_dataset"
+    path: "/mnt/e/data/datasets/remotion/remotion_explainer_dataset.jsonl"
+    tags: ["remotion"]
+
+# ═══════════════════════════════════════════════════════════════
+# UNCENSORED
+# ═══════════════════════════════════════════════════════════════
+uncensored_datasets:
+  - name: "arafatar/toxic_uncensored_LGBTQ_csv"
+    path: "/mnt/e/data/datasets/uncensored/arafatar_toxic_uncensored_LGBTQ_csv"
+    tags: ["uncensored"]
+  - name: "ArielACE/NSFW-Lora"
+    path: "/mnt/e/data/datasets/uncensored/ArielACE_NSFW-Lora"
+    tags: ["uncensored"]
+  - name: "HuggingFaceH4/no_robots"
+    path: "/mnt/e/data/datasets/uncensored/HuggingFaceH4_no_robots"
+    tags: ["uncensored"]
+  - name: "LDJnr/Pure-Dove"
+    path: "/mnt/e/data/datasets/uncensored/LDJnr_Pure-Dove"
+    tags: ["uncensored"]
+  - name: "Makki2104/difference_images_Cloth-Nude"
+    path: "/mnt/e/data/datasets/uncensored/Makki2104_difference_images_Cloth-Nude"
+    tags: ["uncensored", "multimodal"]
+  - name: "SkillFi/inpaint-data"
+    path: "/mnt/e/data/datasets/uncensored/SkillFi_inpaint-data"
+    tags: ["uncensored"]
+  - name: "Wenaka/uncensored_anime"
+    path: "/mnt/e/data/datasets/uncensored/Wenaka_uncensored_anime"
+    tags: ["uncensored"]
+  - name: "WizardLM-7B-Uncensored"
+    path: "/mnt/e/data/datasets/uncensored/WizardLM-7B-Uncensored"
+    tags: ["uncensored"]

@@ -9,7 +9,9 @@
 ---
 
 ## 🏆 Capability Tier Declaration
+
 Nexus provides a tier-based capability manifest so consumers can understand the fidelity and resource requirements:
+
 - **Tier 1 (Core):** General Language, Reasoning, Base NLP. (Optimized for <8GB VRAM, Teacher-Free)
 - **Tier 2 (Pro):** Code, Tool-Use, Agent Planning. (Optimized for <12GB VRAM, Rank 512, Teacher-Free)
 - **Tier 3 (Ultra):** Voice Cloning, Vision QA, Video. (Optimized for 16GB VRAM, Rank 1024, Teacher-Free)
@@ -18,66 +20,70 @@ Nexus provides a tier-based capability manifest so consumers can understand the 
 
 ## 🚀 Key Features
 
-*   **Universal Perception**: Native understanding of Text, Images, Audio (Speech/Music), and Video.
-*   **Modular Architecture**: Hot-swappable **Adapters** allow you to load only the capabilities you need (e.g., enable `VisionAdapter` for image tasks).
-*   **15-Teacher Distillation**: Knowledge from industry leaders (Gemini, Qwen, Stable Diffusion, Whisper) fused into one.
-*   **Efficient Inference**: Optimized for consumer hardware (RTX 3090/4090/5080) with NF4 quantization.
+- **Universal Perception**: Native understanding of Text, Images, Audio (Speech/Music), and Video.
+- **Sequential Layer Ingestion (SLI)**: The "Librarian" component allows ingesting knowledge from **Massive Models (100B - 1T+ parameters)** on consumer GPUs by streaming layers sequentially.
+- **Automated Distillation**: A self-driving pipeline (`nexus_pipeline.py`) that profiles, extracts, and distills knowledge from any teacher in the registry.
+- **Modular Architecture**: Hot-swappable **Adapters** allow you to load only the capabilities you need.
+- **Constraint-Aware**: Optimized for consumer hardware (RTX 5080 Laptop, 16GB VRAM) via NIWT Profiling and FlashAttention.
 
 ---
 
-## 📦 Installation
+## 📦 Installation & Usage
+
+### 1. Development Implementation
+
+Nexus is currently a research codebase. To run the automated pipeline:
 
 ```bash
-pip install nexus-ai
+# 1. Activate Environment
+conda activate nexus
+
+# 2. Run the Self-Driving Pipeline
+./run_nexus_master.sh [OPTIONS]
 ```
 
-## ⚡ Quick Start
+### 2. Available Options
 
-```python
-import nexus
+| Option | Description |
+| :--- | :--- |
+| `--reset` | FULL RESET: Clear state, previous results, and checkpoints. |
+| `--models <ID1,ID2>` | Filter to specific teacher models (e.g. `google_smol`) or `all`. |
+| `--datasets <NAME>` | Filter datasets (e.g. `cais_mmlu`, `multimodal`), `all` (108 datasets), or specific tags. |
+| `--stage <NAME>` | Run only a specific stage (profiling, extraction, training). |
+| `--dry-run` | Simulate execution and verify pathing without compute. |
+| `--skip-non-llm` | Skip audio/vision/multimodal teacher models. |
 
-# Load the student with specific adapters
-model = nexus.load(
-    "nexus-student-v1",
-    adapters=["vision", "reasoning", "audio"]
-)
+The pipeline will automatically:
 
-# Multi-modal input (Text + Image)
-response = model.generate(
-    input="Analyze this dashboard and explain the trend.",
-    image="dashboard.png",
-    audio=None
-)
-
-print(response)
-# Output: "The dashboard shows a 15% increase in user retention..."
-```
+1. **Read Registry**: Import from `src.nexus_core.towers.registry`.
+2. **Profile Teachers (NIWT)**: Analyze activation patterns.
+3. **Extract Knowledge**:
+    - **Smart Download**: Automatically fetches missing datasets from Hugging Face.
+    - **SLI (Massive)**: Uses "Sequential Layer Ingestion" for datasets >15GB.
+4. **Train Student**: Perform multi-objective distillation with Activation Anchoring.
+5. **Train Router**: Optimize the Sparse Intent Router.
 
 ---
 
-## 🧠 The Ecosystem (Teacher Models)
+## 🧠 The Ecosystem (Teacher Registry)
 
-Nexus is trained on the distilled knowledge of these 14 specialized models:
+Nexus is trained on the distilled knowledge of specialized models defined in `src.nexus_core.towers.registry`:
 
-| Category | Teacher Model | Capability |
-| :--- | :--- | :--- |
-| **Reasoning & Agents** | AgentCPM-Explore | Long-horizon Planning |
-| **Language** | Gemma Scope 27B / GLM-4.7 Flash | General NLP & Coding |
-| **Vision-Language** | Step3-VL-10B | Visual QA & Reasoning |
-| **Audio (ASR)** | VibeVoice-ASR / Parakeet | Long-form & Multilingual Speech-to-Text |
-| **Audio (Gen)** | Personaplex / Qwen3-TTS | Conversational Voice & cloning |
-| **Visual Gen** | Stable Diffusion 3 / SVD | Image & Video Generation |
-| **Encoders** | SigLIP / VideoMAE | Dense Visual Understanding |
+| **Logic & Reasoning** | Massive Reasoner (e.g. DeepSeek-70B) | Deep Reasoning capabilities | **SLI (Sequential)** |
+| **Agentic** | Agent-Specialists | Long-horizon Planning | Standard |
+| **Vision** | Visual-Transformers | Visual QA & Reasoning | Standard |
+| **Audio** | Audio-Encoders | Speech Understanding | Standard |
 
 ---
 
 ## 🔧 Architecture
 
-Nexus uses a **Sparse Intent Router** to dynamically activate the relevant sub-modules (Adapters) based on the input query. This ensures that you only pay the compute cost for the modalities you use.
+Nexus uses a **Sparse Intent Router** to dynamically activate the relevant sub-modules (Adapters) based on the input query.
 
-*   **Core**: 4B Parameter Transformer (Student)
-*   **Router**: Lightweight MLP for intent classification
-*   **Adapters**: Specialized LoRA-based modules for each modality
+- **Student Core**: 8B Parameter Transformer (Llama-3 based) utilizing FlashAttention.
+- **The Librarian**: SSD-backed Vector Memory for infinite context lookup during training.
+- **NIWT Profiler**: Neural Information-Weighted Tower for identifying critical teacher circuits.
+- **Router**: Lightweight MLP for intent classification (Entropy-Regularized).
 
 ## 📜 License
 

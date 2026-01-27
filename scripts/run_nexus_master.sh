@@ -44,10 +44,7 @@ log_step() { echo -e "\n${PURPLE}═══════════════�
 # ============ CONFIGURATION ============
 RESET_STATE=false
 DRY_RUN=false
-SKIP_NON_LLM=false
 TARGET_STAGE=""
-SELECTED_MODELS="all"
-SELECTED_DATASETS=""
 
 # ============ HELP ============
 print_usage() {
@@ -57,9 +54,6 @@ print_usage() {
     echo "  --reset             Delete saved pipeline state and start fresh."
     echo "  --stage <NAME>      Run only specific stage (profiling, knowledge_extraction, training, router_training)"
     echo "  --dry-run           Simulate execution without running heavy compute."
-    echo "  --skip-non-llm      Skip profiling of non-LLM models."
-    echo "  --models <NAMES>    Comma-separated list of teacher models or 'all' (default: all)"
-    echo "  --datasets <NAMES>  Comma-separated list of datasets (e.g. 'code/stack-smol') or 'all'"
     echo "  --help              Show this help message."
     echo ""
     exit 0
@@ -70,10 +64,7 @@ while [[ "$#" -gt 0 ]]; do
     case $1 in
         --reset) RESET_STATE=true ;;
         --dry-run) DRY_RUN=true ;;
-        --skip-non-llm) SKIP_NON_LLM=true ;;
         --stage) TARGET_STAGE="$2"; shift ;;
-        --models) SELECTED_MODELS="$2"; shift ;;
-        --datasets) SELECTED_DATASETS="$2"; shift ;;
         --help|-h) print_usage ;;
         *) log_error "Unknown parameter: $1"; print_usage ;;
     esac
@@ -83,7 +74,7 @@ done
 # ============ HEADER ============
 echo ""
 echo -e "${CYAN}╔═══════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${CYAN}║              NEXUS SELF-DRIVING PIPELINE v6.1                 ║${NC}"
+echo -e "${CYAN}║              NEXUS SELF-DRIVING PIPELINE v6.0                 ║${NC}"
 echo -e "${CYAN}╚═══════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "  Environment: ${GREEN}${CONDA_DEFAULT_ENV}${NC}"
@@ -97,27 +88,24 @@ echo ""
 log_info "Performing system health check..."
 
 # 1. Check Python Dependencies
-python -c "import torch; import faiss; import transformers; import huggingface_hub" 2>/dev/null
+python -c "import torch; import faiss; import transformers" 2>/dev/null
 if [ $? -ne 0 ]; then
-    log_error "Critical dependencies missing (torch, faiss, transformers, huggingface_hub)."
+    log_error "Critical dependencies missing (torch, faiss, transformers)."
     exit 1
 fi
 log_success "Dependencies Verified."
 
-# 2. Check Registry Import
-python -c "from src.nexus_core.towers.registry import TEACHER_REGISTRY, DATASET_REGISTRY; print(f'Loaded {len(TEACHER_REGISTRY)} models, {len(DATASET_REGISTRY)} datasets')" 2>/dev/null
-if [ $? -ne 0 ]; then
-    log_warn "Could not import Python Registry. Pipeline might fallback to empty defaults."
+# 2. Check Registry
+REGISTRY_FILE="src/nexus_final/registry.json"
+if [ ! -f "$REGISTRY_FILE" ]; then
+    log_warn "Registry not found at $REGISTRY_FILE. Pipeline may fail."
 else
-    log_success "Python Registry Verified."
+    TEACHER_COUNT=$(grep -c "teacher_id" "$REGISTRY_FILE" || true)
+    log_success "Registry Loaded ($TEACHER_COUNT teachers found)."
 fi
 
 # ============ EXECUTION ============
 export PYTHONPATH=$PYTHONPATH:$(pwd)/src
-
-if $RESET_STATE; then
-    log_warn "Reset flag detected. Pipeline will clear previous artifacts in scripts/nexus_pipeline.py."
-fi
 
 CMD="python scripts/nexus_pipeline.py"
 
@@ -129,20 +117,8 @@ if $DRY_RUN; then
     CMD="$CMD --dry-run"
 fi
 
-if $SKIP_NON_LLM; then
-    CMD="$CMD --skip-non-llm"
-fi
-
 if [ -n "$TARGET_STAGE" ]; then
     CMD="$CMD --stage $TARGET_STAGE"
-fi
-
-if [ -n "$SELECTED_DATASETS" ]; then
-    CMD="$CMD --datasets '$SELECTED_DATASETS'"
-fi
-
-if [ "$SELECTED_MODELS" != "all" ]; then
-    CMD="$CMD --models '$SELECTED_MODELS'"
 fi
 
 log_step "Handing control to Python Orchestrator"
@@ -150,7 +126,7 @@ echo -e "${YELLOW}> Executing: $CMD${NC}"
 echo ""
 
 # Execute
-eval $CMD
+$CMD
 
 if [ $? -eq 0 ]; then
     echo ""

@@ -1,7 +1,9 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+
 from transformers import PreTrainedModel, PretrainedConfig
-from typing import Optional, Tuple, List, Dict
+from typing import Optional, Tuple, List, Dict, Any
 
 class NexusStudentConfig(PretrainedConfig):
     model_type = "nexus_student"
@@ -74,8 +76,14 @@ class NexusCrossAttention(nn.Module):
 class NexusDecoderLayer(nn.Module):
     def __init__(self, config: NexusStudentConfig):
         super().__init__()
-        # Self Attention (Causal)
-        self.self_attn = nn.MultiheadAttention(config.hidden_size, config.num_attention_heads, batch_first=True)
+        # Self Attention (FlashAttention Ready)
+        self.num_heads = config.num_attention_heads
+        self.head_dim = config.hidden_size // self.num_heads
+        
+        self.q_proj = nn.Linear(config.hidden_size, config.hidden_size, bias=False)
+        self.k_proj = nn.Linear(config.hidden_size, config.hidden_size, bias=False)
+        self.v_proj = nn.Linear(config.hidden_size, config.hidden_size, bias=False)
+        self.o_proj = nn.Linear(config.hidden_size, config.hidden_size, bias=False)
         
         # MLP
         self.mlp = nn.Sequential(
@@ -97,15 +105,33 @@ class NexusDecoderLayer(nn.Module):
         self.cross_attn_layernorm = nn.RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 
     def forward(self, hidden_states, adapter_states=None, attention_mask=None):
-        # 1. Self Attention
+        # 1. Self Attention (FlashAttention via SDPA)
         residual = hidden_states
         hidden_states = self.input_layernorm(hidden_states)
         
-        # Note: nn.MultiheadAttention handles causal masking if attn_mask is provided correctly, 
-        # but for simplicity in this implementation we rely on the caller passing the causal mask 
-        # or we assume inference mode. For rigorous training, we'd use FlashAttention.
-        attn_out, _ = self.self_attn(hidden_states, hidden_states, hidden_states, attn_mask=attention_mask)
-        hidden_states = residual + attn_out
+        bsz, q_len, _ = hidden_states.size()
+        
+        # Project QKV
+        query_states = self.q_proj(hidden_states).view(bsz, q_len, self.num_heads, self.head_dim).transpose(1, 2)
+        key_states = self.k_proj(hidden_states).view(bsz, q_len, self.num_heads, self.head_dim).transpose(1, 2)
+        value_states = self.v_proj(hidden_states).view(bsz, q_len, self.num_heads, self.head_dim).transpose(1, 2)
+        
+        # FlashAttention (handles heavy lifting)
+        # Note: attention_mask handling depends on the SDPA implementation (usually bias addition)
+        # For simplicity here, we assume is_causal=True for training
+        is_causal = True if q_len > 1 else False
+        
+        attn_output = F.scaled_dot_product_attention(
+            query_states, key_states, value_states, 
+            attn_mask=None, # SDPA handles causal with is_causal=True
+            dropout_p=0.0, 
+            is_causal=is_causal
+        )
+        
+        attn_output = attn_output.transpose(1, 2).contiguous().view(bsz, q_len, -1)
+        attn_output = self.o_proj(attn_output)
+        
+        hidden_states = residual + attn_output
         
         # 2. Cross Attention (The Nexus Bridge)
         if adapter_states is not None:
@@ -190,8 +216,12 @@ class NexusStudentCore(PreTrainedModel):
             output = (logits, hidden_states)
             return ((loss,) + output) if loss is not None else output
 
-        return {
-            "loss": loss,
-            "logits": logits,
-            "hidden_states": hidden_states
-        }
+    def read_from_memory(self, query: str, knowledge_tower: Any, top_k: int = 3) -> torch.Tensor:
+        """
+        Convenience method to query the KnowledgeTower and return the projected context.
+        This context can then be passed to the forward call as part of adapter_hidden_states.
+        """
+        self.eval()
+        with torch.no_grad():
+            memory_context = knowledge_tower(query, top_k=top_k)
+        return memory_context

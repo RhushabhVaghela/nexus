@@ -138,7 +138,7 @@ class NIWTCore:
             # Threshold: Top 20% or specifically active neurons
             # "Rehabilitating Weak Neurons" concept implies we look for specific bands
             # For this impl, we keep top 30% active neurons as the "Feature"
-            threshold = torch.quantile(act_tensor, 0.70)
+            threshold = torch.quantile(act_tensor.float(), 0.70)
             mask = act_tensor > threshold
             layer_idx = int(name.split('_')[1])
             self.neuron_mask[layer_idx] = mask.nonzero().squeeze().tolist()

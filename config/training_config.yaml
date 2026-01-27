@@ -72,3 +72,75 @@ output:
   model_save_dir: "/mnt/e/models/nexus-omni"
   checkpoint_dir: "/mnt/e/checkpoints/nexus-omni"
   logs_dir: "/mnt/d/Research Experiments/nexus/logs"
+
+# ------------------------------------------------------------------------------
+# TEACHER MODEL REGISTRY (Auto-Generated)
+# ------------------------------------------------------------------------------
+teachers:
+  # Reasoning & Language
+  reasoning_core: 
+    model: "openbmb/AgentCPM-Explore"
+    tags: [reasoning, agent, language]
+  logic_heavy:
+    model: "zai-org/GLM-4.7-Flash"
+    tags: [logic, math, code]
+  interpretability:
+    model: "google/gemma-scope-2-27b-pt"
+    tags: [interpretability]
+  translation:
+    model: "google/translategemma-4b-it"
+    tags: [translation]
+  base_small:
+    model: "Qwen/Qwen2.5-0.5B"
+    tags: [base, small]
+  coder:
+    model: "Qwen/Qwen2.5-Coder-7B-Instruct"
+    tags: [code]
+  omni_base:
+    model: "Qwen/Qwen2.5-Omni-7B-GPTQ-Int4"
+    tags: [omni, multimodal]
+  omni_large:
+    model: "Qwen/Qwen3-Omni-30B-A3B-Instruct"
+    tags: [omni, large]
+
+  # Vision
+  vision_main:
+    model: "stepfun-ai/Step3-VL-10B"
+    tags: [vision]
+  object_detection:
+    model: "PaDT/OVD-3B"
+    tags: [vision, detection]
+  vision_enc:
+    model: "google/siglip2-so400m-patch16-512"
+    tags: [vision, encoder]
+  video_enc:
+    model: "MCG-NJU/videomae-large"
+    tags: [video, encoder]
+  video_gen:
+    model: "stabilityai/stable-video-diffusion-img2vid-xt-1-1"
+    tags: [video, generation]
+
+  # Audio
+  omni_speech:
+    model: "nvidia/personaplex-7b-v1"
+    tags: [audio, speech]
+  asr_long:
+    model: "microsoft/VibeVoice-ASR"
+    tags: [audio, asr]
+  asr_fast:
+    model: "nvidia/parakeet-tdt-0.6b-v3"
+    tags: [audio, asr]
+  tts_custom:
+    model: "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
+    tags: [audio, tts]
+  tts_design:
+    model: "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign"
+    tags: [audio, tts]
+  audio_tokenizer:
+    model: "Qwen/Qwen3-TTS-Tokenizer-12Hz"
+    tags: [audio, tokenizer]
+  
+  # Generation
+  image_gen:
+    model: "stabilityai/stable-diffusion-3-medium-diffusers"
+    tags: [vision, generation]
