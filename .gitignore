@@ -12,8 +12,8 @@ logs/
 results/
 checkpoints/
 offload-cache/
-llm-dataset-resources/
-research-papers/
+# llm-dataset-resources/
+# research-papers/
 *.log
 .coverage
 .benchmarks/
@@ -28,7 +28,7 @@ dataset and performance suggestions.md
 universal-architecture.md
 rejection_sampled.jsonl
 nexus_agent_mix.jsonl
-new-plan-conversation-files/
+# new-plan-conversation-files/
 
 
 # Node modules

@@ -1,0 +1,5 @@
+mode: production
+device: auto
+threads: 4
+logging: minimal
+model_path: ../model/student.onnx

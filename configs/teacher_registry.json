@@ -1,0 +1,218 @@
+[
+  {
+    "teacher_id": "AgentCPM-Explore",
+    "category": "Agent (LLM-based)",
+    "best_feature": "Long-horizon tasks with 100+ interaction rounds and multi-source validation on benchmarks like GAIA .",
+    "path": "./models/AgentCPM-Explore",
+    "status": "ready",
+    "capabilities": {
+      "reasoning": {
+        "benchmark": "gsm8k",
+        "metric": "accuracy",
+        "retain_fraction": 0.97
+      },
+      "knowledge": {
+        "benchmark": "mmlu",
+        "metric": "accuracy",
+        "retain_fraction": 0.97
+      },
+      "agent": {
+        "benchmark": "gaia",
+        "metric": "success_rate",
+        "retain_fraction": 0.97
+      }
+    }
+  },
+  {
+    "teacher_id": "google_gemma-scope-2-27b-pt",
+    "category": "Language model (likely scope/PT variant)",
+    "best_feature": "Part of Gemma 3 family for efficient text generation in various precisions .",
+    "path": "./models/google_gemma-scope-2-27b-pt/attn_out/layer_16_width_16k_l0_medium",
+    "status": "ready",
+    "capabilities": {
+      "reasoning": {
+        "benchmark": "gsm8k",
+        "metric": "accuracy",
+        "retain_fraction": 0.97
+      },
+      "knowledge": {
+        "benchmark": "mmlu",
+        "metric": "accuracy",
+        "retain_fraction": 0.97
+      }
+    }
+  },
+  {
+    "teacher_id": "stepfun-ai_Step3-VL-10B",
+    "category": "Vision-language (multimodal)",
+    "best_feature": "Balances small size with high intelligence for VL tasks .",
+    "path": "./models/stepfun-ai_Step3-VL-10B",
+    "status": "ready",
+    "capabilities": {
+      "vision_qa": {
+        "benchmark": "vqav2",
+        "metric": "accuracy",
+        "retain_fraction": 0.97
+      }
+    }
+  },
+  {
+    "teacher_id": "microsoft_VibeVoice-ASR",
+    "category": "Audio (ASR/speech-to-text)",
+    "best_feature": "Handles 60-minute long-form audio in single-pass with consistent speaker tracking .",
+    "path": "./models/microsoft_VibeVoice-ASR",
+    "status": "ready",
+    "capabilities": {
+      "asr": {
+        "benchmark": "librispeech",
+        "metric": "wer",
+        "retain_fraction": 1.03
+      }
+    }
+  },
+  {
+    "teacher_id": "nvidia_personaplex-7b-v1",
+    "category": "Audio (conversational speech)",
+    "best_feature": "Voice/role control in full-duplex conversations using Moshi architecture at 24kHz .",
+    "path": "./models/nvidia_personaplex-7b-v1",
+    "status": "ready",
+    "capabilities": {
+      "voice_chat": {
+        "benchmark": "moshi_eval",
+        "metric": "coherence",
+        "retain_fraction": 0.95
+      }
+    }
+  },
+  {
+    "teacher_id": "zai-org/GLM-4.7-Flash",
+    "category": "Language model (MoE)",
+    "best_feature": "128K context with strong coding performance .",
+    "path": "./models/zai-org_GLM-4.7-Flash",
+    "status": "ready",
+    "capabilities": {
+      "reasoning": {
+        "benchmark": "gsm8k",
+        "metric": "accuracy",
+        "retain_fraction": 0.97
+      },
+      "knowledge": {
+        "benchmark": "mmlu",
+        "metric": "accuracy",
+        "retain_fraction": 0.97
+      }
+    }
+  },
+  {
+    "teacher_id": "parakeet-tdt-0.6b-v3",
+    "category": "Audio (multilingual ASR)",
+    "best_feature": "High-throughput multilingual speech recognition .",
+    "path": "MISSING",
+    "status": "missing",
+    "capabilities": {
+      "asr": {
+        "benchmark": "librispeech",
+        "metric": "wer",
+        "retain_fraction": 1.03
+      }
+    }
+  },
+  {
+    "teacher_id": "Qwen_Qwen3-TTS-12Hz-1.7B-CustomVoice",
+    "category": "Audio (TTS)",
+    "best_feature": "Custom voice cloning with style control in 10 languages, low-latency streaming .",
+    "path": "/mnt/e/data/decoders/audio-decoders/Qwen_Qwen3-TTS-12Hz-1.7B-CustomVoice",
+    "status": "ready",
+    "capabilities": {
+      "tts": {
+        "benchmark": "cosine_sim",
+        "metric": "similarity",
+        "retain_fraction": 0.85
+      }
+    }
+  },
+  {
+    "teacher_id": "Qwen_Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+    "category": "Audio (TTS)",
+    "best_feature": "Voice design from descriptions with instruction control, multilingual support .",
+    "path": "/mnt/e/data/decoders/audio-decoders/Qwen_Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+    "status": "ready",
+    "capabilities": {
+      "tts": {
+        "benchmark": "cosine_sim",
+        "metric": "similarity",
+        "retain_fraction": 0.85
+      }
+    }
+  },
+  {
+    "teacher_id": "stabilityai_stable-diffusion-3-medium-diffusers",
+    "category": "Image generation",
+    "best_feature": "Improved typography and complex prompt understanding via MMDiT .",
+    "path": "/mnt/e/data/decoders/image-decoders/stabilityai_stable-diffusion-3-medium-diffusers/text_encoder",
+    "status": "ready",
+    "capabilities": {
+      "image_generation": {
+        "benchmark": "fid",
+        "metric": "score",
+        "retain_fraction": 0.95
+      }
+    }
+  },
+  {
+    "teacher_id": "stabilityai_stable-video-diffusion-img2vid-xt-1-1",
+    "category": "Video generation (img2vid)",
+    "best_feature": "Generates 25 frames at 1024x576 from input image with motion control .",
+    "path": "/mnt/e/data/decoders/vision-decoders/stabilityai_stable-video-diffusion-img2vid-xt-1-1/image_encoder",
+    "status": "ready",
+    "capabilities": {
+      "video": {
+        "benchmark": "ucf101",
+        "metric": "fvd",
+        "retain_fraction": 0.95
+      }
+    }
+  },
+  {
+    "teacher_id": "Qwen_Qwen3-TTS-Tokenizer-12Hz",
+    "category": "Audio (speech tokenizer)",
+    "best_feature": "Efficient acoustic compression preserving paralinguistics for TTS pipeline .",
+    "path": "/mnt/e/data/encoders/audio-encoders/Qwen_Qwen3-TTS-Tokenizer-12Hz",
+    "status": "ready",
+    "capabilities": {
+      "audio_tokenizer": {
+        "benchmark": "reconstruction",
+        "metric": "mse",
+        "retain_fraction": 0.99
+      }
+    }
+  },
+  {
+    "teacher_id": "siglip2-so400m-patch16-512",
+    "category": "Vision encoder (image-text)",
+    "best_feature": "Multilingual zero-shot classification and dense features at 512x512 .",
+    "path": "/mnt/e/data/encoders/image-encoders/siglip2-so400m-patch16-512",
+    "status": "ready",
+    "capabilities": {
+      "vision_encoder": {
+        "benchmark": "imagenet_linear",
+        "metric": "accuracy",
+        "retain_fraction": 0.97
+      }
+    }
+  },
+  {
+    "teacher_id": "MCG-NJU_videomae-large",
+    "category": "Video encoder (self-supervised)",
+    "best_feature": "Masked autoencoding for video classification via ViT patches .",
+    "path": "/mnt/e/data/encoders/vision-encoders/MCG-NJU_videomae-large",
+    "status": "ready",
+    "capabilities": {
+      "video": {
+        "benchmark": "ucf101",
+        "metric": "fvd",
+        "retain_fraction": 0.95
+      }
+    }
+  }
+]

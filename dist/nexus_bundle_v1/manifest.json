@@ -1,0 +1,41 @@
+{
+  "name": "nexus_bundle_v1",
+  "version": "1.0.0",
+  "description": "Universal Modular AI Student Model (Teacher-Free)",
+  "schema_version": "1.1",
+  "hardware_requirements": {
+    "vram_min": "8GB",
+    "vram_recommended": "16GB (RTX 5080)",
+    "quantization": "nf4"
+  },
+  "capabilities": {
+    "tier_1": {
+      "name": "Core Reasoning",
+      "description": "General Language, Logic, Base NLP",
+      "rank_cap": 0,
+      "expected_retention": 0.97
+    },
+    "tier_2": {
+      "name": "Pro Skills",
+      "description": "Code Generation, Tool Use, Agent Planning",
+      "rank_cap": 512,
+      "expected_retention": 0.95
+    },
+    "tier_3": {
+      "name": "Ultra Multimodal",
+      "description": "Voice Cloning, Vision QA, High-Fidelity Video",
+      "rank_cap": 1024,
+      "expected_retention": 0.85
+    }
+  },
+  "invariants": {
+    "teacher_free": true,
+    "training_code_excluded": true
+  },
+  "components": {
+    "backbone": "backbone/backbone.safetensors",
+    "router": "router/router.safetensors",
+    "adapters": "adapters/"
+  },
+  "license": "MIT"
+}
