@@ -280,6 +280,7 @@ class NexusPipeline:
     def stage_metadata_discovery(self):
         if "metadata_discovery" in self.state["completed_stages"]:
             print("[Skip] Metadata Discovery already complete.")
+            self.state["current_stage"] = "profiling"
             return
 
         print("\n=== STAGE 0: UNIVERSAL METADATA DISCOVERY ===")
@@ -321,12 +322,14 @@ class NexusPipeline:
         self.state["config"]["hidden_size"] = max_hidden
         self.state["config"]["vocab_size"] = max_vocab
         self.state["completed_stages"].append("metadata_discovery")
+        self.state["current_stage"] = "profiling"
         self._save_state()
 
 
     def stage_profiling(self):
         if "profiling" in self.state["completed_stages"]:
             print("[Skip] Profiling already complete.")
+            self.state["current_stage"] = "knowledge_extraction"
             return
 
         print("\n=== STAGE 1: NIWT PROFILING & ACTIVATION ANALYSIS ===")
@@ -405,6 +408,7 @@ class NexusPipeline:
     def stage_knowledge_extraction(self):
         if "knowledge_extraction" in self.state["completed_stages"]:
             print("[Skip] Knowledge Extraction already complete.")
+            self.state["current_stage"] = "training"
             return
 
         print("\n=== STAGE 1.5: MATHEMATICAL KNOWLEDGE EXTRACTION (LIBRARIAN) ===")
@@ -501,6 +505,7 @@ class NexusPipeline:
     def stage_training(self):
         if "training" in self.state["completed_stages"]:
             print("[Skip] Training already complete.")
+            self.state["current_stage"] = "router_training"
             return
 
         print("\n=== STAGE 2: DISTILLATION LOOP ===")
@@ -526,6 +531,7 @@ class NexusPipeline:
     def stage_router_training(self):
         if "router_training" in self.state["completed_stages"]:
             print("[Skip] Router Training already complete.")
+            self.state["current_stage"] = "evaluation"
             return
 
         print("\n=== STAGE 3: ROUTER TRAINING ===")
@@ -544,6 +550,7 @@ class NexusPipeline:
     def stage_evaluation(self):
         if "evaluation" in self.state["completed_stages"]:
             print("[Skip] Evaluation already complete.")
+            self.state["current_stage"] = "export"
             return
 
         print("\n=== STAGE 4: EVALUATION ===")
@@ -557,6 +564,7 @@ class NexusPipeline:
     def stage_export(self):
         if "export" in self.state["completed_stages"]:
             print("[Skip] Export already complete.")
+            self.state["current_stage"] = "cleanup"
             return
             
         print("\n=== STAGE 5: EXPORT ===")
@@ -574,6 +582,7 @@ class NexusPipeline:
     def stage_cleanup(self):
         if "cleanup" in self.state["completed_stages"]:
             print("[Skip] Cleanup already complete.")
+            self.state["current_stage"] = "done"
             return
             
         print("\n=== STAGE 6: CLEANUP ===")
