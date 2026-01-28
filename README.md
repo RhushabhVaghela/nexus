@@ -21,7 +21,7 @@ Nexus provides a tier-based capability manifest so consumers can understand the 
 ## 🚀 Key Features
 
 - **Universal Perception**: Native understanding of Text, Images, Audio (Speech/Music), and Video.
-- **Sequential Layer Ingestion (SLI)**: The "Librarian" component allows ingesting knowledge from **Massive Models (100B - 1T+ parameters)** on consumer GPUs by streaming layers sequentially.
+- **Sequential Layer Ingestion (SLI)**: The "Librarian" component allows ingesting knowledge from **Massive Models (100B - 1T+ parameters)** on consumer GPUs by streaming layers sequentially. Automatically falls back to SLI based on **Memory Headroom analysis**.
 - **Automated Distillation**: A self-driving pipeline (`nexus_pipeline.py`) that profiles, extracts, and distills knowledge from any teacher in the registry.
 - **Modular Architecture**: Hot-swappable **Adapters** allow you to load only the capabilities you need.
 - **Constraint-Aware**: Optimized for consumer hardware (RTX 5080 Laptop, 16GB VRAM) via NIWT Profiling and FlashAttention.
@@ -59,7 +59,7 @@ The pipeline will automatically:
 2. **Profile Teachers (NIWT)**: Analyze activation patterns.
 3. **Extract Knowledge**:
     - **Smart Download**: Automatically fetches missing datasets from Hugging Face.
-    - **SLI (Massive)**: Uses "Sequential Layer Ingestion" for datasets >15GB.
+    - **SLI (Massive)**: Uses "Sequential Layer Ingestion" for Teacher Models that exceed available VRAM (Memory-Aware Trigger).
 4. **Train Student**: Perform multi-objective distillation with Activation Anchoring.
 5. **Train Router**: Optimize the Sparse Intent Router.
 
@@ -80,7 +80,7 @@ Nexus is trained on the distilled knowledge of specialized models defined in `sr
 
 Nexus uses a **Sparse Intent Router** to dynamically activate the relevant sub-modules (Adapters) based on the input query.
 
-- **Student Core**: 8B Parameter Transformer (Llama-3 based) utilizing FlashAttention.
+- **Student Core**: **Universal Architecture** (Dynamically sized or 2B-8B) utilizing FlashAttention. Adapts to teacher dimensions.
 - **The Librarian**: SSD-backed Vector Memory for infinite context lookup during training.
 - **NIWT Profiler**: Neural Information-Weighted Tower for identifying critical teacher circuits.
 - **Router**: Lightweight MLP for intent classification (Entropy-Regularized).

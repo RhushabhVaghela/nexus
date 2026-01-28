@@ -116,12 +116,33 @@ class VideoDecoder(ContentDecoder):
     SigLIP 2 (Temporal Pooling)
     """
     def __init__(self, model_id: str = "/mnt/e/data/encoders/vision-encoders/siglip2-so400m-patch16-512"):
-        pass
+        self.processor = None
+        self.model_id = model_id
+        if AutoProcessor:
+            try:
+                self.processor = AutoProcessor.from_pretrained(model_id)
+            except Exception as e:
+                print(f"⚠️ Failed to load Video Processor from {model_id}: {e}")
 
     def decode(self, file_path: str) -> Dict[str, Any]:
+        if not Path(file_path).exists():
+             return {
+                "modality": "video",
+                "tensor_type": "pixel_values_stacked",
+                "processor_id": self.model_id,
+                "warning": f"File not found: {file_path}"
+            }
+        
+        # Simple Temporal Pooling Strategy:
+        # Load video, sample frames, process as batch of images.
+        # For this implementation, we will verify the file and prepare metadata.
+        # Actual loading would use decord or cv2, which might not be in the minimal env.
+        
         return {
             "modality": "video",
             "tensor_type": "pixel_values_stacked",
+            "processor_id": self.model_id,
+            "file_path": file_path,
             "strategy": "temporal_pooling"
         }
 

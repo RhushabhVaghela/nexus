@@ -79,7 +79,9 @@ conda activate nexus
 
 ### Handling Massive Models (SLI)
 
-If a teacher has **>60B Parameters** (like DeepSeek or massive encoder-decoders), the pipeline **automatically** switches to **SLI Mode** (Sequential Layer Ingestion).
+If a teacher has **>60B Parameters** (like DeepSeek or massive encoder-decoders), or if the **VRAM Headroom** analysis indicates insufficient memory, the pipeline **automatically** switches to **SLI Mode** (Sequential Layer Ingestion).
+
+* **Layer Mapping:** Uses `SequentialLayerIntegrator` to stream layers one-by-one.
 
 * **No Config Needed.** The system detects the size.
 * **Disk Requirement:** ~20GB free space (it deletes shards as it goes).

@@ -11,6 +11,7 @@ Complete reference for the Nexus Model test suite covering **~400 tests** across
 | Unit | 180 | ~10s | `pytest tests/unit/ -v` |
 | Integration | 68 | ~45s | `pytest tests/integration/ -v` |
 | Multimodal | 20 | ~15s | `pytest tests/multimodal/ -v` |
+| Nexus Final | 10 | ~30s | `pytest tests/nexus_final/ -v` |
 | E2E | 21 | ~60s | `pytest tests/e2e/ -v` |
 | Streaming | 10 | ~5s | `pytest tests/unit_streaming/ -v` |
 | **Total** | **346** | **~120s** | `pytest tests/ --full-tests -v` |
@@ -46,6 +47,10 @@ Tests the modality detection system that probes models for capabilities.
 | `test_format_report_json` | JSON output format |
 | `test_format_report_human` | Human-readable output format |
 | `test_edge_cases` | Missing config files, invalid paths |
+| **test_memory_trigger.py** | |
+| `test_estimate_vram_7b` | Verify 7B model VRAM estimation (approx 3-5GB) |
+| `test_estimate_vram_70b` | Verify 70B model VRAM estimation (approx 35-45GB) |
+| `test_should_use_sli_trigger` | Verify SLI triggers only when VRAM is insufficient |
 
 **Usage:**
 
@@ -172,6 +177,15 @@ Uses real **Qwen2.5-0.5B** model for realistic validation.
 | `test_text_only_model_no_audio_config` | No audio_config for text model |
 | `test_detect_on_real_text_model` | detect_modalities on real model |
 | `test_model_type_is_qwen` | Detected as Qwen model |
+
+#### `test_massive_model_sli.py` (2 tests, `tests/nexus_final/`)
+
+Tests the Sequential Layer Ingestion (SLI) mechanism for handling models larger than VRAM.
+
+| Test | Description |
+|------|-------------|
+| `test_layer_weight_loader_reassembly` | Verifies sharded weight files are reassembled correctly |
+| `test_memory_integration_logic` | Verifies SLI activates when `should_use_sli` returns True |
 
 ---
 

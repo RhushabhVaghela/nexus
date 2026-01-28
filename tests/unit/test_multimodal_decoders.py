@@ -109,11 +109,19 @@ def test_audio_decoder_init_error(mock_from_pretrained):
     decoder = AudioDecoder()
     assert decoder.processor is None
 
-def test_video_decoder():
+def test_video_decoder_file_not_found():
     decoder = VideoDecoder()
-    result = decoder.decode("test.mp4")
+    result = decoder.decode("non_existent.mp4")
+    assert "warning" in result
     assert result["modality"] == "video"
-    assert result["strategy"] == "temporal_pooling"
+
+def test_video_decoder_success():
+    with patch("src.multimodal.decoders.Path.exists", return_value=True):
+        decoder = VideoDecoder()
+        result = decoder.decode("test.mp4")
+        assert result["modality"] == "video"
+        assert result["strategy"] == "temporal_pooling"
+        assert result["file_path"] == "test.mp4"
 
 def test_omni_decoder():
     omni = OmniDecoder()

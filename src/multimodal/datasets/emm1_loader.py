@@ -107,11 +107,9 @@ class EMM1Dataset(torch.utils.data.IterableDataset):
         return sample
 
     def __len__(self):
-        # IterableDataset doesn't strictly require len, but if we know it we can return it.
-        # Since we are strictly streaming, we might not know strict length without scanning.
-        # Return an estimate or raise NotImplementedError.
-        # Returning limit if set, else large number or 0.
-        return self.sample_limit if self.sample_limit > 0 else 100000000
+        # IterableDataset doesn't strictly require len.
+        # Returning sample_limit if set, otherwise an estimated large dataset size.
+        return self.sample_limit if self.sample_limit > 0 else 100_000_000
 
 def emm1_collate_fn(batch):
     batch = [b for b in batch if b is not None]
