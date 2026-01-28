@@ -91,7 +91,15 @@ echo -e "${CYAN}║              NEXUS SELF-DRIVING PIPELINE v6.1               
 echo -e "${CYAN}╚═══════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "  Environment: ${GREEN}${CONDA_DEFAULT_ENV}${NC}"
-echo -e "  Mode:        $(if $RESET_STATE; then echo "${RED}RESET${NC}"; else echo "${GREEN}RESUME${NC}"; fi)"
+MODE_LABEL=""
+if $RESET_STATE; then
+    MODE_LABEL="${RED}RESET${NC}"
+elif [ -f ".pipeline_state.json" ]; then
+    MODE_LABEL="${GREEN}RESUME${NC}"
+else
+    MODE_LABEL="${BLUE}FRESH START${NC}"
+fi
+echo -e "  Mode:        $MODE_LABEL"
 if [ -n "$TARGET_STAGE" ]; then
     echo -e "  Target:      ${YELLOW}$TARGET_STAGE${NC}"
 fi

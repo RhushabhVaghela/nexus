@@ -660,8 +660,16 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     if args.reset:
-        print("[Pipeline] FULL RESET requested. Clearing all previous artifacts...")
-        paths_to_nuke = [STATE_FILE, RESULTS_ROOT, MEMORY_DIR, CHECKPOINT_DIR, RELEASE_DIR]
+        print(f"[Pipeline] FULL RESET requested from Base: {BASE_DIR}")
+        print("[Pipeline] Clearing all previous artifacts...")
+        
+        # Added 'logs' and 'results' folder to nuke list
+        LOGS_DIR = os.path.join(BASE_DIR, "logs")
+        RESULTS_DIR = os.path.join(BASE_DIR, "results")
+        
+        # We nuke RESULTS_DIR instead of RESULTS_ROOT
+        paths_to_nuke = [STATE_FILE, RESULTS_DIR, MEMORY_DIR, CHECKPOINT_DIR, RELEASE_DIR, LOGS_DIR]
+        
         for p in paths_to_nuke:
             full_p = os.path.join(BASE_DIR, p) if not os.path.isabs(p) else p
             if os.path.exists(full_p):
@@ -670,6 +678,9 @@ if __name__ == "__main__":
                     shutil.rmtree(full_p)
                 else:
                     os.remove(full_p)
+            else:
+                # Verbose feedback for user clarity
+                print(f"  -> [Already Clean] {os.path.basename(full_p)}")
         
         os.makedirs(RESULTS_ROOT, exist_ok=True)
         os.makedirs(MEMORY_DIR, exist_ok=True)
