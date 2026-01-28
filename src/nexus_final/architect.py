@@ -20,7 +20,7 @@ class NeuralArchitect:
     def __init__(self, output_dir: str = "architect_output", registry_path: str = "configs/teacher_registry.json"):
         self.output_dir = output_dir
         self.registry_path = registry_path
-        self.default_base_model = "meta-llama/Meta-Llama-3-8B" # Realistic default for 4096-dim
+        self.default_base_model = "meta-llama/Llama-3.2-1B-Instruct" # Realistic default for 2048-dim student
         os.makedirs(output_dir, exist_ok=True)
     
     def load_profiling_data(self, profile_path: str) -> Dict[str, Any]:
@@ -93,7 +93,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 class NexusBridge(nn.Module):
     """
     Affine Projection Bridge to align Teacher Latent Space with Student.
-    Essential for Multimodal Fusion (e.g., Vision 1280D -> Llama 4096D).
+    Essential for Multimodal Fusion (e.g., Vision 1280D -> Student 2048D).
     """
     def __init__(self, in_features, out_features):
         super().__init__()

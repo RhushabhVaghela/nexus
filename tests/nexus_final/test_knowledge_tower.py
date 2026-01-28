@@ -13,7 +13,7 @@ def test_knowledge_tower_projection():
         mock_model.from_pretrained.return_value = MagicMock()
         mock_tokenizer.from_pretrained.return_value = MagicMock()
         
-        tower = KnowledgeTower(embedding_dim=384, student_dim=4096)
+        tower = KnowledgeTower(student_dim=128, embedding_dim=384)
         
         # Mock the encoder behavior during forward
         tower.encoder = MagicMock()
@@ -42,7 +42,7 @@ def test_knowledge_tower_projection():
         # Test forward
         projected = tower("test query", top_k=2)
         
-        assert projected.shape == (1, 2, 4096)
+        assert projected.shape == (1, 2, 128)
         assert isinstance(projected, torch.Tensor)
 
 def test_file_memory_manager(tmp_path):
@@ -56,13 +56,13 @@ def test_file_memory_manager(tmp_path):
 def test_student_read_from_memory():
     from src.nexus_core.student.core import NexusStudentCore, NexusStudentConfig
     
-    config = NexusStudentConfig(num_hidden_layers=1, hidden_size=4096)
+    config = NexusStudentConfig(num_hidden_layers=1, hidden_size=128)
     student = NexusStudentCore(config)
     
     mock_tower = MagicMock()
-    mock_tower.return_value = torch.randn(1, 3, 4096)
+    mock_tower.return_value = torch.randn(1, 3, 128)
     
     context = student.read_from_memory("tell me about nexus", mock_tower)
     
-    assert context.shape == (1, 3, 4096)
+    assert context.shape == (1, 3, 128)
     mock_tower.assert_called_once()

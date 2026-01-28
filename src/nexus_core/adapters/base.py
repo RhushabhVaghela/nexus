@@ -10,7 +10,7 @@ class BaseAdapter(nn.Module):
     - 'Representation Calibration' (LIT)
     - Fixes 'Hidden Representation Mismatch'
     """
-    def __init__(self, teacher_dim: int, student_dim: int = 4096):
+    def __init__(self, teacher_dim: int, student_dim: int):
         super().__init__()
         
         # 1. Projection (Dimension Reduction)

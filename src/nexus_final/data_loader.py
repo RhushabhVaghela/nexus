@@ -193,15 +193,19 @@ class UniversalDataLoader:
                 ]
             }
 
-        # 6. Fallback: Scan keys for anything resembling text
-        potential_keys = ["text", "content", "prompt", "input"]
-        for key in potential_keys:
-            if key in sample and isinstance(sample[key], str) and len(sample[key]) > 0:
-                 return {
+        # 6. Ultimate Fallback: Universal Heuristic Sanitizer
+        try:
+            from nexus_core.data.sanitizer import UniversalSanitizer
+            sanitizer = UniversalSanitizer()
+            clean_text = sanitizer.sanitize(sample)
+            if clean_text and len(clean_text) > 5:
+                return {
                     "messages": [
-                        {"role": "user", "content": sample[key]}
+                        {"role": "user", "content": clean_text}
                     ]
-                 }
+                }
+        except ImportError:
+            pass
 
         return None
 

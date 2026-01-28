@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from typing import List
 
 class SparseIntentRouter(nn.Module):
-    def __init__(self, input_dim=4096, num_towers=4):
+    def __init__(self, input_dim, num_towers=4):
         """
         Determines which Specialist Tower to activate based on the input.
         This is critical for latency reduction (Step 2.D in Mitigation Strategy).

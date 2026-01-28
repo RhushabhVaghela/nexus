@@ -11,6 +11,11 @@ sys.path.append(os.path.join(os.getcwd(), 'src'))
 sys.path.append(os.path.join(os.getcwd(), 'scripts'))
 
 from niwt_core import NIWTCore
+from nexus_core.data.sanitizer import UniversalSanitizer
+import logging
+
+# Suppress noisy transformers generation warnings (e.g. "top_p is ignored when do_sample=False")
+logging.getLogger("transformers").setLevel(logging.ERROR)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -19,15 +24,20 @@ def main():
     parser.add_argument("--dataset_name", type=str, default=None)
     parser.add_argument("--sample_size", type=int, default=50)
     parser.add_argument("--output_dir", type=str, default="results/niwt_profiling")
+    parser.add_argument("--no_quant", action="store_true", help="Disable 4-bit quantization (useful for small models/CPU)")
     args = parser.parse_args()
 
     print(f"\n[NIWT Profiler] Starting analysis for {args.teacher_id}...")
     
+    # 0. Hardware Optimization (Beast Mode: RTX 5080)
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cudnn.benchmark = True
+    
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"[Hardware] Mode: {device}")
 
-    # 1. Load Model (4-bit for VRAM safety)
-    print(f"[Loader] Loading {args.model_path} in 4-bit...")
+    # 1. Load Model (4-bit for VRAM safety, unless disabled)
+    print(f"[Loader] Loading {args.model_path} (Quantization: {'Disabled' if args.no_quant else '4-bit'})...")
     try:
         # fix_mistral_regex is needed for some newer models/tokenizers
         try:
@@ -40,13 +50,25 @@ def main():
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
             
-        quantization_config = BitsAndBytesConfig(load_in_4bit=True)
-        model = AutoModelForCausalLM.from_pretrained(
-            args.model_path,
-            device_map="auto",
-            quantization_config=quantization_config,
-            trust_remote_code=True
-        )
+        load_dtype = torch.bfloat16 if device == "cuda" else torch.float32
+        
+        if args.no_quant:
+            # Simple loading for verification/CPU
+            model = AutoModelForCausalLM.from_pretrained(args.model_path, trust_remote_code=True, torch_dtype=load_dtype)
+            model.to(device)
+        else:
+            # Robust loading for LLMs
+            quantization_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=load_dtype # Beast Mode: Use BF16 for 4-bit compute
+            )
+            model = AutoModelForCausalLM.from_pretrained(
+                args.model_path,
+                device_map="auto",
+                quantization_config=quantization_config,
+                trust_remote_code=True,
+                torch_dtype=load_dtype
+            )
     except Exception as e:
         print(f"[Error] Failed to load model: {e}")
         sys.exit(1)
@@ -56,8 +78,21 @@ def main():
     niwt = NIWTCore(model, tokenizer, config)
 
     # Load Dataset Stimulus
-    calibration_data = ["Hello world"] # Default fallback
-    test_cases = [("The capital of France is", "Paris")]
+    calibration_data = ["Hello world"] * 50 # Default fallback
+    
+    # Use robust static calibration prompts instead of fragile next-token prediction
+    test_cases = [
+        ("The capital of France is", "Paris"),
+        ("The command to list files in Linux is", "ls"),
+        ("10 + 10 =", "20"),
+        ("The largest planet in solar system is", "Jupiter"),
+        ("Python is a programming", "language"),
+        ("Hello, how are", "you"),
+        ("Red, Green and", "Blue"),
+        ("A cat says", "meow"),
+        ("Opposite of Up is", "Down"),
+        ("Water boils at 100 degrees", "Celsius")
+    ]
 
     if args.dataset_name:
         try:
@@ -72,8 +107,6 @@ def main():
                     ds = load_from_disk(args.dataset_name)
                     # Handle splits if 'train' exists, else take first
                     if 'train' in ds: ds = ds['train']
-                    # Convert to iterable for consistency if needed, or just slice
-                    # If it's arrow, we can just slice. But let's unify interface.
                 else:
                     # Assume JSON/JSONL directory
                     ds = load_dataset("json", data_dir=args.dataset_name, split="train", streaming=True)
@@ -92,17 +125,17 @@ def main():
                 iterable_ds = ds.select(range(min(len(ds), args.sample_size)))
 
             for item in iterable_ds:
-                # Try to find text content in common fields
-                text = item.get("text") or item.get("content") or item.get("instruction") or str(item)
-                samples.append(text[:512]) # Truncate for speed
+                # Use UniversalSanitizer to handle messy fragments reliably
+                clean_text = UniversalSanitizer.sanitize(item)
+                if clean_text:
+                    samples.append(clean_text)
             
             if samples:
                 calibration_data = samples
-                # Create synthetic test cases from data (Source -> Source prefix)
-                test_cases = [(s[:50], s[50:60]) for s in samples[:5] if len(s) > 60]
-                print(f"[Loader] Loaded {len(samples)} samples for stimulus.")
+                print(f"[Loader] Loaded {len(samples)} sanitized samples for (Stage 2) activation analysis.")
+                
         except Exception as e:
-            print(f"[Warn] Failed to load dataset {args.dataset_name}: {e}. Using fallback.")
+            print(f"[Warn] Failed to load dataset {args.dataset_name}: {e}. Using fallback calibration data.")
 
     # 3. Stage 1: Perturbation
     critical_layers = niwt.run_stage_1_perturbation(test_cases)

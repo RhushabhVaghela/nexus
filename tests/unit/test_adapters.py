@@ -14,8 +14,8 @@ class MockReasoningAdapter(nn.Module):
 
 class TestAdapters(unittest.TestCase):
     def setUp(self):
-        self.teacher_dim = 4096
-        self.student_dim = 2048
+        self.teacher_dim = 256
+        self.student_dim = 128
         self.adapter = MockReasoningAdapter(self.teacher_dim, self.student_dim)
 
     def test_dimensions(self):

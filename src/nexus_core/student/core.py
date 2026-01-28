@@ -4,13 +4,14 @@ import torch.nn.functional as F
 
 from transformers import PreTrainedModel, PretrainedConfig
 from typing import Optional, Tuple, List, Dict, Any
+from .router import SparseIntentRouter
 
 class NexusStudentConfig(PretrainedConfig):
     model_type = "nexus_student"
     def __init__(
         self,
         vocab_size=32000,
-        hidden_size=4096,
+        hidden_size=None,
         intermediate_size=11008,
         num_hidden_layers=32,
         num_attention_heads=32,
@@ -103,6 +104,7 @@ class NexusDecoderLayer(nn.Module):
         self.cross_attn = NexusCrossAttention(config)
         self.cross_attn_gate = nn.Parameter(torch.tensor([0.0])) # Start closed (Tanh gating)
         self.cross_attn_layernorm = nn.RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
+        self.gradient_checkpointing = False
 
     def forward(self, hidden_states, adapter_states=None, attention_mask=None):
         # 1. Self Attention (FlashAttention via SDPA)
@@ -152,6 +154,7 @@ class NexusDecoderLayer(nn.Module):
 
 class NexusStudentCore(PreTrainedModel):
     config_class = NexusStudentConfig
+    supports_gradient_checkpointing = True
     
     def __init__(self, config: NexusStudentConfig):
         super().__init__(config)
@@ -160,6 +163,11 @@ class NexusStudentCore(PreTrainedModel):
         self.norm = nn.RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
         
+        # Integrated Intent Router
+        # Standard: 5 towers (Reasoning, Vision, Audio, Generation, Agentic)
+        self.router = SparseIntentRouter(config.hidden_size, num_towers=5)
+        
+        self.gradient_checkpointing = False
         self.post_init()
 
     def get_input_embeddings(self):
@@ -175,6 +183,7 @@ class NexusStudentCore(PreTrainedModel):
         attention_mask: Optional[torch.Tensor] = None,
         labels: Optional[torch.LongTensor] = None,
         return_dict: bool = True,
+        output_router_logits: bool = False,
     ):
         batch_size, seq_len = input_ids.shape
         hidden_states = self.embed_tokens(input_ids)
@@ -195,11 +204,25 @@ class NexusStudentCore(PreTrainedModel):
 
         # Forward Pass
         for layer in self.layers:
-            hidden_states = layer(
-                hidden_states, 
-                adapter_states=active_adapter_states, 
-                attention_mask=attention_mask
-            )
+            if self.gradient_checkpointing and self.training:
+                def create_custom_forward(module):
+                    def custom_forward(*inputs):
+                        return module(*inputs)
+                    return custom_forward
+                
+                hidden_states = torch.utils.checkpoint.checkpoint(
+                    create_custom_forward(layer),
+                    hidden_states,
+                    active_adapter_states,
+                    attention_mask,
+                    use_reentrant=False
+                )
+            else:
+                hidden_states = layer(
+                    hidden_states, 
+                    adapter_states=active_adapter_states, 
+                    attention_mask=attention_mask
+                )
             
         hidden_states = self.norm(hidden_states)
         logits = self.lm_head(hidden_states)
@@ -212,9 +235,26 @@ class NexusStudentCore(PreTrainedModel):
             loss_fct = nn.CrossEntropyLoss()
             loss = loss_fct(shift_logits.view(-1, self.config.vocab_size), shift_labels.view(-1))
             
-        if not return_dict:
-            output = (logits, hidden_states)
-            return ((loss,) + output) if loss is not None else output
+        # Router Calculation (for monitoring or entropy loss)
+        router_logits = None
+        if output_router_logits:
+            # We use the mean-pooled hidden states from the backbone as router input
+            # This allows the router to learn the 'intent' of the processed sequence.
+            router_logits = self.router.gate(hidden_states.mean(dim=1))
+
+        if return_dict:
+            return {
+                "loss": loss,
+                "logits": logits,
+                "hidden_states": hidden_states,
+                "router_logits": router_logits
+            }
+            
+        output = (logits, hidden_states)
+        if output_router_logits:
+            output = output + (router_logits,)
+            
+        return ((loss,) + output) if loss is not None else output
 
     def read_from_memory(self, query: str, knowledge_tower: Any, top_k: int = 3) -> torch.Tensor:
         """

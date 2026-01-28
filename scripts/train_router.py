@@ -50,12 +50,11 @@ class RouterDataset(Dataset):
     def __getitem__(self, idx):
         return self.features[idx], self.labels[idx]
 
-def train_router(epochs=5, batch_size=32):
-    print(f"\n[Router] Starting Training for {epochs} epochs...")
+def train_router(input_dim=4096, num_towers=5, epochs=5, batch_size=32):
+    print(f"\n[Router] Starting Training (Dim: {input_dim}, Towers: {num_towers}) for {epochs} epochs...")
     
     # 1. Initialize Router
-    # Input Dim: 4096 (Student Latent), Towers: 5 (Reasoning, Vision, Audio, Gen, Agent)
-    router = SparseIntentRouter(input_dim=4096, num_towers=5, top_k=1)
+    router = SparseIntentRouter(input_dim=input_dim, num_towers=num_towers, top_k=1)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     router.to(device)
     
@@ -63,7 +62,13 @@ def train_router(epochs=5, batch_size=32):
     criterion = nn.CrossEntropyLoss()
     
     # 2. Data Loader
+    # Adjust synthetic data generation to match input_dim
     dataset = RouterDataset(data_path=DATA_PATH)
+    if not dataset.data_path or not os.path.exists(dataset.data_path):
+        print(f"[Router_DS] Overriding synthetic data with dim={input_dim}")
+        dataset.features = torch.randn(dataset.fallback_size, input_dim)
+        dataset.labels = torch.randint(0, num_towers, (dataset.fallback_size,))
+
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
     
     # 3. Training Loop
@@ -76,8 +81,6 @@ def train_router(epochs=5, batch_size=32):
             batch_X, batch_y = batch_X.to(device), batch_y.to(device)
             
             optimizer.zero_grad()
-            
-            # Using the `gate` output for raw logits
             logits = router.gate(batch_X)
             
             loss = criterion(logits, batch_y)
@@ -97,4 +100,17 @@ def train_router(epochs=5, batch_size=32):
     print(f"[Router] Weights saved to {save_path}")
 
 if __name__ == "__main__":
-    train_router()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input_dim", type=int, default=2048) # Default to optimized student dim
+    parser.add_argument("--num_towers", type=int, default=5)
+    parser.add_argument("--epochs", type=int, default=5)
+    parser.add_argument("--batch_size", type=int, default=32)
+    args = parser.parse_args()
+    
+    train_router(
+        input_dim=args.input_dim, 
+        num_towers=args.num_towers, 
+        epochs=args.epochs, 
+        batch_size=args.batch_size
+    )

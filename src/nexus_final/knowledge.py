@@ -39,8 +39,8 @@ class KnowledgeTower(nn.Module):
     """
     def __init__(
         self, 
+        student_dim: int,
         embedding_dim: int = 384, 
-        student_dim: int = 4096,
         device: str = "cpu"
     ):
         super().__init__()

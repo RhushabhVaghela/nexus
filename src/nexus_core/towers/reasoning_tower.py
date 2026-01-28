@@ -4,7 +4,7 @@ from .base_tower import BaseTower
 from ..adapters.reasoning_adapter import ReasoningAdapter
 
 class ReasoningTower(BaseTower):
-    def __init__(self, config, teacher_dim, student_dim=4096):
+    def __init__(self, config, teacher_dim, student_dim):
         super().__init__(config)
         self.teacher_dim = teacher_dim
         self.student_dim = student_dim

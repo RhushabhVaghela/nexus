@@ -290,6 +290,8 @@ class NIWTCore:
                  outputs = self.model.generate(
                      **inputs, 
                      max_new_tokens=20, 
+                     min_new_tokens=5, # Force it to say something
+                     repetition_penalty=1.2,
                      pad_token_id=self.tokenizer.eos_token_id,
                      use_cache=True,
                      do_sample=False

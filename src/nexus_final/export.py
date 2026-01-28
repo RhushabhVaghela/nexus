@@ -14,7 +14,7 @@ class NexusExporter:
         self.output_dir = os.path.abspath(output_dir)
         os.makedirs(self.output_dir, exist_ok=True)
         
-    def export(self, student_path, router_path, knowledge_index_path):
+    def export(self, student_path, router_path, knowledge_index_path, vocab_size=None, hidden_size=None):
         print(f"[Exporter] Assembling Nexus Release in {self.output_dir}...")
         
         # 1. Export Student Core (The LLM)
@@ -47,8 +47,8 @@ class NexusExporter:
         # Create config
         config = {
             "model_type": "nexus_student",
-            "vocab_size": 32000,
-            "hidden_size": 2048
+            "vocab_size": vocab_size or 128256,
+            "hidden_size": hidden_size or 2048
         }
         with open(os.path.join(student_dest, "config.json"), "w") as f:
             json.dump(config, f, indent=2)
@@ -114,7 +114,9 @@ if __name__ == "__main__":
     parser.add_argument("--router", default="checkpoints/router_final.pt", help="Path to router weights")
     parser.add_argument("--index", default="vector_index.faiss", help="Path to knowledge index")
     parser.add_argument("--output", default="nexus-release-v1", help="Export directory")
+    parser.add_argument("--vocab_size", type=int, default=128256)
+    parser.add_argument("--hidden_size", type=int, default=2048)
     args = parser.parse_args()
     
     exporter = NexusExporter(args.output)
-    exporter.export(args.student, args.router, args.index)
+    exporter.export(args.student, args.router, args.index, vocab_size=args.vocab_size, hidden_size=args.hidden_size)

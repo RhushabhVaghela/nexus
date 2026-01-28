@@ -6,18 +6,18 @@ class CrossModalAlignment(nn.Module):
      aligns embedding spaces of disparate encoders (Vision, Audio) 
     into the shared Student Latent Space (Core).
     """
-    def __init__(self, vision_dim: int = 1024, audio_dim: int = 2048, video_dim: int = 1024, tool_dim: int = 1024, core_dim: int = 4096):
+    def __init__(self, core_dim: int, vision_dim: int = 1024, audio_dim: int = 2048, video_dim: int = 1024, tool_dim: int = 1024):
         super().__init__()
-        # Vision: SigLIP (1024) -> Core (4096) | Handles Images
+        # Vision: SigLIP (1024) -> Core (2048) | Handles Images
         self.vision_proj = nn.Linear(vision_dim, core_dim)
         
-        # Audio: Qwen3-TTS (2048) -> Core (4096) | Handles Speech/Sounds
+        # Audio: Qwen3-TTS (2048) -> Core (2048) | Handles Speech/Sounds
         self.audio_proj = nn.Linear(audio_dim, core_dim)
         
-        # Video: VideoMAE (1024) -> Core (4096) | Handles Video
+        # Video: VideoMAE (1024) -> Core (2048) | Handles Video
         self.video_proj = nn.Linear(video_dim, core_dim)
         
-        # Tools: Action Embeddings (1024) -> Core (4096) | Handles Tool/Function States
+        # Tools: Action Embeddings (1024) -> Core (2048) | Handles Tool/Function States
         self.tool_proj = nn.Linear(tool_dim, core_dim)
         
         self.norm_v = nn.LayerNorm(core_dim)
@@ -35,7 +35,7 @@ class CrossModalAlignment(nn.Module):
             video_feats:  [B, S_vd, D_vd] - Video
             tool_feats:   [B, S_t, D_t] - Tool Outputs/Action States
         Returns:
-            aligned_combined: [Batch, Total_Seq, 4096]
+            aligned_combined: [Batch, Total_Seq, core_dim]
         """
         aligned_outputs = []
         

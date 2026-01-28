@@ -1,8 +1,13 @@
 import pytest
 import torch
 import os
+import sys
 from unittest.mock import MagicMock, patch
+
+# Ensure src is in path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from src.nexus_final.sli_integrator import LayerWeightLoader
+from src.nexus_final.utils.memory import should_use_sli
 
 def test_layer_weight_loader_reassembly():
     # Mock weight map: Layer 0 is split between shard_A and shard_B
@@ -49,6 +54,24 @@ def test_layer_weight_loader_reassembly():
         # Verify both shards were 'loaded' into internal state
         assert "shard_A.safetensors" in loader.loaded_shards
         assert "shard_B.safetensors" in loader.loaded_shards
+
+def test_memory_integration_logic():
+    """
+    Verify that should_use_sli logic can be imported and running in this context.
+    """
+    class MockConfig:
+        def __init__(self):
+            self.hidden_size = 8192
+            self.num_hidden_layers = 80
+            self.d_model = 8192
+            
+    config = MockConfig()
+    
+    with patch("torch.cuda.is_available", return_value=True), \
+         patch("torch.cuda.mem_get_info", return_value=(16 * 1024**3, 16 * 1024**3)):
+         
+         # 16GB VRAM, Huge Config -> Should Trigger SLI
+         assert should_use_sli(config) is True
 
 if __name__ == "__main__":
     pytest.main([__file__])

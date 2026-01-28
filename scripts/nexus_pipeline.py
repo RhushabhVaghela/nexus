@@ -7,6 +7,8 @@ import argparse
 import subprocess
 from datetime import datetime
 import shutil
+from transformers import AutoConfig
+from nexus_final.utils.memory import should_use_sli
 
 # --- CONFIGURATION (CONVERT TO ABSOLUTE) ---
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -275,6 +277,52 @@ class NexusPipeline:
         
         print(f"[SLI] Sequential processing complete for {hf_id}. Duration: {datetime.now() - start_time}")
 
+    def stage_metadata_discovery(self):
+        if "metadata_discovery" in self.state["completed_stages"]:
+            print("[Skip] Metadata Discovery already complete.")
+            return
+
+        print("\n=== STAGE 0: UNIVERSAL METADATA DISCOVERY ===")
+        max_hidden = 1024 # Baseline floor
+        max_vocab = 32000 # Baseline floor
+        
+        if not self.target_models:
+             print("[Error] No active models for discovery!")
+             return
+
+        for model_key in self.target_models:
+            if model_key in TEACHER_REGISTRY:
+                path = TEACHER_REGISTRY[model_key].get('path', TEACHER_REGISTRY[model_key].get('model'))
+            else:
+                path = model_key
+            
+            print(f"[Discovery] Inspecting: {path}...")
+            try:
+                config = AutoConfig.from_pretrained(path, trust_remote_code=True)
+                
+                # Try common hidden dimension keys
+                hidden = getattr(config, "hidden_size", getattr(config, "d_model", getattr(config, "dim", 0)))
+                # Try common vocab size keys
+                vocab = getattr(config, "vocab_size", 0)
+                
+                if hidden > max_hidden:
+                    print(f"  -> Found larger hidden_size: {hidden}")
+                    max_hidden = hidden
+                if vocab > max_vocab:
+                    print(f"  -> Found larger vocab_size: {vocab}")
+                    max_vocab = vocab
+            except Exception as e:
+                print(f"  -> [Warn] Failed to fetch config for {path}: {e}")
+                # Use registry values as secondary fallback if available
+                if model_key in TEACHER_REGISTRY:
+                    max_hidden = max(max_hidden, TEACHER_REGISTRY[model_key].get('dim', 2048))
+
+        print(f"[Discovery] Final Unified Specs: Hidden={max_hidden}, Vocab={max_vocab}")
+        self.state["config"]["hidden_size"] = max_hidden
+        self.state["config"]["vocab_size"] = max_vocab
+        self.state["completed_stages"].append("metadata_discovery")
+        self._save_state()
+
 
     def stage_profiling(self):
         if "profiling" in self.state["completed_stages"]:
@@ -412,25 +460,39 @@ class NexusPipeline:
                     hf_id, local_parent = ds_res
                     self.process_massive_dataset(hf_id, local_parent, path, name)
                 else:
-                    # ds_res is local_path
-                    print(f"  -> Ingesting {ds_key} (Standard)...")
-                    output_dir = os.path.join(MEMORY_DIR, name.replace('/', '_'))
+                    # DYNAMIC: Use memory-aware SLI trigger
+                    is_too_large = False
+                    try:
+                        config = AutoConfig.from_pretrained(path, trust_remote_code=True)
+                        if should_use_sli(config):
+                            is_too_large = True
+                    except Exception as e:
+                        print(f"  -> [Warn] Failed to check mem for {name}: {e}. Defaulting to Standard.")
                     
-                    # Robust Execution Strategy: Try GPU first, fallback to CPU on crash
-                    # This handles Coder crashes, OOMs, or driver issues gracefully without hardcoding.
-                    device_arg = "cuda"
-                    cmd = f"{sys.executable} -m src.nexus_final.distill_knowledge --teacher '{path}' --output '{output_dir}' --dataset '{ds_res}' --device {device_arg} --limit {self.sample_size}"
-                    
-                    print(f"[Pipeline] Attempting execution on {device_arg.upper()}...")
-                    ret = self.run_command(cmd, allow_fail=True)
-                    
-                    if ret != 0:
-                        print(f"\n[Pipeline] GPU Execution Failed (Code {ret}). Automatically Retrying on CPU...")
-                        device_arg = "cpu"
-                        cmd_cpu = f"{sys.executable} -m src.nexus_final.distill_knowledge --teacher '{path}' --output '{output_dir}' --dataset '{ds_res}' --device {device_arg} --limit {self.sample_size}"
+                    if is_too_large:
+                        print(f"  -> [SLI Fallback] Ingesting {ds_key} using Sequential Layer Ingestion...")
+                        output_dir = os.path.join(MEMORY_DIR, name.replace('/', '_'))
+                        # SequentialLayerIntegrator processes layers one-by-one
+                        # This avoids OOM for models that don't fit even in 4-bit.
+                        cmd = f"{sys.executable} -m src.nexus_final.sli_integrator --model '{path}' --output '{output_dir}' --dataset '{ds_res}' --limit {self.sample_size}"
+                        self.run_command(cmd, allow_fail=False)
+                    else:
+                        # ds_res is local_path
+                        print(f"  -> Ingesting {ds_key} (Standard)...")
+                        output_dir = os.path.join(MEMORY_DIR, name.replace('/', '_'))
                         
-                        # If CPU fails, we let it crash naturally
-                        self.run_command(cmd_cpu, allow_fail=False)
+                        # Robust Execution Strategy: Try GPU first, fallback to CPU on crash
+                        device_arg = "cuda"
+                        cmd = f"{sys.executable} -m src.nexus_final.distill_knowledge --teacher '{path}' --output '{output_dir}' --dataset '{ds_res}' --device {device_arg} --limit {self.sample_size}"
+                        
+                        print(f"[Pipeline] Attempting execution on {device_arg.upper()}...")
+                        ret = self.run_command(cmd, allow_fail=True)
+                        
+                        if ret != 0:
+                            print(f"\n[Pipeline] GPU Execution Failed (Code {ret}). Automatically Retrying on CPU...")
+                            device_arg = "cpu"
+                            cmd_cpu = f"{sys.executable} -m src.nexus_final.distill_knowledge --teacher '{path}' --output '{output_dir}' --dataset '{ds_res}' --device {device_arg} --limit {self.sample_size}"
+                            self.run_command(cmd_cpu, allow_fail=False)
 
         self.state["completed_stages"].append("knowledge_extraction")
         self.state["current_stage"] = "training"
@@ -444,11 +506,18 @@ class NexusPipeline:
         print("\n=== STAGE 2: DISTILLATION LOOP ===")
         profile_path = os.path.join(RESULTS_ROOT, "mock_critical_layers.json") 
         if os.path.exists(RESULTS_ROOT):
-            files = sorted([f for f in os.listdir(RESULTS_ROOT) if f.endswith(".json")], reverse=True)
+            import glob
+            # Search recursively for the most recent profile
+            files = sorted(glob.glob(os.path.join(RESULTS_ROOT, "**/*.json"), recursive=True), key=os.path.getmtime, reverse=True)
             if files:
-                profile_path = os.path.join(RESULTS_ROOT, files[0])
+                profile_path = files[0]
+                print(f"[Pipeline] Using Profile: {profile_path}")
 
-        self.run_command(f"'{sys.executable}' '{os.path.join(BASE_DIR, 'scripts/train.py')}' --epochs 1 --profile_path '{profile_path}'")
+        hidden_size = self.state["config"].get("hidden_size", 2048)
+        vocab_size = self.state["config"].get("vocab_size", 128256)
+        
+        cmd = f"'{sys.executable}' '{os.path.join(BASE_DIR, 'scripts/train.py')}' --epochs {self.epochs} --profile_path '{profile_path}' --hidden_size {hidden_size} --vocab_size {vocab_size}"
+        self.run_command(cmd)
         
         self.state["completed_stages"].append("training")
         self.state["current_stage"] = "router_training"
@@ -460,7 +529,12 @@ class NexusPipeline:
             return
 
         print("\n=== STAGE 3: ROUTER TRAINING ===")
-        cmd = f"'{sys.executable}' '{os.path.join(BASE_DIR, 'scripts/train_router.py')}'"
+        # Calculate towers dynamically to match student initialization
+        num_towers = len([k for k in TEACHER_REGISTRY.keys() if TEACHER_REGISTRY[k].get('model')])
+        # Use detected student dimension
+        input_dim = self.state["config"].get("hidden_size", 2048)
+        
+        cmd = f"'{sys.executable}' '{os.path.join(BASE_DIR, 'scripts/train_router.py')}' --input_dim {input_dim} --num_towers {num_towers}"
         self.run_command(cmd)
         
         self.state["completed_stages"].append("router_training")
@@ -487,7 +561,10 @@ class NexusPipeline:
             
         print("\n=== STAGE 5: EXPORT ===")
         ckpt_path = os.path.join(CHECKPOINT_DIR, "checkpoint_latest.pt")
-        cmd = f"{sys.executable} -m src.nexus_final.export --student '{ckpt_path}' --output '{RELEASE_DIR}'"
+        hidden_size = self.state["config"].get("hidden_size", 2048)
+        vocab_size = self.state["config"].get("vocab_size", 128256)
+        
+        cmd = f"{sys.executable} -m src.nexus_final.export --student '{ckpt_path}' --output '{RELEASE_DIR}' --hidden_size {hidden_size} --vocab_size {vocab_size}"
         self.run_command(cmd)
         
         self.state["completed_stages"].append("export")
@@ -526,7 +603,11 @@ class NexusPipeline:
         # Determine start point
         start_key = self.state.get("current_stage", "init")
         
-        if start_key == "init" or start_key == "profiling":
+        if start_key == "init" or start_key == "metadata_discovery":
+            self.stage_metadata_discovery()
+            if self.paused: return
+
+        if self.state["current_stage"] == "metadata_discovery" or self.state["current_stage"] == "profiling":
             self.stage_profiling()
             if self.paused: return
 

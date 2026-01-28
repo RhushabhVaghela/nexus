@@ -14,20 +14,34 @@ class NexusDistillationDataset(Dataset):
     """
     Loads Knowledge Shards produced by Stage 1.5 (Extraction).
     """
-    def __init__(self, data_dir, tokenizer, max_length=2048):
-        self.files = glob.glob(os.path.join(data_dir, "**/*.pt"), recursive=True)
+    def __init__(self, data_dir, tokenizer, max_length=2048, hidden_size=2048):
+        self.data_dir = data_dir
+        self.files = glob.glob(os.path.join(self.data_dir, "**/*.pt"), recursive=True)
         # Filter for shard files (avoiding router weights etc)
         self.files = [f for f in self.files if "shard_" in os.path.basename(f)]
         
         self.tokenizer = tokenizer
         self.max_length = max_length
+        self.hidden_size = hidden_size
         
         print(f"[Dataset] Found {len(self.files)} knowledge shards in {data_dir}")
 
     def __len__(self):
-        return len(self.files)
+        return max(1, len(self.files))
 
     def __getitem__(self, idx):
+        if not self.files:
+            # Yield dummy sample for verification
+            print("[Dataset] Empty directory. Yielding dummy sample for verification...")
+            input_ids = torch.zeros(self.max_length, dtype=torch.long)
+            return {
+                "input_ids": input_ids,
+                "attention_mask": torch.ones(self.max_length, dtype=torch.long),
+                "labels": input_ids.clone(),
+                "teacher_features": {"base": torch.zeros(self.hidden_size)},
+                "teacher_logits": torch.zeros(1)
+            }
+            
         path = self.files[idx]
         try:
             # Shard contains: {'text': str, 'hidden_state': Tensor, ...}
@@ -70,37 +84,55 @@ def main():
     parser.add_argument("--batch_size", type=int, default=1) # Low batch size for safety
     parser.add_argument("--profile_path", type=str, default="")
     parser.add_argument("--data_dir", type=str, default="memory/")
+    parser.add_argument("--hidden_size", type=int, default=2048)
+    parser.add_argument("--vocab_size", type=int, default=128256)
     args = parser.parse_args()
 
     print(f"\n[Nexus Training] Starting Epochs: {args.epochs}")
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"[Hardware] Mode: {device}")
 
+    # 0. Hardware & Precision Optimization (Beast Mode: RTX 5080)
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cudnn.benchmark = True
+    
+    from src.nexus_final.utils.memory import check_memory_headroom, get_recommended_batch_size
+    ok, status = check_memory_headroom(vram_headroom_gb=1.0, ram_headroom_gb=2.0)
+    print(f"[Memory] Initial Check: {status}")
+
     # 1. Initialize Student (Low-Memory Mode)
-    # Using Llama-3-8B config logic
+    # Right-Sized for 16GB VRAM (Sweet Spot for Distillation)
+    # We slightly reduce layers and hidden size to ensure "and RAM" headroom is safe.
     config = NexusStudentConfig(
-        vocab_size=128256, 
-        hidden_size=4096,
-        num_hidden_layers=32,
-        num_attention_heads=32,
-        num_key_value_heads=8,
+        vocab_size=args.vocab_size, 
+        hidden_size=args.hidden_size,
+        num_hidden_layers=16, 
+        num_attention_heads=16,
+        num_key_value_heads=4,
         num_adapters=1,
-        torch_dtype=torch.float16 if device == "cuda" else torch.float32
+        torch_dtype=torch.bfloat16 if device == "cuda" else torch.float32
     )
 
-    print("[Memory] Initializing Student directly on Accelerator (FP16)...")
-    # Context manager to initialize directly on device (Avoids CPU RAM spike)
-    # If using PyTorch < 2.0, explicit to() is needed. 
-    # For robust OOM safety, we use Empty Init + Load or direct device construction.
-    # NexusStudentCore inherits PreTrainedModel, check if it handles _init_weights.
-    
-    # Critical: Initialize in FP16/BF16 to save 50% RAM
-    dtype = torch.float16 if device == "cuda" else torch.float32
+    print("[Memory] Initializing Student on Accelerator (Beast Mode: BF16)...")
+    dtype = torch.bfloat16 if device == "cuda" else torch.float32
     
     with torch.device(device):
         student = NexusStudentCore(config).to(dtype=dtype)
     
-    print(f"[Model] Student Initialized (Llama-3 Arch) on {device}.")
+    # Enable Gradient Checkpointing for VRAM savings
+    if device == "cuda":
+        print("[Memory] Enabling Gradient Checkpointing...")
+        student.gradient_checkpointing_enable()
+        
+        # 1.5 Compiled Execution (Beast Mode: Max Autotune)
+        print("[Performance] Compiling Student Model (torch.compile)...")
+        try:
+            student = torch.compile(student, mode="reduce-overhead")
+            print("[Performance] Kernel Fusion Active.")
+        except Exception as e:
+            print(f"[Warn] torch.compile failed: {e}. Falling back to eager.")
+
+    print(f"[Model] Student Initialized (~1.6B Params) on {device}.")
 
     # 2. Tokenizer (Using Llama-3-8B base)
     try:
@@ -115,14 +147,37 @@ def main():
         tokenizer.pad_token = tokenizer.eos_token
 
     # 3. Dataset
-    dataset = NexusDistillationDataset(args.data_dir, tokenizer)
+    dataset = NexusDistillationDataset(args.data_dir, tokenizer, hidden_size=args.hidden_size)
     if len(dataset) == 0:
         print("[Warn] No data found. Generating dummy batch for validation.")
     
-    loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
+    # Dynamic Batch Size Recommendation
+    batch_size = args.batch_size
+    if device == "cuda":
+        rec_batch = get_recommended_batch_size(base_batch=args.batch_size, max_batch=8)
+        if rec_batch > batch_size:
+            print(f"[Memory] Increasing batch_size from {batch_size} to {rec_batch} (VRAM Headroom Detected).")
+            batch_size = rec_batch
 
-    # 4. Optimizer
-    optimizer = AdamW(student.parameters(), lr=1e-5)
+    # Aggressive Data Pipelining (Beast Mode: Intel Ultra 9)
+    loader = DataLoader(
+        dataset, 
+        batch_size=batch_size, 
+        shuffle=True, 
+        pin_memory=True if device == "cuda" else False,
+        num_workers=8 if device == "cuda" else 0,
+        persistent_workers=True if device == "cuda" else False,
+        prefetch_factor=4 if device == "cuda" else None
+    )
+
+    # 4. Optimizer: Use 8-bit AdamW for massive VRAM savings
+    try:
+        import bitsandbytes as bnb
+        print("[Memory] Using 8-bit AdamW Optimizer...")
+        optimizer = bnb.optim.AdamW8bit(student.parameters(), lr=1e-5)
+    except ImportError:
+        print("[Warn] bitsandbytes not found. Using standard AdamW.")
+        optimizer = AdamW(student.parameters(), lr=1e-5)
 
     # 5. Trainer
     # Mock adapters for simple execution verification

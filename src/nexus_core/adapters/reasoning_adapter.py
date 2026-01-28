@@ -9,7 +9,7 @@ class ReasoningAdapter(nn.Module):
     Uses Activation-Guided Consolidation to distill critical reasoning capabilities
     from the teacher model.
     """
-    def __init__(self, teacher_dim: int = 4096, student_dim: int = 4096):
+    def __init__(self, teacher_dim: int, student_dim: int):
         super().__init__()
         self.teacher_dim = teacher_dim
         self.student_dim = student_dim
@@ -41,7 +41,7 @@ class ReasoningAdapter(nn.Module):
         self.critical_layers = [item['layer'] for item in data.get('critical_layers', [])]
         print(f"[Adapter] Configured with critical layers: {self.critical_layers}")
 
-    def forward(self, teacher_hidden_states: torch.Tensor):
+    def forward(self, teacher_hidden_states: torch.Tensor, student_query: Optional[torch.Tensor] = None):
         """
         Args:
             teacher_hidden_states: Tensor of shape (Batch, Seq, TeacherDim)
@@ -56,4 +56,4 @@ class ReasoningAdapter(nn.Module):
         # 3. Apply Gate
         output = aligned_features * gate_score
         
-        return output
+        return output, gate_score

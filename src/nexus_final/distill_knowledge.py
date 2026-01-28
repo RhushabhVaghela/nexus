@@ -51,12 +51,13 @@ class KnowledgeDistiller:
         hf_logging.set_verbosity_error() # Suppress "Some weights..." to console
         hf_logging.enable_propagation()  # Allow propagation to our file handler
 
-        # Datatype logic
-        model_dtype = torch.float16
+        # 0. Hardware Optimization (Beast Mode: RTX 5080)
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.benchmark = True
+
+        # Datatype logic: Use BF16 for Blackwell/Ada hardware
+        model_dtype = torch.bfloat16 if device == "cuda" else torch.float32
         if device == "cpu":
-             # Only force float32 if we are strictly using dense models on CPU.
-             # For GPTQ, we simply cannot run on CPU easily without kernels.
-             # If we try to force float32 on a GPTQ config, it might just break differently or OOM.
              pass 
 
         # Smart Model Loading Strategy

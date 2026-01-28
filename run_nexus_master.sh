@@ -60,6 +60,8 @@ print_usage() {
     echo "  --skip-non-llm      Skip profiling of non-LLM models."
     echo "  --models <NAMES>    Comma-separated list of teacher models or 'all' (default: all)"
     echo "  --datasets <NAMES>  Comma-separated list of datasets (e.g. 'code/stack-smol') or 'all'"
+    echo "  --sample_size <N>   Number of samples for profiling/distillation (default: 50)"
+    echo "  --epochs <N>        Number of training epochs (default: 1)"
     echo "  --help              Show this help message."
     echo ""
     exit 0
@@ -74,6 +76,8 @@ while [[ "$#" -gt 0 ]]; do
         --stage) TARGET_STAGE="$2"; shift ;;
         --models) SELECTED_MODELS="$2"; shift ;;
         --datasets) SELECTED_DATASETS="$2"; shift ;;
+        --sample_size) SAMPLE_SIZE="$2"; shift ;;
+        --epochs) EPOCHS="$2"; shift ;;
         --help|-h) print_usage ;;
         *) log_error "Unknown parameter: $1"; print_usage ;;
     esac
@@ -143,6 +147,14 @@ fi
 
 if [ "$SELECTED_MODELS" != "all" ]; then
     CMD="$CMD --models '$SELECTED_MODELS'"
+fi
+
+if [ -n "$SAMPLE_SIZE" ]; then
+    CMD="$CMD --sample_size $SAMPLE_SIZE"
+fi
+
+if [ -n "$EPOCHS" ]; then
+    CMD="$CMD --epochs $EPOCHS"
 fi
 
 log_step "Handing control to Python Orchestrator"

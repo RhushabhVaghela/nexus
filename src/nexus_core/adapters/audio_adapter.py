@@ -1,13 +1,13 @@
 import torch
 import torch.nn as nn
-from typing import List
+from typing import List, Optional
 from .base import BaseAdapter
 
 class AudioAdapter(nn.Module):
     """
     Adapter for the Audio Specialist Tower (Whisper, Parakeet, Qwen3-Audio).
     """
-    def __init__(self, teacher_dim: int = 1280, student_dim: int = 4096):
+    def __init__(self, teacher_dim: int, student_dim: int):
         super().__init__()
         self.teacher_dim = teacher_dim
         self.student_dim = student_dim
@@ -29,7 +29,7 @@ class AudioAdapter(nn.Module):
             self.critical_layers = [item['layer'] for item in data.get('critical_layers', [])]
             print(f"[AudioAdapter] Critical Layers: {self.critical_layers}")
 
-    def forward(self, teacher_activations: torch.Tensor):
+    def forward(self, teacher_activations: torch.Tensor, student_query: Optional[torch.Tensor] = None):
         # 1. Project
         aligned = self.alignment(teacher_activations)
         
@@ -37,4 +37,4 @@ class AudioAdapter(nn.Module):
         gate_score = torch.sigmoid(self.gate_proj(aligned))
         
         # 3. Output
-        return aligned * gate_score
+        return aligned * gate_score, gate_score

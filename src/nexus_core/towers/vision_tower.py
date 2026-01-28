@@ -4,7 +4,7 @@ from .base_tower import BaseTower
 from ..adapters.vision_adapter import VisionAdapter
 
 class VisionTower(BaseTower):
-    def __init__(self, config, teacher_dim, student_dim=4096):
+    def __init__(self, config, teacher_dim, student_dim):
         super().__init__(config)
         self.projection = VisionAdapter(teacher_dim, student_dim)
         

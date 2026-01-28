@@ -19,7 +19,7 @@ from src.utils.repetition import PromptRepetitionEngine
 class ImageProjector(nn.Module):
     """Projector from LLM hidden states to SD3 conditioning."""
     
-    def __init__(self, llm_dim: int = 4096, sd_dim: int = 2048, num_tokens: int = 77):
+    def __init__(self, llm_dim: int, sd_dim: int, num_tokens: int):
         super().__init__()
         self.num_tokens = num_tokens
         
@@ -83,7 +83,7 @@ class ImageGenStage(BaseStage):
             llm_dim = self.model.config.hidden_size
             
             # Initialize projector
-            self.projector = ImageProjector(llm_dim=llm_dim)
+            self.projector = ImageProjector(llm_dim=llm_dim, sd_dim=2048, num_tokens=77)
             self.projector = self.projector.to(self.model.device)
             
             # Optimizer for projector only

@@ -8,7 +8,7 @@ class VisionAdapter(nn.Module):
     Adapter for the Vision Specialist Tower (Step3-VL, SigLIP).
     Maps visual tokens to Student Space.
     """
-    def __init__(self, teacher_dim: int = 2048, student_dim: int = 4096):
+    def __init__(self, teacher_dim: int, student_dim: int):
         super().__init__()
         self.teacher_dim = teacher_dim
         self.student_dim = student_dim
@@ -30,7 +30,7 @@ class VisionAdapter(nn.Module):
             self.critical_layers = [item['layer'] for item in data.get('critical_layers', [])]
             print(f"[VisionAdapter] Critical Layers: {self.critical_layers}")
 
-    def forward(self, teacher_activations: torch.Tensor):
+    def forward(self, teacher_activations: torch.Tensor, student_query: Optional[torch.Tensor] = None):
         """
         Args:
             teacher_activations: (Batch, Seq, Teacher_Dim)
@@ -42,4 +42,4 @@ class VisionAdapter(nn.Module):
         gate_score = torch.sigmoid(self.gate_proj(aligned))
         
         # 3. Output
-        return aligned * gate_score
+        return aligned * gate_score, gate_score

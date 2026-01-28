@@ -19,7 +19,7 @@ from src.utils.repetition import PromptRepetitionEngine
 class VideoProjector(nn.Module):
     """Projector from LLM hidden states to SVD conditioning."""
     
-    def __init__(self, llm_dim: int = 4096, svd_dim: int = 1024, num_frames: int = 14):
+    def __init__(self, llm_dim: int, svd_dim: int, num_frames: int):
         super().__init__()
         self.num_frames = num_frames
         
@@ -80,7 +80,7 @@ class VideoGenStage(BaseStage):
             llm_dim = self.model.config.hidden_size
             
             # Initialize video projector
-            self.projector = VideoProjector(llm_dim=llm_dim)
+            self.projector = VideoProjector(llm_dim=llm_dim, svd_dim=1024, num_frames=14)
             self.projector = self.projector.to(self.model.device)
             
             self.optimizer = torch.optim.AdamW(

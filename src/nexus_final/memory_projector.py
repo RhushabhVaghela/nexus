@@ -6,7 +6,7 @@ class ActivationGuidedProjector(nn.Module):
     Learned projection that maps external embeddings/activations 
     into the Nexus Student's hidden dimension (4096).
     """
-    def __init__(self, input_dim: int, output_dim: int = 4096):
+    def __init__(self, input_dim: int, output_dim: int):
         super().__init__()
         self.projector = nn.Sequential(
             nn.Linear(input_dim, output_dim),

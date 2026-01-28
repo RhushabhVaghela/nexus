@@ -19,7 +19,7 @@ class NexusConfig:
     offload_cpu: bool = True  # Enable swapping to RAM
     
     # Model Architecture
-    shared_dim: int = 4096
+    shared_dim: int = 2048
     adapter_bottleneck_dim: int = 1024
     num_bridge_heads: int = 8
     

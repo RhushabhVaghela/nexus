@@ -119,7 +119,7 @@ def fake_omni_model_path(tmp_path_factory):
         "model_type": "qwen2_5_omni",
         "architectures": ["Qwen2_5OmniForConditionalGeneration"],
         "vocab_size": 151936,
-        "hidden_size": 4096,
+        "hidden_size": 128,
         "vision_config": {"hidden_size": 1024},
         "audio_config": {"hidden_size": 1024},
         "token2wav_config": {},
@@ -201,7 +201,7 @@ def fake_model_path(tmp_path_factory):
         "model_type": "qwen2",
         "architectures": ["Qwen2ForCausalLM"],
         "vocab_size": 151936,
-        "hidden_size": 4096,
+        "hidden_size": 128,
         "num_hidden_layers": 2,
         "num_attention_heads": 4,
     }
@@ -224,7 +224,7 @@ def real_text_model(text_model_path, device, request):
     if not request.config.getoption("--use-real-models"):
         mock_model = MagicMock()
         mock_model.device = torch.device(device)
-        mock_model.config = MagicMock(vocab_size=151936, hidden_size=4096, model_type="qwen2")
+        mock_model.config = MagicMock(vocab_size=151936, hidden_size=128, model_type="qwen2")
         mock_model.return_value = MagicMock(loss=torch.tensor(0.5), logits=torch.randn(1, 10, 151936))
         # Return an object with sequences attribute to mimic transformers output
         mock_output = MagicMock()
