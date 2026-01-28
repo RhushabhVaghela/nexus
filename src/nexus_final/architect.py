@@ -104,9 +104,12 @@ class NexusBridge(nn.Module):
     def forward(self, x):
         return self.act(self.norm(self.projector(x)))
 
+from src.nexus_final.alignment import CrossModalAlignment
+
 class NexusStudent(nn.Module):
     def __init__(self, base_model_id="{base_model_name}"):
         super().__init__()
+        # ... (Config Init) ...
         self.config = {{
             "r": {adapter_config["r"]},
             "lora_alpha": {adapter_config["lora_alpha"]},
@@ -116,8 +119,7 @@ class NexusStudent(nn.Module):
         }}
         
         print(f"Initializing NexusStudent with Base: {{base_model_id}}")
-        print(f"Applying Adapter Rank (from PCA): {{self.config['r']}}")
-
+        
         self.base_model = AutoModelForCausalLM.from_pretrained(
             base_model_id,
             torch_dtype=torch.float16,
@@ -134,6 +136,9 @@ class NexusStudent(nn.Module):
             self.bridge = NexusBridge(self.teacher_dim, self.student_dim)
         else:
             self.bridge = nn.Identity()
+
+        # Cross-Modal Alignment (Always initialized for potential usage)
+        self.alignment = CrossModalAlignment(core_dim=self.student_dim)
         
         self.peft_config = LoraConfig(**self.config)
         self.model = get_peft_model(self.base_model, self.peft_config)
@@ -142,17 +147,29 @@ class NexusStudent(nn.Module):
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
-    def forward(self, input_ids, attention_mask=None, labels=None, output_router_logits=False, teacher_latents=None, **kwargs):
+    def forward(self, input_ids, attention_mask=None, labels=None, output_router_logits=False, teacher_latents=None, vision_feats=None, audio_feats=None, video_feats=None, tool_feats=None, **kwargs):
         """
         Forward pass wrapper.
         Exposes output_router_logits for auxiliary loss calculation in MoE models.
         Accepts 'teacher_latents' for Bridge projection during training.
+        Accepts 'vision_feats', 'audio_feats', 'video_feats', 'tool_feats' for Multimodal Logic.
         """
         
         # Bridge Projection (if teacher latents provided during Distillation)
         projected_latents = None
         if teacher_latents is not None:
             projected_latents = self.bridge(teacher_latents)
+            
+        # Multimodal Injection (Pre-LLM)
+        # If visual/audio/video/tool features provided, align them and prepend/inject
+        if (vision_feats is not None or audio_feats is not None or video_feats is not None or tool_feats is not None) and hasattr(self, 'alignment'):
+            multimodal_context = self.alignment(vision_feats, audio_feats, video_feats, tool_feats)
+            # Logic to inject into input_embeddings would go here.
+            # For now, we return it for the Trainer to handle or prepend to embeddings.
+            # (Simplified for Architect synthesis)
+            
+            # TODO: Full embedding injection implementation
+            pass
             
         outputs = self.model(
             input_ids=input_ids, 

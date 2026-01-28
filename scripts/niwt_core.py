@@ -229,13 +229,35 @@ class NIWTCore:
     # HELPERS
     # =========================================================
     def _get_model_layers(self):
-        # Auto-detect layer list based on common architectures
-        if hasattr(self.model, "model"):
-            if hasattr(self.model.model, "layers"):
-                return self.model.model.layers
+        """
+        Dynamically locate the list of Transformer layers.
+        Searches recursively for the first nn.ModuleList that looks like transformer blocks.
+        """
+        # 1. Check common hardcoded locations first for speed
+        if hasattr(self.model, "model") and hasattr(self.model.model, "layers"):
+            return self.model.model.layers
         if hasattr(self.model, "layers"):
-             return self.model.layers
-        raise ValueError("Could not locate Transformer layers in model.")
+            return self.model.layers
+            
+        # 2. Recursive search
+        def find_layers(module):
+            for name, child in module.named_children():
+                if isinstance(child, nn.ModuleList) and len(child) > 0:
+                    # Check if elements look like layers (have attention or mlp)
+                    first_child = child[0]
+                    child_attrs = dir(first_child)
+                    if any(kw in child_attrs for kw in ["self_attn", "mlp", "attention", "block"]):
+                         return child
+                # Recurse
+                res = find_layers(child)
+                if res is not None: return res
+            return None
+
+        layers = find_layers(self.model)
+        if layers is not None:
+             return layers
+             
+        raise ValueError(f"Could not locate Transformer layers in model of type {type(self.model)}.")
 
     def _evaluate_capability(self, test_cases):
         """
@@ -245,13 +267,32 @@ class NIWTCore:
         score_sum = 0
         for prompt, target in test_cases:
              inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
+             # Safety: Clamp token IDs to avoid CUDA asserts if tokenizer > model vocab
+             if hasattr(self.model.config, 'vocab_size'):
+                 vocab_lim = self.model.config.vocab_size - 1
+                 
+                 # Debug: Print stats
+                 min_id = inputs['input_ids'].min().item()
+                 max_id = inputs['input_ids'].max().item()
+                 print(f"[Debug] Gen Input IDs: Min={min_id}, Max={max_id}, Vocab={vocab_lim}")
+                 
+                 # Print warning once if we detect OOB
+                 if (inputs['input_ids'] > vocab_lim).any() and not hasattr(self, '_warned_oob'):
+                     print(f"[Warn] Detected token IDs > vocab_size ({vocab_lim}). Clamping inputs to prevent crash.")
+                     self._warned_oob = True
+                 
+                 inputs['input_ids'] = inputs['input_ids'].clamp(max=vocab_lim)
+                 if 'attention_mask' in inputs:
+                     inputs['attention_mask'] = inputs['attention_mask'].to(self.model.device)
+
              with torch.no_grad():
-                 # Generate small sample
+                 # Generate small sample - Force Greedy to avoid Multinomial Crash on NaNs
                  outputs = self.model.generate(
                      **inputs, 
                      max_new_tokens=20, 
                      pad_token_id=self.tokenizer.eos_token_id,
-                     use_cache=True
+                     use_cache=True,
+                     do_sample=False
                  )
                  out_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
                  

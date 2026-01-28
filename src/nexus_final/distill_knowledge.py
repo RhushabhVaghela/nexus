@@ -4,7 +4,7 @@ import os
 import json
 import tqdm
 from typing import List, Dict, Any, Optional
-from transformers import AutoTokenizer, AutoModel, BitsAndBytesConfig
+from transformers import AutoTokenizer, AutoModel, AutoConfig, BitsAndBytesConfig
 from .knowledge import KnowledgeTower
 
 class KnowledgeDistiller:
@@ -23,33 +23,84 @@ class KnowledgeDistiller:
         self.model_path = teacher_model_path
         
         try:
-            self.tokenizer = AutoTokenizer.from_pretrained(teacher_model_path)
+            # fix_mistral_regex is needed for some newer models/tokenizers
+            try:
+                self.tokenizer = AutoTokenizer.from_pretrained(teacher_model_path, fix_mistral_regex=True)
+            except TypeError as te:
+                print(f"[Distiller] Note: 'fix_mistral_regex' not supported by this transformers version ({te}). Loading standard tokenizer.")
+                self.tokenizer = AutoTokenizer.from_pretrained(teacher_model_path)
         except Exception:
             # For some encoders, tokenizer might not be available or needed (e.g. CLIP/SigLIP might use processor)
             print(f"[Distiller] Warning: Could not load tokenizer for {teacher_model_path}. Using fallback.")
             self.tokenizer = None
         
-        quantization_config = BitsAndBytesConfig(load_in_4bit=True)
-        # Use AutoModel (generic) instead of AutoModelForCausalLM (specific)
+        # Detect GPTQ/AWQ to avoid BitsAndBytes conflict
+        is_quantized = "GPTQ" in teacher_model_path or "AWQ" in teacher_model_path
+        if is_quantized:
+            print(f"[Distiller] Detected Quantized Model ({teacher_model_path}). disabling BitsAndBytes.")
+            quantization_config = None
+        else:
+            quantization_config = BitsAndBytesConfig(load_in_4bit=True)
+
+        # Configure Logging to reduce console noise
+        import logging
+        logging.basicConfig(filename='distiller_debug.log', level=logging.INFO, 
+                            format='%(asctime)s - %(levelname)s - %(message)s')
+        
+        from transformers import logging as hf_logging
+        hf_logging.set_verbosity_error() # Suppress "Some weights..." to console
+        hf_logging.enable_propagation()  # Allow propagation to our file handler
+
+        # Datatype logic
+        model_dtype = torch.float16
+        if device == "cpu":
+             # Only force float32 if we are strictly using dense models on CPU.
+             # For GPTQ, we simply cannot run on CPU easily without kernels.
+             # If we try to force float32 on a GPTQ config, it might just break differently or OOM.
+             pass 
+
+        # Smart Model Loading Strategy
         try:
-            self.model = AutoModel.from_pretrained(
-                teacher_model_path, 
-                torch_dtype=torch.float16, 
-                device_map=device,
-                quantization_config=quantization_config,
-                trust_remote_code=True
-            )
+            # 1. Inspect config first
+            config = AutoConfig.from_pretrained(teacher_model_path, trust_remote_code=True)
+            model_type = getattr(config, "model_type", "")
+            logging.info(f"Model Type Detected: {model_type}")
+
+            if model_type == "qwen2_5_omni":
+                print(f"[Distiller] Detected '{model_type}'. Using Qwen2ForCausalLM (Omni-Compatible).")
+                from transformers import Qwen2ForCausalLM
+                self.model = Qwen2ForCausalLM.from_pretrained(
+                    teacher_model_path,
+                    dtype=model_dtype,
+                    device_map=device,
+                    trust_remote_code=True
+                )
+            else:
+                # 2. Standard Loading Path
+                try:
+                    self.model = AutoModel.from_pretrained(
+                        teacher_model_path, 
+                        dtype=model_dtype, 
+                        device_map=device,
+                        quantization_config=quantization_config,
+                        trust_remote_code=True
+                    )
+                except Exception:
+                    # 3. Fallback for models that demand xxxForCausalLM (e.g., standard Qwen)
+                    print(f"[Distiller] AutoModel failed. Falling back to AutoModelForCausalLM.")
+                    from transformers import AutoModelForCausalLM
+                    self.model = AutoModelForCausalLM.from_pretrained(
+                        teacher_model_path,
+                        dtype=model_dtype,
+                        device_map=device,
+                        quantization_config=quantization_config,
+                        trust_remote_code=True
+                    )
+
         except Exception as e:
-            print(f"[Distiller] Error loading model {teacher_model_path}: {e}")
-            # Fallback to CausalLM if AutoModel failed for some reason
-            from transformers import AutoModelForCausalLM
-            self.model = AutoModelForCausalLM.from_pretrained(
-                teacher_model_path,
-                torch_dtype=torch.float16,
-                device_map=device,
-                quantization_config=quantization_config,
-                trust_remote_code=True
-            )
+            logging.error(f"[Distiller] Fatal Load Error: {e}")
+            print(f"[Distiller] Failed to load model {teacher_model_path}. See 'distiller_debug.log'.")
+            raise e
         self.model.eval()
 
     def extract_thematic_clusters(
@@ -108,18 +159,20 @@ class KnowledgeDistiller:
 
 if __name__ == "__main__":
     import argparse
+    parser = argparse.ArgumentParser()
     parser.add_argument("--teacher", required=True, help="Path to teacher model")
     parser.add_argument("--output", required=True, help="Output directory for shards")
     parser.add_argument("--dataset", type=str, default="general/google_smol", help="Dataset path relative to /mnt/e/data/datasets")
     parser.add_argument("--limit", type=int, default=100, help="Max samples to extract")
     parser.add_argument("--shard_prefix", type=str, default="shard", help="Prefix for saved shards")
+    parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu", help="Device to use (cuda/cpu)")
     args = parser.parse_args()
     
     # Mock KnowledgeTower for standalone run (or load real if path provided)
     from .knowledge import KnowledgeTower
-    tower = KnowledgeTower(index_path="vector_index.faiss") # Dummy/Local
+    tower = KnowledgeTower(device="cpu") # Dummy/Local instantiation for extraction
     
-    distiller = KnowledgeDistiller(tower, args.teacher)
+    distiller = KnowledgeDistiller(tower, args.teacher, device=args.device)
     
     # Use UniversalDataLoader
     from .data_loader import UniversalDataLoader

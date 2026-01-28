@@ -32,13 +32,17 @@ MEMORY_DIR = os.path.join(BASE_DIR, "memory")
 CHECKPOINT_DIR = os.path.join(BASE_DIR, "checkpoints")
 RELEASE_DIR = os.path.join(BASE_DIR, "nexus-release-v1")
 DATASET_BASE_DIR = "/mnt/e/data/datasets" # Default storage for downloaded datasets
+DATA_PATH = "/mnt/e/data" # Secondary location for models/encoders/decoders
 
 class NexusPipeline:
-    def __init__(self, dry_run=False, skip_non_llm=False, models=None, datasets=None):
+    def __init__(self, dry_run=False, skip_non_llm=False, models=None, datasets=None, sample_size=50, epochs=1):
         self.state = self._load_state()
         self.paused = False
         self.dry_run = dry_run
+        self.dry_run = dry_run
         self.skip_non_llm = skip_non_llm
+        self.sample_size = sample_size
+        self.epochs = epochs
         
         # Parse and Expand Selections
         self.target_models = self._resolve_selection(models, TEACHER_REGISTRY, "models")
@@ -115,14 +119,16 @@ class NexusPipeline:
         self._save_state()
         sys.exit(0)
 
-    def run_command(self, cmd):
+    def run_command(self, cmd, allow_fail=False):
         print(f"[Exec] {cmd}")
         if self.dry_run:
-            return
+            return 0
         ret = os.system(cmd)
         if ret != 0:
             print(f"[Error] Command failed with code {ret}")
-            sys.exit(ret)
+            if not allow_fail:
+                sys.exit(ret)
+        return ret
 
     def ensure_dataset_available(self, dataset_key):
         """
@@ -291,6 +297,7 @@ class NexusPipeline:
             else:
                 name = model_key
                 path = model_key
+                teacher = {} # Prevent UnboundLocalError
                 category = "unknown"
                 desc = "Raw Model Path"
             
@@ -310,9 +317,37 @@ class NexusPipeline:
             print(f"\n[Profiler] Target: {name} (Key: {model_key})")
             
             # Ensure model path is valid/download if needed (Future improvement)
-            model_arg = path
+            if os.path.exists(path):
+                model_arg = path
+            else:
+                # Check secondary DATA_PATH
+                # Path in registry is like /mnt/d/.../models/AgentCPM. We need relative part.
+                if path.startswith(BASE_DIR):
+                    rel_path = os.path.relpath(path, BASE_DIR)
+                    alt_path = os.path.join(DATA_PATH, rel_path)
+                    if os.path.exists(alt_path):
+                        print(f"[Profiler] Model found in secondary storage: {alt_path}")
+                        model_arg = alt_path
+                    else:
+                        fallback_id = teacher.get('model', name)
+                        print(f"[Profiler] Path not found in Repo or Data Drive. Autoloading from HF: {fallback_id}")
+                        model_arg = fallback_id
+                else:
+                    fallback_id = teacher.get('model', name)
+                    print(f"[Profiler] Local path {path} not found. Falling back to HF ID: {fallback_id}")
+                    model_arg = fallback_id
             
-            cmd = f"{sys.executable} {os.path.join(BASE_DIR, 'scripts/run_profiling_driver.py')} --teacher_id '{name}' --model_path '{model_arg}'"
+            # Prepare command
+            dataset_arg = ""
+            if self.target_datasets:
+                # Use the first available dataset for profiling stimulus
+                ds_key = self.target_datasets[0]
+                if ds_key in DATASET_REGISTRY and 'local_path' in DATASET_REGISTRY[ds_key]:
+                    dataset_arg = f"--dataset_name '{DATASET_REGISTRY[ds_key]['local_path']}'"
+                else:
+                    dataset_arg = f"--dataset_name '{ds_key}'"
+            
+            cmd = f"'{sys.executable}' '{os.path.join(BASE_DIR, 'scripts/run_profiling_driver.py')}' --teacher_id '{name}' --model_path '{model_arg}' {dataset_arg} --sample_size {self.sample_size}"
             self.run_command(cmd)
 
         self.state["completed_stages"].append("profiling")
@@ -349,7 +384,22 @@ class NexusPipeline:
             if model_key in TEACHER_REGISTRY:
                 teacher = TEACHER_REGISTRY[model_key]
                 name = teacher.get('model', model_key)
-                path = teacher.get('path', name)
+                raw_path = teacher.get('path', name)
+                if os.path.exists(raw_path):
+                    path = raw_path
+                else:
+                    # Check Secondary
+                    if raw_path.startswith(BASE_DIR):
+                        rel = os.path.relpath(raw_path, BASE_DIR)
+                        alt = os.path.join(DATA_PATH, rel)
+                        if os.path.exists(alt):
+                            path = alt
+                        else:
+                            path = teacher.get('model', name)
+                            print(f"[Librarian] Model not found locally. Using HF ID: {path}")
+                    else:
+                        path = teacher.get('model', name)
+                        print(f"[Librarian] Local path {raw_path} not found. Falling back to HF ID: {path}")
             else:
                 name = model_key
                 path = model_key
@@ -365,8 +415,22 @@ class NexusPipeline:
                     # ds_res is local_path
                     print(f"  -> Ingesting {ds_key} (Standard)...")
                     output_dir = os.path.join(MEMORY_DIR, name.replace('/', '_'))
-                    cmd = f"{sys.executable} -m src.nexus_final.distill_knowledge --teacher '{path}' --output '{output_dir}' --dataset '{ds_res}'"
-                    self.run_command(cmd)
+                    
+                    # Robust Execution Strategy: Try GPU first, fallback to CPU on crash
+                    # This handles Coder crashes, OOMs, or driver issues gracefully without hardcoding.
+                    device_arg = "cuda"
+                    cmd = f"{sys.executable} -m src.nexus_final.distill_knowledge --teacher '{path}' --output '{output_dir}' --dataset '{ds_res}' --device {device_arg} --limit {self.sample_size}"
+                    
+                    print(f"[Pipeline] Attempting execution on {device_arg.upper()}...")
+                    ret = self.run_command(cmd, allow_fail=True)
+                    
+                    if ret != 0:
+                        print(f"\n[Pipeline] GPU Execution Failed (Code {ret}). Automatically Retrying on CPU...")
+                        device_arg = "cpu"
+                        cmd_cpu = f"{sys.executable} -m src.nexus_final.distill_knowledge --teacher '{path}' --output '{output_dir}' --dataset '{ds_res}' --device {device_arg} --limit {self.sample_size}"
+                        
+                        # If CPU fails, we let it crash naturally
+                        self.run_command(cmd_cpu, allow_fail=False)
 
         self.state["completed_stages"].append("knowledge_extraction")
         self.state["current_stage"] = "training"
@@ -384,7 +448,7 @@ class NexusPipeline:
             if files:
                 profile_path = os.path.join(RESULTS_ROOT, files[0])
 
-        self.run_command(f"{sys.executable} {os.path.join(BASE_DIR, 'scripts/train.py')} --epochs 1 --profile_path '{profile_path}'")
+        self.run_command(f"'{sys.executable}' '{os.path.join(BASE_DIR, 'scripts/train.py')}' --epochs 1 --profile_path '{profile_path}'")
         
         self.state["completed_stages"].append("training")
         self.state["current_stage"] = "router_training"
@@ -396,7 +460,7 @@ class NexusPipeline:
             return
 
         print("\n=== STAGE 3: ROUTER TRAINING ===")
-        cmd = f"{sys.executable} {os.path.join(BASE_DIR, 'scripts/train_router.py')}"
+        cmd = f"'{sys.executable}' '{os.path.join(BASE_DIR, 'scripts/train_router.py')}'"
         self.run_command(cmd)
         
         self.state["completed_stages"].append("router_training")
@@ -409,7 +473,7 @@ class NexusPipeline:
             return
 
         print("\n=== STAGE 4: EVALUATION ===")
-        cmd = f"{sys.executable} {os.path.join(BASE_DIR, 'src/nexus_final/benchmark_nexus.py')}"
+        cmd = f"'{sys.executable}' '{os.path.join(BASE_DIR, 'src/nexus_final/benchmark_nexus.py')}'"
         self.run_command(cmd)
 
         self.state["completed_stages"].append("evaluation")
@@ -500,12 +564,14 @@ if __name__ == "__main__":
     parser.add_argument("--dry-run", action="store_true", help="Dry run mode")
     parser.add_argument("--models", type=str, default="all", help="Comma-separated list of teacher models or 'all'")
     parser.add_argument("--datasets", type=str, default=None, help="Comma-separated list of datasets or 'all'")
+    parser.add_argument("--sample_size", type=int, default=50, help="Number of samples to use")
+    parser.add_argument("--epochs", type=int, default=1, help="Number of training epochs")
     
     args = parser.parse_args()
     
     if args.reset:
         print("[Pipeline] FULL RESET requested. Clearing all previous artifacts...")
-        paths_to_nuke = [STATE_FILE, RESULTS_ROOT, MEMORY_DIR, CHECKPOINT_DIR, RELEASE_DIR, "benchmarks"]
+        paths_to_nuke = [STATE_FILE, RESULTS_ROOT, MEMORY_DIR, CHECKPOINT_DIR, RELEASE_DIR]
         for p in paths_to_nuke:
             full_p = os.path.join(BASE_DIR, p) if not os.path.isabs(p) else p
             if os.path.exists(full_p):
@@ -518,12 +584,16 @@ if __name__ == "__main__":
         os.makedirs(RESULTS_ROOT, exist_ok=True)
         os.makedirs(MEMORY_DIR, exist_ok=True)
         os.makedirs(CHECKPOINT_DIR, exist_ok=True)
+        print("[Pipeline] Reset complete. Exiting.")
+        sys.exit(0)
 
     pipeline = NexusPipeline(
         dry_run=args.dry_run, 
         skip_non_llm=args.skip_non_llm,
         models=args.models,
-        datasets=args.datasets
+        datasets=args.datasets,
+        sample_size=args.sample_size,
+        epochs=args.epochs
     )
     
     pipeline.run()

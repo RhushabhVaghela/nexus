@@ -5,7 +5,7 @@ Defines the Teacher Models, Encoders, and Decoders used in the ecosystem.
 
 import os
 
-BASE_PATH = "/mnt/d/Research Experiments/nexus"
+BASE_PATH = "/mnt/e/data"
 
 TEACHER_REGISTRY = {
     # --- REASONING & AGENTIC (Language) ---

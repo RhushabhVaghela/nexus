@@ -2,6 +2,7 @@ import pytest
 import os
 import torch
 from src.nexus_final.distill import NexusTrainer
+from src.nexus_final.distill_knowledge import KnowledgeDistiller
 from src.nexus_final.loss_functions import ActivationAnchoringLoss
 
 @pytest.fixture
@@ -100,3 +101,43 @@ def test_activation_anchoring_loss():
     assert loss_anchored > 0
     
     # Verify that anchored loss is higher if drift is present (implicitly checked by logic)
+
+def test_smart_model_loading_strategies(tmp_path):
+    # We need to mock KnowledgeDistiller dependencies to test __init__ logic
+    from unittest.mock import MagicMock, patch
+    from src.nexus_final.distill_knowledge import KnowledgeDistiller
+    
+    tower_mock = MagicMock()
+
+    
+    # CASE 1: Omni Model Detection
+    with patch("src.nexus_final.distill_knowledge.AutoConfig.from_pretrained") as mock_conf, \
+         patch("transformers.Qwen2ForCausalLM.from_pretrained") as mock_qwen, \
+         patch("src.nexus_final.distill_knowledge.AutoModel.from_pretrained") as mock_auto:
+        
+        # Setup specific config response
+        mock_conf.return_value.model_type = "qwen2_5_omni"
+
+        
+        distiller = KnowledgeDistiller(tower_mock, "fake/omni-model", device="cpu")
+        
+        # specific verify
+        mock_qwen.assert_called_once()
+        mock_auto.assert_not_called()
+        print("Omni Smart Load: PASSED")
+
+    # CASE 2: Standard Model Fallback
+    with patch("src.nexus_final.distill_knowledge.AutoConfig.from_pretrained") as mock_conf, \
+         patch("transformers.Qwen2ForCausalLM.from_pretrained") as mock_qwen, \
+         patch("src.nexus_final.distill_knowledge.AutoModel.from_pretrained") as mock_auto:
+        
+        mock_conf.return_value.model_type = "llama"
+
+        
+        distiller = KnowledgeDistiller(tower_mock, "fake/llama-model", device="cpu")
+        
+        # Verify standard path
+        mock_auto.assert_called_once()
+        mock_qwen.assert_not_called()
+        print("Standard Smart Load: PASSED")
+

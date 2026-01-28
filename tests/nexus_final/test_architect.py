@@ -53,3 +53,9 @@ def test_student_model_synthesis(architect_setup):
         assert "class NexusStudent" in content
         assert "entropy_loss" in content # Verify my router diversity fix
         assert "projected_teacher_latents" in content
+        assert "projected_teacher_latents" in content
+        # Verify Multimodal Expansion in Forward Signature
+        assert "video_feats=None" in content
+        assert "tool_feats=None" in content
+        assert "self.alignment(vision_feats, audio_feats, video_feats, tool_feats)" in content
+
