@@ -1,0 +1,452 @@
+[
+  {
+    "id": 1,
+    "domain": "Math",
+    "difficulty": "easy",
+    "input": "Calculate 20% of 250",
+    "answer": "50",
+    "category": "Percentage",
+    "short_explanation": "20% = 0.20, so 250 × 0.20 = 50"
+  },
+  {
+    "id": 2,
+    "domain": "Math",
+    "difficulty": "easy",
+    "input": "What is the area of a rectangle with length 12 and width 8?",
+    "answer": "96",
+    "category": "Geometry",
+    "short_explanation": "Area = length × width = 12 × 8 = 96 square units"
+  },
+  {
+    "id": 3,
+    "domain": "Math",
+    "difficulty": "easy",
+    "input": "Solve for x: 4x + 9 = 29",
+    "answer": "5",
+    "category": "Algebra",
+    "short_explanation": "Subtract 9 from both sides (4x=20), then divide by 4"
+  },
+  {
+    "id": 4,
+    "domain": "Math",
+    "difficulty": "medium",
+    "input": "Find the hypotenuse of a right triangle with legs 6 and 8",
+    "answer": "10",
+    "category": "Geometry",
+    "short_explanation": "Using Pythagorean theorem: √(6² + 8²) = √(36+64) = √100 = 10"
+  },
+  {
+    "id": 5,
+    "domain": "Math",
+    "difficulty": "medium",
+    "input": "A train covers 450 km in 5 hours. What is its speed?",
+    "answer": "90 km/h",
+    "category": "Arithmetic",
+    "short_explanation": "Speed = Distance ÷ Time = 450 ÷ 5 = 90 km/h"
+  },
+  {
+    "id": 6,
+    "domain": "Math",
+    "difficulty": "medium",
+    "input": "Solve the system: 2x + 3y = 16 and x + y = 6",
+    "answer": "x = 2, y = 4",
+    "category": "Algebra",
+    "short_explanation": "From second equation x = 6 - y, substitute into first: 2(6-y) + 3y = 16"
+  },
+  {
+    "id": 7,
+    "domain": "Math",
+    "difficulty": "hard",
+    "input": "How many diagonals does a hexagon have?",
+    "answer": "9",
+    "category": "Combinatorics",
+    "short_explanation": "Formula is n(n-3)/2 = 6(3)/2 = 9 diagonals"
+  },
+  {
+    "id": 8,
+    "domain": "Math",
+    "difficulty": "hard",
+    "input": "Find the derivative of f(x) = ln(x² + 1)",
+    "answer": "f'(x) = 2x/(x² + 1)",
+    "category": "Calculus",
+    "short_explanation": "Apply chain rule: derivative of ln(u) is u'/u"
+  },
+  {
+    "id": 9,
+    "domain": "Code",
+    "difficulty": "easy",
+    "input": "Write Python code to convert string to uppercase",
+    "answer": "s.upper()",
+    "category": "Python",
+    "short_explanation": "String method upper() returns uppercase version"
+  },
+  {
+    "id": 10,
+    "domain": "Code",
+    "difficulty": "easy",
+    "input": "What is the output of print([1, 2] + [3, 4])?",
+    "answer": "[1, 2, 3, 4]",
+    "category": "Python",
+    "short_explanation": "List concatenation joins the two lists into one"
+  },
+  {
+    "id": 11,
+    "domain": "Code",
+    "difficulty": "easy",
+    "input": "Write JavaScript to get the length of an array arr",
+    "answer": "arr.length",
+    "category": "JavaScript",
+    "short_explanation": "Length property returns number of elements in array"
+  },
+  {
+    "id": 12,
+    "domain": "Code",
+    "difficulty": "medium",
+    "input": "Write SQL to find the highest salary in employees table",
+    "answer": "SELECT MAX(salary) FROM employees;",
+    "category": "SQL",
+    "short_explanation": "MAX() aggregate function returns maximum value in column"
+  },
+  {
+    "id": 13,
+    "domain": "Code",
+    "difficulty": "medium",
+    "input": "What is the space complexity of merge sort?",
+    "answer": "O(n)",
+    "category": "Algorithms",
+    "short_explanation": "Requires additional array of size n for merging elements"
+  },
+  {
+    "id": 14,
+    "domain": "Code",
+    "difficulty": "medium",
+    "input": "Write Python to filter even numbers from list [1,2,3,4,5,6]",
+    "answer": "list(filter(lambda x: x % 2 == 0, [1,2,3,4,5,6]))",
+    "category": "Python",
+    "short_explanation": "Filter applies lambda function to keep only even elements"
+  },
+  {
+    "id": 15,
+    "domain": "Code",
+    "difficulty": "hard",
+    "input": "Explain async/await in JavaScript",
+    "answer": "Syntax for handling promises asynchronously; async declares function, await pauses execution until promise resolves",
+    "category": "JavaScript",
+    "short_explanation": "Makes asynchronous code look synchronous and easier to read"
+  },
+  {
+    "id": 16,
+    "domain": "Code",
+    "difficulty": "hard",
+    "input": "Write Python to implement binary search iteratively",
+    "answer": "def bs(arr, t): l, r = 0, len(arr)-1; while l <= r: m = (l+r)//2; if arr[m] == t: return m; elif arr[m] < t: l = m+1; else: r = m-1; return -1",
+    "category": "Python",
+    "short_explanation": "Maintains left/right pointers, halves search space each iteration"
+  },
+  {
+    "id": 17,
+    "domain": "Language",
+    "difficulty": "easy",
+    "input": "Correct the grammar: 'Its a beautiful day'",
+    "answer": "It's a beautiful day",
+    "category": "Grammar",
+    "short_explanation": "'It's' is the contraction for 'it is', not the possessive 'its'"
+  },
+  {
+    "id": 18,
+    "domain": "Language",
+    "difficulty": "easy",
+    "input": "What is the synonym of 'rapid'?",
+    "answer": "Swift",
+    "category": "Vocabulary",
+    "short_explanation": "Swift means happening quickly or at high speed"
+  },
+  {
+    "id": 19,
+    "domain": "Language",
+    "difficulty": "easy",
+    "input": "Identify the adjective in: 'The tall building shines brightly'",
+    "answer": "tall",
+    "category": "Grammar",
+    "short_explanation": "'Tall' describes the noun 'building'"
+  },
+  {
+    "id": 20,
+    "domain": "Language",
+    "difficulty": "medium",
+    "input": "What literary device is used in 'The world is a stage'?",
+    "answer": "Metaphor",
+    "category": "Literature",
+    "short_explanation": "Direct comparison without 'like' or 'as'; equates world to stage"
+  },
+  {
+    "id": 21,
+    "domain": "Language",
+    "difficulty": "medium",
+    "input": "Change to past tense: 'She walks to school'",
+    "answer": "She walked to school",
+    "category": "Grammar",
+    "short_explanation": "Add -ed to regular verb walk for simple past tense"
+  },
+  {
+    "id": 22,
+    "domain": "Language",
+    "difficulty": "medium",
+    "input": "What is the meaning of the idiom 'piece of cake'?",
+    "answer": "Something very easy to do",
+    "category": "Vocabulary",
+    "short_explanation": "Originated from 1870s when cake was given as prize for easy contests"
+  },
+  {
+    "id": 23,
+    "domain": "Language",
+    "difficulty": "hard",
+    "input": "Analyze the tone of: 'What a surprise, the train is late again'",
+    "answer": "Sarcastic/Exasperated",
+    "category": "Analysis",
+    "short_explanation": "'What a surprise' implies expected outcome, showing frustration"
+  },
+  {
+    "id": 24,
+    "domain": "Language",
+    "difficulty": "hard",
+    "input": "Translate 'Thank you very much' to German",
+    "answer": "Vielen Dank",
+    "category": "Translation",
+    "short_explanation": "Standard German expression for expressing gratitude"
+  },
+  {
+    "id": 25,
+    "domain": "Science",
+    "difficulty": "easy",
+    "input": "What is the chemical symbol for sodium?",
+    "answer": "Na",
+    "category": "Chemistry",
+    "short_explanation": "From Latin 'natrium'; atomic number 11"
+  },
+  {
+    "id": 26,
+    "domain": "Science",
+    "difficulty": "easy",
+    "input": "What planet is closest to the Sun?",
+    "answer": "Mercury",
+    "category": "Astronomy",
+    "short_explanation": "Mercury orbits at average distance of 58 million km from Sun"
+  },
+  {
+    "id": 27,
+    "domain": "Science",
+    "difficulty": "easy",
+    "input": "What organ pumps blood throughout the body?",
+    "answer": "Heart",
+    "category": "Biology",
+    "short_explanation": "Muscular organ that circulates blood through circulatory system"
+  },
+  {
+    "id": 28,
+    "domain": "Science",
+    "difficulty": "medium",
+    "input": "What is the main gas in Earth's atmosphere?",
+    "answer": "Nitrogen (78%)",
+    "category": "Earth Science",
+    "short_explanation": "Nitrogen comprises about 78% of atmospheric composition"
+  },
+  {
+    "id": 29,
+    "domain": "Science",
+    "difficulty": "medium",
+    "input": "What is the formula for density?",
+    "answer": "Density = mass/volume",
+    "category": "Physics",
+    "short_explanation": "Measures mass per unit volume, typically kg/m³ or g/cm³"
+  },
+  {
+    "id": 30,
+    "domain": "Science",
+    "difficulty": "medium",
+    "input": "What is the pH of lemon juice?",
+    "answer": "Approximately 2",
+    "category": "Chemistry",
+    "short_explanation": "Citric acid makes lemon juice acidic with low pH"
+  },
+  {
+    "id": 31,
+    "domain": "Science",
+    "difficulty": "hard",
+    "input": "What is the function of ribosomes?",
+    "answer": "Protein synthesis",
+    "category": "Biology",
+    "short_explanation": "Ribosomes translate mRNA into amino acid chains (proteins)"
+  },
+  {
+    "id": 32,
+    "domain": "Science",
+    "difficulty": "hard",
+    "input": "What is the Doppler effect?",
+    "answer": "Change in frequency of wave in relation to observer moving relative to wave source",
+    "category": "Physics",
+    "short_explanation": "Approaching source has higher frequency; receding has lower frequency"
+  },
+  {
+    "id": 33,
+    "domain": "Reasoning",
+    "difficulty": "easy",
+    "input": "If all birds have feathers and penguins are birds, do penguins have feathers?",
+    "answer": "Yes",
+    "category": "Logic",
+    "short_explanation": "Syllogism: if A has property B and C is A, then C has B"
+  },
+  {
+    "id": 34,
+    "domain": "Reasoning",
+    "difficulty": "easy",
+    "input": "Complete the pattern: 3, 6, 12, 24, __",
+    "answer": "48",
+    "category": "Pattern",
+    "short_explanation": "Each number is multiplied by 2; geometric sequence with ratio 2"
+  },
+  {
+    "id": 35,
+    "domain": "Reasoning",
+    "difficulty": "easy",
+    "input": "M is taller than N. N is taller than O. Who is the shortest?",
+    "answer": "O",
+    "category": "Logic",
+    "short_explanation": "Transitive ordering: M > N > O, so O is shortest"
+  },
+  {
+    "id": 36,
+    "domain": "Reasoning",
+    "difficulty": "medium",
+    "input": "You have 8 balls, one is heavier. Find it in 2 weighings using balance scale",
+    "answer": "Weigh 3 vs 3. If equal, weigh remaining 2. If unequal, weigh 2 from heavier side against each other",
+    "category": "Logic",
+    "short_explanation": "Divide and conquer: 3-3-2 split eliminates 2/3 each weighing"
+  },
+  {
+    "id": 37,
+    "domain": "Reasoning",
+    "difficulty": "medium",
+    "input": "If 6 workers build a wall in 4 days, how long for 8 workers?",
+    "answer": "3 days",
+    "category": "Logic",
+    "short_explanation": "Inverse proportion: 6×4 = 8×3 = 24 worker-days total work"
+  },
+  {
+    "id": 38,
+    "domain": "Reasoning",
+    "difficulty": "medium",
+    "input": "What comes next: J, F, M, A, M, __?",
+    "answer": "J (June)",
+    "category": "Pattern",
+    "short_explanation": "First letters of months: January, February, March, April, May, June"
+  },
+  {
+    "id": 39,
+    "domain": "Reasoning",
+    "difficulty": "hard",
+    "input": "A man looks at a portrait and says 'Brothers and sisters I have none, but this man's father is my father's son.' Who is in the portrait?",
+    "answer": "His son",
+    "category": "Logic",
+    "short_explanation": "'My father's son' = himself (no brothers), so 'this man's father' = himself, making the subject his son"
+  },
+  {
+    "id": 40,
+    "domain": "Reasoning",
+    "difficulty": "hard",
+    "input": "I have cities but no houses, forests but no trees, water but no fish. What am I?",
+    "answer": "A map",
+    "category": "Logic",
+    "short_explanation": "Maps represent geographical features without containing physical objects"
+  },
+  {
+    "id": 41,
+    "domain": "Multimodal",
+    "difficulty": "easy",
+    "input": "[Image: Yellow triangular sign with exclamation mark] What does this sign mean?",
+    "answer": "Warning or caution",
+    "category": "Visual Recognition",
+    "short_explanation": "Yellow triangles with symbols indicate potential hazards ahead"
+  },
+  {
+    "id": 42,
+    "domain": "Multimodal",
+    "difficulty": "easy",
+    "input": "[Image: Pie chart divided into four unequal colored sections] What does this represent?",
+    "answer": "Proportional distribution of categories",
+    "category": "Data Visualization",
+    "short_explanation": "Pie charts show parts of a whole as angular slices"
+  },
+  {
+    "id": 43,
+    "domain": "Multimodal",
+    "difficulty": "easy",
+    "input": "[Image: Bright sun with no clouds visible] Describe the weather",
+    "answer": "Sunny or clear weather",
+    "category": "Visual Recognition",
+    "short_explanation": "Direct sunlight with clear sky indicates fair weather conditions"
+  },
+  {
+    "id": 44,
+    "domain": "Multimodal",
+    "difficulty": "medium",
+    "input": "[Image: Histogram with bell-shaped curve centered] What distribution is shown?",
+    "answer": "Normal distribution",
+    "category": "Data Visualization",
+    "short_explanation": "Symmetric bell curve indicates Gaussian distribution of data"
+  },
+  {
+    "id": 45,
+    "domain": "Multimodal",
+    "difficulty": "medium",
+    "input": "[Image: Gantt chart with horizontal bars of different lengths] What is this used for?",
+    "answer": "Project scheduling and timeline visualization",
+    "category": "Data Visualization",
+    "short_explanation": "Bars represent task durations and dependencies over time"
+  },
+  {
+    "id": 46,
+    "domain": "Multimodal",
+    "difficulty": "medium",
+    "input": "[Image: Radar chart with multiple axes and polygon shape] What does this display?",
+    "answer": "Multivariate data across multiple quantitative variables",
+    "category": "Data Visualization",
+    "short_explanation": "Each axis represents a variable; polygon shape shows relative values"
+  },
+  {
+    "id": 47,
+    "domain": "Multimodal",
+    "difficulty": "hard",
+    "input": "[Image: ROC curve with line close to top-left corner] What does this indicate?",
+    "answer": "High classifier performance with good true positive and low false positive rates",
+    "category": "Data Visualization",
+    "short_explanation": "Area under curve near 1.0 indicates excellent model discrimination"
+  },
+  {
+    "id": 48,
+    "domain": "Multimodal",
+    "difficulty": "hard",
+    "input": "[Image: Tree diagram with branches splitting at each node] What algorithm does this represent?",
+    "answer": "Decision tree",
+    "category": "Machine Learning",
+    "short_explanation": "Recursive binary splitting based on feature values for classification/regression"
+  },
+  {
+    "id": 49,
+    "domain": "Multimodal",
+    "difficulty": "hard",
+    "input": "[Image: Fisheye lens photo showing curved horizon] What causes this distortion?",
+    "answer": "Wide-angle lens optics creating barrel distortion",
+    "category": "Photography",
+    "short_explanation": "Extreme wide field of view bends straight lines toward edges"
+  },
+  {
+    "id": 50,
+    "domain": "Multimodal",
+    "difficulty": "hard",
+    "input": "[Image: MRI scan showing cross-sectional brain tissue with white/grey matter contrast] What imaging type is this?",
+    "answer": "T1-weighted MRI",
+    "category": "Medical Imaging",
+    "short_explanation": "MRI uses magnetic fields; T1-weighting shows white matter bright, grey matter dark"
+  }
+]

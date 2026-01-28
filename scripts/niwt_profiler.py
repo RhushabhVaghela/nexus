@@ -119,13 +119,22 @@ class NIWTProfiler:
     def evaluate_batch(self, prompts: list[str], targets: list[str]) -> float:
         inputs = self.tokenizer(prompts, return_tensors="pt", padding=True, truncation=True).to(self.model.device)
         
-        # Optimize generation for speed
+        gen_kwargs = {
+            "max_new_tokens": 512,
+            "pad_token_id": self.tokenizer.pad_token_id,
+            "do_sample": False,
+            "temperature": 0.0 # Keeping temperature for legacy but unsetting if do_sample is False
+        }
+        
+        # Clean up sampling params if do_sample is False to avoid warnings
+        if not gen_kwargs.get("do_sample", False):
+            gen_kwargs["top_p"] = None
+            gen_kwargs["top_k"] = None
+            gen_kwargs["temperature"] = None # Explicitly None to avoid warnings
+
         outputs = self.model.generate(
             **inputs, 
-            max_new_tokens=512, 
-            pad_token_id=self.tokenizer.pad_token_id,
-            do_sample=False,
-            temperature=0.0
+            **gen_kwargs
         )
         
         # Slice output to remove prompt for cleaner checking

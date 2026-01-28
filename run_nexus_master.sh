@@ -62,6 +62,14 @@ print_usage() {
     echo "  --datasets <NAMES>  Comma-separated list of datasets (e.g. 'code/stack-smol') or 'all'"
     echo "  --sample_size <N>   Number of samples for profiling/distillation (default: 50)"
     echo "  --epochs <N>        Number of training epochs (default: 1)"
+    echo "  --lr <VAL>          Student Learning Rate (default: 1e-5)"
+    echo "  --router-epochs <N> Number of router training epochs (default: 5)"
+    echo "  --router-lr <VAL>   Router Learning Rate (default: 1e-4)"
+    echo "  --embedding-model <M> Embedding model for Librarian (default: sentence-transformers/all-MiniLM-L6-v2)"
+    echo "  --use-unsloth      Enable Unsloth optimizations for 3x speedup."
+    echo "  --packing          Enable sequence packing for higher throughput."
+    echo "  --max-seq-length <N> Max sequence length (default: 2048)."
+    echo "  --grpo             Enable GRPO reasoning training stage."
     echo "  --help              Show this help message."
     echo ""
     exit 0
@@ -78,6 +86,14 @@ while [[ "$#" -gt 0 ]]; do
         --datasets) SELECTED_DATASETS="$2"; shift ;;
         --sample_size) SAMPLE_SIZE="$2"; shift ;;
         --epochs) EPOCHS="$2"; shift ;;
+        --lr) LR="$2"; shift ;;
+        --router-epochs) ROUTER_EPOCHS="$2"; shift ;;
+        --router-lr) ROUTER_LR="$2"; shift ;;
+        --embedding-model) EMBEDDING_MODEL="$2"; shift ;;
+        --use-unsloth) USE_UNSLOTH=true ;;
+        --packing) PACKING=true ;;
+        --max-seq-length) MAX_SEQ_LENGTH="$2"; shift ;;
+        --grpo) USE_GRPO=true ;;
         --help|-h) print_usage ;;
         *) log_error "Unknown parameter: $1"; print_usage ;;
     esac
@@ -106,6 +122,25 @@ fi
 echo ""
 
 # ============ PRE-FLIGHT CHECKS ============
+# ============ PRE-FLIGHT CHECKS ============
+cleanup_existing_processes() {
+    log_warn "Checking for existing Nexus processes..."
+    # Patterns to match
+    PATTERNS=("python.*nexus_pipeline.py" "python.*scripts/train.py" "python.*run_profiling_driver.py" "python.*distill_knowledge")
+    
+    for pattern in "${PATTERNS[@]}"; do
+        # pgrep returns 1 if no process found, which triggers set -e exit. Add || true.
+        pids=$(pgrep -f "$pattern" || true)
+        if [ -n "$pids" ]; then
+            log_warn "Killing conflicting processes for: $pattern (PIDs: $pids)"
+            echo "$pids" | xargs kill -9 2>/dev/null || true
+        fi
+    done
+    log_success "Process cleanup complete."
+}
+
+cleanup_existing_processes
+
 log_info "Performing system health check..."
 
 # 1. Check Python Dependencies
@@ -163,6 +198,38 @@ fi
 
 if [ -n "$EPOCHS" ]; then
     CMD="$CMD --epochs $EPOCHS"
+fi
+
+if [ -n "$LR" ]; then
+    CMD="$CMD --lr $LR"
+fi
+
+if [ -n "$ROUTER_EPOCHS" ]; then
+    CMD="$CMD --router_epochs $ROUTER_EPOCHS"
+fi
+
+if [ -n "$ROUTER_LR" ]; then
+    CMD="$CMD --router_lr $ROUTER_LR"
+fi
+
+if [ -n "$EMBEDDING_MODEL" ]; then
+    CMD="$CMD --embedding_model '$EMBEDDING_MODEL'"
+fi
+
+if [ "$USE_UNSLOTH" = true ]; then
+    CMD="$CMD --use_unsloth"
+fi
+
+if [ "$PACKING" = true ]; then
+    CMD="$CMD --packing"
+fi
+
+if [ -n "$MAX_SEQ_LENGTH" ]; then
+    CMD="$CMD --max_seq_length $MAX_SEQ_LENGTH"
+fi
+
+if [ "$USE_GRPO" = true ]; then
+    CMD="$CMD --grpo"
 fi
 
 log_step "Handing control to Python Orchestrator"

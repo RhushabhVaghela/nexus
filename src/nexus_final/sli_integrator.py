@@ -166,3 +166,30 @@ class SequentialLayerIntegrator:
                 if isinstance(out, tuple): out = out[0]
                 outputs.append(out.cpu())
         torch.save(torch.cat(outputs, dim=0), out_path)
+
+if __name__ == "__main__":
+    import argparse
+    from .data_loader import UniversalDataLoader
+
+    parser = argparse.ArgumentParser(description="Nexus Sequential Layer Integrator (SLI)")
+    parser.add_argument("--model", type=str, required=True, help="HF Model ID (e.g. DeepSeek-V3)")
+    parser.add_argument("--output", type=str, default="memory/sli_shards", help="Output directory for activations")
+    parser.add_argument("--dataset", type=str, required=True, help="Dataset path or key")
+    parser.add_argument("--limit", type=int, default=10, help="Max samples to process")
+    parser.add_argument("--student_dim", type=int, default=2048, help="Target student dimension (for future projection)")
+    args = parser.parse_args()
+
+    print(f"🚀 Initializing SLI for: {args.model}")
+    integrator = SequentialLayerIntegrator(
+        model_id=args.model,
+        output_dir=args.output,
+        cache_dir="temp_sli_shards",
+        activation_cache_dir=os.path.join(args.output, "activations")
+    )
+
+    loader = UniversalDataLoader()
+    print(f"[SLI] Loading dataset: {args.dataset}")
+    dataset = list(loader.load_dataset(args.dataset, limit=args.limit))
+    
+    integrator.run_sli(dataset)
+    print("✅ SLI Processing Complete.")

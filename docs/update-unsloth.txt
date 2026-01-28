@@ -1,0 +1,25 @@
+pip install --upgrade --force-reinstall --no-cache-dir --no-deps unsloth
+pip install --upgrade --force-reinstall --no-cache-dir --no-deps unsloth_zoo
+
+Why this configuration?
+--use-unsloth: Triples your tokens-per-second and slashes VRAM usage.
+--packing: Ensures that every training sequence is 100% full, meaning no VRAM is wasted on empty padding tokens.
+--grpo: Since you are training a "coder" model, this adds the reasoning stage we built, which will help the model "think" better through coding logic.
+--lr 5e-5: I consolidated your learning rate. 1.23e-4 is quite high for LoRA and can cause instability, while 5e-6 is very slow. 5e-5 is the "goldilocks" zone for Unsloth + LoRA.
+--embedding-model "all-mpnet-base-v2": You selected this twice; I kept it once. It’s a great choice for high-precision retrieval during the knowledge extraction stage.
+[!IMPORTANT] Since we implemented automatic fallback, even if you haven't installed the Unsloth library yet, this command is safe to run. It will simply notify you that Unsloth wasn't found and proceed with the standard (but slower) training path.
+
+Example - 
+
+./run_nexus_master.sh \
+  --use-unsloth \
+  --packing \
+  --grpo \
+  --models "coder, translation" \
+  --datasets "google_smol" \
+  --epochs 1 \
+  --lr 5e-5 \
+  --router-epochs 1 \
+  --router-lr 2e-4 \
+  --embedding-model "all-mpnet-base-v2" \
+  2>&1 | tee "pipeline-run-output.txt"

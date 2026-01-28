@@ -22,8 +22,24 @@ Nexus provides a tier-based capability manifest so consumers can understand the 
 
 - **Universal Perception**: Native understanding of Text, Images, Audio (Speech/Music), and Video.
 - **Sequential Layer Ingestion (SLI)**: The "Librarian" component allows ingesting knowledge from **Massive Models (100B - 1T+ parameters)** on consumer GPUs by streaming layers sequentially. Automatically falls back to SLI based on **Memory Headroom analysis**.
-- **Automated Distillation**: A self-driving pipeline (`nexus_pipeline.py`) that profiles, extracts, and distills knowledge from any teacher in the registry.
-- **Modular Architecture**: Hot-swappable **Adapters** allow you to load only the capabilities you need.
+
+# Nexus Self-Driving Pipeline
+
+> **v6.1 - "Beast Mode"**
+
+Nexus is a Universal Knowledge Distillation pipeline that fully automates the journey from Profiling -> Knowledge Extraction -> Distillation -> Router Training.
+
+## 🛡️ Robustness & Safety (New in v6.1)
+
+**Process Exclusivity (Singleton Execution)**
+
+- **Auto-Cleanup**: The master script (`run_nexus_master.sh`) automatically detects and kills any conflicting Nexus processes (e.g., zombie `train.py` or orphaned `nexus_pipeline.py`) before starting a new run.
+- **Lock Protection**: The Python Core uses a `.pipeline.lock` file to prevent accidental concurrent execution. If you try to run two instances manually, the second one will refuse to start.
+
+## Usage
+
+**Modular Architecture**: Hot-swappable **Adapters** allow you to load only the capabilities you need.
+
 - **Constraint-Aware**: Optimized for consumer hardware (RTX 5080 Laptop, 16GB VRAM) via NIWT Profiling and FlashAttention.
 
 ---

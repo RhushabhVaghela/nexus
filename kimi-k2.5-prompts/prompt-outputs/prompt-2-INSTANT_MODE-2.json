@@ -1,0 +1,452 @@
+[
+  {
+    "id": 1,
+    "domain": "Math",
+    "difficulty": "easy",
+    "input": "Calculate 15% of 300",
+    "answer": "45",
+    "category": "Percentage",
+    "short_explanation": "15% = 0.15, so 300 × 0.15 = 45"
+  },
+  {
+    "id": 2,
+    "domain": "Math",
+    "difficulty": "easy",
+    "input": "What is the perimeter of a square with side length 9?",
+    "answer": "36",
+    "category": "Geometry",
+    "short_explanation": "Perimeter = 4 × side = 4 × 9 = 36"
+  },
+  {
+    "id": 3,
+    "domain": "Math",
+    "difficulty": "easy",
+    "input": "Solve for y: 5y - 3 = 22",
+    "answer": "5",
+    "category": "Algebra",
+    "short_explanation": "Add 3 to both sides (5y=25), then divide by 5"
+  },
+  {
+    "id": 4,
+    "domain": "Math",
+    "difficulty": "medium",
+    "input": "Find the volume of a sphere with radius 3 (V = 4/3 πr³)",
+    "answer": "36π or approximately 113.1",
+    "category": "Geometry",
+    "short_explanation": "V = 4/3 × π × 27 = 36π cubic units"
+  },
+  {
+    "id": 5,
+    "domain": "Math",
+    "difficulty": "medium",
+    "input": "A car travels 360 km in 6 hours. What is its average speed?",
+    "answer": "60 km/h",
+    "category": "Arithmetic",
+    "short_explanation": "Speed = Distance ÷ Time = 360 ÷ 6 = 60 km/h"
+  },
+  {
+    "id": 6,
+    "domain": "Math",
+    "difficulty": "medium",
+    "input": "Solve the system: 3x + 2y = 12 and x - y = 1",
+    "answer": "x = 2.8, y = 1.8",
+    "category": "Algebra",
+    "short_explanation": "From second equation x = y + 1, substitute into first: 3(y+1) + 2y = 12"
+  },
+  {
+    "id": 7,
+    "domain": "Math",
+    "difficulty": "hard",
+    "input": "How many ways can 6 books be arranged on a shelf?",
+    "answer": "720",
+    "category": "Combinatorics",
+    "short_explanation": "6! = 6 × 5 × 4 × 3 × 2 × 1 = 720 permutations"
+  },
+  {
+    "id": 8,
+    "domain": "Math",
+    "difficulty": "hard",
+    "input": "Find the integral of f(x) = 4x³ + 3x²",
+    "answer": "F(x) = x⁴ + x³ + C",
+    "category": "Calculus",
+    "short_explanation": "Apply power rule for integration: ∫xⁿ dx = xⁿ⁺¹/(n+1)"
+  },
+  {
+    "id": 9,
+    "domain": "Code",
+    "difficulty": "easy",
+    "input": "Write Python code to check if a string s is empty",
+    "answer": "if not s:",
+    "category": "Python",
+    "short_explanation": "Empty strings evaluate to False in Python boolean context"
+  },
+  {
+    "id": 10,
+    "domain": "Code",
+    "difficulty": "easy",
+    "input": "What is the output of print(3 * 'ab')?",
+    "answer": "ababab",
+    "category": "Python",
+    "short_explanation": "String multiplication repeats the string 3 times"
+  },
+  {
+    "id": 11,
+    "domain": "Code",
+    "difficulty": "easy",
+    "input": "Write a JavaScript function to check if a number is positive",
+    "answer": "const isPositive = n => n > 0;",
+    "category": "JavaScript",
+    "short_explanation": "Returns true if n is greater than zero"
+  },
+  {
+    "id": 12,
+    "domain": "Code",
+    "difficulty": "medium",
+    "input": "Write SQL to count employees in each department",
+    "answer": "SELECT department, COUNT(*) FROM employees GROUP BY department;",
+    "category": "SQL",
+    "short_explanation": "GROUP BY aggregates rows by department; COUNT tallies each group"
+  },
+  {
+    "id": 13,
+    "domain": "Code",
+    "difficulty": "medium",
+    "input": "What is the time complexity of linear search?",
+    "answer": "O(n)",
+    "category": "Algorithms",
+    "short_explanation": "Worst case requires checking all n elements in the array"
+  },
+  {
+    "id": 14,
+    "domain": "Code",
+    "difficulty": "medium",
+    "input": "Write a Python dictionary comprehension mapping numbers 1-3 to their squares",
+    "answer": "{x: x**2 for x in range(1, 4)}",
+    "category": "Python",
+    "short_explanation": "Creates {1: 1, 2: 4, 3: 9}"
+  },
+  {
+    "id": 15,
+    "domain": "Code",
+    "difficulty": "hard",
+    "input": "Explain the difference between let and var in JavaScript",
+    "answer": "let is block-scoped; var is function-scoped and can be redeclared",
+    "category": "JavaScript",
+    "short_explanation": "let prevents hoisting issues and limits scope to nearest block"
+  },
+  {
+    "id": 16,
+    "domain": "Code",
+    "difficulty": "hard",
+    "input": "Write a Python decorator that doubles the return value of a function",
+    "answer": "def double_result(func): def wrapper(*args): return 2 * func(*args); return wrapper",
+    "category": "Python",
+    "short_explanation": "Decorators wrap functions to modify their behavior without changing source code"
+  },
+  {
+    "id": 17,
+    "domain": "Language",
+    "difficulty": "easy",
+    "input": "Correct the grammar: 'Your going to love this'",
+    "answer": "You're going to love this",
+    "category": "Grammar",
+    "short_explanation": "'You're' is the contraction for 'you are'"
+  },
+  {
+    "id": 18,
+    "domain": "Language",
+    "difficulty": "easy",
+    "input": "What is the antonym of 'ancient'?",
+    "answer": "Modern",
+    "category": "Vocabulary",
+    "short_explanation": "Modern means recent or contemporary, opposite of ancient"
+  },
+  {
+    "id": 19,
+    "domain": "Language",
+    "difficulty": "easy",
+    "input": "Identify the noun in: 'The dog runs quickly'",
+    "answer": "dog",
+    "category": "Grammar",
+    "short_explanation": "'Dog' is the person, place, or thing being described"
+  },
+  {
+    "id": 20,
+    "domain": "Language",
+    "difficulty": "medium",
+    "input": "What literary device is used in 'Time flies like an arrow'?",
+    "answer": "Simile",
+    "category": "Literature",
+    "short_explanation": "Compares time to an arrow using 'like' (explicit comparison)"
+  },
+  {
+    "id": 21,
+    "domain": "Language",
+    "difficulty": "medium",
+    "input": "Convert to active voice: 'The cake was eaten by the children'",
+    "answer": "The children ate the cake",
+    "category": "Grammar",
+    "short_explanation": "Subject performs the action; object receives it"
+  },
+  {
+    "id": 22,
+    "domain": "Language",
+    "difficulty": "medium",
+    "input": "What is the meaning of the idiom 'hit the sack'?",
+    "answer": "To go to bed or sleep",
+    "category": "Vocabulary",
+    "short_explanation": "Originated from using sacks as mattresses; means going to sleep"
+  },
+  {
+    "id": 23,
+    "domain": "Language",
+    "difficulty": "hard",
+    "input": "Analyze the tone of: 'Oh great, another meeting that could have been an email'",
+    "answer": "Sarcastic/Ironic",
+    "category": "Analysis",
+    "short_explanation": "'Oh great' expresses fake enthusiasm, highlighting inefficiency"
+  },
+  {
+    "id": 24,
+    "domain": "Language",
+    "difficulty": "hard",
+    "input": "Translate 'Good morning' to French",
+    "answer": "Bonjour",
+    "category": "Translation",
+    "short_explanation": "Standard French greeting used throughout the day"
+  },
+  {
+    "id": 25,
+    "domain": "Science",
+    "difficulty": "easy",
+    "input": "What is the chemical symbol for oxygen?",
+    "answer": "O",
+    "category": "Chemistry",
+    "short_explanation": "O is the atomic symbol for oxygen, atomic number 8"
+  },
+  {
+    "id": 26,
+    "domain": "Science",
+    "difficulty": "easy",
+    "input": "What is the largest planet in our solar system?",
+    "answer": "Jupiter",
+    "category": "Astronomy",
+    "short_explanation": "Jupiter is a gas giant with diameter ~139,820 km"
+  },
+  {
+    "id": 27,
+    "domain": "Science",
+    "difficulty": "easy",
+    "input": "What is the basic unit of life?",
+    "answer": "Cell",
+    "category": "Biology",
+    "short_explanation": "All living organisms are composed of one or more cells"
+  },
+  {
+    "id": 28,
+    "domain": "Science",
+    "difficulty": "medium",
+    "input": "What gas do animals produce during respiration?",
+    "answer": "Carbon dioxide (CO₂)",
+    "category": "Biology",
+    "short_explanation": "Cellular respiration converts glucose and oxygen into CO₂, water, and ATP"
+  },
+  {
+    "id": 29,
+    "domain": "Science",
+    "difficulty": "medium",
+    "input": "What is the acceleration due to gravity on Earth?",
+    "answer": "9.8 m/s²",
+    "category": "Physics",
+    "short_explanation": "Standard value for gravitational acceleration at Earth's surface"
+  },
+  {
+    "id": 30,
+    "domain": "Science",
+    "difficulty": "medium",
+    "input": "What is the atomic number of carbon?",
+    "answer": "6",
+    "category": "Chemistry",
+    "short_explanation": "Carbon has 6 protons in its nucleus"
+  },
+  {
+    "id": 31,
+    "domain": "Science",
+    "difficulty": "hard",
+    "input": "What is the Heisenberg Uncertainty Principle?",
+    "answer": "Cannot simultaneously know exact position and momentum of a particle",
+    "category": "Physics",
+    "short_explanation": "Fundamental limit in quantum mechanics; measurement disturbs the system"
+  },
+  {
+    "id": 32,
+    "domain": "Science",
+    "difficulty": "hard",
+    "input": "What enzyme unwinds DNA during replication?",
+    "answer": "Helicase",
+    "category": "Biology",
+    "short_explanation": "Helicase breaks hydrogen bonds between base pairs to separate strands"
+  },
+  {
+    "id": 33,
+    "domain": "Reasoning",
+    "difficulty": "easy",
+    "input": "If all squares are rectangles and all rectangles are quadrilaterals, are all squares quadrilaterals?",
+    "answer": "Yes",
+    "category": "Logic",
+    "short_explanation": "Transitive property: if A is B and B is C, then A is C"
+  },
+  {
+    "id": 34,
+    "domain": "Reasoning",
+    "difficulty": "easy",
+    "input": "Complete the pattern: 1, 4, 9, 16, __",
+    "answer": "25",
+    "category": "Pattern",
+    "short_explanation": "Perfect squares: 1², 2², 3², 4², so next is 5² = 25"
+  },
+  {
+    "id": 35,
+    "domain": "Reasoning",
+    "difficulty": "easy",
+    "input": "X is older than Y. Y is older than Z. Who is the oldest?",
+    "answer": "X",
+    "category": "Logic",
+    "short_explanation": "Transitive ordering: X > Y > Z, so X is oldest"
+  },
+  {
+    "id": 36,
+    "domain": "Reasoning",
+    "difficulty": "medium",
+    "input": "You have a 3-liter and 5-liter jug. How do you measure exactly 4 liters?",
+    "answer": "Fill 5L, pour into 3L leaving 2L. Empty 3L, pour 2L into it. Fill 5L again, pour 1L into 3L to fill it, leaving 4L in 5L jug",
+    "category": "Logic",
+    "short_explanation": "Use modular arithmetic: 5 - 3 = 2, then 5 - 1 = 4"
+  },
+  {
+    "id": 37,
+    "domain": "Reasoning",
+    "difficulty": "medium",
+    "input": "A bat and ball cost $11 total. The bat costs $10 more than the ball. How much is the ball?",
+    "answer": "$0.50",
+    "category": "Logic",
+    "short_explanation": "Ball = $0.50, bat = $10.50; difference is $10, total is $11"
+  },
+  {
+    "id": 38,
+    "domain": "Reasoning",
+    "difficulty": "medium",
+    "input": "What is the next number: 2, 3, 5, 7, 11, __?",
+    "answer": "13",
+    "category": "Pattern",
+    "short_explanation": "Sequence of prime numbers; 13 is the next prime"
+  },
+  {
+    "id": 39,
+    "domain": "Reasoning",
+    "difficulty": "hard",
+    "input": "Four people need to cross a bridge in 17 minutes. They take 1, 2, 5, 10 minutes. Only two cross at a time with one flashlight. How?",
+    "answer": "1+2 cross (2 min), 1 returns (1 min), 5+10 cross (10 min), 2 returns (2 min), 1+2 cross (2 min). Total: 17 minutes",
+    "category": "Logic",
+    "short_explanation": "Optimal strategy sends fastest people as escorts to minimize return trips"
+  },
+  {
+    "id": 40,
+    "domain": "Reasoning",
+    "difficulty": "hard",
+    "input": "I am lighter than a feather but the strongest person cannot hold me for long. What am I?",
+    "answer": "Breath",
+    "category": "Logic",
+    "short_explanation": "Breath has negligible weight but cannot be held indefinitely"
+  },
+  {
+    "id": 41,
+    "domain": "Multimodal",
+    "difficulty": "easy",
+    "input": "[Image: Green circular sign with white arrow pointing right] What does this traffic sign mean?",
+    "answer": "Mandatory right turn",
+    "category": "Visual Recognition",
+    "short_explanation": "Circular blue/green signs with arrows indicate mandatory directions"
+  },
+  {
+    "id": 42,
+    "domain": "Multimodal",
+    "difficulty": "easy",
+    "input": "[Image: Line graph trending downward from left to right] What trend is shown?",
+    "answer": "Decreasing trend or decline",
+    "category": "Data Visualization",
+    "short_explanation": "Downward slope indicates values decreasing over time or categories"
+  },
+  {
+    "id": 43,
+    "domain": "Multimodal",
+    "difficulty": "easy",
+    "input": "[Image: Dark clouds covering the sky] Describe the weather",
+    "answer": "Overcast or stormy weather",
+    "category": "Visual Recognition",
+    "short_explanation": "Dense cloud cover blocks sunlight, indicating potential rain"
+  },
+  {
+    "id": 44,
+    "domain": "Multimodal",
+    "difficulty": "medium",
+    "input": "[Image: Bar chart with bars of varying heights labeled Q1-Q4] Which quarter had highest sales?",
+    "answer": "The quarter with the tallest bar",
+    "category": "Data Visualization",
+    "short_explanation": "Bar height corresponds to sales volume; tallest indicates maximum"
+  },
+  {
+    "id": 45,
+    "domain": "Multimodal",
+    "difficulty": "medium",
+    "input": "[Image: Flowchart with diamond shape containing question mark] What does the diamond represent?",
+    "answer": "Decision point",
+    "category": "Data Visualization",
+    "short_explanation": "Diamonds in flowcharts indicate yes/no or conditional branches"
+  },
+  {
+    "id": 46,
+    "domain": "Multimodal",
+    "difficulty": "medium",
+    "input": "[Image: Venn diagram with two overlapping circles] What does the overlap represent?",
+    "answer": "Intersection or common elements between sets",
+    "category": "Data Visualization",
+    "short_explanation": "Overlapping region contains items belonging to both categories"
+  },
+  {
+    "id": 47,
+    "domain": "Multimodal",
+    "difficulty": "hard",
+    "input": "[Image: Confusion matrix with high values on diagonal] What does this indicate?",
+    "answer": "Good model performance with accurate predictions",
+    "category": "Data Visualization",
+    "short_explanation": "Diagonal values represent correct predictions; high values mean accuracy"
+  },
+  {
+    "id": 48,
+    "domain": "Multimodal",
+    "difficulty": "hard",
+    "input": "[Image: Box plot with long whisker extending downward] What does this indicate?",
+    "answer": "Presence of low outliers or wide spread in lower values",
+    "category": "Data Visualization",
+    "short_explanation": "Whiskers show range; extended whisker indicates data spread or outliers"
+  },
+  {
+    "id": 49,
+    "domain": "Multimodal",
+    "difficulty": "hard",
+    "input": "[Image: Infrared satellite image showing swirling pattern] What weather phenomenon is this?",
+    "answer": "Hurricane or cyclone",
+    "category": "Meteorology",
+    "short_explanation": "Spiral cloud pattern with eye indicates tropical cyclone formation"
+  },
+  {
+    "id": 50,
+    "domain": "Multimodal",
+    "difficulty": "hard",
+    "input": "[Image: X-ray showing bone fracture with displacement] What type of fracture is this?",
+    "answer": "Displaced fracture",
+    "category": "Medical Imaging",
+    "short_explanation": "Bone ends are misaligned and separated from normal position"
+  }
+]

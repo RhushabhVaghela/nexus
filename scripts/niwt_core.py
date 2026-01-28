@@ -92,6 +92,15 @@ class NIWTCore:
             
             results.append({"layer": i, "drop": drop, "critical": is_critical})
             
+        # 3. Fallback: If 0 critical layers found, take the top 3 most impactful anyway
+        if not self.critical_layers and results:
+            print("[Stage 1 Fallback] No layers crossed threshold. Selecting top 3 most impactful layers...")
+            # Sort by drop descending
+            sorted_results = sorted(results, key=lambda x: x['drop'], reverse=True)
+            for res in sorted_results[:3]:
+                self.critical_layers.append({"layer": res['layer'], "drop": res['drop']})
+                print(f"  [Fallback] Selected Layer {res['layer']:02d} | Drop: {res['drop']:.2%}")
+
         print(f"[Stage 1] Complete. Found {len(self.critical_layers)} critical layers.")
         return self.critical_layers
 
@@ -287,14 +296,27 @@ class NIWTCore:
 
              with torch.no_grad():
                  # Generate small sample - Force Greedy to avoid Multinomial Crash on NaNs
+                 gen_kwargs = {
+                     "max_new_tokens": 20,
+                     "min_new_tokens": 5,
+                     "repetition_penalty": 1.2,
+                     "pad_token_id": self.tokenizer.eos_token_id,
+                     "use_cache": True,
+                     "do_sample": False
+                 }
+                 
+                 # Clean up sampling params if do_sample is False to avoid warnings
+                 if not gen_kwargs.get("do_sample", False):
+                     # These might be in the model's generation_config, so we explicitly override them if possible
+                     # or just let Transformers handle it if we don't pass them.
+                     # However, to be extra safe and follow user request to "unset" them:
+                     gen_kwargs["top_p"] = None
+                     gen_kwargs["top_k"] = None
+                     gen_kwargs["temperature"] = None
+
                  outputs = self.model.generate(
                      **inputs, 
-                     max_new_tokens=20, 
-                     min_new_tokens=5, # Force it to say something
-                     repetition_penalty=1.2,
-                     pad_token_id=self.tokenizer.eos_token_id,
-                     use_cache=True,
-                     do_sample=False
+                     **gen_kwargs
                  )
                  out_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
                  

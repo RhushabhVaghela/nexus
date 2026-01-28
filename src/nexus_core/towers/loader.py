@@ -1,6 +1,8 @@
-import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, AutoModel
-from typing import Tuple, Optional
+import sys
+import os
+from typing import Tuple, Optional, Any
+from ..utils.universal_inspector import UniversalInspector
 
 class TowerLoader:
     """
@@ -33,6 +35,13 @@ class TowerLoader:
         
         try:
             if model_type == "causal":
+                # Pre-load fix: Help model find its custom scripts (e.g. translate-gemma)
+                custom_path = UniversalInspector.find_custom_script(model_path, "generate.py")
+                if custom_path:
+                    print(f"[TowerLoader] Found custom script folder: {custom_path}. Adding to sys.path.")
+                    if custom_path not in sys.path:
+                        sys.path.insert(0, custom_path)
+
                 model = AutoModelForCausalLM.from_pretrained(
                     model_path,
                     quantization_config=quant_config,

@@ -38,13 +38,19 @@ def main():
 
     # 1. Load Model (4-bit for VRAM safety, unless disabled)
     print(f"[Loader] Loading {args.model_path} (Quantization: {'Disabled' if args.no_quant else '4-bit'})...")
+    # Strong suppression for experimental/beta models that might have noisy configs
+    logging.getLogger("transformers.modeling_utils").setLevel(logging.ERROR)
+    logging.getLogger("transformers.generation.utils").setLevel(logging.ERROR)
+    logging.getLogger("transformers.tokenization_utils_base").setLevel(logging.ERROR)
+    
     try:
         # fix_mistral_regex is needed for some newer models/tokenizers
         try:
+            # fix_mistral_regex is needed for some newer models/tokenizers
             tokenizer = AutoTokenizer.from_pretrained(args.model_path, fix_mistral_regex=True)
             print("[Loader] Tokenizer loaded with fix_mistral_regex=True")
-        except TypeError as e:
-            print(f"[Warn] fix_mistral_regex not supported or failed: {e}. Falling back.")
+        except Exception as e:
+            # Fallback for older transformers or non-Mistral models
             tokenizer = AutoTokenizer.from_pretrained(args.model_path)
 
         if tokenizer.pad_token is None:
@@ -69,13 +75,15 @@ def main():
                 trust_remote_code=True,
                 torch_dtype=load_dtype
             )
+        print("[Loader] Model weights loaded successfully.")
     except Exception as e:
-        print(f"[Error] Failed to load model: {e}")
+        print(f"[Error] Critical failure during model loading: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
-    # 2. Initialize NIWT Core
-    config = {"alpha": 1.0} # Default config
-    niwt = NIWTCore(model, tokenizer, config)
+    # Re-suppress if needed, but keeping it INFO for now to catch issues
+    # logging.getLogger("transformers").setLevel(logging.ERROR)
 
     # Load Dataset Stimulus
     calibration_data = ["Hello world"] * 50 # Default fallback
@@ -137,31 +145,57 @@ def main():
         except Exception as e:
             print(f"[Warn] Failed to load dataset {args.dataset_name}: {e}. Using fallback calibration data.")
 
-    # 3. Stage 1: Perturbation
-    critical_layers = niwt.run_stage_1_perturbation(test_cases)
-    
-    # 4. Stage 2: Activation Analysis
-    niwt.run_stage_2_activation_analysis(calibration_data)
-    
-    # 5. Stage 3: Spectral Analysis
-    rank = niwt.run_stage_3_spectral()
-    
-    # 6. Save Profile
-    # Ensure full path for nested teacher IDs (e.g. Qwen/Coder) exists
-    profile_path = os.path.join(args.output_dir, f"{args.teacher_id}_profile.json")
-    os.makedirs(os.path.dirname(profile_path), exist_ok=True)
-    
-    profile_data = {
-        "teacher_id": args.teacher_id,
-        "critical_layers": [cl['layer'] for cl in critical_layers],
-        "intrinsic_dimension": rank,
-        "status": "complete"
-    }
-    
-    with open(profile_path, 'w') as f:
-        json.dump(profile_data, f, indent=2)
+    # stage 1: Perturbation
+    # For profiling, we force greedy search (do_sample=False) but must unset sampling flags
+    # to avoid transformers warnings/errors
+    def run_safe_generate(model, tokenizer, **kwargs):
+        # Remove sampling params if do_sample is False
+        if not kwargs.get("do_sample", False):
+            kwargs.pop("top_p", None)
+            kwargs.pop("top_k", None)
+            kwargs.pop("temperature", None)
+        return model.generate(**kwargs)
+
+    try:
+        # 2. Initialize NIWT Core
+        print("[NIWT] Initializing NIWT Core...")
+        config = {"alpha": 1.0} # Default config
+        niwt = NIWTCore(model, tokenizer, config)
+
+        # 3. Stage 1: Perturbation
+        print("[NIWT] Running Stage 1: Perturbation...")
+        critical_layers = niwt.run_stage_1_perturbation(test_cases)
         
-    print(f"[NIWT] Profile saved to {profile_path}")
+        # 4. Stage 2: Activation Analysis
+        print("[NIWT] Running Stage 2: Activation Analysis...")
+        niwt.run_stage_2_activation_analysis(calibration_data)
+        
+        # 5. Stage 3: Spectral Analysis
+        print("[NIWT] Running Stage 3: Spectral Analysis...")
+        rank = niwt.run_stage_3_spectral()
+        
+        # 6. Save Profile
+        # Ensure full path for nested teacher IDs (e.g. Qwen/Coder) exists
+        profile_path = os.path.join(args.output_dir, f"{args.teacher_id}_profile.json")
+        os.makedirs(os.path.dirname(profile_path), exist_ok=True)
+        
+        profile_data = {
+            "teacher_id": args.teacher_id,
+            "critical_layers": [cl['layer'] for cl in critical_layers],
+            "intrinsic_dimension": rank,
+            "status": "complete"
+        }
+        
+        with open(profile_path, 'w') as f:
+            json.dump(profile_data, f, indent=2)
+            
+        print(f"[NIWT] Profile saved to {profile_path}")
+
+    except Exception as e:
+        print(f"[Error] Profiling failed for {args.teacher_id}: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

@@ -55,7 +55,7 @@ class KnowledgeTower(nn.Module):
     """
     def __init__(
         self, 
-        student_dim: int,
+        student_dim: int = 2048,
         embedding_dim: int = 384, 
         device: str = "cpu",
         embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
@@ -74,8 +74,18 @@ class KnowledgeTower(nn.Module):
 
     def _lazy_init_encoder(self):
         if self.encoder is None:
-            self.tokenizer = AutoTokenizer.from_pretrained(self.embedding_model_id)
-            self.encoder = AutoModel.from_pretrained(self.embedding_model_id).to(self.device).eval()
+            # 1. Attempt Unsloth FastSentenceTransformer (3x speedup)
+            try:
+                from unsloth import FastSentenceTransformer
+                print(f"[Knowledge] Loading optimized FastSentenceTransformer: {self.embedding_model_id}")
+                self.encoder = FastSentenceTransformer(self.embedding_model_id, device=self.device)
+                self.using_fast_encoder = True
+            except (ImportError, Exception) as e:
+                # 2. Fallback to standard Transformers
+                print(f"[Knowledge] FastSentenceTransformer Not Available ({e}). Falling back to standard Transformers.")
+                self.tokenizer = AutoTokenizer.from_pretrained(self.embedding_model_id)
+                self.encoder = AutoModel.from_pretrained(self.embedding_model_id).to(self.device).eval()
+                self.using_fast_encoder = False
 
     def build_index(self, documents: List[str]):
         """
@@ -87,19 +97,27 @@ class KnowledgeTower(nn.Module):
         batch_size = 32
         
         with torch.no_grad():
-            for i in range(0, len(documents), batch_size):
-                batch = documents[i : i + batch_size]
-                encoded = self.tokenizer(batch, padding=True, truncation=True, return_tensors='pt').to(self.device)
-                outputs = self.encoder(**encoded)
-                # Mean Pooling + Normalization
-                mask = encoded['attention_mask'].unsqueeze(-1).expand(outputs.last_hidden_state.size())
-                sum_emb = torch.sum(outputs.last_hidden_state * mask, 1)
-                count = torch.clamp(mask.sum(1), min=1e-9)
-                pooled = sum_emb / count
-                normalized = torch.nn.functional.normalize(pooled, p=2, dim=1)
-                embeddings.append(normalized.cpu().numpy())
+            if self.using_fast_encoder:
+                # FastSentenceTransformer handles batching and pooling internally
+                all_embeddings = self.encoder.encode(documents, batch_size=batch_size, convert_to_numpy=True, normalize_embeddings=True)
+                embeddings.append(all_embeddings)
+            else:
+                for i in range(0, len(documents), batch_size):
+                    batch = documents[i : i + batch_size]
+                    encoded = self.tokenizer(batch, padding=True, truncation=True, return_tensors='pt').to(self.device)
+                    outputs = self.encoder(**encoded)
+                    # Mean Pooling + Normalization
+                    mask = encoded['attention_mask'].unsqueeze(-1).expand(outputs.last_hidden_state.size())
+                    sum_emb = torch.sum(outputs.last_hidden_state * mask, 1)
+                    count = torch.clamp(mask.sum(1), min=1e-9)
+                    pooled = sum_emb / count
+                    normalized = torch.nn.functional.normalize(pooled, p=2, dim=1)
+                    embeddings.append(normalized.cpu().numpy())
                 
-        all_embeddings = np.concatenate(embeddings, axis=0)
+        if self.using_fast_encoder:
+            all_embeddings = embeddings[0]
+        else:
+            all_embeddings = np.concatenate(embeddings, axis=0)
         self.index = faiss.IndexFlatIP(all_embeddings.shape[1])
         self.index.add(all_embeddings)
 
@@ -110,12 +128,15 @@ class KnowledgeTower(nn.Module):
         """
         self._lazy_init_encoder()
         with torch.no_grad():
-            encoded = self.tokenizer([query], padding=True, truncation=True, return_tensors='pt')
-            encoded = {k: v.to(self.device) for k, v in encoded.items()}
-            outputs = self.encoder(**encoded)
-            mask = encoded['attention_mask'].unsqueeze(-1).expand(outputs.last_hidden_state.size())
-            query_emb = (torch.sum(outputs.last_hidden_state * mask, 1) / torch.clamp(mask.sum(1), min=1e-9))
-            query_emb = torch.nn.functional.normalize(query_emb, p=2, dim=1).cpu().numpy()
+            if self.using_fast_encoder:
+                query_emb = self.encoder.encode([query], convert_to_numpy=True, normalize_embeddings=True)
+            else:
+                encoded = self.tokenizer([query], padding=True, truncation=True, return_tensors='pt')
+                encoded = {k: v.to(self.device) for k, v in encoded.items()}
+                outputs = self.encoder(**encoded)
+                mask = encoded['attention_mask'].unsqueeze(-1).expand(outputs.last_hidden_state.size())
+                pooled = (torch.sum(outputs.last_hidden_state * mask, 1) / torch.clamp(mask.sum(1), min=1e-9))
+                query_emb = torch.nn.functional.normalize(pooled, p=2, dim=1).cpu().numpy()
             
         scores, indices = self.index.search(query_emb, top_k)
         
@@ -127,12 +148,19 @@ class KnowledgeTower(nn.Module):
                 doc_text = self.documents[idx]
                 # Embed doc
                 with torch.no_grad():
-                    d_enc = self.tokenizer([doc_text], padding=True, truncation=True, return_tensors='pt')
-                    d_enc = {k: v.to(self.device) for k, v in d_enc.items()}
-                    d_out = self.encoder(**d_enc)
-                    d_mask = d_enc['attention_mask'].unsqueeze(-1).expand(d_out.last_hidden_state.size())
-                    d_emb = (torch.sum(d_out.last_hidden_state * d_mask, 1) / torch.clamp(d_mask.sum(1), min=1e-9))
-                    retrieved_embeddings.append(d_emb)
+                    if self.using_fast_encoder:
+                        # For the projector, we need the tensor output, not just the numpy embedding
+                        # However, FastSentenceTransformer encode() often returns numpy by default.
+                        # We use convert_to_tensor=True
+                        d_emb = self.encoder.encode([doc_text], convert_to_tensor=True, normalize_embeddings=False)
+                        retrieved_embeddings.append(d_emb)
+                    else:
+                        d_enc = self.tokenizer([doc_text], padding=True, truncation=True, return_tensors='pt')
+                        d_enc = {k: v.to(self.device) for k, v in d_enc.items()}
+                        d_out = self.encoder(**d_enc)
+                        d_mask = d_enc['attention_mask'].unsqueeze(-1).expand(d_out.last_hidden_state.size())
+                        d_emb = (torch.sum(d_out.last_hidden_state * d_mask, 1) / torch.clamp(d_mask.sum(1), min=1e-9))
+                        retrieved_embeddings.append(d_emb)
         
         if not retrieved_embeddings:
             return torch.zeros(1, 0, self.projector.projector[0].out_features).to(self.device)
@@ -149,12 +177,15 @@ class KnowledgeTower(nn.Module):
         """
         self._lazy_init_encoder()
         with torch.no_grad():
-            encoded = self.tokenizer([query], padding=True, truncation=True, return_tensors='pt')
-            encoded = {k: v.to(self.device) for k, v in encoded.items()}
-            outputs = self.encoder(**encoded)
-            mask = encoded['attention_mask'].unsqueeze(-1).expand(outputs.last_hidden_state.size())
-            query_emb = (torch.sum(outputs.last_hidden_state * mask, 1) / torch.clamp(mask.sum(1), min=1e-9))
-            query_emb = torch.nn.functional.normalize(query_emb, p=2, dim=1).cpu().numpy()
+            if self.using_fast_encoder:
+                query_emb = self.encoder.encode([query], convert_to_numpy=True, normalize_embeddings=True)
+            else:
+                encoded = self.tokenizer([query], padding=True, truncation=True, return_tensors='pt')
+                encoded = {k: v.to(self.device) for k, v in encoded.items()}
+                outputs = self.encoder(**encoded)
+                mask = encoded['attention_mask'].unsqueeze(-1).expand(outputs.last_hidden_state.size())
+                pooled = (torch.sum(outputs.last_hidden_state * mask, 1) / torch.clamp(mask.sum(1), min=1e-9))
+                query_emb = torch.nn.functional.normalize(pooled, p=2, dim=1).cpu().numpy()
             
         if self.index is None or self.index.ntotal == 0:
             return []

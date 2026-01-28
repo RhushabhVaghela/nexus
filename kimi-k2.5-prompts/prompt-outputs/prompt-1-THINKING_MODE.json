@@ -1,0 +1,459 @@
+[
+  {
+    "example_id": 1,
+    "domain": "Mathematical Reasoning",
+    "difficulty": "easy",
+    "input": "What is 15% of 200?",
+    "reasoning_steps": [
+      "Step 1: Understand the objective - calculate 15% of 200",
+      "Step 2: Convert percentage to decimal - 15% = 15/100 = 0.15",
+      "Step 3: Multiply the decimal by the total amount - 200 × 0.15",
+      "Step 4: Calculate - 200 × 0.15 = 30",
+      "Step 5: Verify - Check that 30/200 = 0.15 which equals 15% ✓"
+    ],
+    "answer": "30",
+    "principle": "Convert percentage to decimal by dividing by 100, then multiply by the total number"
+  },
+  {
+    "example_id": 2,
+    "domain": "Mathematical Reasoning",
+    "difficulty": "medium",
+    "input": "Divide 50 marbles between Alice and Bob in a 2:3 ratio. How many marbles does each person receive?",
+    "reasoning_steps": [
+      "Step 1: Identify total parts in ratio - 2 parts (Alice) + 3 parts (Bob) = 5 total parts",
+      "Step 2: Calculate value per part - 50 marbles ÷ 5 parts = 10 marbles per part",
+      "Step 3: Calculate Alice's share - 2 parts × 10 marbles/part = 20 marbles",
+      "Step 4: Calculate Bob's share - 3 parts × 10 marbles/part = 30 marbles",
+      "Step 5: Verify - Check that 20 + 30 = 50 marbles total and 20:30 simplifies to 2:3 ✓"
+    ],
+    "answer": "Alice receives 20 marbles, Bob receives 30 marbles",
+    "principle": "Sum the ratio parts, divide the total quantity by this sum, then multiply each ratio term by the resulting quotient"
+  },
+  {
+    "example_id": 3,
+    "domain": "Mathematical Reasoning",
+    "difficulty": "medium",
+    "input": "Find the area of an L-shaped figure composed of a 10cm×6cm rectangle with a 4cm×3cm rectangle removed from one corner.",
+    "reasoning_steps": [
+      "Step 1: Calculate area of the large rectangle - 10 cm × 6 cm = 60 cm²",
+      "Step 2: Calculate area of the removed rectangle - 4 cm × 3 cm = 12 cm²",
+      "Step 3: Subtract removed area from total area - 60 cm² - 12 cm² = 48 cm²",
+      "Step 4: Alternative verification - Divide L-shape into two rectangles: 10×3 and 6×3, calculate 30+18=48 cm² ✓"
+    ],
+    "answer": "48 cm²",
+    "principle": "Use the subtraction method for irregular shapes: calculate the area of the encompassing shape minus the area of the missing sections"
+  },
+  {
+    "example_id": 4,
+    "domain": "Mathematical Reasoning",
+    "difficulty": "hard",
+    "input": "A rectangle has a perimeter of 28 cm and a diagonal of 10 cm. Find the length and width of the rectangle.",
+    "reasoning_steps": [
+      "Step 1: Set up equations from constraints - Perimeter: 2(L+W)=28 → L+W=14; Diagonal: L²+W²=10²=100",
+      "Step 2: Use algebraic identity - (L+W)² = L² + 2LW + W²",
+      "Step 3: Substitute known values - 14² = 100 + 2LW → 196 = 100 + 2LW → 2LW = 96 → LW = 48",
+      "Step 4: Solve system - L and W are roots of t² - 14t + 48 = 0",
+      "Step 5: Factor quadratic - (t-6)(t-8)=0, so dimensions are 6 cm and 8 cm",
+      "Step 6: Verify - Perimeter: 2(6+8)=28 ✓; Diagonal: √(36+64)=√100=10 ✓"
+    ],
+    "answer": "Length 8 cm and width 6 cm (or vice versa)",
+    "principle": "Combine geometric constraints with algebraic identities to solve systems involving quadratic relationships"
+  },
+  {
+    "example_id": 5,
+    "domain": "Mathematical Reasoning",
+    "difficulty": "hard",
+    "input": "Anna, Ben, and Carla have ages summing to 45. Anna is twice as old as Carla. Ben's age is exactly halfway between Anna's and Carla's. How old is Ben?",
+    "reasoning_steps": [
+      "Step 1: Define variables - Let Carla's age = C",
+      "Step 2: Express relationships algebraically - Anna = 2C; Ben = (2C + C)/2 = 1.5C",
+      "Step 3: Set up sum equation - 2C + 1.5C + C = 45 → 4.5C = 45",
+      "Step 4: Solve for C - C = 10 (Carla is 10)",
+      "Step 5: Calculate Ben's age - Ben = 1.5 × 10 = 15",
+      "Step 6: Verify - Anna=20, Ben=15, Carla=10; Sum=45 ✓; 15 is halfway between 10 and 20 ✓"
+    ],
+    "answer": "15",
+    "principle": "Translate 'halfway between' as arithmetic mean and word relationships into simultaneous equations for constraint satisfaction"
+  },
+  {
+    "example_id": 6,
+    "domain": "Code",
+    "difficulty": "easy",
+    "input": "Write a Python statement to reverse the string 'hello' and store it in a variable named reversed_str.",
+    "reasoning_steps": [
+      "Step 1: Identify the target operation - reverse character order of 'hello' to get 'olleh'",
+      "Step 2: Select Python method - string slicing with [::-1] creates a reversed copy",
+      "Step 3: Implement syntax - reversed_str = 'hello'[::-1]",
+      "Step 4: Verify - The slice notation means start:end:step with -1 step reversing through the string ✓"
+    ],
+    "answer": "reversed_str = 'hello'[::-1]",
+    "principle": "Python slicing [::-1] generates a reversed sequence by stepping backwards through the original"
+  },
+  {
+    "example_id": 7,
+    "domain": "Code",
+    "difficulty": "medium",
+    "input": "Filter the list numbers = [1, 2, 3, 4, 5, 6, 7, 8] to keep only even values using a list comprehension.",
+    "reasoning_steps": [
+      "Step 1: Define the condition for filtering - number is even if number % 2 == 0 (modulo equals zero)",
+      "Step 2: Construct list comprehension syntax - [expression for item in iterable if condition]",
+      "Step 3: Implement - [x for x in numbers if x % 2 == 0]",
+      "Step 4: Execute mentally - Check each element: 2, 4, 6, 8 satisfy condition",
+      "Step 5: Verify result - Output [2, 4, 6, 8] contains only even integers ✓"
+    ],
+    "answer": "[x for x in numbers if x % 2 == 0] resulting in [2, 4, 6, 8]",
+    "principle": "Use list comprehension with a conditional filter for declarative, readable subset selection from iterables"
+  },
+  {
+    "example_id": 8,
+    "domain": "Code",
+    "difficulty": "medium",
+    "input": "Explain step-by-step how binary search finds the value 7 in the sorted array [1, 3, 5, 7, 9, 11].",
+    "reasoning_steps": [
+      "Step 1: Initialize search boundaries - left=0, right=5 (indices), target=7",
+      "Step 2: First iteration - Calculate middle index: (0+5)//2 = 2; Value at index 2 is 5",
+      "Step 3: Compare - 7 > 5, so discard left half; set left = mid + 1 = 3",
+      "Step 4: Second iteration - New middle: (3+5)//2 = 4; Value at index 4 is 9",
+      "Step 5: Compare - 7 < 9, so discard right half; set right = mid - 1 = 3",
+      "Step 6: Third iteration - Middle: (3+3)//2 = 3; Value at index 3 is 7",
+      "Step 7: Target found at index 3 ✓"
+    ],
+    "answer": "Index 3",
+    "principle": "Binary search divides the search space in half each iteration by comparing the target to the median element, achieving O(log n) complexity"
+  },
+  {
+    "example_id": 9,
+    "domain": "Code",
+    "difficulty": "medium",
+    "input": "Calculate the minimum number of coins needed to make 37 cents using a dynamic programming approach (coin denominations: 1, 5, 10, 25).",
+    "reasoning_steps": [
+      "Step 1: Initialize DP array where dp[i] represents minimum coins for amount i; dp[0]=0, others=∞",
+      "Step 2: Build up solutions for amounts 1 to 37: for each coin, if coin ≤ amount, dp[amount] = min(dp[amount], dp[amount-coin]+1)",
+      "Step 3: Calculate sequentially - dp[1]=1, dp[2]=2, ..., dp[5]=1 (one nickel), dp[6]=2 (5+1)",
+      "Step 4: Continue to dp[25]=1 (one quarter), dp[30]=2 (25+5), dp[35]=2 (25+10)",
+      "Step 5: Calculate dp[37] - min(dp[36]+1, dp[32]+1, dp[27]+1, dp[12]+1) = min(3+1, 4+1, 3+1, 2+1) = 3",
+      "Step 6: Verification - 37 = 25+10+1+1 requires 4 coins? Recalculate: dp[36] uses 25+10+1=3 coins? Actually dp[36]=25+10+1=3. So dp[37]=4. Check 10+10+10+5+1+1=6, 25+5+5+1+1=5. Optimal: 25+10+1+1=4. ✓"
+    ],
+    "answer": "4 coins (one quarter, one dime, and two pennies)",
+    "principle": "Dynamic programming solves optimization problems by storing optimal substructure solutions (minimum coins for sub-amounts) to avoid redundant calculations"
+  },
+  {
+    "example_id": 10,
+    "domain": "Code",
+    "difficulty": "hard",
+    "input": "Calculate the minimum edit distance between 'kitten' and 'sitting' using recursive memoization. Show the recurrence relation logic.",
+    "reasoning_steps": [
+      "Step 1: Define recurrence - If chars match, cost=0 and move diagonally; else cost=1 + min(insert, delete, replace)",
+      "Step 2: Build memoization table bottom-up: rows 'kitten'+1, cols 'sitting'+1",
+      "Step 3: Initialize base cases - transform empty string to prefix costs = length of prefix",
+      "Step 4: Fill table comparing characters: k≠s (min(0,1,1)+1=1), i≠i (0+diagonal), etc.",
+      "Step 5: Track operations: kitten→sitten (replace k→s), sitten→sittin (replace e→i), sittin→sitting (insert g)",
+      "Step 6: Verify - Table[6][7] = 3 operations; check path validity through matrix ✓"
+    ],
+    "answer": "3 (replace 'k' with 's', replace 'e' with 'i', insert 'g' at end)",
+    "principle": "Memoization stores Levenshtein subproblem solutions to prevent exponential recomputation in recursive string algorithms"
+  },
+  {
+    "example_id": 11,
+    "domain": "Language",
+    "difficulty": "easy",
+    "input": "Correct the grammar in: 'Their going to the store over there to buy they're bread.'",
+    "reasoning_steps": [
+      "Step 1: Analyze first 'Their' - should be contraction 'They're' (they are going)",
+      "Step 2: Analyze 'over there' - correct usage (location)",
+      "Step 3: Analyze final 'they're' - should be possessive 'their' (belonging to them)",
+      "Step 4: Construct corrected sentence",
+      "Step 5: Verify - 'They're going to the store over there to buy their bread.' ✓"
+    ],
+    "answer": "They're going to the store over there to buy their bread.",
+    "principle": "They're = contraction of 'they are'; their = possessive determiner; there = location adverb"
+  },
+  {
+    "example_id": 12,
+    "domain": "Language",
+    "difficulty": "easy",
+    "input": "Define the word 'ephemeral' and explain its etymological connection to the concept of transience.",
+    "reasoning_steps": [
+      "Step 1: Define meaning - lasting for a very short time, fleeting",
+      "Step 2: Trace etymology - Greek 'ephēmeros' meaning 'lasting only one day' (epi=on, hēmera=day)",
+      "Step 3: Connect to modern usage - mayfly lifespan, temporary digital content, fads",
+      "Step 4: Construct example sentence",
+      "Step 5: Verify definition captures both brevity and momentary beauty ✓"
+    ],
+    "answer": "Ephemeral means lasting for a very short time. From Greek 'ephēmeros' (lasting a day), it describes fleeting phenomena like mayflies or social media stories that disappear after 24 hours.",
+    "principle": "Trace etymology to understand connotation: ephemeral implies transience with a suggestion of delicate or poignant beauty"
+  },
+  {
+    "example_id": 13,
+    "domain": "Language",
+    "difficulty": "medium",
+    "input": "Read: 'John slammed his fist on the desk and stormed out of the meeting, leaving papers scattered across the floor.' What can we infer about John's emotional state and the meeting's outcome?",
+    "reasoning_steps": [
+      "Step 1: Analyze physical actions - 'slammed' indicates violent force, 'stormed out' suggests abrupt angry departure",
+      "Step 2: Analyze environmental effect - 'scattered papers' implies disregard for order/property",
+      "Step 3: Infer emotional state - combination shows anger, frustration, loss of control",
+      "Step 4: Infer meeting outcome - premature termination without resolution, likely conflict",
+      "Step 5: Distinguish inference from fact - The text doesn't explicitly state 'John was angry' but implies it through behavior ✓"
+    ],
+    "answer": "John was likely furious or frustrated; the meeting ended prematurely without resolution due to conflict.",
+    "principle": "Infer emotional states from physical action verbs and environmental effects rather than explicit emotional labels"
+  },
+  {
+    "example_id": 14,
+    "domain": "Language",
+    "difficulty": "medium",
+    "input": "Explain how to translate the English idiom 'kick the bucket' (meaning to die) into Spanish while preserving the euphemistic tone.",
+    "reasoning_steps": [
+      "Step 1: Recognize idiom type - euphemism for death using informal/vulgar imagery",
+      "Step 2: Analyze literal translation failure - 'patear el balde' means nothing in Spanish",
+      "Step 3: Identify target language equivalent - 'estirar la pata' (literally 'stretch the leg') is the comparable Spanish euphemism",
+      "Step 4: Note connotative match - both use body part metaphors (bucket/leg) and informal register",
+      "Step 5: Verify cultural equivalent - Both imply sudden or undignified death via animal allusion ✓"
+    ],
+    "answer": "Use the Spanish idiom 'estirar la pata' rather than literal translation, as both employ body-part euphemisms for death.",
+    "principle": "Translate idioms by finding conceptual and tonal equivalents in the target language, not literal word-for-word conversion"
+  },
+  {
+    "example_id": 15,
+    "domain": "Language",
+    "difficulty": "hard",
+    "input": "Disambiguate the sentence: 'I saw the man with the telescope.' Provide both parse trees and explain the syntactic attachment ambiguity.",
+    "reasoning_steps": [
+      "Step 1: Identify ambiguity source - prepositional phrase 'with the telescope' can modify different heads",
+      "Step 2: Parse 1 (Instrumental) - [I saw [the man] [with the telescope]]; I used the telescope to see the man",
+      "Step 3: Parse 2 (Descriptive) - [I saw [the man with the telescope]]; The man was holding the telescope",
+      "Step 4: Analyze syntactic structure - Attachment to Verb Phrase vs. Noun Phrase",
+      "Step 5: Semantic verification - Both interpretations are grammatically valid but contextually distinct ✓"
+    ],
+    "answer": "Two interpretations: 1) Instrumental: I used the telescope to see the man (PP attaches to VP), 2) Descriptive: I saw the man who was holding the telescope (PP attaches to NP)",
+    "principle": "Prepositional phrase attachment ambiguity arises when a PP can syntactically modify either the verb phrase (instrument) or the noun phrase (modifier)"
+  },
+  {
+    "example_id": 16,
+    "domain": "Science",
+    "difficulty": "easy",
+    "input": "Calculate the force required to accelerate a 5kg mass at 3 m/s².",
+    "reasoning_steps": [
+      "Step 1: Identify relevant physical law - Newton's Second Law of Motion",
+      "Step 2: Recall formula - Force = mass × acceleration (F = ma)",
+      "Step 3: Substitute values - m = 5 kg, a = 3 m/s²",
+      "Step 4: Calculate - F = 5 × 3 = 15",
+      "Step 5: Verify units - kg × m/s² = Newtons (N), so 15 N ✓"
+    ],
+    "answer": "15 Newtons",
+    "principle": "Newton's Second Law: Force equals mass times acceleration (F=ma), with force measured in Newtons"
+  },
+  {
+    "example_id": 17,
+    "domain": "Science",
+    "difficulty": "easy",
+    "input": "Balance the chemical equation: H₂ + O₂ → H₂O",
+    "reasoning_steps": [
+      "Step 1: Count atoms on left - H: 2, O: 2",
+      "Step 2: Count atoms on right - H: 2, O: 1",
+      "Step 3: Balance oxygen first - Need 2 O on right, so coefficient 2 before H₂O: H₂ + O₂ → 2H₂O",
+      "Step 4: Now H on right = 4, so balance left with 2H₂: 2H₂ + O₂ → 2H₂O",
+      "Step 5: Verify - Left: 4H, 2O; Right: 4H, 2O ✓"
+    ],
+    "answer": "2H₂ + O₂ → 2H₂O",
+    "principle": "Balance chemical equations by adjusting stoichiometric coefficients to ensure atom count is conserved on both sides of the reaction"
+  },
+  {
+    "example_id": 18,
+    "domain": "Science",
+    "difficulty": "medium",
+    "input": "Explain why a glass of ice water warms up when left in a room temperature environment using the concept of entropy.",
+    "reasoning_steps": [
+      "Step 1: Define entropy - measure of disorder or number of possible microstates in a system",
+      "Step 2: Identify initial states - Ice water (low entropy, ordered molecules) and Room (high entropy, thermal energy)",
+      "Step 3: Apply Second Law - Systems tend toward maximum entropy; heat flows to increase total universe entropy",
+      "Step 4: Explain mechanism - Thermal energy disperses from room (high temp) to ice water (low temp) distributing energy more evenly",
+      "Step 5: Verify equilibrium - Process stops when temperatures equalize (maximum entropy state reached) ✓"
+    ],
+    "answer": "Heat flows from the room to the ice water because the total entropy of the universe increases as thermal energy disperses from high-temperature regions to low-temperature regions until thermal equilibrium is reached.",
+    "principle": "Second Law of Thermodynamics: Heat flows spontaneously from hot to cold because this direction increases the total entropy of the universe"
+  },
+  {
+    "example_id": 19,
+    "domain": "Science",
+    "difficulty": "medium",
+    "input": "Explain the role of ATP in cellular respiration, specifically how it couples exergonic and endergonic reactions.",
+    "reasoning_steps": [
+      "Step 1: Define ATP structure - Adenosine triphosphate with high-energy phosphate bonds",
+      "Step 2: Explain exergonic phase - Cellular respiration (glucose breakdown) releases energy, used to phosphorylate ADP → ATP",
+      "Step 3: Explain endergonic coupling - ATP hydrolysis (ATP → ADP + Pi) releases -30.5 kJ/mol to drive cellular work",
+      "Step 4: Describe energy currency concept - ATP acts as intermediate shuttle between energy production and consumption",
+      "Step 5: Verify relationship - Exergonic (catabolism) → ATP synthesis → Endergonic (anabolism/movement) ✓"
+    ],
+    "answer": "ATP serves as the energy currency: cellular respiration extracts exergonic energy from glucose to phosphorylate ADP into ATP; ATP hydrolysis then provides the endergonic energy required for cellular work like muscle contraction.",
+    "principle": "ATP couples exergonic (energy-releasing) catabolic reactions to endergonic (energy-requiring) anabolic processes through phosphoryl group transfers"
+  },
+  {
+    "example_id": 20,
+    "domain": "Science",
+    "difficulty": "hard",
+    "input": "Calculate the minimum cable tension needed to support a 1000kg suspension bridge segment with a 10m cable angled 30 degrees from horizontal.",
+    "reasoning_steps": [
+      "Step 1: Identify forces - Weight W = mg = 1000 kg × 9.81 m/s² = 9810 N acting downward",
+      "Step 2: Resolve tension vector - Tension T has vertical component T×sin(30°) and horizontal T×cos(30°)",
+      "Step 3: Apply equilibrium condition - Vertical component must balance weight: T×sin(30°) = 9810 N",
+      "Step 4: Solve for T - T = 9810 / 0.5 = 19620 N",
+      "Step 5: Verify horizontal equilibrium - Horizontal components from both sides cancel; vertical supports weight ✓"
+    ],
+    "answer": "19,620 Newtons (approximately 19.6 kN)",
+    "principle": "Static equilibrium requires vector decomposition of tension into components that balance gravitational forces; vertical component T·sin(θ) must equal the supported weight"
+  },
+  {
+    "example_id": 21,
+    "domain": "Reasoning",
+    "difficulty": "easy",
+    "input": "All cats are mammals. Whiskers is a cat. Therefore, what is Whiskers?",
+    "reasoning_steps": [
+      "Step 1: Identify logical structure - Categorical syllogism with major premise, minor premise, conclusion",
+      "Step 2: Map categories - Cats ⊂ Mammals (all cats are subset of mammals)",
+      "Step 3: Map instance - Whiskers ∈ Cats (Whiskers is element of cat set)",
+      "Step 4: Apply transitive property - If A ⊂ B and C ∈ A, then C ∈ B",
+      "Step 5: Conclude - Whiskers ∈ Mammals ✓"
+    ],
+    "answer": "Whiskers is a mammal.",
+    "principle": "Syllogistic reasoning: If set A is a subset of set B, and element C belongs to set A, then C belongs to set B (transitivity of membership)"
+  },
+  {
+    "example_id": 22,
+    "domain": "Reasoning",
+    "difficulty": "easy",
+    "input": "Complete the sequence: 2, 4, 8, 16, __",
+    "reasoning_steps": [
+      "Step 1: Analyze differences - 4-2=2, 8-4=4, 16-8=8 (differences doubling)",
+      "Step 2: Check multiplicative pattern - 4/2=2, 8/4=2, 16/8=2 (constant ratio of 2)",
+      "Step 3: Identify sequence type - Geometric sequence with common ratio r=2",
+      "Step 4: Calculate next term - 16 × 2 = 32",
+      "Step 5: Verify pattern continuation - 32×2=64 maintains the geometric progression ✓"
+    ],
+    "answer": "32",
+    "principle": "Geometric sequences progress by constant multiplicative ratio; verify by checking that each term divided by its predecessor equals the same constant"
+  },
+  {
+    "example_id": 23,
+    "domain": "Reasoning",
+    "difficulty": "medium",
+    "input": "Three boxes are labeled 'Apples', 'Oranges', and 'Mixed', but all labels are incorrect. You may pick one fruit from one box. How do you correctly relabel all boxes?",
+    "reasoning_steps": [
+      "Step 1: Analyze constraints - All labels are wrong, so 'Mixed' box contains only one fruit type",
+      "Step 2: Select optimal box - Pick from the box labeled 'Mixed' (must be single fruit since label is wrong)",
+      "Step 3: Interpret result - If you get an apple, that box is actually 'Apples'",
+      "Step 4: Deduce second box - Box labeled 'Oranges' cannot contain oranges (wrong label) and cannot contain apples (found them), so must be 'Mixed'",
+      "Step 5: Deduce third box - By elimination, the box labeled 'Apples' must contain 'Oranges'",
+      "Step 6: Verify - All original labels wrong, all new labels correct ✓"
+    ],
+    "answer": "Pick from the box labeled 'Mixed'. If apple, it's the Apples box. The box labeled 'Oranges' must be Mixed (can't be oranges), and the remaining is Oranges.",
+    "principle": "Use counterfactual constraint propagation: leverage the fact that all information is definitely wrong to eliminate impossibilities and force logical deductions"
+  },
+  {
+    "example_id": 24,
+    "domain": "Reasoning",
+    "difficulty": "medium",
+    "input": "A plant near a sunny window with regular watering died within a week. The owner increased watering but the plant deteriorated further. What is the most likely cause?",
+    "reasoning_steps": [
+      "Step 1: Test overwatering hypothesis - More water worsened condition, consistent with root rot hypothesis",
+      "Step 2: Eliminate underwatering - More water didn't help, so not thirst",
+      "Step 3: Consider sunlight - Sunny window suggests adequate light, possible sunburn rare with gradual death",
+      "Step 4: Evaluate counterfactual - If lack of water was cause, adding water would improve, not worsen",
+      "Step 5: Confirm likely cause - Deterioration upon increased watering strongly indicates overwatering/root rot ✓"
+    ],
+    "answer": "Root rot caused by overwatering, evidenced by deterioration when given additional water.",
+    "principle": "Counterfactual causal reasoning: if increasing variable X worsens outcome Y, then X is likely a cause of Y rather than a preventative factor"
+  },
+  {
+    "example_id": 25,
+    "domain": "Reasoning",
+    "difficulty": "hard",
+    "input": "The Barber Paradox: A barber shaves all and only those who do not shave themselves. Who shaves the barber? Resolve the logical inconsistency.",
+    "reasoning_steps": [
+      "Step 1: Formalize condition - Barber shaves X iff X does not shave X",
+      "Step 2: Self-application - If Barber shaves Barber, then by definition he does not shave himself (contradiction)",
+      "Step 3: Negation test - If Barber does not shave himself, then by definition he must shave himself (contradiction)",
+      "Step 4: Identify paradox type - Self-referential set membership paradox (Russell's Paradox)",
+      "Step 5: Resolution - The set 'all who do not shave themselves' cannot have a selector function within the set; such a barber cannot exist",
+      "Step 6: Alternative resolution - The barber is a woman (not a man who shaves), or is shaved by someone outside the domain ✓"
+    ],
+    "answer": "This is a logically impossible situation (Russell's Paradox), proving no such barber can exist as defined; the set of 'all who do not shave themselves' cannot consistently include its own selector.",
+    "principle": "Russell's Paradox demonstrates that naive set comprehension leads to contradictions, requiring axiomatic restrictions on set formation or exclusion of self-reference"
+  },
+  {
+    "example_id": 26,
+    "domain": "Multimodal",
+    "difficulty": "easy",
+    "input": "[Image description: A photograph showing the sun halfway below the horizon over the ocean, with orange and red colors dominating the sky] Explain why the sun appears red in this image.",
+    "reasoning_steps": [
+      "Step 1: Identify phenomenon - Sunset/sunrise with sun near horizon",
+      "Step 2: Recall light scattering - Rayleigh scattering intensity proportional to 1/λ⁴ (shorter wavelengths scatter more)",
+      "Step 3: Analyze path length - Low angle sun travels through more atmosphere, scattering blue light (short λ) extensively",
+      "Step 4: Determine transmitted light - Longer wavelengths (red/orange) scattered less, pass through to observer",
+      "Step 5: Verify - Blue light diverted, red light reaches eye directly from solar disk ✓"
+    ],
+    "answer": "The sun appears red due to Rayleigh scattering: as sunlight passes through the thicker atmosphere at low angles, shorter blue wavelengths scatter away, leaving longer red wavelengths to reach the observer.",
+    "principle": "Atmospheric scattering preferentially removes shorter wavelengths from the line of sight during low-angle solar events, transmitting the remaining longer wavelengths (red/orange)"
+  },
+  {
+    "example_id": 27,
+    "domain": "Multimodal",
+    "difficulty": "easy",
+    "input": "Connect the mathematical concept of sine waves to the sound produced by a flute.",
+    "reasoning_steps": [
+      "Step 1: Identify physical phenomenon - Sound is longitudinal pressure waves in air",
+      "Step 2: Map to mathematical model - Flute produces nearly pure tones modeled by sinusoidal functions y = A·sin(2πft)",
+      "Step 3: Connect parameters - Frequency f determines pitch (Hz), amplitude A determines volume (decibels)",
+      "Step 4: Describe mechanism - Periodic air pressure variation from vibrating air column in flute body",
+      "Step 5: Verify correspondence - Harmonic content of flute notes approximates sine wave superposition ✓"
+    ],
+    "answer": "A flute produces sound waves that can be modeled as sine waves where the mathematical function y=sin(2πft) represents air pressure variations over time, with frequency f determining pitch and amplitude determining loudness.",
+    "principle": "Harmonic oscillations in physical systems (air pressure) map directly to trigonometric sine functions, bridging mathematics and acoustics through wave equations"
+  },
+  {
+    "example_id": 28,
+    "domain": "Multimodal",
+    "difficulty": "medium",
+    "input": "[Visual description: A circle inscribed in a square with side length 10 units] Calculate the area of the shaded region between the square and the circle.",
+    "reasoning_steps": [
+      "Step 1: Calculate square area - Side² = 10² = 100 square units",
+      "Step 2: Determine circle dimensions - Diameter equals side length = 10, so radius r = 5",
+      "Step 3: Calculate circle area - πr² = π(5)² = 25π ≈ 78.54 square units",
+      "Step 4: Subtract regions - Shaded area = Square area - Circle area = 100 - 25π",
+      "Step 5: Alternative verification - Could also calculate as four corners each (25 - 25π/4) ✓"
+    ],
+    "answer": "100 - 25π square units (approximately 21.46)",
+    "principle": "Geometric constraint relationships: inscribed figures share critical dimensions (diameter equals side length) enabling area subtraction for composite region calculations"
+  },
+  {
+    "example_id": 29,
+    "domain": "Multimodal",
+    "difficulty": "hard",
+    "input": "Design a sorting strategy for physically organizing books on a shelf by weight (heaviest to lightest) that minimizes physical work (force × distance) using concepts from physics and computer science.",
+    "reasoning_steps": [
+      "Step 1: Identify physical constraints - Work done against gravity W = mgh; minimizing mass×distance is crucial",
+      "Step 2: Analyze algorithmic approaches - Bubble sort requires many small moves; Selection sort moves heavy items once but far; Insertion sort moves items short distances",
+      "Step 3: Synthesize optimal strategy - Use insertion sort starting from heaviest end: insert lighter books into the heavy sorted section",
+      "Step 4: Justify physically - Moving light books (small m) short distances (insertion) requires less work than moving heavy books (selection) or many swaps (bubble)",
+      "Step 5: Verify complexity - O(n²) comparisons but minimal physical work; contrast with standard CS optimality which minimizes comparisons not energy ✓"
+    ],
+    "answer": "Use insertion sort starting from the heaviest book: maintain a sorted heavy section and insert lighter books into their correct positions. This minimizes work (W=mgh) by moving smaller masses rather than larger ones.",
+    "principle": "Algorithmic efficiency differs from physical efficiency: minimize physical work (mass × distance) by prioritizing movement of light objects over heavy ones, contrary to comparison-minimizing sorts"
+  },
+  {
+    "example_id": 30,
+    "domain": "Multimodal",
+    "difficulty": "hard",
+    "input": "A delivery robot must navigate from point A to point B across hilly terrain while minimizing both energy consumption and time. Synthesize physics, algorithms, and logic to formulate the optimization approach.",
+    "reasoning_steps": [
+      "Step 1: Define physical model - Energy cost includes potential energy change (mgh), rolling resistance (μmg·cos(θ)·d), and acceleration; Time depends on velocity constraints",
+      "Step 2: Formulate multi-objective function - Scalarize using weighted sum: Cost = α(Energy in Joules) + β(Time in seconds) requiring dimensional consistency through conversion factors",
+      "Step 3: Apply graph representation - Discretize terrain into weighted graph where edge weights represent the combined cost function",
+      "Step 4: Select algorithm - Use A* search with heuristic combining Euclidean distance/speed and estimated energy based on elevation change",
+      "Step 5: Incorporate constraints - Maximum slope limits (physics), battery capacity (resource), dynamic obstacles (logic conditions)",
+      "Step 6: Verify optimality - Pareto frontier analysis confirms trade-off between speed and energy; downhill paths preferred for energy, direct paths for time ✓"
+    ],
+    "answer": "Model as a weighted graph where edge weights = α(mgh_change + friction×distance) + β(distance/max_speed). Use A* search with a heuristic estimating combined cost, prioritizing paths with gentle downhills to minimize the multi-objective cost function.",
+    "principle": "Multi-objective optimization requires scalarization (weighted sum) of heterogeneous units (Joules, seconds) through dimensional analysis and informed algorithmic search (A*) with domain-specific heuristics"
+  }
+]

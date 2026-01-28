@@ -5,6 +5,7 @@ import sys
 import shutil
 import json
 import signal
+import gc
 from torch.utils.data import DataLoader
 from .loss_functions import ActivationAnchoringLoss
 from ..nexus_core.student.core import NexusStudentCore
@@ -59,6 +60,10 @@ class NexusTrainer:
         self.prev_loss = float('inf')
         self.best_val_loss = float('inf')
         
+        # --- Gradient Accumulation ---
+        self.grad_accum_steps = config.get("gradient_accumulation_steps", 1)
+
+        
         # Register Signal Handler for Graceful Shutdown and Control
         signal.signal(signal.SIGINT, self.handle_signal)
         signal.signal(signal.SIGTERM, self.handle_signal)
@@ -90,6 +95,13 @@ class NexusTrainer:
             'best_val_loss': self.best_val_loss
         }, path)
         print(f"[Checkpoint] Saved to {path}")
+        
+        # Always maintain a "checkpoint_latest.pt" for the exporter
+        if tag != "latest":
+            latest_path = os.path.join(self.checkpoint_dir, "checkpoint_latest.pt")
+            shutil.copy(path, latest_path)
+            print(f"[Checkpoint] Updated link: {latest_path}")
+            
         return path
 
     def load_checkpoint(self, tag="latest"):
@@ -129,9 +141,11 @@ class NexusTrainer:
             print(f"\n=== Epoch {epoch+1}/{epochs} | Alpha: {current_alpha:.4f} ===")
             
             with tqdm(self.train_loader, desc=f"Epoch {epoch+1}", dynamic_ncols=True) as pbar:
-                for batch in pbar:
+                for step_idx, batch in enumerate(pbar):
                     try:
-                        loss_metrics = self.training_step(batch)
+                        is_accum_boundary = ((step_idx + 1) % self.grad_accum_steps == 0) or ((step_idx + 1) == len(self.train_loader))
+                        
+                        loss_metrics = self.training_step(batch, is_accum_boundary)
                         
                         # Update Progress Bar
                         pbar.set_postfix(loss_metrics)
@@ -165,7 +179,8 @@ class NexusTrainer:
 
             self.save_checkpoint(f"epoch_{epoch+1}")
 
-    def training_step(self, batch):
+    def training_step(self, batch, is_accum_boundary=True):
+
         """
         Executes a single training step with multi-objective distillation.
         """
@@ -196,7 +211,15 @@ class NexusTrainer:
         else:
             teacher_feats = {k: v.to(self.device) for k, v in batch['teacher_features'].items()}
         
-        self.optimizer.zero_grad()
+            teacher_feats = {k: v.to(self.device) for k, v in batch['teacher_features'].items()}
+        
+        # Accumulate gradients without zeroing if not boundary
+        # Note: We zero grad AFTER stepping, so standard PyTorch style is:
+        # 1. Zero (at start of accumulation or after step)
+        # 2. Forward/Backward
+        # 3. Step (at boundary)
+        # For simplicity in this refactor, we rely on the optimizer holding state.
+        # Ideally: optimizer.zero_grad() happens ONLY after step.
         
         # 1. Adapter Projection (NIWT Bridge)
         # We project all teacher features into the student's latent space
@@ -254,24 +277,38 @@ class NexusTrainer:
             self.load_checkpoint("best") # Rollback to the best known state
             return {"loss": "ROLLBACK", "gnorm": "0.00"}
 
-        total_loss.backward()
+        # Scale Loss for Accumulation
+        scaled_loss = total_loss / self.grad_accum_steps
+        scaled_loss.backward()
         
-        # 6. Gradient Monitoring & Clipping
-        grad_norm = torch.nn.utils.clip_grad_norm_(self.student.parameters(), self.max_grad_norm)
-        
-        # Check for vanishing gradients (masking)
-        if grad_norm < 1e-6:
-            print(f"[Warning] Vanishing Gradients detected: {grad_norm:.6f}. Increasing CE weight.")
-            self.loss_fn.alpha_ce *= 1.1
+        # 6. Gradient Monitoring & Update (Only at boundary)
+        grad_norm = 0.0
+        if is_accum_boundary:
+            # Clipping
+            grad_norm = torch.nn.utils.clip_grad_norm_(self.student.parameters(), self.max_grad_norm)
+            
+            # Check for vanishing gradients (masking)
+            if grad_norm < 1e-6:
+                print(f"[Warning] Vanishing Gradients detected: {grad_norm:.6f}. Increasing CE weight.")
+                self.loss_fn.alpha_ce *= 1.1
 
-        self.optimizer.step()
+            self.optimizer.step()
+            self.optimizer.zero_grad()
+            self.global_step += 1
+            
+            # Update prev_loss for spike detection using the FULL (unscaled) loss
+            self.prev_loss = total_loss.item()
         
-        # Update metrics and checkpointing
-        self.prev_loss = total_loss.item()
-        self.global_step += 1
+        # We track full steps (global_step)
         
-        if self.global_step % 50 == 0:
+        if self.global_step % 50 == 0 and is_accum_boundary:
             self.save_checkpoint("latest")
+            
+        # 7. Periodic RAM & VRAM Cleanup (OOM-Safe for Laptop)
+        if self.global_step % 100 == 0 and is_accum_boundary:
+            gc.collect()
+            if self.device == "cuda":
+                torch.cuda.empty_cache()
             
         return {
             "loss": f"{total_loss.item():.4f}", 

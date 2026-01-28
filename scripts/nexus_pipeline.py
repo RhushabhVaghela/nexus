@@ -37,14 +37,54 @@ DATASET_BASE_DIR = "/mnt/e/data/datasets" # Default storage for downloaded datas
 DATA_PATH = "/mnt/e/data" # Secondary location for models/encoders/decoders
 
 class NexusPipeline:
-    def __init__(self, dry_run=False, skip_non_llm=False, models=None, datasets=None, sample_size=50, epochs=1):
+    def __init__(self, dry_run=False, skip_non_llm=False, models=None, datasets=None, 
+                 sample_size=50, epochs=1, lr=1e-5, router_epochs=5, router_lr=1e-4,
+                 embedding_model="sentence-transformers/all-MiniLM-L6-v2",
+                 use_unsloth=False, packing=False, max_seq_length=2048, use_grpo=False):
         self.state = self._load_state()
         self.paused = False
-        self.dry_run = dry_run
+
+        # --- Singleton Lock Mechanism ---
+        self.lock_file = os.path.join(BASE_DIR, ".pipeline.lock")
+        if os.path.exists(self.lock_file):
+            with open(self.lock_file, 'r') as f:
+                try:
+                    old_pid = int(f.read().strip())
+                    # Check if process is actually running
+                    os.kill(old_pid, 0)
+                    print(f"[Error] Pipeline overlap detected! PID {old_pid} is supposedly running.")
+                    print(f"        'run_nexus_master.sh' should have cleaned this up.")
+                    print(f"        Please kill the process manually or run the master script.")
+                    sys.exit(1)
+                except (OSError, ValueError):
+                    # Process dead or file corrupt
+                    pass
+        
+        # Acquire Lock
+        with open(self.lock_file, 'w') as f:
+            f.write(str(os.getpid()))
+        
+        # Ensure cleanup on exit
+        import atexit
+        def remove_lock():
+            if os.path.exists(self.lock_file):
+                os.remove(self.lock_file)
+        atexit.register(remove_lock)
+
         self.dry_run = dry_run
         self.skip_non_llm = skip_non_llm
         self.sample_size = sample_size
         self.epochs = epochs
+        self.lr = lr
+        self.router_epochs = router_epochs
+        self.router_lr = router_lr
+        self.embedding_model = embedding_model
+        
+        # Optimization Flags
+        self.use_unsloth = use_unsloth
+        self.packing = packing
+        self.max_seq_length = max_seq_length
+        self.use_grpo = use_grpo
         
         # Parse and Expand Selections
         self.target_models = self._resolve_selection(models, TEACHER_REGISTRY, "models")
@@ -54,6 +94,13 @@ class NexusPipeline:
             print(f"[Pipeline] Final Model List: {self.target_models}")
         if self.target_datasets:
             print(f"[Pipeline] Final Dataset List: {self.target_datasets}")
+
+        # Resolve embedding model alias
+        if self.embedding_model == "all-mpnet-base-v2":
+            print(f"[Pipeline] Auto-resolving embedding model '{self.embedding_model}' to 'sentence-transformers/all-mpnet-base-v2'")
+            self.embedding_model = "sentence-transformers/all-mpnet-base-v2"
+        elif self.embedding_model == "all-MiniLM-L6-v2":
+            self.embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
         
         # Signal Handling for Graceful Pause
         signal.signal(signal.SIGINT, self._handle_interrupt)
@@ -129,7 +176,9 @@ class NexusPipeline:
         if ret != 0:
             print(f"[Error] Command failed with code {ret}")
             if not allow_fail:
-                sys.exit(ret)
+                # FIX: os.system return code is 16-bit. 256 wraps to 0 in shell exit.
+                # Must exit with 1 explicitly.
+                sys.exit(1)
         return ret
 
     def ensure_dataset_available(self, dataset_key):
@@ -398,8 +447,19 @@ class NexusPipeline:
                 else:
                     dataset_arg = f"--dataset_name '{ds_key}'"
             
+            # Check if profile already exists to skip redundant compute
+            # RESULTS_ROOT is globally defined as .../results/niwt_profiling
+            expected_profile = os.path.join(RESULTS_ROOT, f"{name}_profile.json")
+            if os.path.exists(expected_profile):
+                print(f"[Skip] Profile already exists for {name} ({expected_profile})")
+                continue
+
             cmd = f"'{sys.executable}' '{os.path.join(BASE_DIR, 'scripts/run_profiling_driver.py')}' --teacher_id '{name}' --model_path '{model_arg}' {dataset_arg} --sample_size {self.sample_size}"
-            self.run_command(cmd)
+            
+            # Allow individual model failure to not kill the whole pipeline
+            ret = self.run_command(cmd, allow_fail=True)
+            if ret != 0:
+                print(f"[Profiler] WARNING: Profiling failed for {name}. Skipping to next model.")
 
         self.state["completed_stages"].append("profiling")
         self.state["current_stage"] = "knowledge_extraction"
@@ -476,18 +536,17 @@ class NexusPipeline:
                     if is_too_large:
                         print(f"  -> [SLI Fallback] Ingesting {ds_key} using Sequential Layer Ingestion...")
                         output_dir = os.path.join(MEMORY_DIR, name.replace('/', '_'))
-                        # SequentialLayerIntegrator processes layers one-by-one
-                        # This avoids OOM for models that don't fit even in 4-bit.
-                        cmd = f"{sys.executable} -m src.nexus_final.sli_integrator --model '{path}' --output '{output_dir}' --dataset '{ds_res}' --limit {self.sample_size}"
+                        hidden_size = self.state["config"].get("hidden_size", 2048)
+                        cmd = f"{sys.executable} -m src.nexus_final.sli_integrator --model '{path}' --output '{output_dir}' --dataset '{ds_res}' --limit {self.sample_size} --student_dim {hidden_size}"
                         self.run_command(cmd, allow_fail=False)
                     else:
                         # ds_res is local_path
                         print(f"  -> Ingesting {ds_key} (Standard)...")
                         output_dir = os.path.join(MEMORY_DIR, name.replace('/', '_'))
                         
-                        # Robust Execution Strategy: Try GPU first, fallback to CPU on crash
                         device_arg = "cuda"
-                        cmd = f"{sys.executable} -m src.nexus_final.distill_knowledge --teacher '{path}' --output '{output_dir}' --dataset '{ds_res}' --device {device_arg} --limit {self.sample_size}"
+                        hidden_size = self.state["config"].get("hidden_size", 2048)
+                        cmd = f"{sys.executable} -m src.nexus_final.distill_knowledge --teacher '{path}' --output '{output_dir}' --dataset '{ds_res}' --device {device_arg} --limit {self.sample_size} --student_dim {hidden_size} --embedding_model '{self.embedding_model}'"
                         
                         print(f"[Pipeline] Attempting execution on {device_arg.upper()}...")
                         ret = self.run_command(cmd, allow_fail=True)
@@ -495,7 +554,7 @@ class NexusPipeline:
                         if ret != 0:
                             print(f"\n[Pipeline] GPU Execution Failed (Code {ret}). Automatically Retrying on CPU...")
                             device_arg = "cpu"
-                            cmd_cpu = f"{sys.executable} -m src.nexus_final.distill_knowledge --teacher '{path}' --output '{output_dir}' --dataset '{ds_res}' --device {device_arg} --limit {self.sample_size}"
+                            cmd_cpu = f"{sys.executable} -m src.nexus_final.distill_knowledge --teacher '{path}' --output '{output_dir}' --dataset '{ds_res}' --device {device_arg} --limit {self.sample_size} --student_dim {hidden_size} --embedding_model '{self.embedding_model}'"
                             self.run_command(cmd_cpu, allow_fail=False)
 
         self.state["completed_stages"].append("knowledge_extraction")
@@ -521,10 +580,38 @@ class NexusPipeline:
         hidden_size = self.state["config"].get("hidden_size", 2048)
         vocab_size = self.state["config"].get("vocab_size", 128256)
         
-        cmd = f"'{sys.executable}' '{os.path.join(BASE_DIR, 'scripts/train.py')}' --epochs {self.epochs} --profile_path '{profile_path}' --hidden_size {hidden_size} --vocab_size {vocab_size}"
+        unsloth_flag = "--use_unsloth" if self.use_unsloth else ""
+        packing_flag = "--packing" if self.packing else ""
+        
+        cmd = f"'{sys.executable}' '{os.path.join(BASE_DIR, 'scripts/train.py')}' --epochs {self.epochs} --lr {self.lr} --profile_path '{profile_path}' --hidden_size {hidden_size} --vocab_size {vocab_size} --max_seq_length {self.max_seq_length} {unsloth_flag} {packing_flag}"
         self.run_command(cmd)
         
         self.state["completed_stages"].append("training")
+        self.state["current_stage"] = "grpo_training" if self.use_grpo else "router_training"
+        self._save_state()
+
+    def stage_grpo_training(self):
+        if "grpo_training" in self.state["completed_stages"]:
+            print("[Skip] GRPO Training already complete.")
+            self.state["current_stage"] = "router_training"
+            return
+
+        print("\n=== STAGE 2.5: GRPO REASONING EVOLUTION ===")
+        # We assume rejection_sampled.jsonl exists or we use the data_dir
+        data_path = "rejection_sampled.jsonl"
+        if not os.path.exists(data_path):
+            print(f"[Warn] {data_path} not found. Searching in memory...")
+            import glob
+            mem_files = glob.glob(os.path.join(MEMORY_DIR, "**/*.jsonl"), recursive=True)
+            if mem_files: data_path = mem_files[0]
+
+        unsloth_flag = "--use_unsloth" if self.use_unsloth else ""
+        ckpt_path = os.path.join(CHECKPOINT_DIR, "checkpoint_latest.pt")
+        
+        cmd = f"'{sys.executable}' '{os.path.join(BASE_DIR, 'scripts/train_grpo.py')}' --model_path '{ckpt_path}' --data_path '{data_path}' --max_seq_length {self.max_seq_length} --lr {self.lr} {unsloth_flag}"
+        self.run_command(cmd)
+
+        self.state["completed_stages"].append("grpo_training")
         self.state["current_stage"] = "router_training"
         self._save_state()
 
@@ -540,7 +627,7 @@ class NexusPipeline:
         # Use detected student dimension
         input_dim = self.state["config"].get("hidden_size", 2048)
         
-        cmd = f"'{sys.executable}' '{os.path.join(BASE_DIR, 'scripts/train_router.py')}' --input_dim {input_dim} --num_towers {num_towers}"
+        cmd = f"'{sys.executable}' '{os.path.join(BASE_DIR, 'scripts/train_router.py')}' --input_dim {input_dim} --num_towers {num_towers} --towers_dir '{MEMORY_DIR}' --epochs {self.router_epochs} --lr {self.router_lr}"
         self.run_command(cmd)
         
         self.state["completed_stages"].append("router_training")
@@ -569,6 +656,15 @@ class NexusPipeline:
             
         print("\n=== STAGE 5: EXPORT ===")
         ckpt_path = os.path.join(CHECKPOINT_DIR, "checkpoint_latest.pt")
+        
+        # Fallback: Find highest epoch if "latest" is missing (e.g. from interrupted old runs)
+        if not os.path.exists(ckpt_path):
+            import glob
+            ckpts = glob.glob(os.path.join(CHECKPOINT_DIR, "checkpoint_epoch_*.pt"))
+            if ckpts:
+                ckpt_path = sorted(ckpts, key=lambda x: int(os.path.basename(x).split('_')[2].split('.')[0]))[-1]
+                print(f"[Export] Fallback: Using final epoch checkpoint: {ckpt_path}")
+
         hidden_size = self.state["config"].get("hidden_size", 2048)
         vocab_size = self.state["config"].get("vocab_size", 128256)
         
@@ -602,7 +698,11 @@ class NexusPipeline:
         self.state["current_stage"] = "done"
         self._save_state()
 
-    def run(self):
+    def run(self, stage_override=None):
+        if stage_override:
+            print(f"[Pipeline] Overriding current stage to: {stage_override}")
+            self.state["current_stage"] = stage_override
+
         print("Nexus Automation Pipeline Initialized.")
         print(f"[Config] Base Path: {BASE_DIR}")
         print(f"[Config] Registry: Loaded from src.nexus_core.towers.registry")
@@ -626,6 +726,10 @@ class NexusPipeline:
             
         if self.state["current_stage"] == "training":
             self.stage_training()
+            if self.paused: return
+
+        if self.state["current_stage"] == "grpo_training":
+            self.stage_grpo_training()
             if self.paused: return
 
         if self.state["current_stage"] == "router_training":
@@ -656,6 +760,15 @@ if __name__ == "__main__":
     parser.add_argument("--datasets", type=str, default=None, help="Comma-separated list of datasets or 'all'")
     parser.add_argument("--sample_size", type=int, default=50, help="Number of samples to use")
     parser.add_argument("--epochs", type=int, default=1, help="Number of training epochs")
+    parser.add_argument("--stage", type=str, default=None, help="Run only specific stage")
+    parser.add_argument("--lr", type=float, default=1e-5, help="Student Learning Rate")
+    parser.add_argument("--router_epochs", type=int, default=5, help="Router training epochs")
+    parser.add_argument("--router_lr", type=float, default=1e-4, help="Router Learning Rate")
+    parser.add_argument("--embedding_model", type=str, default="sentence-transformers/all-MiniLM-L6-v2", help="Librarian embedding model")
+    parser.add_argument("--use_unsloth", action="store_true", help="Enable Unsloth optimizations")
+    parser.add_argument("--packing", action="store_true", help="Enable sequence packing")
+    parser.add_argument("--max_seq_length", type=int, default=2048, help="Max sequence length")
+    parser.add_argument("--grpo", action="store_true", help="Enable GRPO reasoning training stage")
     
     args = parser.parse_args()
     
@@ -694,7 +807,15 @@ if __name__ == "__main__":
         models=args.models,
         datasets=args.datasets,
         sample_size=args.sample_size,
-        epochs=args.epochs
+        epochs=args.epochs,
+        lr=args.lr,
+        router_epochs=args.router_epochs,
+        router_lr=args.router_lr,
+        embedding_model=args.embedding_model,
+        use_unsloth=args.use_unsloth,
+        packing=args.packing,
+        max_seq_length=args.max_seq_length,
+        use_grpo=args.grpo
     )
     
-    pipeline.run()
+    pipeline.run(stage_override=args.stage)

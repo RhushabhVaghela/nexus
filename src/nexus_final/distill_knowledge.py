@@ -168,11 +168,12 @@ if __name__ == "__main__":
     parser.add_argument("--shard_prefix", type=str, default="shard", help="Prefix for saved shards")
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu", help="Device to use (cuda/cpu)")
     parser.add_argument("--embedding_model", type=str, default="sentence-transformers/all-MiniLM-L6-v2", help="Embedding model for index (default: MiniLM-L6, optional: all-mpnet-base-v2)")
+    parser.add_argument("--student_dim", type=int, default=2048, help="Hidden dimension of the target student model")
     args = parser.parse_args()
     
     # Mock KnowledgeTower for standalone run (or load real if path provided)
     from .knowledge import KnowledgeTower
-    tower = KnowledgeTower(device="cpu", embedding_model=args.embedding_model) # Dummy/Local instantiation for extraction
+    tower = KnowledgeTower(student_dim=args.student_dim, device="cpu", embedding_model=args.embedding_model) # Dummy/Local instantiation for extraction
     
     distiller = KnowledgeDistiller(tower, args.teacher, device=args.device)
     

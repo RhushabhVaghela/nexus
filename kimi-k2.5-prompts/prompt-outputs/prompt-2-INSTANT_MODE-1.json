@@ -1,0 +1,452 @@
+[
+  {
+    "id": 1,
+    "domain": "Math",
+    "difficulty": "easy",
+    "input": "Calculate 25% of 160",
+    "answer": "40",
+    "category": "Percentage",
+    "short_explanation": "25% = 0.25, so 160 × 0.25 = 40"
+  },
+  {
+    "id": 2,
+    "domain": "Math",
+    "difficulty": "easy",
+    "input": "What is the sum of angles in a triangle?",
+    "answer": "180 degrees",
+    "category": "Geometry",
+    "short_explanation": "The interior angles of any triangle always sum to 180°."
+  },
+  {
+    "id": 3,
+    "domain": "Math",
+    "difficulty": "easy",
+    "input": "Solve for x: 3x + 7 = 22",
+    "answer": "5",
+    "category": "Algebra",
+    "short_explanation": "Subtract 7 from both sides (3x=15), then divide by 3."
+  },
+  {
+    "id": 4,
+    "domain": "Math",
+    "difficulty": "medium",
+    "input": "Find the area of a circle with radius 7 cm (use π ≈ 22/7)",
+    "answer": "154 cm²",
+    "category": "Geometry",
+    "short_explanation": "Area = πr² = (22/7) × 7² = 22 × 7 = 154."
+  },
+  {
+    "id": 5,
+    "domain": "Math",
+    "difficulty": "medium",
+    "input": "A train travels 240 km in 4 hours. What is its average speed?",
+    "answer": "60 km/h",
+    "category": "Arithmetic",
+    "short_explanation": "Speed = Distance ÷ Time = 240 ÷ 4 = 60 km/h."
+  },
+  {
+    "id": 6,
+    "domain": "Math",
+    "difficulty": "medium",
+    "input": "Solve the system: 2x + y = 10 and x - y = 2",
+    "answer": "x = 4, y = 2",
+    "category": "Algebra",
+    "short_explanation": "Add equations to eliminate y (3x=12, x=4), then substitute back."
+  },
+  {
+    "id": 7,
+    "domain": "Math",
+    "difficulty": "hard",
+    "input": "How many ways can 5 people be arranged in a row?",
+    "answer": "120",
+    "category": "Combinatorics",
+    "short_explanation": "5! = 5 × 4 × 3 × 2 × 1 = 120 permutations."
+  },
+  {
+    "id": 8,
+    "domain": "Math",
+    "difficulty": "hard",
+    "input": "Find the derivative of f(x) = 3x³ + 2x² - 5x + 1",
+    "answer": "f'(x) = 9x² + 4x - 5",
+    "category": "Calculus",
+    "short_explanation": "Apply power rule: d/dx(xⁿ) = nxⁿ⁻¹ to each term."
+  },
+  {
+    "id": 9,
+    "domain": "Code",
+    "difficulty": "easy",
+    "input": "Write Python code to check if a number x is even",
+    "answer": "x % 2 == 0",
+    "category": "Python",
+    "short_explanation": "The modulo operator returns 0 for even numbers."
+  },
+  {
+    "id": 10,
+    "domain": "Code",
+    "difficulty": "easy",
+    "input": "What is the output of print('Hello' + ' ' + 'World')?",
+    "answer": "Hello World",
+    "category": "Python",
+    "short_explanation": "String concatenation joins the three strings with a space."
+  },
+  {
+    "id": 11,
+    "domain": "Code",
+    "difficulty": "easy",
+    "input": "Write a JavaScript arrow function that doubles a number n",
+    "answer": "const double = n => n * 2;",
+    "category": "JavaScript",
+    "short_explanation": "Arrow function implicitly returns n multiplied by 2."
+  },
+  {
+    "id": 12,
+    "domain": "Code",
+    "difficulty": "medium",
+    "input": "Write SQL to select all employees with salary > 50000",
+    "answer": "SELECT * FROM employees WHERE salary > 50000;",
+    "category": "SQL",
+    "short_explanation": "WHERE clause filters rows based on the condition."
+  },
+  {
+    "id": 13,
+    "domain": "Code",
+    "difficulty": "medium",
+    "input": "What is the time complexity of binary search on a sorted array?",
+    "answer": "O(log n)",
+    "category": "Algorithms",
+    "short_explanation": "Each iteration halves the search space, giving logarithmic complexity."
+  },
+  {
+    "id": 14,
+    "domain": "Code",
+    "difficulty": "medium",
+    "input": "Write a Python list comprehension to get squares of numbers 1-5",
+    "answer": "[x**2 for x in range(1, 6)]",
+    "category": "Python",
+    "short_explanation": "Generates [1, 4, 9, 16, 25] using concise syntax."
+  },
+  {
+    "id": 15,
+    "domain": "Code",
+    "difficulty": "hard",
+    "input": "Explain the difference between '==' and '===' in JavaScript",
+    "answer": "'==' compares values with type coercion; '===' compares values and types strictly",
+    "category": "JavaScript",
+    "short_explanation": "Strict equality (===) requires both value and type to match."
+  },
+  {
+    "id": 16,
+    "domain": "Code",
+    "difficulty": "hard",
+    "input": "Write a recursive Python function to calculate factorial of n",
+    "answer": "def factorial(n): return 1 if n <= 1 else n * factorial(n-1)",
+    "category": "Python",
+    "short_explanation": "Base case returns 1; recursive case multiplies n by factorial(n-1)."
+  },
+  {
+    "id": 17,
+    "domain": "Language",
+    "difficulty": "easy",
+    "input": "Correct the grammar: 'Their going to the store'",
+    "answer": "They're going to the store",
+    "category": "Grammar",
+    "short_explanation": "'They're' is the contraction for 'they are', not the possessive 'their'."
+  },
+  {
+    "id": 18,
+    "domain": "Language",
+    "difficulty": "easy",
+    "input": "What is the synonym of 'happy'?",
+    "answer": "Joyful",
+    "category": "Vocabulary",
+    "short_explanation": "Joyful means feeling or expressing great happiness."
+  },
+  {
+    "id": 19,
+    "domain": "Language",
+    "difficulty": "easy",
+    "input": "Identify the verb in: 'The cat sleeps on the sofa'",
+    "answer": "sleeps",
+    "category": "Grammar",
+    "short_explanation": "'Sleeps' is the action word describing what the cat does."
+  },
+  {
+    "id": 20,
+    "domain": "Language",
+    "difficulty": "medium",
+    "input": "What literary device is used in 'The wind whispered through the trees'?",
+    "answer": "Personification",
+    "category": "Literature",
+    "short_explanation": "Giving human qualities (whispering) to non-human things (wind)."
+  },
+  {
+    "id": 21,
+    "domain": "Language",
+    "difficulty": "medium",
+    "input": "Convert to passive voice: 'The chef cooked the meal'",
+    "answer": "The meal was cooked by the chef",
+    "category": "Grammar",
+    "short_explanation": "Object becomes subject; verb becomes 'was + past participle'."
+  },
+  {
+    "id": 22,
+    "domain": "Language",
+    "difficulty": "medium",
+    "input": "What is the meaning of the idiom 'break the ice'?",
+    "answer": "To initiate conversation in a social setting to relieve tension",
+    "category": "Vocabulary",
+    "short_explanation": "Originated from breaking ice to allow ships to pass; now means starting social interaction."
+  },
+  {
+    "id": 23,
+    "domain": "Language",
+    "difficulty": "hard",
+    "input": "Analyze the tone of: 'The so-called expert clearly had no idea what he was talking about'",
+    "answer": "Sarcastic/Ironic",
+    "category": "Analysis",
+    "short_explanation": "'So-called' and 'clearly' indicate mockery of the expert's credentials."
+  },
+  {
+    "id": 24,
+    "domain": "Language",
+    "difficulty": "hard",
+    "input": "Translate 'Where is the library?' to Spanish",
+    "answer": "¿Dónde está la biblioteca?",
+    "category": "Translation",
+    "short_explanation": "Standard Spanish question structure with inverted question mark."
+  },
+  {
+    "id": 25,
+    "domain": "Science",
+    "difficulty": "easy",
+    "input": "What is the chemical symbol for gold?",
+    "answer": "Au",
+    "category": "Chemistry",
+    "short_explanation": "From Latin 'aurum', meaning shining dawn or glow of sunrise."
+  },
+  {
+    "id": 26,
+    "domain": "Science",
+    "difficulty": "easy",
+    "input": "How many planets are in our solar system?",
+    "answer": "8",
+    "category": "Astronomy",
+    "short_explanation": "Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune (Pluto is a dwarf planet)."
+  },
+  {
+    "id": 27,
+    "domain": "Science",
+    "difficulty": "easy",
+    "input": "What is the powerhouse of the cell?",
+    "answer": "Mitochondria",
+    "category": "Biology",
+    "short_explanation": "Organelle that generates ATP through cellular respiration."
+  },
+  {
+    "id": 28,
+    "domain": "Science",
+    "difficulty": "medium",
+    "input": "What gas do plants absorb during photosynthesis?",
+    "answer": "Carbon dioxide (CO₂)",
+    "category": "Biology",
+    "short_explanation": "Plants convert CO₂ and water into glucose using sunlight."
+  },
+  {
+    "id": 29,
+    "domain": "Science",
+    "difficulty": "medium",
+    "input": "What is the speed of light in vacuum?",
+    "answer": "299,792,458 m/s (approximately 3 × 10⁸ m/s)",
+    "category": "Physics",
+    "short_explanation": "Universal physical constant denoted by c; exact value since 1983."
+  },
+  {
+    "id": 30,
+    "domain": "Science",
+    "difficulty": "medium",
+    "input": "What is the pH of pure water at 25°C?",
+    "answer": "7",
+    "category": "Chemistry",
+    "short_explanation": "Neutral pH where hydrogen and hydroxide ion concentrations are equal (10⁻⁷ M)."
+  },
+  {
+    "id": 31,
+    "domain": "Science",
+    "difficulty": "hard",
+    "input": "What is the second law of thermodynamics?",
+    "answer": "Entropy of an isolated system always increases over time",
+    "category": "Physics",
+    "short_explanation": "Heat flows spontaneously from hot to cold; systems tend toward disorder."
+  },
+  {
+    "id": 32,
+    "domain": "Science",
+    "difficulty": "hard",
+    "input": "What particle is exchanged in the strong nuclear force?",
+    "answer": "Gluon",
+    "category": "Physics",
+    "short_explanation": "Massless bosons that mediate interactions between quarks, carrying color charge."
+  },
+  {
+    "id": 33,
+    "domain": "Reasoning",
+    "difficulty": "easy",
+    "input": "If all roses are flowers and some flowers fade quickly, can we conclude some roses fade quickly?",
+    "answer": "No",
+    "category": "Logic",
+    "short_explanation": "The 'some flowers' that fade quickly might not include any roses."
+  },
+  {
+    "id": 34,
+    "domain": "Reasoning",
+    "difficulty": "easy",
+    "input": "Complete the pattern: 2, 6, 12, 20, __",
+    "answer": "30",
+    "category": "Pattern",
+    "short_explanation": "Pattern is n×(n+1): 1×2=2, 2×3=6, 3×4=12, 4×5=20, 5×6=30."
+  },
+  {
+    "id": 35,
+    "domain": "Reasoning",
+    "difficulty": "easy",
+    "input": "A is taller than B. B is taller than C. Who is the shortest?",
+    "answer": "C",
+    "category": "Logic",
+    "short_explanation": "Transitive property: A > B > C, therefore C is shortest."
+  },
+  {
+    "id": 36,
+    "domain": "Reasoning",
+    "difficulty": "medium",
+    "input": "Three switches control three bulbs in another room. How do you match them with only one visit to the room?",
+    "answer": "Turn on switch 1 for 5 minutes, turn off and turn on switch 2. Visit room: on=switch2, warm=switch1, cold=switch3",
+    "category": "Logic",
+    "short_explanation": "Use heat as a second state variable besides light."
+  },
+  {
+    "id": 37,
+    "domain": "Reasoning",
+    "difficulty": "medium",
+    "input": "If it takes 5 machines 5 minutes to make 5 widgets, how long for 100 machines to make 100 widgets?",
+    "answer": "5 minutes",
+    "category": "Logic",
+    "short_explanation": "Each machine makes 1 widget in 5 minutes; 100 machines make 100 widgets in same time."
+  },
+  {
+    "id": 38,
+    "domain": "Reasoning",
+    "difficulty": "medium",
+    "input": "What is the next letter in the sequence: O, T, T, F, F, S, S, __?",
+    "answer": "E",
+    "category": "Pattern",
+    "short_explanation": "First letters of numbers: One, Two, Three, Four, Five, Six, Seven, Eight."
+  },
+  {
+    "id": 39,
+    "domain": "Reasoning",
+    "difficulty": "hard",
+    "input": "You have two ropes that burn for exactly 60 minutes each, but unevenly. How do you measure 45 minutes?",
+    "answer": "Light rope A at both ends and rope B at one end. When A burns out (30 min), light other end of B. When B burns out: 45 minutes total",
+    "category": "Logic",
+    "short_explanation": "Burning from both ends halves time; sequential burning adds 30 + 15 minutes."
+  },
+  {
+    "id": 40,
+    "domain": "Reasoning",
+    "difficulty": "hard",
+    "input": "A farmer has 17 sheep and all but 9 die. How many are left?",
+    "answer": "9",
+    "category": "Logic",
+    "short_explanation": "'All but 9' means 9 survived; the rest (8) died."
+  },
+  {
+    "id": 41,
+    "domain": "Multimodal",
+    "difficulty": "easy",
+    "input": "[Image: Red octagonal sign] What does this traffic sign mean?",
+    "answer": "Stop",
+    "category": "Visual Recognition",
+    "short_explanation": "Red octagon is universally recognized as a stop sign."
+  },
+  {
+    "id": 42,
+    "domain": "Multimodal",
+    "difficulty": "easy",
+    "input": "[Image: Bar chart showing sales increasing Jan-Mar] What trend is shown?",
+    "answer": "Sales are increasing over the first three months",
+    "category": "Data Visualization",
+    "short_explanation": "The upward slope of bars from January to March indicates growth."
+  },
+  {
+    "id": 43,
+    "domain": "Multimodal",
+    "difficulty": "easy",
+    "input": "[Image: Blue sky with white clouds] Describe the weather",
+    "answer": "Partly cloudy or fair weather",
+    "category": "Visual Recognition",
+    "short_explanation": "Blue sky with scattered clouds indicates good weather conditions."
+  },
+  {
+    "id": 44,
+    "domain": "Multimodal",
+    "difficulty": "medium",
+    "input": "[Image: Line graph with two crossing lines labeled 'Revenue' and 'Cost'] What does the intersection point represent?",
+    "answer": "Break-even point",
+    "category": "Data Visualization",
+    "short_explanation": "Where revenue equals cost, indicating zero profit/loss."
+  },
+  {
+    "id": 45,
+    "domain": "Multimodal",
+    "difficulty": "medium",
+    "input": "[Image: Map with blue lines connecting cities] What type of visualization is this?",
+    "answer": "Network graph or route map",
+    "category": "Data Visualization",
+    "short_explanation": "Shows connections/routes between geographic locations."
+  },
+  {
+    "id": 46,
+    "domain": "Multimodal",
+    "difficulty": "medium",
+    "input": "[Image: Pie chart divided into 25%, 35%, 20%, 20%] Which category is largest?",
+    "answer": "The 35% category",
+    "category": "Data Visualization",
+    "short_explanation": "35% represents the biggest slice of the pie chart."
+  },
+  {
+    "id": 47,
+    "domain": "Multimodal",
+    "difficulty": "hard",
+    "input": "[Image: Heat map of website clicks with red hotspots on top-right] What does this indicate?",
+    "answer": "Users click most frequently in the top-right area of the page",
+    "category": "Data Visualization",
+    "short_explanation": "Red color intensity correlates with higher click frequency/engagement."
+  },
+  {
+    "id": 48,
+    "domain": "Multimodal",
+    "difficulty": "hard",
+    "input": "[Image: Scatter plot with positive correlation between study hours and test scores] What relationship is shown?",
+    "answer": "Positive correlation: more study hours associated with higher test scores",
+    "category": "Data Visualization",
+    "short_explanation": "Upward trend indicates that as one variable increases, so does the other."
+  },
+  {
+    "id": 49,
+    "domain": "Multimodal",
+    "difficulty": "hard",
+    "input": "[Image: Chemical structure with benzene ring and OH group] What compound class is this?",
+    "answer": "Phenol",
+    "category": "Chemistry",
+    "short_explanation": "Benzene ring directly bonded to hydroxyl (-OH) group defines phenols."
+  },
+  {
+    "id": 50,
+    "domain": "Multimodal",
+    "difficulty": "hard",
+    "input": "[Image: ECG waveform with regular P-QRS-T complexes] What does this indicate?",
+    "answer": "Normal sinus rhythm",
+    "category": "Medical Imaging",
+    "short_explanation": "Regular pattern with distinct waves indicates healthy heart electrical activity."
+  }
+]

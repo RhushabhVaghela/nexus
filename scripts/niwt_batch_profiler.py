@@ -88,11 +88,21 @@ class NIWTBatchProfiler:
         prompts = self.format_prompts(questions)
         inputs = self.tokenizer(prompts, return_tensors="pt", padding=True, truncation=True, max_length=512).to(self.model.device)
         
+        gen_kwargs = {
+            "max_new_tokens": 256,
+            "pad_token_id": self.tokenizer.pad_token_id,
+            "do_sample": False
+        }
+        
+        # Clean up sampling params if do_sample is False to avoid warnings
+        if not gen_kwargs.get("do_sample", False):
+            gen_kwargs["top_p"] = None
+            gen_kwargs["top_k"] = None
+            gen_kwargs["temperature"] = None
+
         outputs = self.model.generate(
             **inputs, 
-            max_new_tokens=256, # Enough for answer check, saving VRAM
-            pad_token_id=self.tokenizer.pad_token_id,
-            do_sample=False
+            **gen_kwargs
         )
         
         # Decode only new tokens? Or full? 

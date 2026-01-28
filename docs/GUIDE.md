@@ -50,16 +50,13 @@ conda activate nexus
 ./run_nexus_master.sh
 
 # Target specific teachers and datasets
-./run_nexus_master.sh --models "DeepSeek-V3" --datasets "reasoning/AI4Math_IneqMath,code/python-stack"
+./run_nexus_master.sh --models "DeepSeek-V3" --datasets "reasoning/AI4Math_IneqMath"
 
-# High-Scale Dataset Auto-Discovery
-./run_nexus_master.sh --datasets all
+# Advanced Configuration (Configurable Parameters)
+./run_nexus_master.sh --epochs 2 --lr 1e-5 --router-epochs 10 --router-lr 2e-4
 
 # Custom Embedding Model (for Knowledge Index)
-# Default (MiniLM - Fast)
-python -m src.nexus_final.distill_knowledge --teacher ... --embedding_model "sentence-transformers/all-MiniLM-L6-v2"
-# Higher Quality (MPNet)
-python -m src.nexus_final.distill_knowledge --teacher ... --embedding_model "sentence-transformers/all-mpnet-base-v2"
+./run_nexus_master.sh --embedding-model "sentence-transformers/all-mpnet-base-v2"
 
 # Reset and fresh start (clears previous artifacts)
 ./run_nexus_master.sh --reset

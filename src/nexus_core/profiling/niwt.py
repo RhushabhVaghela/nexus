@@ -7,6 +7,7 @@ import gc
 from typing import List, Dict, Tuple, Optional, Any
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
+from nexus_core.utils.universal_inspector import UniversalInspector
 
 class ThermalProtection:
     """
@@ -122,6 +123,15 @@ class NIWTCore:
                 gc.collect()
                 torch.cuda.empty_cache()
             
+        # 3. Fallback: If 0 critical layers found, take the top 3 most impactful anyway
+        if not self.critical_layers and results:
+            print("[Stage 1 Fallback] No layers crossed threshold. Selecting top 3 most impactful layers...")
+            # Sort by drop descending
+            sorted_results = sorted(results, key=lambda x: x['drop'], reverse=True)
+            for res in sorted_results[:3]:
+                self.critical_layers.append({"layer": res['layer'], "drop": res['drop'], "score": res['score']})
+                print(f"  [Fallback] Selected Layer {res['layer']:02d} | Drop: {res['drop']:.2%}")
+
         print(f"[Stage 1] Complete. Found {len(self.critical_layers)} critical layers.")
         return self.critical_layers
 
@@ -190,19 +200,8 @@ class NIWTCore:
     # HELPERS
     # =========================================================
     def _get_model_layers(self):
-        # Auto-detect layer list based on common architectures
-        if hasattr(self.model, "model"):
-            if hasattr(self.model.model, "layers"):
-                return self.model.model.layers
-        if hasattr(self.model, "layers"):
-             return self.model.layers
-        # Try generic "h" (common in some HF models)
-        if hasattr(self.model, "h"):
-            return self.model.h
-        if hasattr(self.model, "transformer"):
-             if hasattr(self.model.transformer, "h"):
-                 return self.model.transformer.h
-        raise ValueError("Could not locate Transformer layers in model.")
+        # Universal Inspector handles architecture differences
+        return UniversalInspector.find_backbone_layers(self.model)
 
     def _evaluate_capability_batched(self, test_cases: List[Tuple[str, str]]) -> float:
         """
@@ -218,14 +217,25 @@ class NIWTCore:
             inputs = self.tokenizer(prompts, padding=True, truncation=True, return_tensors="pt").to(self.model.device)
             
             with torch.no_grad():
-                # Generate small sample
-                # Note: max_new_tokens is small for profiling speed (16-32 is usually enough to check CoT start or answer)
+                # Generate small sample - Force Greedy to avoid Multinomial Crash on NaNs
+                gen_kwargs = {
+                    "max_new_tokens": 20,
+                    "min_new_tokens": 5,
+                    "repetition_penalty": 1.2,
+                    "pad_token_id": self.tokenizer.eos_token_id,
+                    "use_cache": True,
+                    "do_sample": False
+                }
+                
+                # Clean up sampling params if do_sample is False to avoid warnings
+                if not gen_kwargs.get("do_sample", False):
+                    gen_kwargs["top_p"] = None
+                    gen_kwargs["top_k"] = None
+                    gen_kwargs["temperature"] = None
+
                 outputs = self.model.generate(
                     **inputs, 
-                    max_new_tokens=32, 
-                    pad_token_id=self.tokenizer.eos_token_id,
-                    use_cache=True,
-                    do_sample=False # Deterministic
+                    **gen_kwargs
                 )
             
             decoded_batch = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)

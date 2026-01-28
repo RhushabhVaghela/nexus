@@ -43,6 +43,9 @@ class NexusExporter:
                      shutil.copy(student_path, os.path.join(student_dest, "pytorch_model.bin"))
              else:
                  print(f"[Exporter] Error: Student checkpoint not found at {student_path}")
+                 print("[Exporter] Export Failed: Missing Student Core.")
+                 import sys
+                 sys.exit(1)
              
         # Create config
         config = {
@@ -60,8 +63,10 @@ class NexusExporter:
         # Here just copy weights
         if os.path.exists(router_path):
             shutil.copy(router_path, router_dest)
+            print(f"[Exporter] Router weights saved to {router_dest}")
         else:
             # Create dummy if missing (for dry run continuity)
+            print(f"[Exporter] Warning: Router final weights not found at {router_path}. Creating dummy.")
             torch.save({"dummy": True}, router_dest)
 
         # 3. Export Knowledge Index
@@ -69,8 +74,10 @@ class NexusExporter:
         index_dest = os.path.join(self.output_dir, "knowledge_index.faiss")
         if os.path.exists(knowledge_index_path):
             shutil.copy(knowledge_index_path, index_dest)
+            print(f"[Exporter] Knowledge index saved to {index_dest}")
         else:
             # Create dummy
+            print(f"[Exporter] Warning: Knowledge index not found at {knowledge_index_path}. Creating dummy.")
             with open(index_dest, "w") as f: f.write("dummy_index")
 
         # 4. Create Model Card
