@@ -55,6 +55,12 @@ conda activate nexus
 # High-Scale Dataset Auto-Discovery
 ./run_nexus_master.sh --datasets all
 
+# Custom Embedding Model (for Knowledge Index)
+# Default (MiniLM - Fast)
+python -m src.nexus_final.distill_knowledge --teacher ... --embedding_model "sentence-transformers/all-MiniLM-L6-v2"
+# Higher Quality (MPNet)
+python -m src.nexus_final.distill_knowledge --teacher ... --embedding_model "sentence-transformers/all-mpnet-base-v2"
+
 # Reset and fresh start (clears previous artifacts)
 ./run_nexus_master.sh --reset
 ```
@@ -99,6 +105,14 @@ While training is running, you can signal the process:
 
 * `kill -USR1 <pid>`: Pause and Save State.
 * `kill -USR2 <pid>`: Save Immediate Checkpoint (don't stop).
+
+### Persistent Context Sessions (The Desk)
+
+You can save your current "retrieved context" (the Desk) to SSD to share between sessions or different models.
+
+* **Save:** `tower.save_desk("project_alpha", context_list)`
+* **Load:** `context = tower.load_desk("project_alpha")`
+This creates a JSON file in `memory/sessions/project_alpha.json` containing the raw text snippets.
 
 ---
 

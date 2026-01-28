@@ -167,11 +167,12 @@ if __name__ == "__main__":
     parser.add_argument("--limit", type=int, default=100, help="Max samples to extract")
     parser.add_argument("--shard_prefix", type=str, default="shard", help="Prefix for saved shards")
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu", help="Device to use (cuda/cpu)")
+    parser.add_argument("--embedding_model", type=str, default="sentence-transformers/all-MiniLM-L6-v2", help="Embedding model for index (default: MiniLM-L6, optional: all-mpnet-base-v2)")
     args = parser.parse_args()
     
     # Mock KnowledgeTower for standalone run (or load real if path provided)
     from .knowledge import KnowledgeTower
-    tower = KnowledgeTower(device="cpu") # Dummy/Local instantiation for extraction
+    tower = KnowledgeTower(device="cpu", embedding_model=args.embedding_model) # Dummy/Local instantiation for extraction
     
     distiller = KnowledgeDistiller(tower, args.teacher, device=args.device)
     

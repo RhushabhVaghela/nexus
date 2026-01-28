@@ -32,6 +32,22 @@ class FileMemoryManager:
     def list_memory_files(self) -> List[str]:
         return [f for f in os.listdir(self.memory_root) if f.endswith(".txt")]
 
+    def save_context_session(self, session_id: str, context: List[str]):
+        """Persists the current 'Desk' (Context) to SSD for cross-session sharing."""
+        session_dir = os.path.join(self.memory_root, "sessions")
+        os.makedirs(session_dir, exist_ok=True)
+        path = os.path.join(session_dir, f"{session_id}.json")
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(context, f, indent=2)
+            
+    def load_context_session(self, session_id: str) -> List[str]:
+        """Loads a shared 'Desk' (Context) from SSD."""
+        path = os.path.join(self.memory_root, "sessions", f"{session_id}.json")
+        if os.path.exists(path):
+            with open(path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        return []
+
 class KnowledgeTower(nn.Module):
     """
     Integrated Memory Tower for the Nexus Specialist Architecture.
@@ -41,7 +57,8 @@ class KnowledgeTower(nn.Module):
         self, 
         student_dim: int,
         embedding_dim: int = 384, 
-        device: str = "cpu"
+        device: str = "cpu",
+        embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     ):
         super().__init__()
         self.device = device
@@ -51,7 +68,7 @@ class KnowledgeTower(nn.Module):
         # Internal FAISS for fast retrieval during training/inference
         self.index = None
         self.documents = []
-        self.embedding_model_id = "sentence-transformers/all-MiniLM-L6-v2"
+        self.embedding_model_id = embedding_model
         self.tokenizer = None
         self.encoder = None
 
@@ -124,5 +141,38 @@ class KnowledgeTower(nn.Module):
         # Project into student space
         projected_context = self.projector(combined_embeddings) # [1, k, student_dim]
         return projected_context
+
+    def retrieve_text_context(self, query: str, top_k: int = 3) -> List[str]:
+        """
+        Retrieves raw text context for 'Standard Models' (e.g., Llama-3, GPT-4).
+        This enables 'Unlimited Context' via standard RAG (Text Injection).
+        """
+        self._lazy_init_encoder()
+        with torch.no_grad():
+            encoded = self.tokenizer([query], padding=True, truncation=True, return_tensors='pt')
+            encoded = {k: v.to(self.device) for k, v in encoded.items()}
+            outputs = self.encoder(**encoded)
+            mask = encoded['attention_mask'].unsqueeze(-1).expand(outputs.last_hidden_state.size())
+            query_emb = (torch.sum(outputs.last_hidden_state * mask, 1) / torch.clamp(mask.sum(1), min=1e-9))
+            query_emb = torch.nn.functional.normalize(query_emb, p=2, dim=1).cpu().numpy()
+            
+        if self.index is None or self.index.ntotal == 0:
+            return []
+            
+        scores, indices = self.index.search(query_emb, top_k)
+        
+        results = []
+        for idx in indices[0]:
+            if idx < len(self.documents):
+                results.append(self.documents[idx])
+        return results
+
+    def save_desk(self, session_id: str, context: List[str]):
+        """Saves current context list to a named session."""
+        self.memory_manager.save_context_session(session_id, context)
+        
+    def load_desk(self, session_id: str) -> List[str]:
+        """Loads context list from a named session."""
+        return self.memory_manager.load_context_session(session_id)
 
 import numpy as np # Needed for build_index
