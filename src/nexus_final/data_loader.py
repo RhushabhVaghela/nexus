@@ -184,16 +184,38 @@ class UniversalDataLoader:
                 ]
             }
 
-        # 5. Audio / Multimodal (e.g. Mozilla Common Voice)
-        if "sentence" in sample:
-            return {
+        # 5. Audio / Multimodal (e.g. Mozilla Common Voice / Speech Commands)
+        if "sentence" in sample or "audio" in sample:
+            content = sample.get("sentence", "Analyze this audio.")
+            audio_path = sample.get("audio", {}).get("path") if isinstance(sample.get("audio"), dict) else sample.get("audio")
+            res = {
                 "messages": [
-                    {"role": "user", "content": "Transcribe the following audio:"},
-                    {"role": "assistant", "content": sample["sentence"]}
+                    {"role": "user", "content": content},
+                    {"role": "assistant", "content": sample.get("label", "Detected")}
                 ]
             }
+            if audio_path: res["audio"] = [audio_path]
+            return res
 
-        # 6. Ultimate Fallback: Universal Heuristic Sanitizer
+        # 6. Vision (LLaVA / VQAs)
+        if "image" in sample or "image_path" in sample:
+            img = sample.get("image_path") or sample.get("image")
+            # If image is a dict (HF format), extract path
+            img_path = img.get("path") if isinstance(img, dict) else img
+            
+            user_msg = sample.get("question") or sample.get("instruction") or "What is in this image?"
+            assistant_msg = sample.get("answer") or sample.get("output") or ""
+            
+            res = {
+                "messages": [
+                    {"role": "user", "content": user_msg},
+                    {"role": "assistant", "content": assistant_msg}
+                ]
+            }
+            if img_path: res["images"] = [img_path]
+            return res
+
+        # 7. Ultimate Fallback: Universal Heuristic Sanitizer
         try:
             from nexus_core.data.sanitizer import UniversalSanitizer
             sanitizer = UniversalSanitizer()

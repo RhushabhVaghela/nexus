@@ -2,8 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from transformers import PreTrainedModel, PretrainedConfig
-from typing import Optional, Tuple, List, Dict, Any
+from transformers import PreTrainedModel, PretrainedConfig, GenerationMixin
+from transformers.modeling_outputs import CausalLMOutputWithPast
+from typing import Optional, Tuple, List, Dict, Any, Union
 from .router import SparseIntentRouter
 
 class NexusStudentConfig(PretrainedConfig):
@@ -152,12 +153,14 @@ class NexusDecoderLayer(nn.Module):
         
         return hidden_states
 
-class NexusStudentCore(PreTrainedModel):
+class NexusStudentCore(PreTrainedModel, GenerationMixin):
     config_class = NexusStudentConfig
     supports_gradient_checkpointing = True
+    _no_split_modules = ["NexusDecoderLayer"]
     
     def __init__(self, config: NexusStudentConfig):
         super().__init__(config)
+        self.can_generate = True
         self.embed_tokens = nn.Embedding(config.vocab_size, config.hidden_size)
         self.layers = nn.ModuleList([NexusDecoderLayer(config) for _ in range(config.num_hidden_layers)])
         self.norm = nn.RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
@@ -243,18 +246,29 @@ class NexusStudentCore(PreTrainedModel):
             router_logits = self.router.gate(hidden_states.mean(dim=1))
 
         if return_dict:
-            return {
-                "loss": loss,
-                "logits": logits,
-                "hidden_states": hidden_states,
-                "router_logits": router_logits
-            }
+            return CausalLMOutputWithPast(
+                loss=loss,
+                logits=logits,
+                hidden_states=hidden_states,
+                attentions=None
+            )
             
         output = (logits, hidden_states)
         if output_router_logits:
             output = output + (router_logits,)
             
         return ((loss,) + output) if loss is not None else output
+
+    def prepare_inputs_for_generation(self, input_ids, **kwargs):
+        # Basic implementation for greedy/sampling
+        return {
+            "input_ids": input_ids,
+            "attention_mask": kwargs.get("attention_mask", None),
+        }
+
+    # Alias for safety
+    def generate(self, *args, **kwargs):
+        return super().generate(*args, **kwargs)
 
     def read_from_memory(self, query: str, knowledge_tower: Any, top_k: int = 3) -> torch.Tensor:
         """

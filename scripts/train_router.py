@@ -64,9 +64,20 @@ class RouterDataset(Dataset):
                             if "hidden_state" in shard:
                                 feat = shard["hidden_state"]
                                 if feat.dim() > 1: feat = feat.mean(dim=0)
+                                
+                                # Dimension Unification: Pad or truncate to match student hidden_dim
+                                current_dim = feat.shape[-1]
+                                if current_dim < self.input_dim:
+                                    padding = torch.zeros(self.input_dim - current_dim)
+                                    feat = torch.cat([feat, padding], dim=-1)
+                                elif current_dim > self.input_dim:
+                                    feat = feat[:self.input_dim]
+
                                 all_feats.append(feat.view(1, -1))
                                 all_labels.append(torch.tensor([idx]))
-                        except: continue
+                        except Exception as e: 
+                            print(f"  -> [Error] Failed to process shard {s_path}: {e}")
+                            continue
                 
                 if all_feats:
                     self.features = torch.cat(all_feats, dim=0)

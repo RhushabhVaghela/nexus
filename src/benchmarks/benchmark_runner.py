@@ -269,6 +269,57 @@ class BenchmarkRunner:
             
         return prompts[:15] # Return a manageable set
 
+    def benchmark_multimodal(self, name: str = "multimodal") -> BenchmarkMetrics:
+        """Benchmark multimodal processing (Vision/Audio)."""
+        if self.model is None or self.loader.processor is None:
+             return None
+             
+        result = BenchmarkMetrics(
+            name=name, 
+            category="multimodal", 
+            model_name=Path(self.config.model_path).name
+        )
+        
+        try:
+            # Create dummy multimodal input (e.g. for vision/audio)
+            # This is a generic test of the processing pipeline
+            from PIL import Image
+            import numpy as np
+            
+            # Dummy image
+            dummy_image = Image.fromarray(np.zeros((224, 224, 3), dtype=np.uint8))
+            dummy_audio = np.zeros(16000) # 1s of silence
+            
+            inputs = {}
+            if "vision" in str(getattr(self.loader.processor, "__class__", "")).lower():
+                inputs = self.loader.processor(text="Describe the image.", images=dummy_image, return_tensors="pt")
+            elif "audio" in str(getattr(self.loader.processor, "__class__", "")).lower() or "speech" in str(getattr(self.loader.processor, "__class__", "")).lower():
+                inputs = self.loader.processor(audio=dummy_audio, sampling_rate=16000, return_tensors="pt")
+            else:
+                 # Generic fallback
+                 inputs = self.loader.processor(text="Hello", return_tensors="pt")
+
+            inputs = {k: v.to(self.model.device) if isinstance(v, torch.Tensor) else v for k, v in inputs.items()}
+            
+            self._clear_memory()
+            start = time.perf_counter()
+            with torch.no_grad():
+                # Test inference speed for multimodal context
+                self.model.generate(**inputs, max_new_tokens=20)
+            end = time.perf_counter()
+            
+            result.total_time_s = end - start
+            result.latency_ms = result.total_time_s * 1000
+            result.success = True
+            
+        except Exception as e:
+            result.success = False
+            result.error = str(e)
+            
+        self.tracker.log_benchmark(result)
+        self.local_results.append(result)
+        return result
+
     def run_all(self):
         """Run all benchmarks."""
         self.setup()
@@ -280,18 +331,33 @@ class BenchmarkRunner:
         prompts = self.get_sample_prompts()
         
         # 1. Generation Benchmark
-        print(f"\n[1/2] Generation Benchmarks ({len(prompts)} prompts)")
+        print(f"\n[1/3] Generation Benchmarks ({len(prompts)} prompts)")
         for i, prompt in enumerate(prompts):
             print(f"  Running prompt {i+1}/{len(prompts)} (len={len(prompt)} chars)...")
             result = self.benchmark_generation(prompt, f"gen_sample_{i+1}")
-            print(f"    -> {result.tokens_per_second:.1f} tok/s, {result.latency_ms:.0f}ms latency")
+            if result.success:
+                print(f"    -> {result.tokens_per_second:.1f} tok/s, {result.latency_ms:.0f}ms latency")
+            else:
+                print(f"    -> FAILED: {result.error}")
             
         # 2. Perplexity Benchmark
-        print(f"\n[2/2] Perplexity Benchmarks")
+        print(f"\n[2/3] Perplexity Benchmarks")
         for i, prompt in enumerate(prompts):
              print(f"  Running prompt {i+1}/{len(prompts)}...")
              result = self.benchmark_perplexity(prompt, f"ppl_sample_{i+1}")
-             print(f"    -> PPL={result.perplexity:.2f}")
+             if result.success:
+                print(f"    -> PPL={result.perplexity:.2f}")
+             else:
+                print(f"    -> FAILED: {result.error}")
+
+        # 3. Multimodal Benchmark
+        if self.loader.processor:
+            print(f"\n[3/3] Multimodal Benchmarks")
+            result = self.benchmark_multimodal()
+            if result and result.success:
+                print(f"    -> Multimodal Latency: {result.latency_ms:.1f}ms")
+            elif result:
+                print(f"    -> Multimodal FAILED: {result.error}")
 
     def print_summary(self):
         """Print benchmark summary."""

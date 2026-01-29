@@ -43,41 +43,27 @@ def main():
     logging.getLogger("transformers.generation.utils").setLevel(logging.ERROR)
     logging.getLogger("transformers.tokenization_utils_base").setLevel(logging.ERROR)
     
-    try:
-        # fix_mistral_regex is needed for some newer models/tokenizers
-        try:
-            # fix_mistral_regex is needed for some newer models/tokenizers
-            tokenizer = AutoTokenizer.from_pretrained(args.model_path, fix_mistral_regex=True)
-            print("[Loader] Tokenizer loaded with fix_mistral_regex=True")
-        except Exception as e:
-            # Fallback for older transformers or non-Mistral models
-            tokenizer = AutoTokenizer.from_pretrained(args.model_path)
+    # Datatype logic: Use BF16 for Blackwell/Ada hardware
+    load_dtype = torch.bfloat16 if device == "cuda" else torch.float32
 
-        if tokenizer.pad_token is None:
-            tokenizer.pad_token = tokenizer.eos_token
+    # Load Model using Universal OmniModelLoader
+    from src.omni.loader import OmniModelLoader
+    
+    print(f"[Loader] Initializing Universal Loader for {args.teacher_id}...")
+    loader = OmniModelLoader(args.model_path)
+    
+    try:
+        load_kwargs = {
+            "trust_remote_code": True,
+            "torch_dtype": load_dtype
+        }
+        if not args.no_quant:
+            load_kwargs["load_in_4bit"] = True
             
-        load_dtype = torch.bfloat16 if device == "cuda" else torch.float32
-        
-        if args.no_quant:
-            # Simple loading for verification/CPU
-            model = AutoModelForCausalLM.from_pretrained(args.model_path, trust_remote_code=True, torch_dtype=load_dtype)
-            model.to(device)
-        else:
-            # Robust loading for LLMs
-            quantization_config = BitsAndBytesConfig(
-                load_in_4bit=True,
-                bnb_4bit_compute_dtype=load_dtype # Beast Mode: Use BF16 for 4-bit compute
-            )
-            model = AutoModelForCausalLM.from_pretrained(
-                args.model_path,
-                device_map="auto",
-                quantization_config=quantization_config,
-                trust_remote_code=True,
-                torch_dtype=load_dtype
-            )
-        print("[Loader] Model weights loaded successfully.")
+        model, tokenizer = loader.load(mode="full", **load_kwargs)
+        print(f"[Loader] Model loaded successfully using class: {model.__class__.__name__}")
     except Exception as e:
-        print(f"[Error] Critical failure during model loading: {e}")
+        print(f"[Error] Universal Loader failed for {args.teacher_id}: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

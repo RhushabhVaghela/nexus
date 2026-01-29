@@ -56,94 +56,186 @@ class OmniModelLoader:
     """
     
     SUPPORTED_ARCHITECTURES = [
-        # =========== ANY-TO-ANY OMNI MODELS (Unified Multimodal) ===========
-        # Qwen Omni family (text+audio+vision+video in/out)
-        "Qwen2_5OmniForConditionalGeneration",
-        "Qwen2OmniTalkerForConditionalGeneration", 
-        "Qwen3OmniForConditionalGeneration",
-        # NExT-GPT (any-to-any: text, image, audio, video)
-        "NExTGPTForConditionalGeneration",
-        "NExTGPTModel",
-        # NExT-OMNI (discrete flow paradigm)
-        "NExTOMNIForConditionalGeneration",
-        # AWS Nova 2 Omni
-        "NovaOmniForConditionalGeneration",
-        # OpenAI-style (GPT-4o architecture approximations)
-        "GPT4OmniForConditionalGeneration",
-        "OmniModalTransformer",
-        # Gemini-style unified models
-        "GeminiForConditionalGeneration",
-        "GeminiOmniForConditionalGeneration",
-        # Meta Chameleon (any-to-any)
+        "AfmoeForCausalLM",
+        "ApertusForCausalLM",
+        "ArceeForCausalLM",
+        "ArcticForCausalLM",
+        "AudioFlamingo3ForConditionalGeneration",
+        "BaiChuanForCausalLM",
+        "BaichuanForCausalLM",
+        "BailingMoeForCausalLM",
+        "BailingMoeV2ForCausalLM",
+        "BambaForCausalLM",
+        "BertForMaskedLM",
+        "BertForSequenceClassification",
+        "BertModel",
+        "BitnetForCausalLM",
+        "BloomForCausalLM",
+        "BloomModel",
+        "CamembertModel",
+        "ChameleonForCausalLM",
         "ChameleonForConditionalGeneration",
-        
-        # =========== TEXT-ONLY LLMs ===========
-        # Qwen family
-        "Qwen2ForCausalLM",
-        "Qwen2_5ForCausalLM",
-        "Qwen3ForCausalLM",
-        # Llama family
-        "LlamaForCausalLM",
-        "LlamaModel",
-        "Llama3ForCausalLM",
-        "Llama4ForCausalLM",
-        # Mistral family
-        "MistralForCausalLM",
-        "MixtralForCausalLM",
-        # Phi family
-        "PhiForCausalLM",
-        "Phi3ForCausalLM",
-        "Phi4ForCausalLM",
-        # Gemma family
-        "GemmaForCausalLM",
+        "ChatGLMForConditionalGeneration",
+        "ChatGLMModel",
+        "CodeShellForCausalLM",
+        "CogVLMForCausalLM",
+        "Cohere2ForCausalLM",
+        "CohereForCausalLM",
+        "DbrxForCausalLM",
+        "DeciLMForCausalLM",
+        "DeepseekForCausalLM",
+        "DistilBertForMaskedLM",
+        "DistilBertForSequenceClassification",
+        "DistilBertModel",
+        "Dots1ForCausalLM",
+        "DreamModel",
+        "Ernie4_5ForCausalLM",
+        "Ernie4_5_ForCausalLM",
+        "Ernie4_5_MoeForCausalLM",
+        "Exaone4ForCausalLM",
+        "ExaoneForCausalLM",
+        "ExaoneMoEForCausalLM",
+        "FalconForCausalLM",
+        "FalconH1ForCausalLM",
+        "FalconMambaForCausalLM",
+        "GPT2LMHeadModel",
+        "GPTBigCodeForCausalLM",
+        "GPTNeoXForCausalLM",
+        "GPTRefactForCausalLM",
         "Gemma2ForCausalLM",
         "Gemma3ForCausalLM",
-        # DeepSeek family
-        "DeepseekForCausalLM",
-        "DeepseekV2ForCausalLM",
-        "DeepseekV3ForCausalLM",
-        # Other text models
-        "FalconForCausalLM",
-        "GPT2LMHeadModel",
-        "GPTNeoXForCausalLM",
-        "OPTForCausalLM",
-        "BloomForCausalLM",
-        "StableLMForCausalLM",
+        "Gemma3ForConditionalGeneration",
+        "Gemma3TextModel",
+        "Gemma3nForCausalLM",
+        "Gemma3nForConditionalGeneration",
+        "GemmaForCausalLM",
+        "Glm4ForCausalLM",
+        "Glm4MoeForCausalLM",
+        "Glm4MoeLiteForCausalLM",
+        "Glm4vForConditionalGeneration",
+        "Glm4vMoeForConditionalGeneration",
+        "GlmForCausalLM",
+        "GlmasrModel",
+        "GptOssForCausalLM",
+        "GraniteForCausalLM",
+        "GraniteMoeForCausalLM",
+        "GraniteMoeHybridForCausalLM",
+        "GraniteMoeSharedForCausalLM",
+        "Grok1ForCausalLM",
+        "GrokForCausalLM",
+        "GroveMoeForCausalLM",
+        "HunYuanDenseV1ForCausalLM",
+        "HunYuanMoEV1ForCausalLM",
+        "Idefics3ForConditionalGeneration",
+        "InternLM2ForCausalLM",
+        "InternLM3ForCausalLM",
+        "InternVisionModel",
+        "JAISLMHeadModel",
+        "JambaForCausalLM",
+        "JanusForConditionalGeneration",
+        "JinaBertForMaskedLM",
+        "JinaBertModel",
+        "KORMoForCausalLM",
+        "KimiVLForConditionalGeneration",
+        "LFM2ForCausalLM",
+        "LLaDAMoEModel",
+        "LLaDAMoEModelLM",
+        "LLaDAModelLM",
+        "Lfm2AudioForConditionalGeneration",
+        "Lfm2ForCausalLM",
+        "Lfm2Model",
+        "Lfm2MoeForCausalLM",
+        "Lfm2VlForConditionalGeneration",
+        "LightOnOCRForConditionalGeneration",
+        "Llama4ForCausalLM",
+        "Llama4ForConditionalGeneration",
+        "LlamaBidirectionalModel",
+        "LlavaStableLMEpochForCausalLM",
+        "MPTForCausalLM",
+        "MT5ForConditionalGeneration",
+        "MaincoderForCausalLM",
+        "Mamba2ForCausalLM",
         "MambaForCausalLM",
-        "RecurrentGemmaForCausalLM",
-        
-        # =========== VISION-LANGUAGE MODELS ===========
+        "MambaLMHeadModel",
+        "MiMoV2FlashForCausalLM",
+        "MiniCPM3ForCausalLM",
+        "MiniCPMForCausalLM",
+        "MiniMaxM2ForCausalLM",
+        "Mistral3ForConditionalGeneration",
+        "ModernBertForMaskedLM",
+        "ModernBertForSequenceClassification",
+        "ModernBertModel",
+        "NemotronForCausalLM",
+        "NemotronHForCausalLM",
+        "NeoBERT",
+        "NeoBERTForSequenceClassification",
+        "NeoBERTLMHead",
+        "NomicBertModel",
+        "OLMoForCausalLM",
+        "Olmo2ForCausalLM",
+        "Olmo3ForCausalLM",
+        "OlmoForCausalLM",
+        "OlmoeForCausalLM",
+        "OpenELMForCausalLM",
+        "OrionForCausalLM",
+        "PLMForCausalLM",
+        "PLaMo2ForCausalLM",
+        "PLaMo3ForCausalLM",
+        "PanguEmbeddedForCausalLM",
+        "Phi3ForCausalLM",
+        "PhiForCausalLM",
+        "PhiMoEForCausalLM",
+        "Plamo2ForCausalLM",
+        "Plamo3ForCausalLM",
+        "PlamoForCausalLM",
+        "QWenLMHeadModel",
+        "Qwen2AudioForConditionalGeneration",
+        "Qwen2ForCausalLM",
+        "Qwen2Model",
+        "Qwen2MoeForCausalLM",
+        "Qwen2OmniTalkerForConditionalGeneration",
         "Qwen2VLForConditionalGeneration",
-        "MllamaForConditionalGeneration",  # Llama vision
-        "Phi3VForCausalLM",  # Phi vision
-        "PaliGemmaForConditionalGeneration",
-        "LlavaForConditionalGeneration",
-        "LlavaNextForConditionalGeneration",
-        "LlavaOneVisionForConditionalGeneration",
-        "InternLMForCausalLM",
-        "InternVLChatModel",
-        "CogVLMForCausalLM",
-        "Idefics2ForConditionalGeneration",
-        "Florence2ForConditionalGeneration",
-        "MolmoForCausalLM",
-        "PixtralForConditionalGeneration",
-        
-        # =========== AUDIO MODELS ===========
-        "WhisperForConditionalGeneration",
-        "Wav2Vec2ForCTC",
-        "SeamlessM4TForConditionalGeneration",
-        "MusicGenForConditionalGeneration",
-        "SpeechT5ForTextToSpeech",
-        
-        # =========== VIDEO MODELS ===========
-        "VideoLlamaForConditionalGeneration",
-        "MPlug2ForConditionalGeneration",
-        "VideoChatGPTForConditionalGeneration",
-        
-        # =========== IMAGE GENERATION ===========
-        "StableDiffusionPipeline",
-        "SDXLPipeline",
-        "Flux1ForConditionalGeneration",
+        "Qwen2VLModel",
+        "Qwen2_5OmniForConditionalGeneration",
+        "Qwen2_5OmniModel",
+        "Qwen2_5_VLForConditionalGeneration",
+        "Qwen3ForCausalLM",
+        "Qwen3MoeForCausalLM",
+        "Qwen3NextForCausalLM",
+        "Qwen3OmniForConditionalGeneration",
+        "Qwen3TTSForConditionalGeneration",
+        "Qwen3VLForConditionalGeneration",
+        "Qwen3VLMoeForConditionalGeneration",
+        "RND1",
+        "RWForCausalLM",
+        "RWKV6Qwen2ForCausalLM",
+        "RWKV7ForCausalLM",
+        "RobertaForSequenceClassification",
+        "RobertaModel",
+        "Rwkv6ForCausalLM",
+        "Rwkv7ForCausalLM",
+        "RwkvHybridForCausalLM",
+        "SeedOssForCausalLM",
+        "SmallThinkerForCausalLM",
+        "SmolLM3ForCausalLM",
+        "SmolVLMForConditionalGeneration",
+        "SolarOpenForCausalLM",
+        "StableLMEpochForCausalLM",
+        "StableLmForCausalLM",
+        "Starcoder2ForCausalLM",
+        "T5EncoderModel",
+        "T5ForConditionalGeneration",
+        "T5WithLMHeadModel",
+        "UMT5ForConditionalGeneration",
+        "UMT5Model",
+        "UltravoxModel",
+        "VoxtralForConditionalGeneration",
+        "WavTokenizerDec",
+        "XLMRobertaForSequenceClassification",
+        "XLMRobertaModel",
+        "XverseForCausalLM",
+        "YoutuVLForConditionalGeneration",
+        "modeling_grove_moe.GroveMoeForCausalLM",
     ]
     
     def __init__(self, model_path: Optional[Union[str, Path]] = None):
@@ -153,38 +245,43 @@ class OmniModelLoader:
         self._processor = None
         self._config = None # This will store the model info
     
-    @staticmethod
-    def is_omni_model(model_path: Union[str, Path]) -> bool:
-        """
-        Check if the model at model_path is an Omni-compatible model.
-        """
+    @classmethod
+    def is_omni_model(cls, model_path: Union[str, Path]) -> bool:
+        """Check if the given path contains an Omni model."""
         path = Path(model_path)
         if not path.exists():
             return False
             
-        if "omni" in path.name.lower():
+        # 1. Direct registry check for known architectures
+        info = cls.get_model_info(model_path)
+        if info["is_supported"]:
             return True
             
-        try:
-             import json
-             config_path = path / "config.json"
-             if config_path.exists():
-                 with open(config_path) as f:
-                     config = json.load(f)
-                 if "architectures" in config:
-                     archs = config["architectures"]
-                     for arch in archs:
-                         if "omni" in arch.lower() or "qwen" in arch.lower():
-                             return True
-                         if "llama" in arch.lower() or "mistral" in arch.lower():
-                             return True
-        except Exception:
-            pass
+        # 2. Config-based check
+        config_path = path / "config.json"
+        if config_path.exists():
+            try:
+                import json
+                with open(config_path) as f:
+                    config = json.load(f)
+                
+                # Check model_type or architectures
+                model_type = config.get("model_type", "").lower()
+                if "omni" in model_type or "any-to-any" in model_type:
+                    return True
+                    
+                archs = config.get("architectures", [])
+                for arch in archs:
+                    if "omni" in arch.lower() or "qwen" in arch.lower():
+                        return True
+                    if "llama" in arch.lower() or "mistral" in arch.lower():
+                        return True
+            except: pass
             
-        return True
+        return False
 
-    @staticmethod
-    def get_model_info(model_path: Union[str, Path]) -> Dict[str, Any]:
+    @classmethod
+    def get_model_info(cls, model_path: Union[str, Path]) -> Dict[str, Any]:
         """Get information about the model."""
         import json
         info = {
@@ -192,7 +289,8 @@ class OmniModelLoader:
             "size": "unknown",
             "is_quantized": False,
             "has_talker": False,
-            "architecture": "unknown"
+            "architecture": "unknown",
+            "is_supported": False
         }
         
         try:
@@ -209,6 +307,12 @@ class OmniModelLoader:
                     
                 if any(k for k in config.keys() if "talker" in k or "audio" in k):
                     info["has_talker"] = True
+
+                # Check support
+                if info["architecture"] in cls.SUPPORTED_ARCHITECTURES:
+                    info["is_supported"] = True
+                elif "omni" in config.get("model_type", "").lower():
+                    info["is_supported"] = True
                     
         except Exception:
             pass
@@ -229,7 +333,7 @@ class OmniModelLoader:
 
         logger.info(f"Loading Model from {model_path} (Mode: {mode})")
         
-        trust_remote_code = kwargs.get("trust_remote_code", True)
+        trust_remote_code = kwargs.pop("trust_remote_code", True)
         
         try:
             from transformers import AutoTokenizer, AutoProcessor, AutoModelForCausalLM, AutoModel
@@ -259,7 +363,7 @@ class OmniModelLoader:
             
             # 3. Load Model with Fallback Strategy
             device_map = kwargs.get("device_map", "auto")
-            torch_dtype = kwargs.get("torch_dtype", "auto")
+            torch_dtype = kwargs.pop("torch_dtype", "auto")
             
             # Check for Prompt Repetition factors in kwargs
             # If present and > 1, we might want to use the OmniMultimodalLM wrapper

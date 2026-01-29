@@ -96,6 +96,43 @@ class TestOmniModelLoading:
         assert model == mock_model
         assert tokenizer == mock_tokenizer
 
+class TestOmniArchitectureRegistry:
+    """Tests for the exhaustive architecture registry."""
+    
+    def test_registry_size(self):
+        from src.omni.loader import OmniModelLoader
+        # Verify we have the expanded registry (should be > 150 now)
+        assert len(OmniModelLoader.SUPPORTED_ARCHITECTURES) > 150
+        
+    def test_specific_architectures_registered(self):
+        from src.omni.loader import OmniModelLoader
+        registry = OmniModelLoader.SUPPORTED_ARCHITECTURES
+        assert "Qwen3TTSForConditionalGeneration" in registry
+        assert "Qwen2_5OmniForConditionalGeneration" in registry
+        assert "Llama4ForCausalLM" in registry
+        assert "Gemma3TextModel" in registry
+        assert "ModernBertModel" in registry
+
+    def test_get_model_info_custom_arch(self, tmp_path):
+        from src.omni.loader import OmniModelLoader
+        import json
+        
+        # Create a fake model with a custom architecture
+        model_dir = tmp_path / "custom_model"
+        model_dir.mkdir()
+        config = {
+            "architectures": ["Qwen3TTSForConditionalGeneration"],
+            "model_type": "qwen3_tts",
+            "hidden_size": 2048,
+            "vocab_size": 151936
+        }
+        with open(model_dir / "config.json", "w") as f:
+            json.dump(config, f)
+            
+        info = OmniModelLoader.get_model_info(str(model_dir))
+        assert info["architecture"] == "Qwen3TTSForConditionalGeneration"
+        assert info["is_supported"] is True
+
 class TestOmniInference:
     """Tests for Omni inference module."""
     

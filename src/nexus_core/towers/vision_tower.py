@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from .base_tower import BaseTower
-from ..adapters.vision_adapter import VisionAdapter
+from nexus_core.adapters.vision_adapter import VisionAdapter
 
 class VisionTower(BaseTower):
     def __init__(self, config, teacher_dim, student_dim):

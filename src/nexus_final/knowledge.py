@@ -1,6 +1,14 @@
 import torch
 import torch.nn as nn
 import os
+import sys
+
+# Ensure unsloth is imported before any transformers components if possible
+try:
+    import unsloth
+except ImportError:
+    pass
+
 import json
 import faiss
 from typing import List, Dict, Optional, Tuple, Any
@@ -76,6 +84,7 @@ class KnowledgeTower(nn.Module):
         if self.encoder is None:
             # 1. Attempt Unsloth FastSentenceTransformer (3x speedup)
             try:
+                # FastSentenceTransformer already patched via top-level unsloth import if available
                 from unsloth import FastSentenceTransformer
                 print(f"[Knowledge] Loading optimized FastSentenceTransformer: {self.embedding_model_id}")
                 self.encoder = FastSentenceTransformer(self.embedding_model_id, device=self.device)

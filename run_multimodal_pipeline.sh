@@ -111,6 +111,16 @@ log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
 log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[⚠]${NC} $1"; }
 
+# Source Monitoring Utils
+MONITOR_SCRIPT="scripts/utils/monitor_utils.sh"
+if [ -f "$MONITOR_SCRIPT" ]; then
+    source "$MONITOR_SCRIPT"
+else
+    # Fallback if missing
+    start_monitor() { echo "Starting $1..."; }
+    stop_monitor() { :; }
+fi
+
 YELLOW='\033[0;33m'
 
 # =============================================================================
@@ -171,9 +181,17 @@ case "${PHASE}" in
     distill)  run_distill ;;
     train)    run_train ;;
     all)
+        MONITOR_PID=$(start_monitor "Phase 1: Download")
         run_download
+        stop_monitor $MONITOR_PID
+        
+        MONITOR_PID=$(start_monitor "Phase 2: Distill")
         run_distill
+        stop_monitor $MONITOR_PID
+        
+        MONITOR_PID=$(start_monitor "Phase 3: Train")
         run_train
+        stop_monitor $MONITOR_PID
         ;;
     *)
         echo "Usage: ./run_multimodal_pipeline.sh [download|distill|train|all] [options]"

@@ -11,6 +11,27 @@
 Nexus is not just a model; it's a **self-driving distillation factory**.
 Instead of running manual scripts like `python train.py`, you maintain a **Registry** of teacher models. The pipeline creates the student model by extracting knowledge from these teachers.
 
+## Universal Expert Integration
+
+The Nexus pipeline uses a standardized `OmniModelLoader` to map over 150 architectures from `llama.cpp` to `transformers` equivalents.
+
+### Supported Modalities
+
+- **Text (LLMs)**: Llama, Mistral, Gemma, Phi, Qwen, etc.
+- **Vision (VLM)**: Qwen2-VL, Llama-3.2-Vision, InternVL.
+- **Audio/TTS**: Qwen3-TTS (Any-to-Any), WavTokenizer.
+- **Encoders**: ModernBert, NeoBERT, CLIP.
+
+### Usage in Code
+
+```python
+from src.omni.loader import OmniModelLoader
+
+# Auto-detects custom architectures like 'qwen3_tts'
+loader = OmniModelLoader("/path/to/custom_model")
+model, tokenizer = loader.load(mode="full")
+```
+
 ---
 
 ## 🚀 3-Step Execution
@@ -66,8 +87,8 @@ conda activate nexus
 
 ## 🔄 The Pipeline Stages
 
-* **Resume:** If you interrupt the process (Ctrl+C), simply run `./run_nexus_master.sh` again. It will skip completed stages and resume instantly.
-* **Reset:** If you want to force a re-run or clear disk space, use `--reset`. This will delete the saved state file, all previous extraction shards in `memory/`, checkpoints in `checkpoints/`, and the final model in `nexus-release-v1/`.
+- **Resume:** If you interrupt the process (Ctrl+C), simply run `./run_nexus_master.sh` again. It will skip completed stages and resume instantly.
+- **Reset:** If you want to force a re-run or clear disk space, use `--reset`. This will delete the saved state file, all previous extraction shards in `memory/`, checkpoints in `checkpoints/`, and the final model in `nexus-release-v1/`.
 
 | Stage | What it does | Magic component |
 | :--- | :--- | :--- |
@@ -84,41 +105,41 @@ conda activate nexus
 
 If a teacher has **>60B Parameters** (like DeepSeek or massive encoder-decoders), or if the **VRAM Headroom** analysis indicates insufficient memory, the pipeline **automatically** switches to **SLI Mode** (Sequential Layer Ingestion).
 
-* **Layer Mapping:** Uses `SequentialLayerIntegrator` to stream layers one-by-one.
+- **Layer Mapping:** Uses `SequentialLayerIntegrator` to stream layers one-by-one.
 
-* **No Config Needed.** The system detects the size.
-* **Disk Requirement:** ~20GB free space (it deletes shards as it goes).
+- **No Config Needed.** The system detects the size.
+- **Disk Requirement:** ~20GB free space (it deletes shards as it goes).
 
 ### Thermal Protection
 
 The system monitors your GPU temperature.
 
-* **> 83°C**: Auto-Pause for 30 seconds.
-* **OOM (Out of Memory)**: Auto-Recovery (clears cache, skips batch).
+- **> 83°C**: Auto-Pause for 30 seconds.
+- **OOM (Out of Memory)**: Auto-Recovery (clears cache, skips batch).
 
 ### Manual Checkpoints
 
 While training is running, you can signal the process:
 
-* `kill -USR1 <pid>`: Pause and Save State.
-* `kill -USR2 <pid>`: Save Immediate Checkpoint (don't stop).
+- `kill -USR1 <pid>`: Pause and Save State.
+- `kill -USR2 <pid>`: Save Immediate Checkpoint (don't stop).
 
 ### Persistent Context Sessions (The Desk)
 
 You can save your current "retrieved context" (the Desk) to SSD to share between sessions or different models.
 
-* **Save:** `tower.save_desk("project_alpha", context_list)`
-* **Load:** `context = tower.load_desk("project_alpha")`
+- **Save:** `tower.save_desk("project_alpha", context_list)`
+- **Load:** `context = tower.load_desk("project_alpha")`
 This creates a JSON file in `memory/sessions/project_alpha.json` containing the raw text snippets.
 
 ---
 
 ## 📂 File Structure
 
-* `scripts/nexus_pipeline.py`: The Boss. Runs everything.
-* `src/nexus_final/registry.json`: The Roster.
-* `src/nexus_final/sli_integrator.py`: The Heavy Lifter (for 1T models).
-* `results/`: All outputs (profiles, checkpoints).
+- `scripts/nexus_pipeline.py`: The Boss. Runs everything.
+- `src/nexus_final/registry.json`: The Roster.
+- `src/nexus_final/sli_integrator.py`: The Heavy Lifter (for 1T models).
+- `results/`: All outputs (profiles, checkpoints).
 
 ---
 

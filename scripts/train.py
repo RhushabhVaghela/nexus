@@ -1,15 +1,33 @@
 import argparse
 import os
+import sys
+
+# Ensure unsloth is imported before any other heavy libraries if possible
+try:
+    # Disable Unsloth background telemetry which can hang during initial loading
+    os.environ["UNSLOTH_OFFLINE"] = "1"
+    import unsloth
+except ImportError:
+    pass
+
+import json
 import torch
 import glob
 import gc
+
+# Ensure 'src' is in path before importing from it
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if os.path.join(BASE_DIR, 'src') not in sys.path:
+    sys.path.append(os.path.join(BASE_DIR, 'src'))
+
 from torch.utils.data import Dataset, DataLoader
 from torch.optim import AdamW
 from transformers import AutoTokenizer
 
 # Import Core Modules
-from src.nexus_core.student.core import NexusStudentCore, NexusStudentConfig
-from src.nexus_final.distill import NexusTrainer
+from nexus_core.student.core import NexusStudentCore, NexusStudentConfig
+from nexus_final.distill import NexusTrainer
+from utils.callbacks import KeyboardPauseCallback
 
 class NexusDistillationDataset(Dataset):
     """
@@ -64,12 +82,20 @@ class NexusDistillationDataset(Dataset):
             attention_mask = tokens.attention_mask.squeeze(0)
             labels = input_ids.clone() # Causal LM
             
+            # Standardize teacher dimension to 4096 (Universal Latent Buffer)
+            # This allows batching shards from different teachers (e.g. 3584, 3072)
+            MAX_DIM = 4096
+            standardized_feat = torch.zeros(MAX_DIM)
+            if teacher_feat is not None:
+                d = min(teacher_feat.shape[0], MAX_DIM)
+                standardized_feat[:d] = teacher_feat[:d]
+            
             return {
                 "input_ids": input_ids,
                 "attention_mask": attention_mask,
                 "labels": labels,
-                "teacher_features": {"base": teacher_feat}, # Simple single-adapter map for now
-                "teacher_logits": torch.zeros(1) # Stub for loss fn if needed
+                "teacher_features": {"base": standardized_feat}, 
+                "teacher_logits": torch.zeros(1)
             }
         except Exception as e:
             print(f"Error loading {path}: {e}")
@@ -104,7 +130,7 @@ def main():
         torch.set_float32_matmul_precision('high')
         torch.backends.cudnn.benchmark = True
     
-    from src.nexus_final.utils.memory import check_memory_headroom, get_recommended_batch_size
+    from nexus_final.utils.memory import check_memory_headroom, get_recommended_batch_size
     ok, status = check_memory_headroom(vram_headroom_gb=1.0, ram_headroom_gb=2.0)
     print(f"[Memory] Initial Check: {status}")
 
@@ -152,7 +178,7 @@ def main():
             num_key_value_heads=4,
             num_adapters=1,
             torch_dtype=torch.bfloat16 if device == "cuda" else torch.float32,
-            attn_implementation="sdpa" if device == "cuda" else "eager",
+            attn_implementation="eager", # Custom architecture requires eager to avoid SDPA dispatch errors
             max_position_embeddings=args.max_seq_length
         )
 
@@ -167,13 +193,16 @@ def main():
             print("[Memory] Enabling Gradient Checkpointing...")
             student.gradient_checkpointing_enable()
             
-            # 1.5 Compiled Execution (Beast Mode: Max Autotune)
-            print("[Performance] Compiling Student Model (torch.compile)...")
-            try:
-                student = torch.compile(student, mode="reduce-overhead")
-                print("[Performance] Kernel Fusion Active.")
-            except Exception as e:
-                print(f"[Warn] torch.compile failed: {e}. Falling back to eager.")
+            # 1.5 Compiled Execution (Skip by default, as 'reduce-overhead' causes CUDAGraph errors with custom loop)
+            # if not args.use_unsloth:
+            #     print("[Performance] Compiling Student Model (torch.compile)...")
+            #     try:
+            #         student = torch.compile(student, mode="reduce-overhead")
+            #         print("[Performance] Kernel Fusion Active.")
+            #     except Exception as e:
+            #         print(f"[Warn] torch.compile failed: {e}. Falling back to eager.")
+            if args.use_unsloth:
+                print("[Performance] Unsloth Kernels Active (Skipping torch.compile).")
 
     print(f"[Model] Student Initialized on {device}.")
 
@@ -206,9 +235,8 @@ def main():
         batch_size=batch_size, 
         shuffle=True, 
         pin_memory=True if device == "cuda" else False,
-        num_workers=4 if device == "cuda" else 0, # Reduced from 8 for RAM safety
-        persistent_workers=True if device == "cuda" else False,
-        prefetch_factor=2 if device == "cuda" else None # Reduced from 4 for RAM safety
+        num_workers=0,
+        persistent_workers=False
     )
 
     # 4. Optimizer: Use 8-bit AdamW for massive VRAM savings
@@ -229,6 +257,19 @@ def main():
     #   already handles loading shards from SSD into the batch efficiently.
     adapters = {} 
     
+    # 5.1 Load Distillation Profile (Critical Layers)
+    critical_layers = []
+    if args.profile_path and os.path.exists(args.profile_path):
+        try:
+            with open(args.profile_path, 'r') as f:
+                profile_data = json.load(f)
+                critical_layers = profile_data.get("critical_layers", [])
+                print(f"[Distillation] Activation Anchoring active for layers: {critical_layers}")
+        except Exception as e:
+            print(f"[Warn] Failed to load profile from {args.profile_path}: {e}")
+    else:
+        print("[Distillation] Warning: No profile found. Proceeding with standard Mean-Squared Error distillation (No Anchoring).")
+
     trainer = NexusTrainer(
         student=student,
         adapters=adapters,
@@ -239,7 +280,8 @@ def main():
         config={
             "offline_distillation": False, 
             "warmup_epochs": 1,
-            "gradient_accumulation_steps": args.grad_accum
+            "gradient_accumulation_steps": args.grad_accum,
+            "critical_layers": critical_layers
         }
     )
 

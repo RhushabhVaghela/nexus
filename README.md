@@ -29,6 +29,24 @@ Nexus provides a tier-based capability manifest so consumers can understand the 
 
 Nexus is a Universal Knowledge Distillation pipeline that fully automates the journey from Profiling -> Knowledge Extraction -> Distillation -> Router Training.
 
+### 🌌 Universal Architecture Support
+
+Nexus now features a **Universal Model Loader** powered by a residency-matched registry of **150+ architectures** (directly synchronized with `llama.cpp`'s state-of-the-art mappings).
+
+- **Any-to-Any Support**: Natively handles Qwen3-TTS, MiniCPM-V, Llama-3.2-Vision, and more.
+- **Robust Metadata Discovery**: Automatic extraction of hidden dims, vocab, and modality-specific configurations.
+- **Unified Interface**: Standardized `OmniModelLoader` for Profiling, Distillation, and Inference.
+
+### 🧪 Getting Started (Quint-Modal Run)
+
+To execute a full 5-teacher multimodal run:
+
+```bash
+./run_nexus_master.sh --models "coder, translation, vision_main, tts_custom, audio_tokenizer" \
+                      --datasets "google_smol, mvp-lab_llava-onevision-1, google_speech_commands" \
+                      --sample_size 5000 --use-unsloth
+```
+
 ## 🛡️ Robustness & Safety (New in v6.1)
 
 **Process Exclusivity (Singleton Execution)**
@@ -45,6 +63,9 @@ Nexus is a Universal Knowledge Distillation pipeline that fully automates the jo
 ---
 
 ## 📦 Installation & Usage
+
+- **Usage & Verification Guide**: [Full Manual](docs/NEXUS_USAGE_GUIDE.md) - Covers Live Monitoring, Inference, Benchmarking, and RAG.
+- **Master Plan**: [Implementation Roadmap](implementation_roadmap.md)
 
 ### 1. Development Implementation
 

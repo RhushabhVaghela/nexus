@@ -8,18 +8,22 @@ Optimized for the Nexus Pipeline with Unsloth support.
 import argparse
 import os
 import sys
-import torch
-import logging
-from pathlib import Path
 
-# Ensure src is in path
-sys.path.append(os.path.join(os.getcwd(), 'src'))
-
+# Ensure unsloth is imported before any other heavy libraries if possible
 try:
     from unsloth import FastLanguageModel, is_bfloat16_supported
     UNSLOTH_AVAILABLE = True
 except ImportError:
     UNSLOTH_AVAILABLE = False
+
+import torch
+import logging
+from pathlib import Path
+
+# Ensure 'src' is in path before importing from it
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if os.path.join(BASE_DIR, 'src') not in sys.path:
+    sys.path.append(os.path.join(BASE_DIR, 'src'))
 
 try:
     from trl import GRPOConfig, GRPOTrainer

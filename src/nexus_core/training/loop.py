@@ -4,8 +4,8 @@ import shutil
 from torch.utils.data import DataLoader
 from .loss import ActivationAnchoringLoss
 # from .loss_functions import ActivationAnchoringLoss # Removed duplicated logic
-from ..student.core import NexusStudentCore
-from ..adapters.reasoning_adapter import ReasoningAdapter
+from nexus_core.student.core import NexusStudentCore
+from nexus_core.adapters.reasoning_adapter import ReasoningAdapter
 from typing import Dict, Any
 
 class NexusTrainer:

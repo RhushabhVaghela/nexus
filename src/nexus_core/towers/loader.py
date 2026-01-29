@@ -2,7 +2,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 import sys
 import os
 from typing import Tuple, Optional, Any
-from ..utils.universal_inspector import UniversalInspector
+from nexus_core.utils.universal_inspector import UniversalInspector
 
 class TowerLoader:
     """

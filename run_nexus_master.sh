@@ -12,6 +12,7 @@
 # =============================================================================
 
 set -e
+export PYTHONUNBUFFERED=1 # Force unbuffered output for real-time monitoring
 
 # ============ ENVIRONMENT CHECK ============
 if [[ "$CONDA_DEFAULT_ENV" != "nexus" ]]; then
@@ -122,7 +123,6 @@ fi
 echo ""
 
 # ============ PRE-FLIGHT CHECKS ============
-# ============ PRE-FLIGHT CHECKS ============
 cleanup_existing_processes() {
     log_warn "Checking for existing Nexus processes..."
     # Patterns to match
@@ -138,6 +138,16 @@ cleanup_existing_processes() {
     done
     log_success "Process cleanup complete."
 }
+
+# Source Monitoring Utils
+MONITOR_SCRIPT="scripts/utils/monitor_utils.sh"
+if [ -f "$MONITOR_SCRIPT" ]; then
+    source "$MONITOR_SCRIPT"
+else
+    # Fallback if missing
+    start_monitor() { echo "Starting $1..."; }
+    stop_monitor() { :; }
+fi
 
 cleanup_existing_processes
 
@@ -237,9 +247,19 @@ echo -e "${YELLOW}> Executing: $CMD${NC}"
 echo ""
 
 # Execute
-eval $CMD
+start_monitor "Nexus Pipeline"
+MONITOR_PID=$(cat .monitor_pid)
 
-if [ $? -eq 0 ]; then
+# ENSURE MONITOR STOPS ON EXIT/INTERRUPT
+trap "stop_monitor $MONITOR_PID" EXIT SIGINT SIGTERM
+
+eval $CMD
+EXIT_CODE=$?
+# Explicitly stop before final messages
+stop_monitor $MONITOR_PID
+trap - EXIT SIGINT SIGTERM # Clear trap
+
+if [ $EXIT_CODE -eq 0 ]; then
     echo ""
     echo -e "${CYAN}╔═══════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${CYAN}║                   MISSION ACCOMPLISHED                        ║${NC}"

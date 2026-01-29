@@ -1,5 +1,12 @@
 import os
 import sys
+
+# Ensure unsloth is imported before any other heavy libraries if possible
+try:
+    import unsloth
+except ImportError:
+    pass
+
 import json
 import signal
 import time
@@ -8,11 +15,15 @@ import subprocess
 from datetime import datetime
 import shutil
 from transformers import AutoConfig
-from nexus_final.utils.memory import should_use_sli
-
 # --- CONFIGURATION (CONVERT TO ABSOLUTE) ---
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.join(BASE_DIR, 'src')) # Ensure src is in path
+
+try:
+    from nexus_final.utils.memory import should_use_sli
+except ImportError:
+    print("[Warning] Could not import memory utils. SLI check will default to False.")
+    def should_use_sli(config): return False
 
 try:
     from nexus_core.towers.registry import TEACHER_REGISTRY, DATASET_REGISTRY
@@ -73,27 +84,52 @@ class NexusPipeline:
 
         self.dry_run = dry_run
         self.skip_non_llm = skip_non_llm
-        self.sample_size = sample_size
-        self.epochs = epochs
-        self.lr = lr
-        self.router_epochs = router_epochs
-        self.router_lr = router_lr
-        self.embedding_model = embedding_model
         
-        # Optimization Flags
-        self.use_unsloth = use_unsloth
-        self.packing = packing
-        self.max_seq_length = max_seq_length
-        self.use_grpo = use_grpo
-        
-        # Parse and Expand Selections
-        self.target_models = self._resolve_selection(models, TEACHER_REGISTRY, "models")
-        self.target_datasets = self._resolve_selection(datasets, DATASET_REGISTRY, "datasets")
+        # Optimization Flags & Hyperparams (Persistent)
+        def sync_sticky(arg_val, state_key, default_val=None):
+            saved_val = self.state["config"].get(state_key)
+            if arg_val == default_val and saved_val is not None:
+                return saved_val
+            if arg_val != default_val:
+                self.state["config"][state_key] = arg_val
+            return arg_val
+
+        self.use_unsloth = sync_sticky(use_unsloth, "use_unsloth", False)
+        self.packing = sync_sticky(packing, "packing", False)
+        self.max_seq_length = sync_sticky(max_seq_length, "max_seq_length", 2048)
+        self.epochs = sync_sticky(epochs, "epochs", 1)
+        self.lr = sync_sticky(lr, "lr", 1e-5)
+        self.sample_size = sync_sticky(sample_size, "sample_size", 50)
+        self.use_grpo = sync_sticky(use_grpo, "use_grpo", False)
+        self.router_epochs = sync_sticky(router_epochs, "router_epochs", 10)
+        self.router_lr = sync_sticky(router_lr, "router_lr", 5e-5)
+        self.embedding_model = sync_sticky(embedding_model, "embedding_model", "all-MiniLM-L6-v2")
+
+        # Parse and Expand Selections (Sticky)
+        saved_models = self.state["config"].get("target_models")
+        if models == "all" and saved_models:
+            print(f"[Pipeline] Resuming with previously selected models: {saved_models}")
+            self.target_models = saved_models
+        else:
+            self.target_models = self._resolve_selection(models, TEACHER_REGISTRY, "models")
+            if self.target_models:
+                self.state["config"]["target_models"] = self.target_models
+
+        saved_datasets = self.state["config"].get("target_datasets")
+        if not datasets and saved_datasets:
+             print(f"[Pipeline] Resuming with previously selected datasets: {saved_datasets}")
+             self.target_datasets = saved_datasets
+        else:
+            self.target_datasets = self._resolve_selection(datasets, DATASET_REGISTRY, "datasets")
+            if self.target_datasets:
+                self.state["config"]["target_datasets"] = self.target_datasets
         
         if self.target_models:
             print(f"[Pipeline] Final Model List: {self.target_models}")
         if self.target_datasets:
             print(f"[Pipeline] Final Dataset List: {self.target_datasets}")
+
+        self._save_state()
 
         # Resolve embedding model alias
         if self.embedding_model == "all-mpnet-base-v2":
@@ -202,12 +238,31 @@ class NexusPipeline:
             hf_id = dataset_key
             local_path = os.path.join(DATASET_BASE_DIR, "downloaded", dataset_key.replace("/", "_"))
 
-        # 2. Check Local Existence
+        # 2. Check Local Existence (Direct)
         if os.path.exists(local_path):
-            # Basic validation: check if not empty
             if os.listdir(local_path):
                 print(f"[Pipeline] Dataset '{dataset_key}' found locally at {local_path}.")
                 return local_path, False
+
+        # 2.5. Dynamic Discovery (Recursive Search)
+        # User Logic: "anything after the last / is the registry name... find it in /mnt/e/data"
+        search_name = os.path.basename(dataset_key) # e.g. "google_smol" from "general/google_smol"
+        print(f"[Pipeline] Searching for '{search_name}' in {DATA_PATH}...")
+        
+        # We limit specific subdirectories to avoid scanning unrelated folders if possible, or scan root.
+        # Given structure /mnt/e/data/datasets/category/name, max_depth=3 is safe.
+        import glob
+        # glob recursive is slow on massive trees, but specific name search is okay.
+        candidates = glob.glob(os.path.join(DATA_PATH, "**", search_name), recursive=True)
+        # Filter for directories only
+        candidates = [c for c in candidates if os.path.isdir(c)]
+        
+        if candidates:
+            # Pick the most likely match (shortest path usually means less nesting noise)
+            best_match = sorted(candidates, key=len)[0]
+            if os.listdir(best_match):
+                print(f"[Pipeline] Dynamic Discovery: Found '{search_name}' at {best_match}")
+                return best_match, False
         
         # 3. Check Size on HF
         try:
@@ -307,7 +362,10 @@ class NexusPipeline:
             print(f"[SLI] Processing layer {idx+1}/{len(data_files)}: {filename}")
             
             # 1. Download File
-            file_path = hf_hub_download(repo_id=hf_id, filename=filename, local_dir=local_path, repo_type="dataset")
+            if self.dry_run:
+                file_path = os.path.join(local_path, filename)
+            else:
+                file_path = hf_hub_download(repo_id=hf_id, filename=filename, local_dir=local_path, repo_type="dataset")
             
             # 2. Run Distillation on this file
             shard_prefix = f"{hf_id.replace('/', '_')}_{os.path.splitext(filename)[0]}"
@@ -347,25 +405,47 @@ class NexusPipeline:
                 path = model_key
             
             print(f"[Discovery] Inspecting: {path}...")
+            # Use OmniModelLoader for robust inspection
+            from src.omni.loader import OmniModelLoader
+            info = OmniModelLoader.get_model_info(path)
+            
             try:
+                # Still try AutoConfig first for more detailed info if possible
                 config = AutoConfig.from_pretrained(path, trust_remote_code=True)
-                
-                # Try common hidden dimension keys
                 hidden = getattr(config, "hidden_size", getattr(config, "d_model", getattr(config, "dim", 0)))
-                # Try common vocab size keys
                 vocab = getattr(config, "vocab_size", 0)
-                
-                if hidden > max_hidden:
-                    print(f"  -> Found larger hidden_size: {hidden}")
-                    max_hidden = hidden
-                if vocab > max_vocab:
-                    print(f"  -> Found larger vocab_size: {vocab}")
-                    max_vocab = vocab
-            except Exception as e:
-                print(f"  -> [Warn] Failed to fetch config for {path}: {e}")
-                # Use registry values as secondary fallback if available
-                if model_key in TEACHER_REGISTRY:
-                    max_hidden = max(max_hidden, TEACHER_REGISTRY[model_key].get('dim', 2048))
+            except Exception:
+                # Robust fallback for custom architectures
+                import json
+                hidden = 0
+                vocab = 0
+                config_path = os.path.join(path, "config.json")
+                if os.path.exists(config_path):
+                    try:
+                        with open(config_path) as f:
+                            cfg = json.load(f)
+                            # Primary LLM config
+                            hidden = cfg.get("hidden_size", cfg.get("d_model", cfg.get("dim", 0)))
+                            vocab = cfg.get("vocab_size", 0)
+                            
+                            # Nested talker/vision configs (e.g. for Qwen-Omni/TTS)
+                            if not hidden:
+                                for k in ["talker_config", "vision_config", "thinker_config"]:
+                                    if k in cfg:
+                                        sub = cfg[k]
+                                        hidden = max(hidden, sub.get("hidden_size", sub.get("d_model", 0)))
+                                        vocab = max(vocab, sub.get("vocab_size", 0))
+                    except: pass
+
+            if not hidden and model_key in TEACHER_REGISTRY:
+                hidden = TEACHER_REGISTRY[model_key].get('dim', 2048)
+            
+            if hidden > max_hidden:
+                print(f"  -> Found hidden_size: {hidden}")
+                max_hidden = hidden
+            if vocab > max_vocab:
+                print(f"  -> Found vocab_size: {vocab}")
+                max_vocab = vocab
 
         print(f"[Discovery] Final Unified Specs: Hidden={max_hidden}, Vocab={max_vocab}")
         self.state["config"]["hidden_size"] = max_hidden
@@ -478,6 +558,7 @@ class NexusPipeline:
              return
         
         # Prepare Datasets
+        # User confirmed local google_smol exists. Using dynamic discovery for robustness.
         dataset_keys = self.target_datasets if self.target_datasets else ["general/google_smol"]
         
         # Resolve all datasets first
@@ -668,7 +749,19 @@ class NexusPipeline:
         hidden_size = self.state["config"].get("hidden_size", 2048)
         vocab_size = self.state["config"].get("vocab_size", 128256)
         
-        cmd = f"{sys.executable} -m src.nexus_final.export --student '{ckpt_path}' --output '{RELEASE_DIR}' --hidden_size {hidden_size} --vocab_size {vocab_size}"
+        # 0. Build Knowledge Index checks
+        index_path = os.path.join(MEMORY_DIR, "vector_index.faiss")
+        if not os.path.exists(index_path):
+            print("\n[Index] Building FAISS Index from Memory Shards...")
+            emb_model = self.embedding_model 
+            build_cmd = f"{sys.executable} -m src.nexus_final.build_index --memory_dir '{MEMORY_DIR}' --output '{index_path}' --embedding_model '{emb_model}'"
+            ret = self.run_command(build_cmd, allow_fail=True)
+            if ret != 0:
+                print("[Warn] Index build failed. Export will use dummy index.")
+        else:
+            print(f"[Index] Found existing index: {index_path}")
+        
+        cmd = f"{sys.executable} -m src.nexus_final.export --student '{ckpt_path}' --output '{RELEASE_DIR}' --hidden_size {hidden_size} --vocab_size {vocab_size} --index '{index_path}'"
         self.run_command(cmd)
         
         self.state["completed_stages"].append("export")
@@ -682,7 +775,9 @@ class NexusPipeline:
             return
             
         print("\n=== STAGE 6: CLEANUP ===")
-        to_clean = [MEMORY_DIR, RESULTS_ROOT]
+        # Persistence: Keep memory for re-indexing/export
+        print(f"[Cleanup] Preserving {MEMORY_DIR} for future operations.")
+        to_clean = [RESULTS_ROOT]
         
         for path in to_clean:
             if os.path.exists(path):
@@ -702,6 +797,10 @@ class NexusPipeline:
         if stage_override:
             print(f"[Pipeline] Overriding current stage to: {stage_override}")
             self.state["current_stage"] = stage_override
+            # FORCE RUN: If user explicitly requested this stage, remove it from completed list
+            if stage_override in self.state["completed_stages"]:
+                self.state["completed_stages"].remove(stage_override)
+                print(f"[Pipeline] Forcing re-execution of stage: {stage_override}")
 
         print("Nexus Automation Pipeline Initialized.")
         print(f"[Config] Base Path: {BASE_DIR}")

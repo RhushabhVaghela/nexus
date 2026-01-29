@@ -1,0 +1,23 @@
+{
+  "current_stage": "profiling",
+  "completed_stages": [
+    "metadata_discovery"
+  ],
+  "config": {
+    "use_unsloth": true,
+    "sample_size": 5000,
+    "router_epochs": 5,
+    "router_lr": 0.0001,
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+    "target_models": [
+      "vision_main",
+      "coder"
+    ],
+    "target_datasets": [
+      "bigcode_the-stack-smol",
+      "mvp-lab_llava-onevision-1"
+    ],
+    "hidden_size": 4096,
+    "vocab_size": 152064
+  }
+}

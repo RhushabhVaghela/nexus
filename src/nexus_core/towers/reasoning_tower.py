@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from .base_tower import BaseTower
-from ..adapters.reasoning_adapter import ReasoningAdapter
+from nexus_core.adapters.reasoning_adapter import ReasoningAdapter
 
 class ReasoningTower(BaseTower):
     def __init__(self, config, teacher_dim, student_dim):

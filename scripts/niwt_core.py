@@ -75,7 +75,31 @@ class NIWTCore:
             # Hook mechanism to bypass layer
             # We use a simple identity bypass for the "Perturbation"
             original_forward = layer.forward
-            layer.forward = lambda *args, **kwargs: args[0] # Identity: Pass hidden states through
+            # Identity: Pass hidden states through, but MUST return as a tuple/structure
+            # standard HF layers return (hidden_states, optional_outputs...)
+            def bypass_forward(hidden_states, *args, **kwargs):
+                # Identity Bypass for Perturbation Analysis
+                # We must match the return structure of the layer's forward method.
+                # Modern Modular Transformers (Qwen2, Gemma) return a Tensor.
+                # Older/Standard implementations (Llama 2, some Gemma) return a Tuple.
+                
+                class_name = layer.__class__.__name__
+                if "Qwen2" in class_name or "Gemma" in class_name:
+                    # Modular implementations return a single Tensor (hidden_states)
+                    # and update Cache objects in-place if use_cache=True.
+                    return hidden_states
+                
+                # Standard HF DecoderLayer.forward return is a tuple: (hidden_states, optional_outputs)
+                if kwargs.get("use_cache", False):
+                    return (hidden_states, None)
+                
+                # Try to detect if the first input was already a tuple (some recursive calls)
+                if isinstance(hidden_states, tuple):
+                    return hidden_states
+                    
+                return (hidden_states,)
+            
+            layer.forward = bypass_forward
             
             # Evaluate
             score = self._evaluate_capability(test_cases)

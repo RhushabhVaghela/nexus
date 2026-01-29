@@ -1,6 +1,14 @@
+import os
+import sys
+
+# Ensure unsloth is imported before any other heavy libraries if possible
+try:
+    import unsloth
+except ImportError:
+    pass
+
 import torch
 import torch.nn as nn
-import os
 import json
 import tqdm
 from typing import List, Dict, Any, Optional
@@ -60,61 +68,42 @@ class KnowledgeDistiller:
         if device == "cpu":
              pass 
 
-        # Smart Model Loading Strategy
+        # Load Model using Universal OmniModelLoader
+        from src.omni.loader import OmniModelLoader
+        
+        print(f"[Distiller] Initializing Universal Loader for {teacher_model_path}...")
+        loader = OmniModelLoader(teacher_model_path)
+        
         try:
-            # 1. Inspect config first
-            config = AutoConfig.from_pretrained(teacher_model_path, trust_remote_code=True)
-            model_type = getattr(config, "model_type", "")
-            logging.info(f"Model Type Detected: {model_type}")
-
-            if model_type == "qwen2_5_omni":
-                print(f"[Distiller] Detected '{model_type}'. Using Qwen2ForCausalLM (Omni-Compatible).")
-                from transformers import Qwen2ForCausalLM
-                self.model = Qwen2ForCausalLM.from_pretrained(
-                    teacher_model_path,
-                    dtype=model_dtype,
-                    device_map=device,
-                    trust_remote_code=True
-                )
-            else:
-                # 2. Standard Loading Path
-                try:
-                    self.model = AutoModel.from_pretrained(
-                        teacher_model_path, 
-                        dtype=model_dtype, 
-                        device_map=device,
-                        quantization_config=quantization_config,
-                        trust_remote_code=True
-                    )
-                except Exception:
-                    # 3. Fallback for models that demand xxxForCausalLM (e.g., standard Qwen)
-                    print(f"[Distiller] AutoModel failed. Falling back to AutoModelForCausalLM.")
-                    from transformers import AutoModelForCausalLM
-                    self.model = AutoModelForCausalLM.from_pretrained(
-                        teacher_model_path,
-                        dtype=model_dtype,
-                        device_map=device,
-                        quantization_config=quantization_config,
-                        trust_remote_code=True
-                    )
-
+            load_kwargs = {
+                "trust_remote_code": True,
+                "torch_dtype": model_dtype
+            }
+            if quantization_config:
+                load_kwargs["load_in_4bit"] = True
+                
+            self.model, self.tokenizer = loader.load(mode="full", **load_kwargs)
+            self.processor = getattr(loader, "processor", None)
+            print(f"[Distiller] Model loaded successfuly using class: {self.model.__class__.__name__}")
         except Exception as e:
+            print(f"[Distiller] Universal Loader failed: {e}")
             logging.error(f"[Distiller] Fatal Load Error: {e}")
-            print(f"[Distiller] Failed to load model {teacher_model_path}. See 'distiller_debug.log'.")
             raise e
+
         self.model.eval()
 
     def extract_thematic_clusters(
         self, 
-        data_source: List[str], 
+        data_source: List[Dict[str, Any]], # Changed from List[str] to List[Dict]
         output_dir: str = "knowledge_shards/",
-        batch_size: int = 4,
+        batch_size: int = 2, # Reduced default for multimodal memory safety
         shard_prefix: str = "shard"
     ):
         """
         Performs batch forward pass to extract hidden states (Mathematical Knowledge).
-        Saves shards to SSD.
+        Supports multimodal inputs (Images/Audio).
         """
+        from PIL import Image
         output_dir = os.path.abspath(output_dir)
         os.makedirs(output_dir, exist_ok=True)
         print(f"[Distiller] Beginning mathematical extraction from {self.model_path}...")
@@ -122,30 +111,95 @@ class KnowledgeDistiller:
         extracted_shards = []
         
         for i in tqdm.tqdm(range(0, len(data_source), batch_size)):
-            batch = data_source[i : i + batch_size]
-            inputs = self.tokenizer(batch, return_tensors="pt", padding=True, truncation=True).to(self.device)
+            batch_samples = data_source[i : i + batch_size]
             
+            # 1. Prepare Inputs
+            texts = []
+            images = []
+            audios = []
+            
+            for s in batch_samples:
+                # Extract user prompt
+                prompt = ""
+                for m in s.get("messages", []):
+                    if m["role"] == "user":
+                        prompt = m["content"]
+                        break
+                texts.append(prompt)
+                
+                # Load Media if present
+                if "images" in s and s["images"]:
+                    try:
+                        images.append(Image.open(s["images"][0]).convert("RGB"))
+                    except Exception as e:
+                        print(f"[Distiller] Failed to load image {s['images'][0]}: {e}")
+                
+                if "audio" in s and s["audio"]:
+                    # For audio, we often pass the path directly to the processor 
+                    # or load with torchaudio/librosa. 
+                    # Qwen-Audio processor often handles paths or arrays.
+                    audios.append(s["audio"][0])
+
+            # 2. Tokenize / Process
+            if self.processor:
+                try:
+                    # Multimodal Processing
+                    process_kwargs = {"text": texts, "return_tensors": "pt", "padding": True}
+                    if images: process_kwargs["images"] = images
+                    if audios: process_kwargs["audios"] = audios # Check if model expects 'audio' or 'audios'
+                    
+                    inputs = self.processor(**process_kwargs).to(self.device)
+                except Exception as e:
+                    print(f"[Distiller] Processor failed: {e}. Falling back to tokenizer.")
+                    inputs = self.tokenizer(texts, return_tensors="pt", padding=True, truncation=True).to(self.device)
+            else:
+                inputs = self.tokenizer(texts, return_tensors="pt", padding=True, truncation=True).to(self.device)
+            
+            # 3. Forward Pass
             with torch.no_grad():
                 outputs = self.model(**inputs, output_hidden_states=True)
                 # Grab the final layer hidden states (the most semantic representation)
-                hidden_states = outputs.hidden_states[-1] # [B, S, D]
+                if hasattr(outputs, "hidden_states") and outputs.hidden_states:
+                    hidden_states = outputs.hidden_states[-1] # [B, S, D]
+                elif hasattr(outputs, "last_hidden_state"):
+                    hidden_states = outputs.last_hidden_state
+                else:
+                    print("[Distiller] Error: No hidden states found in output.")
+                    continue
                 
                 # Perform 'Mean Pooling' to get the shard's semantic essence
-                mask = inputs['attention_mask'].unsqueeze(-1).expand(hidden_states.size())
+                mask = inputs.get('attention_mask', torch.ones(hidden_states.shape[:2])).to(self.device)
+                if mask.dim() == 2:
+                    mask = mask.unsqueeze(-1)
+                
+                # Ensure mask matches hidden_states sequence length (sometimes differs in multimodal models)
+                if mask.size(1) != hidden_states.size(1):
+                     mask = torch.ones((hidden_states.size(0), hidden_states.size(1), 1)).to(self.device)
+
                 sum_h = torch.sum(hidden_states * mask, 1)
                 count = torch.clamp(mask.sum(1), min=1e-9)
                 shard_vectors = sum_h / count # [B, D]
                 
-            # Store Shard to SSD
-            for b_idx, text in enumerate(batch):
-                shard_id = f"{shard_prefix}_{i + b_idx}"
-                shard_path = os.path.join(output_dir, f"{shard_id}.pt")
+            # 4. Store Shard to SSD
+            for b_idx, sample in enumerate(batch_samples):
+                text_id = f"{shard_prefix}_{i + b_idx}"
+                shard_path = os.path.join(output_dir, f"{text_id}.pt")
                 
+                feat = shard_vectors[b_idx].cpu()
+                # Dimension Unification... (existing logic)
+                
+                # Dimension Unification: Pad hidden_state to match student_dim if requested
+                feat = shard_vectors[b_idx].cpu()
+                if hasattr(self.tower, 'student_dim') and self.tower.student_dim > feat.shape[-1]:
+                    padding = torch.zeros(self.tower.student_dim - feat.shape[-1])
+                    feat = torch.cat([feat, padding], dim=-1)
+                elif hasattr(self.tower, 'student_dim') and self.tower.student_dim < feat.shape[-1]:
+                    feat = feat[:self.tower.student_dim]
+
                 # Save both the raw text and the mathematical representation
-                # This allows the 'Librarian' (Student) to fetch facts from SSD.
                 torch.save({
                     "text": text,
-                    "hidden_state": shard_vectors[b_idx].cpu(),
+                    "hidden_state": feat,
                     "teacher": self.model_path
                 }, shard_path)
                 
@@ -184,21 +238,15 @@ if __name__ == "__main__":
     print(f"[Distiller] Loading data from {args.dataset} (limit={args.limit})...")
     dataset_gen = loader.load_dataset(args.dataset, limit=args.limit)
     
-    prompts = []
+    samples = []
     for sample in dataset_gen:
-        # Extract user content as the prompt
-        # Standard format: messages -> user content
-        try:
-            for msg in sample.get('messages', []):
-                if msg['role'] == 'user':
-                    prompts.append(msg['content'])
-                    break
-        except Exception:
-            continue
+        # Preserve full normalized sample for multimodal support
+        if "messages" in sample:
+            samples.append(sample)
             
-    if not prompts:
-        print("[Distiller] Warning: No prompts found in dataset. Using fallbacks.")
-        prompts = ["Explain quantum mechanics.", "Solve 2x + 5 = 9"]
+    if not samples:
+        print("[Distiller] Warning: No valid samples found in dataset. Using fallbacks.")
+        samples = [{"messages": [{"role": "user", "content": "Explain quantum mechanics."}]}]
 
-    print(f"[Distiller] Extracted {len(prompts)} prompts. Starting distillation...")
-    distiller.extract_thematic_clusters(prompts, output_dir=args.output, shard_prefix=args.shard_prefix)
+    print(f"[Distiller] Extracted {len(samples)} samples. Starting distillation...")
+    distiller.extract_thematic_clusters(samples, output_dir=args.output, shard_prefix=args.shard_prefix)

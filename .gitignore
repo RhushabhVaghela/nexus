@@ -28,10 +28,16 @@ dataset and performance suggestions.md
 universal-architecture.md
 rejection_sampled.jsonl
 nexus_agent_mix.jsonl
+
 # new-plan-conversation-files/
 
+# Lock files
+*.lock
+*lock*
 
 # Node modules
 node_modules/
 dashboard/node_modules/
 remotion/node_modules/
+# Unsloth
+unsloth_compiled_cache/

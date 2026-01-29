@@ -63,6 +63,16 @@ log_warn() { echo -e "${YELLOW}[⚠]${NC} $1"; }
 log_error() { echo -e "${RED}[✗]${NC} $1"; }
 log_step() { echo -e "${PURPLE}[STAGE]${NC} $1"; }
 
+# Source Monitoring Utils
+MONITOR_SCRIPT="scripts/utils/monitor_utils.sh"
+if [ -f "$MONITOR_SCRIPT" ]; then
+    source "$MONITOR_SCRIPT"
+else
+    # Fallback if missing
+    start_monitor() { echo "Starting $1..."; }
+    stop_monitor() { :; }
+fi
+
 # ============ DEFAULTS ============
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SRC_DIR="${PROJECT_DIR}/src"
@@ -436,12 +446,14 @@ for stage in "${STAGES[@]}"; do
             if $DRY_RUN; then
                 log_info "[DRY-RUN] python ${SRC_DIR}/24_multimodal_training.py --base-model $CURRENT_MODEL --output-dir $STAGE_OUTPUT $REP_ARGS"
             else
+                MONITOR_PID=$(start_monitor "Training Omni")
                 python "${SRC_DIR}/24_multimodal_training.py" \
                     --base-model "$CURRENT_MODEL" \
                     --output-dir "$STAGE_OUTPUT" \
                     --sample-size "$SAMPLE_SIZE" \
                     $REP_ARGS \
                     2>&1 | tee "${LOG_DIR}/train_omni.log"
+                stop_monitor $MONITOR_PID
             fi
             CURRENT_MODEL="$STAGE_OUTPUT"
             ;;
