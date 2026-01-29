@@ -362,8 +362,9 @@ class OmniModelLoader:
                 logger.debug("No AutoProcessor found (might be text-only model)")
             
             # 3. Load Model with Fallback Strategy
-            device_map = kwargs.get("device_map", "auto")
+            device_map = kwargs.pop("device_map", "auto")
             torch_dtype = kwargs.pop("torch_dtype", "auto")
+            low_cpu_mem_usage = kwargs.pop("low_cpu_mem_usage", True)
             
             # Check for Prompt Repetition factors in kwargs
             # If present and > 1, we might want to use the OmniMultimodalLM wrapper
@@ -383,30 +384,186 @@ class OmniModelLoader:
                 )
                 self._model = model
                 return model, self._tokenizer
+            
+            # Remove redundant kwargs that are explicitly passed
+            kwargs.pop("trust_remote_code", None)
 
-            logger.info("Attempting load with AutoModelForCausalLM...")
+            # 4. Finalize Load Strategy
+            current_device = kwargs.get("device") or ("cuda:0" if torch.cuda.is_available() else "cpu")
+            
+            # --- Monkey-patch transformers/torch for non-standard architectures ---
             try:
-                model = AutoModelForCausalLM.from_pretrained(
-                    str(model_path),
-                    device_map=device_map,
-                    trust_remote_code=trust_remote_code,
-                    torch_dtype=torch_dtype,
-                    low_cpu_mem_usage=True,
-                    **kwargs
-                )
-            except Exception as e1:
-                logger.warning(f"AutoModelForCausalLM failed ({e1}), falling back to AutoModel...")
-                try:
-                    model = AutoModel.from_pretrained(
-                        str(model_path),
-                        device_map=device_map,
-                        trust_remote_code=trust_remote_code,
-                        torch_dtype=torch_dtype,
-                        low_cpu_mem_usage=True,
-                        **kwargs
-                    )
-                except Exception as e2:
-                    raise RuntimeError(f"All loading strategies failed. AutoModel error: {e2}")
+                import transformers.quantizers.quantizers_utils as qu
+                import torch.nn as nn
+                orig_get_submodule = nn.Module.get_submodule
+
+                def patched_get_submodule(self, target):
+                    if not target: return self
+                    try:
+                        return orig_get_submodule(self, target)
+                    except AttributeError as e:
+                        if "is not an nn.Module" in str(e):
+                            # Traversal bug: target path contains a parameter. 
+                            # Search for the deepest valid module parent.
+                            parts = target.split('.')
+                            for i in range(len(parts) - 1, 0, -1):
+                                try:
+                                    return orig_get_submodule(self, ".".join(parts[:i]))
+                                except: continue
+                            return self
+                        raise e
+                
+                nn.Module.get_submodule = patched_get_submodule
+                logger.info("Applied aggressive monkey-patch to nn.Module.get_submodule")
+            except Exception as e:
+                logger.warning(f"Failed to apply transformers monkey-patch: {e}")
+            # ----------------------------------------------------------------------
+
+            # Map of class names to actual objects
+            from transformers import (
+                AutoModelForCausalLM, AutoModel, AutoModelForVision2Seq, 
+                AutoModelForSeq2SeqLM, AutoModelForImageTextToText
+            )
+            auto_classes = {
+                "AutoModelForCausalLM": AutoModelForCausalLM,
+                "AutoModel": AutoModel,
+                "AutoModelForVision2Seq": AutoModelForVision2Seq,
+                "AutoModelForSeq2SeqLM": AutoModelForSeq2SeqLM,
+                "AutoModelForImageTextToText": AutoModelForImageTextToText
+            }
+
+            # Build prioritized strategies
+            strategies = []
+            
+            # 1. Add auto_map preferences first
+            try:
+                config_json = model_path / "config.json"
+                if config_json.exists():
+                    with open(config_json) as f:
+                        cfg_data = json.load(f)
+                        if "auto_map" in cfg_data:
+                            for auto_name in cfg_data["auto_map"].keys():
+                                if auto_name in auto_classes:
+                                    strategies.append((auto_name, auto_classes[auto_name]))
+            except:
+                pass
+
+            # 2. Add defaults if not already present
+            default_priority = [
+                "AutoModelForCausalLM", 
+                "AutoModelForImageTextToText",
+                "AutoModelForVision2Seq", 
+                "AutoModel"
+            ]
+            for name in default_priority:
+                if name not in [s[0] for s in strategies]:
+                    strategies.append((name, auto_classes[name]))
+
+            model = None
+            last_error = None
+            
+            # --- Monkey-patch transformers for non-standard architectures ---
+            # This fixes the AttributeError: 'weight' is not an nn.Module during 4-bit loading
+            orig_get_module_from_name = None
+            try:
+                import transformers.quantizers.quantizers_utils as qu
+                orig_get_module_from_name = qu.get_module_from_name
+                
+                def patched_get_module_from_name(module, tensor_name: str):
+                    if "." in tensor_name:
+                        module_name, tensor_name = tensor_name.rsplit(".", 1)
+                        try:
+                            # Try standard PyTorch way first
+                            module = module.get_submodule(module_name)
+                        except AttributeError as e:
+                            if "is not an nn.Module" in str(e):
+                                # Traversal bug: path contains a parameter. 
+                                # Manually traverse using getattr to skip module check.
+                                for part in module_name.split("."):
+                                    module = getattr(module, part)
+                            else:
+                                raise e
+                    return module, tensor_name
+                
+                qu.get_module_from_name = patched_get_module_from_name
+                logger.info("Applied monkey-patch to transformers.quantizers.quantizers_utils.get_module_from_name")
+            except Exception as e:
+                logger.warning(f"Failed to apply transformers monkey-patch: {e}")
+            # -----------------------------------------------------------------
+
+            try:
+                for class_name, cls_obj in strategies:
+                    try:
+                        logger.info(f"Attempting load with {class_name}...")
+                        
+                        # Setup quantization if needed
+                        if kwargs.get("load_in_4bit") or kwargs.get("load_in_8bit"):
+                            from transformers import BitsAndBytesConfig
+                            skip_modules = [
+                                "vision_model", "visual", "vision_tower", "multi_modal_projector", 
+                                "vit_large_projector", "ln_pre", "ln_post", "ln_1", "ln_2", "conv1",
+                                "wit_large_projector", "downsampler"
+                            ]
+                            q_config = BitsAndBytesConfig(
+                                load_in_4bit=kwargs.pop("load_in_4bit", False),
+                                load_in_8bit=kwargs.pop("load_in_8bit", False),
+                                llm_int8_skip_modules=skip_modules,
+                                bnb_4bit_compute_dtype=torch.float16,
+                                bnb_4bit_quant_type="nf4",
+                                bnb_4bit_use_double_quant=True
+                            )
+                            kwargs["quantization_config"] = q_config
+
+                        # Strategy A: Standard with low_cpu and auto device map
+                        try:
+                            model = cls_obj.from_pretrained(
+                                str(model_path),
+                                device_map=device_map,
+                                trust_remote_code=trust_remote_code,
+                                torch_dtype=torch_dtype,
+                                low_cpu_mem_usage=low_cpu_mem_usage,
+                                **kwargs
+                            )
+                            break
+                        except AttributeError as ae:
+                            if "is not an nn.Module" in str(ae):
+                                logger.warning(f"Caught traversal error for {class_name}. Retrying with pinned device_map...")
+                                pinned_map = {"": torch.cuda.current_device() if torch.cuda.is_available() else "cpu"}
+                                model = cls_obj.from_pretrained(
+                                    str(model_path),
+                                    device_map=pinned_map,
+                                    trust_remote_code=trust_remote_code,
+                                    torch_dtype=torch_dtype,
+                                    low_cpu_mem_usage=False,
+                                    **kwargs
+                                )
+                                break
+                            else: raise ae
+                        except Exception as e:
+                            if "low_cpu_mem_usage" in str(e):
+                                logger.warning(f"Retrying {class_name} without low_cpu_mem_usage...")
+                                model = cls_obj.from_pretrained(
+                                    str(model_path),
+                                    device_map=device_map,
+                                    trust_remote_code=trust_remote_code,
+                                    torch_dtype=torch_dtype,
+                                    low_cpu_mem_usage=False,
+                                    **kwargs
+                                )
+                                break
+                            else: raise e
+                    except Exception as e:
+                        logger.warning(f"{class_name} strategy failed: {e}")
+                        last_error = e
+                        continue
+            finally:
+                if orig_get_module_from_name:
+                    import transformers.quantizers.quantizers_utils as qu
+                    qu.get_module_from_name = orig_get_module_from_name
+                    logger.info("Restored original get_module_from_name")
+            
+            if model is None:
+                raise RuntimeError(f"All loading strategies failed. Final error: {last_error}")
 
             logger.info(f"Model loaded successfully: {type(model).__name__}")
             

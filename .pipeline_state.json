@@ -1,7 +1,13 @@
 {
-  "current_stage": "profiling",
+  "current_stage": "done",
   "completed_stages": [
-    "metadata_discovery"
+    "metadata_discovery",
+    "knowledge_extraction",
+    "training",
+    "router_training",
+    "evaluation",
+    "export",
+    "cleanup"
   ],
   "config": {
     "use_unsloth": true,
@@ -10,8 +16,7 @@
     "router_lr": 0.0001,
     "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
     "target_models": [
-      "vision_main",
-      "coder"
+      "stepfun-ai_Step3-VL-10B"
     ],
     "target_datasets": [
       "bigcode_the-stack-smol",
