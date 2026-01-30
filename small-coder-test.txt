@@ -1,0 +1,193 @@
+[0;36m╔═══════════════════════════════════════════════════════════════╗[0m
+[0;36m║              NEXUS SELF-DRIVING PIPELINE v6.1                 ║[0m
+[0;36m╚═══════════════════════════════════════════════════════════════╝[0m
+[0;34m[INFO][0m Reset not requested — skipping process cleanup
+[0;34m[INFO][0m Performing system health check...
+[0;32m[✓][0m Dependencies verified
+
+[0;35m═══════════════════════════════════════════════════════════════[0m
+[0;35m[STAGE][0m Handing control to Python Orchestrator
+[0;35m═══════════════════════════════════════════════════════════════[0m
+[1;33m> Executing: python scripts/nexus_pipeline.py[0m
+[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:00[0m[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:01[0m🦥 Unsloth: Will patch your computer to enable 2x faster free finetuning.
+[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:02[0m[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:03[0m[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:04[0m🦥 Unsloth Zoo will now patch everything to make training faster!
+[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:05[0m[Pipeline] Final Model List: ['reasoning_core', 'logic_heavy', 'interpretability', 'translation', 'base_small', 'coder', 'omni_base', 'omni_large', 'vision_main', 'object_detection', 'vision_enc', 'video_enc', 'video_gen', 'omni_speech', 'asr_long', 'asr_fast', 'tts_custom', 'tts_design', 'audio_tokenizer', 'image_gen']
+[Pipeline] State saved to /mnt/d/Research Experiments/nexus/.pipeline_state.json
+Nexus Automation Pipeline Initialized.
+[Config] Base Path: /mnt/d/Research Experiments/nexus
+[Config] Registry: Loaded from src.nexus_core.towers.registry
+[Config] Memory: /mnt/d/Research Experiments/nexus/memory
+Current State: init
+
+=== STAGE 0: UNIVERSAL METADATA DISCOVERY ===
+[Discovery] Inspecting: /mnt/e/data/models/AgentCPM-Explore...
+[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:06[0m  -> Found hidden_size: 2560
+  -> Found vocab_size: 151936
+[Discovery] Inspecting: /mnt/e/data/models/zai-org_GLM-4.7-Flash...
+  -> Found vocab_size: 154880
+[Discovery] Inspecting: /mnt/e/data/models/google_gemma-scope-2-27b-pt...
+  -> Found hidden_size: 3072
+  -> Found vocab_size: 256000
+[Discovery] Inspecting: /mnt/e/data/models/google_translategemma-4b-it...
+[Discovery] Inspecting: /mnt/e/data/models/Qwen2.5-0.5B...
+[Discovery] Inspecting: /mnt/e/data/models/Qwen_Qwen2.5-Coder-7B-Instruct...
+  -> Found hidden_size: 3584
+[Discovery] Inspecting: /mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4...
+Unrecognized keys in `rope_scaling` for 'rope_type'='default': {'mrope_section'}
+[Discovery] Inspecting: /mnt/e/data/models/Qwen_Qwen3-Omni-30B-A3B-Instruct...
+Unrecognized keys in `rope_scaling` for 'rope_type'='default': {'mrope_interleaved', 'mrope_section', 'interleaved'}
+Unrecognized keys in `rope_scaling` for 'rope_type'='default': {'mrope_section', 'interleaved'}
+[Discovery] Inspecting: /mnt/e/data/models/stepfun-ai_Step3-VL-10B...
+  -> Found hidden_size: 4096
+[Discovery] Inspecting: /mnt/e/data/models/PaDT_OVD_3B...
+[Discovery] Inspecting: /mnt/e/data/encoders/image-encoders/siglip2-so400m-patch16-512...
+[Discovery] Inspecting: /mnt/e/data/encoders/vision-encoders/MCG-NJU_videomae-large...
+[Discovery] Inspecting: /mnt/e/data/decoders/vision-decoders/stabilityai_stable-video-diffusion-img2vid-xt-1-1...
+[Discovery] Inspecting: /mnt/e/data/models/nvidia_personaplex-7b-v1...
+[Discovery] Inspecting: /mnt/e/data/models/microsoft_VibeVoice-ASR...
+[Discovery] Inspecting: /mnt/e/data/encoders/audio-encoders/parakeet-tdt-0.6b-v3...
+[Discovery] Inspecting: /mnt/e/data/decoders/audio-decoders/Qwen_Qwen3-TTS-12Hz-1.7B-CustomVoice...
+[Discovery] Inspecting: /mnt/e/data/decoders/audio-decoders/Qwen_Qwen3-TTS-12Hz-1.7B-VoiceDesign...
+[Discovery] Inspecting: /mnt/e/data/encoders/audio-encoders/Qwen_Qwen3-TTS-Tokenizer-12Hz...
+[Discovery] Inspecting: /mnt/e/data/decoders/image-decoders/stabilityai_stable-diffusion-3-medium-diffusers...
+[Discovery] Final Unified Specs: Hidden=4096, Vocab=256000
+[Pipeline] State saved to /mnt/d/Research Experiments/nexus/.pipeline_state.json
+
+=== STAGE 1: NIWT PROFILING & ACTIVATION ANALYSIS ===
+
+[Profiler] Target: openbmb/AgentCPM-Explore (Key: reasoning_core)
+[Exec] '/home/rhushabh/miniconda3/envs/nexus/bin/python' '/mnt/d/Research Experiments/nexus/scripts/run_profiling_driver.py' --teacher_id 'openbmb/AgentCPM-Explore' --model_path '/mnt/e/data/models/AgentCPM-Explore'  --sample_size 50
+[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:07[0m[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:08[0m[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:09[0m
+[NIWT Profiler] Starting analysis for openbmb/AgentCPM-Explore...
+[Hardware] Mode: cuda
+[Loader] Loading /mnt/e/data/models/AgentCPM-Explore (Quantization: 4-bit)...
+Skipping import of cpp extensions due to incompatible torch version 2.10.0+cu128 for torchao version 0.15.0             Please see https://github.com/pytorch/ao/issues/2919 for more info
+[Loader] Initializing Universal Loader for openbmb/AgentCPM-Explore...
+[2026-01-30 07:17:09,948] INFO: Loading Model from /mnt/e/data/models/AgentCPM-Explore (Mode: full)
+[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:10[0m[2026-01-30 07:17:11,160] INFO: Applied Self-Healing patches
+[2026-01-30 07:17:11,172] INFO: Trying AutoModelForCausalLM...
+[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:11[0m[2026-01-30 07:17:12,028] WARNING: AutoModelForCausalLM failed: OmniModelLoader.load_for_inference.<locals>.<lambda>() got an unexpected keyword argument 'persistent'
+[2026-01-30 07:17:12,028] INFO: Trying AutoModelForVision2Seq...
+/home/rhushabh/miniconda3/envs/nexus/lib/python3.10/site-packages/transformers/models/auto/modeling_auto.py:2284: FutureWarning: The class `AutoModelForVision2Seq` is deprecated and will be removed in v5.0. Please use `AutoModelForImageTextToText` instead.
+  warnings.warn(
+[2026-01-30 07:17:12,086] WARNING: AutoModelForVision2Seq failed: Unrecognized configuration class <class 'transformers.models.qwen3.configuration_qwen3.Qwen3Config'> for this kind of AutoModel: AutoModelForVision2Seq.
+Model type should be one of BlipConfig, Blip2Config, ChameleonConfig, GitConfig, Idefics2Config, Idefics3Config, InstructBlipConfig, InstructBlipVideoConfig, Kosmos2Config, Kosmos2_5Config, LlavaConfig, LlavaNextConfig, LlavaNextVideoConfig, LlavaOnevisionConfig, Mistral3Config, MllamaConfig, Ovis2Config, PaliGemmaConfig, Pix2StructConfig, Qwen2_5_VLConfig, Qwen2VLConfig, Qwen3VLConfig, Qwen3VLMoeConfig, VideoLlavaConfig, VipLlavaConfig, VisionEncoderDecoderConfig.
+[2026-01-30 07:17:12,086] INFO: Trying AutoModelForImageTextToText...
+[2026-01-30 07:17:12,134] WARNING: AutoModelForImageTextToText failed: Unrecognized configuration class <class 'transformers.models.qwen3.configuration_qwen3.Qwen3Config'> for this kind of AutoModel: AutoModelForImageTextToText.
+Model type should be one of AriaConfig, AyaVisionConfig, BlipConfig, Blip2Config, ChameleonConfig, Cohere2VisionConfig, DeepseekVLConfig, DeepseekVLHybridConfig, Emu3Config, EvollaConfig, Florence2Config, FuyuConfig, Gemma3Config, Gemma3nConfig, GitConfig, Glm4vConfig, Glm4vMoeConfig, GotOcr2Config, IdeficsConfig, Idefics2Config, Idefics3Config, InstructBlipConfig, InternVLConfig, JanusConfig, Kosmos2Config, Kosmos2_5Config, Lfm2VlConfig, Llama4Config, LlavaConfig, LlavaNextConfig, LlavaNextVideoConfig, LlavaOnevisionConfig, Mistral3Config, MllamaConfig, Ovis2Config, PaliGemmaConfig, PerceptionLMConfig, Pix2StructConfig, PixtralVisionConfig, Qwen2_5_VLConfig, Qwen2VLConfig, Qwen3VLConfig, Qwen3VLMoeConfig, ShieldGemma2Config, SmolVLMConfig, UdopConfig, VipLlavaConfig, VisionEncoderDecoderConfig.
+[2026-01-30 07:17:12,134] INFO: Trying AutoModel...
+[2026-01-30 07:17:12,177] WARNING: AutoModel failed: OmniModelLoader.load_for_inference.<locals>.<lambda>() got an unexpected keyword argument 'persistent'
+[2026-01-30 07:17:12,177] ERROR: Load failed: All failed. Last error: OmniModelLoader.load_for_inference.<locals>.<lambda>() got an unexpected keyword argument 'persistent'
+[Error] Universal Loader failed for openbmb/AgentCPM-Explore: All failed. Last error: OmniModelLoader.load_for_inference.<locals>.<lambda>() got an unexpected keyword argument 'persistent'
+Traceback (most recent call last):
+  File "/mnt/d/Research Experiments/nexus/scripts/run_profiling_driver.py", line 63, in main
+    model, tokenizer = loader.load(mode="full", **load_kwargs)
+  File "/mnt/d/Research Experiments/nexus/src/omni/loader.py", line 227, in load
+    return self.load_for_inference(mode=mode, **kwargs)
+  File "/mnt/d/Research Experiments/nexus/src/omni/loader.py", line 370, in load_for_inference
+    if model is None: raise RuntimeError(f"All failed. Last error: {last_err}")
+RuntimeError: All failed. Last error: OmniModelLoader.load_for_inference.<locals>.<lambda>() got an unexpected keyword argument 'persistent'
+[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:12[0m[Error] Command failed with code 256
+[Profiler] WARNING: Profiling failed for openbmb/AgentCPM-Explore. Skipping to next model.
+
+[Profiler] Target: zai-org/GLM-4.7-Flash (Key: logic_heavy)
+[Exec] '/home/rhushabh/miniconda3/envs/nexus/bin/python' '/mnt/d/Research Experiments/nexus/scripts/run_profiling_driver.py' --teacher_id 'zai-org/GLM-4.7-Flash' --model_path '/mnt/e/data/models/zai-org_GLM-4.7-Flash'  --sample_size 50
+[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:13[0m[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:14[0m[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:15[0m
+[NIWT Profiler] Starting analysis for zai-org/GLM-4.7-Flash...
+[Hardware] Mode: cuda
+[Loader] Loading /mnt/e/data/models/zai-org_GLM-4.7-Flash (Quantization: 4-bit)...
+Skipping import of cpp extensions due to incompatible torch version 2.10.0+cu128 for torchao version 0.15.0             Please see https://github.com/pytorch/ao/issues/2919 for more info
+[Loader] Initializing Universal Loader for zai-org/GLM-4.7-Flash...
+[2026-01-30 07:17:16,107] INFO: Loading Model from /mnt/e/data/models/zai-org_GLM-4.7-Flash (Mode: full)
+[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:18[0m[2026-01-30 07:17:19,528] INFO: Applied Self-Healing patches
+[2026-01-30 07:17:19,538] INFO: Trying AutoModelForCausalLM...
+[2026-01-30 07:17:19,557] WARNING: AutoModelForCausalLM failed: The checkpoint you are trying to load has model type `glm4_moe_lite` but Transformers does not recognize this architecture. This could be because of an issue with the checkpoint, or because your version of Transformers is out of date.
+
+You can update Transformers with the command `pip install --upgrade transformers`. If this does not work, and the checkpoint is very new, then there may not be a release version that supports this model yet. In this case, you can get the most up-to-date code by installing Transformers from source with the command `pip install git+https://github.com/huggingface/transformers.git`
+[2026-01-30 07:17:19,557] INFO: Trying AutoModelForVision2Seq...
+/home/rhushabh/miniconda3/envs/nexus/lib/python3.10/site-packages/transformers/models/auto/modeling_auto.py:2284: FutureWarning: The class `AutoModelForVision2Seq` is deprecated and will be removed in v5.0. Please use `AutoModelForImageTextToText` instead.
+  warnings.warn(
+[2026-01-30 07:17:19,574] WARNING: AutoModelForVision2Seq failed: The checkpoint you are trying to load has model type `glm4_moe_lite` but Transformers does not recognize this architecture. This could be because of an issue with the checkpoint, or because your version of Transformers is out of date.
+
+You can update Transformers with the command `pip install --upgrade transformers`. If this does not work, and the checkpoint is very new, then there may not be a release version that supports this model yet. In this case, you can get the most up-to-date code by installing Transformers from source with the command `pip install git+https://github.com/huggingface/transformers.git`
+[2026-01-30 07:17:19,574] INFO: Trying AutoModelForImageTextToText...
+[2026-01-30 07:17:19,589] WARNING: AutoModelForImageTextToText failed: The checkpoint you are trying to load has model type `glm4_moe_lite` but Transformers does not recognize this architecture. This could be because of an issue with the checkpoint, or because your version of Transformers is out of date.
+
+You can update Transformers with the command `pip install --upgrade transformers`. If this does not work, and the checkpoint is very new, then there may not be a release version that supports this model yet. In this case, you can get the most up-to-date code by installing Transformers from source with the command `pip install git+https://github.com/huggingface/transformers.git`
+[2026-01-30 07:17:19,589] INFO: Trying AutoModel...
+[2026-01-30 07:17:19,606] WARNING: AutoModel failed: The checkpoint you are trying to load has model type `glm4_moe_lite` but Transformers does not recognize this architecture. This could be because of an issue with the checkpoint, or because your version of Transformers is out of date.
+
+You can update Transformers with the command `pip install --upgrade transformers`. If this does not work, and the checkpoint is very new, then there may not be a release version that supports this model yet. In this case, you can get the most up-to-date code by installing Transformers from source with the command `pip install git+https://github.com/huggingface/transformers.git`
+[2026-01-30 07:17:19,606] ERROR: Load failed: All failed. Last error: The checkpoint you are trying to load has model type `glm4_moe_lite` but Transformers does not recognize this architecture. This could be because of an issue with the checkpoint, or because your version of Transformers is out of date.
+
+You can update Transformers with the command `pip install --upgrade transformers`. If this does not work, and the checkpoint is very new, then there may not be a release version that supports this model yet. In this case, you can get the most up-to-date code by installing Transformers from source with the command `pip install git+https://github.com/huggingface/transformers.git`
+[Error] Universal Loader failed for zai-org/GLM-4.7-Flash: All failed. Last error: The checkpoint you are trying to load has model type `glm4_moe_lite` but Transformers does not recognize this architecture. This could be because of an issue with the checkpoint, or because your version of Transformers is out of date.
+
+You can update Transformers with the command `pip install --upgrade transformers`. If this does not work, and the checkpoint is very new, then there may not be a release version that supports this model yet. In this case, you can get the most up-to-date code by installing Transformers from source with the command `pip install git+https://github.com/huggingface/transformers.git`
+Traceback (most recent call last):
+  File "/mnt/d/Research Experiments/nexus/scripts/run_profiling_driver.py", line 63, in main
+    model, tokenizer = loader.load(mode="full", **load_kwargs)
+  File "/mnt/d/Research Experiments/nexus/src/omni/loader.py", line 227, in load
+    return self.load_for_inference(mode=mode, **kwargs)
+  File "/mnt/d/Research Experiments/nexus/src/omni/loader.py", line 370, in load_for_inference
+    if model is None: raise RuntimeError(f"All failed. Last error: {last_err}")
+RuntimeError: All failed. Last error: The checkpoint you are trying to load has model type `glm4_moe_lite` but Transformers does not recognize this architecture. This could be because of an issue with the checkpoint, or because your version of Transformers is out of date.
+
+You can update Transformers with the command `pip install --upgrade transformers`. If this does not work, and the checkpoint is very new, then there may not be a release version that supports this model yet. In this case, you can get the most up-to-date code by installing Transformers from source with the command `pip install git+https://github.com/huggingface/transformers.git`
+[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:19[0m[Error] Command failed with code 256
+[Profiler] WARNING: Profiling failed for zai-org/GLM-4.7-Flash. Skipping to next model.
+
+[Profiler] Target: google/gemma-scope-2-27b-pt (Key: interpretability)
+[Exec] '/home/rhushabh/miniconda3/envs/nexus/bin/python' '/mnt/d/Research Experiments/nexus/scripts/run_profiling_driver.py' --teacher_id 'google/gemma-scope-2-27b-pt' --model_path '/mnt/e/data/models/google_gemma-scope-2-27b-pt'  --sample_size 50
+[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:20[0m[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:21[0m[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:22[0m
+[NIWT Profiler] Starting analysis for google/gemma-scope-2-27b-pt...
+[Hardware] Mode: cuda
+[Loader] Loading /mnt/e/data/models/google_gemma-scope-2-27b-pt (Quantization: 4-bit)...
+Skipping import of cpp extensions due to incompatible torch version 2.10.0+cu128 for torchao version 0.15.0             Please see https://github.com/pytorch/ao/issues/2919 for more info
+[Loader] Initializing Universal Loader for google/gemma-scope-2-27b-pt...
+[2026-01-30 07:17:23,650] INFO: Loading Model from /mnt/e/data/models/google_gemma-scope-2-27b-pt (Mode: full)
+[2026-01-30 07:17:23,774] ERROR: Failed to load tokenizer from /mnt/e/data/models/google_gemma-scope-2-27b-pt: not a string
+[2026-01-30 07:17:23,774] ERROR: Load failed: Tokenizer dependency missing: not a string
+[Error] Universal Loader failed for google/gemma-scope-2-27b-pt: Tokenizer dependency missing: not a string
+Traceback (most recent call last):
+  File "/mnt/d/Research Experiments/nexus/src/omni/loader.py", line 240, in load_for_inference
+    tokenizer = AutoTokenizer.from_pretrained(str(model_path), trust_remote_code=trust_remote_code)
+  File "/home/rhushabh/miniconda3/envs/nexus/lib/python3.10/site-packages/transformers/models/auto/tokenization_auto.py", line 1175, in from_pretrained
+    return tokenizer_class_fast.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+  File "/home/rhushabh/miniconda3/envs/nexus/lib/python3.10/site-packages/transformers/tokenization_utils_base.py", line 2113, in from_pretrained
+    return cls._from_pretrained(
+  File "/home/rhushabh/miniconda3/envs/nexus/lib/python3.10/site-packages/transformers/tokenization_utils_base.py", line 2151, in _from_pretrained
+    slow_tokenizer = (cls.slow_tokenizer_class)._from_pretrained(
+  File "/home/rhushabh/miniconda3/envs/nexus/lib/python3.10/site-packages/transformers/tokenization_utils_base.py", line 2359, in _from_pretrained
+    tokenizer = cls(*init_inputs, **init_kwargs)
+  File "/home/rhushabh/miniconda3/envs/nexus/lib/python3.10/site-packages/transformers/models/gemma/tokenization_gemma.py", line 120, in __init__
+    self.sp_model.Load(vocab_file)
+  File "/home/rhushabh/miniconda3/envs/nexus/lib/python3.10/site-packages/sentencepiece/__init__.py", line 961, in Load
+    return self.LoadFromFile(model_file)
+  File "/home/rhushabh/miniconda3/envs/nexus/lib/python3.10/site-packages/sentencepiece/__init__.py", line 316, in LoadFromFile
+    return _sentencepiece.SentencePieceProcessor_LoadFromFile(self, arg)
+TypeError: not a string
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/mnt/d/Research Experiments/nexus/scripts/run_profiling_driver.py", line 63, in main
+    model, tokenizer = loader.load(mode="full", **load_kwargs)
+  File "/mnt/d/Research Experiments/nexus/src/omni/loader.py", line 227, in load
+    return self.load_for_inference(mode=mode, **kwargs)
+  File "/mnt/d/Research Experiments/nexus/src/omni/loader.py", line 249, in load_for_inference
+    raise RuntimeError(f"Tokenizer dependency missing: {e}")
+RuntimeError: Tokenizer dependency missing: not a string
+[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:23[0m[Error] Command failed with code 256
+[Profiler] WARNING: Profiling failed for google/gemma-scope-2-27b-pt. Skipping to next model.
+
+[Profiler] Target: google/translategemma-4b-it (Key: translation)
+[Exec] '/home/rhushabh/miniconda3/envs/nexus/bin/python' '/mnt/d/Research Experiments/nexus/scripts/run_profiling_driver.py' --teacher_id 'google/translategemma-4b-it' --model_path '/mnt/e/data/models/google_translategemma-4b-it'  --sample_size 50
+[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:24[0m[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:25[0m[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:26[0m
+[NIWT Profiler] Starting analysis for google/translategemma-4b-it...
+[Hardware] Mode: cuda
+[Loader] Loading /mnt/e/data/models/google_translategemma-4b-it (Quantization: 4-bit)...
+Skipping import of cpp extensions due to incompatible torch version 2.10.0+cu128 for torchao version 0.15.0             Please see https://github.com/pytorch/ao/issues/2919 for more info
+[Loader] Initializing Universal Loader for google/translategemma-4b-it...
+[2026-01-30 07:17:27,666] INFO: Loading Model from /mnt/e/data/models/google_translategemma-4b-it (Mode: full)
+[0;34m[Nexus Pipeline][0m [1;33m⏱️  00:00:27[0m

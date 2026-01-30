@@ -149,10 +149,38 @@ class NexusStudent(nn.Module):
 
     def forward(self, input_ids, attention_mask=None, labels=None, output_router_logits=False, teacher_latents=None, vision_feats=None, audio_feats=None, video_feats=None, tool_feats=None, **kwargs):
         """
-        Forward pass wrapper.
-        Exposes output_router_logits for auxiliary loss calculation in MoE models.
-        Accepts 'teacher_latents' for Bridge projection during training.
-        Accepts 'vision_feats', 'audio_feats', 'video_feats', 'tool_feats' for Multimodal Logic.
+        Forward pass wrapper with multimodal embedding injection.
+        
+        This method implements the core multimodal fusion mechanism that enables the model
+        to process vision, audio, video, and tool modalities alongside text. The fusion
+        follows patterns from LLaVA, Qwen-VL, and CLIP:
+        
+        1. **Modality Alignment**: Projects features from different encoders into a common space
+        2. **Embedding Injection**: Prepends multimodal embeddings to text embeddings
+        3. **Attention Mask Update**: Ensures proper attention between multimodal and text tokens
+        4. **Label Shifting**: Adjusts labels to account for multimodal prefix tokens
+        
+        Args:
+            input_ids: Text token IDs [batch_size, seq_len]
+            attention_mask: Attention mask [batch_size, seq_len]
+            labels: Target labels for training [batch_size, seq_len]
+            output_router_logits: Whether to output router logits for MoE models
+            teacher_latents: Optional teacher latents for knowledge distillation
+            vision_feats: Optional vision features [batch_size, num_patches, vision_dim]
+            audio_feats: Optional audio features [batch_size, audio_seq_len, audio_dim]
+            video_feats: Optional video features [batch_size, video_seq_len, video_dim]
+            tool_feats: Optional tool/function features [batch_size, tool_seq_len, tool_dim]
+            **kwargs: Additional arguments passed to the base model
+            
+        Returns:
+            Model outputs with optional fields:
+            - loss: Training loss
+            - logits: Model predictions
+            - hidden_states: Hidden representations
+            - router_logits: MoE router outputs
+            - entropy_loss: Router diversity loss
+            - projected_teacher_latents: Teacher latents after bridge projection
+            - multimodal_embeds: The fused multimodal+text embeddings (if multimodal input provided)
         """
         
         # Bridge Projection (if teacher latents provided during Distillation)
@@ -162,22 +190,95 @@ class NexusStudent(nn.Module):
             
         # Multimodal Injection (Pre-LLM)
         # If visual/audio/video/tool features provided, align them and prepend/inject
+        multimodal_embeds = None
+        inputs_embeds = None
+        multimodal_context = None
         if (vision_feats is not None or audio_feats is not None or video_feats is not None or tool_feats is not None) and hasattr(self, 'alignment'):
             multimodal_context = self.alignment(vision_feats, audio_feats, video_feats, tool_feats)
-            # Logic to inject into input_embeddings would go here.
-            # For now, we return it for the Trainer to handle or prepend to embeddings.
-            # (Simplified for Architect synthesis)
             
-            # TODO: Full embedding injection implementation
-            pass
+            # MULTIMODAL EMBEDDING INJECTION IMPLEMENTATION
+            # This implements the core fusion logic inspired by LLaVA, Qwen-VL, and CLIP:
+            # 1. Project aligned multimodal features into the language model's embedding space
+            # 2. Inject at appropriate positions (typically prepended to text embeddings)
+            # 3. Update attention masks to account for multimodal tokens
             
-        outputs = self.model(
-            input_ids=input_ids, 
-            attention_mask=attention_mask, 
-            labels=labels,
-            output_router_logits=output_router_logits,
+            if multimodal_context is not None:
+                # Get the input embeddings from the base model
+                # We need to get the embedding layer to fuse multimodal context
+                if hasattr(self.base_model, 'get_input_embeddings'):
+                    text_embeds = self.base_model.get_input_embeddings()(input_ids)
+                elif hasattr(self.base_model, 'model') and hasattr(self.base_model.model, 'embed_tokens'):
+                    text_embeds = self.base_model.model.embed_tokens(input_ids)
+                else:
+                    # Fallback: try common attribute names
+                    embed_layer = getattr(self.base_model, 'embed_tokens',
+                                         getattr(self.base_model, 'word_embeddings', None))
+                    if embed_layer is not None:
+                        text_embeds = embed_layer(input_ids)
+                    else:
+                        raise ValueError("Could not find input embeddings layer in base model")
+                
+                # Validate dimensions match
+                if multimodal_context.shape[-1] != text_embeds.shape[-1]:
+                    # Project multimodal context to match text embedding dimension if needed
+                    if not hasattr(self, '_multimodal_proj'):
+                        self._multimodal_proj = nn.Linear(
+                            multimodal_context.shape[-1],
+                            text_embeds.shape[-1]
+                        ).to(multimodal_context.device)
+                    multimodal_context = self._multimodal_proj(multimodal_context)
+                
+                # Concatenate multimodal context before text embeddings
+                # This follows the pattern: [vision, audio, ..., text]
+                multimodal_embeds = torch.cat([multimodal_context, text_embeds], dim=1)
+                
+                # Update attention mask if provided
+                if attention_mask is not None:
+                    batch_size = input_ids.shape[0]
+                    multimodal_seq_len = multimodal_context.shape[1]
+                    
+                    # Create attention mask for multimodal tokens (all 1s, fully attendable)
+                    multimodal_mask = torch.ones(
+                        (batch_size, multimodal_seq_len),
+                        dtype=attention_mask.dtype,
+                        device=attention_mask.device
+                    )
+                    
+                    # Concatenate: multimodal tokens can attend to everything, text attends to multimodal
+                    attention_mask = torch.cat([multimodal_mask, attention_mask], dim=1)
+                
+                # Handle labels if provided (shift them to account for multimodal prefix)
+                if labels is not None:
+                    # Labels for multimodal tokens should be -100 (ignored in loss)
+                    multimodal_labels = torch.full(
+                        (labels.shape[0], multimodal_context.shape[1]),
+                        -100,
+                        dtype=labels.dtype,
+                        device=labels.device
+                    )
+                    labels = torch.cat([multimodal_labels, labels], dim=1)
+                
+                # Replace input_ids with None since we're providing embeddings directly
+                # Store for forward pass
+                inputs_embeds = multimodal_embeds
+                input_ids = None  # When providing embeddings, input_ids should be None
+            
+        # Prepare model inputs - use embeddings if multimodal context was injected
+        model_inputs = {
+            "attention_mask": attention_mask,
+            "labels": labels,
+            "output_router_logits": output_router_logits,
             **kwargs
-        )
+        }
+        
+        # If multimodal embeddings are available, use them instead of input_ids
+        if inputs_embeds is not None:
+            model_inputs["inputs_embeds"] = inputs_embeds
+            # input_ids must be None when inputs_embeds is provided
+        else:
+            model_inputs["input_ids"] = input_ids
+        
+        outputs = self.model(**model_inputs)
         
         # Router Diversity (Entropy) Calculation
         entropy_loss = None
@@ -186,15 +287,24 @@ class NexusStudent(nn.Module):
             probs = torch.softmax(outputs.router_logits, dim=-1)
             entropy_loss = -torch.sum(probs * torch.log(probs + 1e-9), dim=-1).mean()
 
-        if projected_latents is not None:
-            return {{
+        # Package outputs with additional metadata
+        if projected_latents is not None or multimodal_embeds is not None:
+            result = {{
                 "loss": outputs.loss,
                 "logits": outputs.logits,
                 "hidden_states": outputs.hidden_states,
                 "router_logits": getattr(outputs, "router_logits", None),
                 "entropy_loss": entropy_loss,
-                "projected_teacher_latents": projected_latents
             }}
+            
+            if projected_latents is not None:
+                result["projected_teacher_latents"] = projected_latents
+                
+            if multimodal_embeds is not None:
+                result["multimodal_embeds"] = multimodal_embeds
+                result["multimodal_seq_len"] = multimodal_context.shape[1] if multimodal_context is not None else 0
+                
+            return result
             
         return outputs
 
@@ -207,6 +317,9 @@ class NexusStudent(nn.Module):
         # Save bridge if it exists and is not Identity
         if isinstance(self.bridge, NexusBridge):
             torch.save(self.bridge.state_dict(), f"{{path}}/bridge.pt")
+        # Save multimodal projection layer if it exists
+        if hasattr(self, '_multimodal_proj') and self._multimodal_proj is not None:
+            torch.save(self._multimodal_proj.state_dict(), f"{{path}}/multimodal_proj.pt")
 
     @property
     def trainable_parameters(self):

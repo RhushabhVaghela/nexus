@@ -176,8 +176,49 @@ The pipeline supports **10 distinct training methodologies**, covering the full 
 
 - **Metrics Tracker**: Auto-logs training/benchmark stats to `results/*.csv`.
 - **Dataset Organizer**: Manages data library (`src/utils/organize_datasets.py`).
-- **Omni-Modal Loading**: Universal loader for any architecture.
+- **Omni-Modal Loading**: Universal loader for any architecture (50+ supported).
 - **Strict Real Models**: Zero mocks in production/testing.
+
+### Universal Model Loader
+
+The pipeline includes a sophisticated [`OmniModelLoader`](src/omni/loader.py:76) supporting **50+ model architectures**:
+
+| Category | Count | Examples |
+|----------|-------|----------|
+| **Text LLMs** | 130+ | Llama, Qwen, Mistral, Gemma, Phi, DeepSeek, Falcon |
+| **Vision Encoders** | 10+ | SigLIP, CLIP, DINOv2, VideoMAE |
+| **ASR Models** | 4+ | Whisper, Speech2Text |
+| **Diffusers** | Full Support | Stable Diffusion, SDXL |
+| **SAE Models** | Detection + Fallback | Gemma Scope |
+
+**Key Features:**
+
+- **Automatic Category Detection**: Detects model type (transformers, vision_encoder, asr, diffusers, sae)
+- **SAE Tokenizer Fallback**: Automatically loads tokenizers from base models for SAE models
+- **Custom Architecture Registration**: Auto-registers non-standard models (glm4_moe_lite, step_robotics, qwen3)
+- **Self-Healing Patches**: Runtime fixes for common loading issues
+- **Safe Loading API**: Graceful error handling with `skip_on_error` option
+
+**Usage:**
+
+```python
+from src.omni.loader import OmniModelLoader, load_omni_model
+
+# Load any supported model
+model, tokenizer = load_omni_model("/path/to/model", mode="thinker_only")
+
+# Check support before loading
+support = OmniModelLoader.is_model_supported("/path/to/model")
+if support["supported"]:
+    print(f"Category: {support['category']}")
+```
+
+**Documentation:**
+
+- [Omni Loader Guide](docs/OMNI_LOADER_GUIDE.md) - Complete developer guide
+- [Architecture Matrix](docs/OMNI_LOADER_GUIDE.md#architecture-compatibility-matrix) - All 14 teacher registry models
+- [Test Coverage](tests/OMNI_LOADER_TEST_COVERAGE.md) - 90+ unit, 40+ integration tests
+- [Benchmark Report](benchmarks/LOADER_BENCHMARK_REPORT.md) - 45+ performance benchmarks
 
 ---
 
@@ -497,6 +538,8 @@ python src/detect_modalities.py /path/to/model
 | [SHELL_SCRIPTS.md](docs/SHELL_SCRIPTS.md) | Script reference |
 | [GUIDE.md](docs/GUIDE.md) | User guide |
 | [datasets.md](docs/multimodal/datasets.md) | Dataset catalog |
+| [OMNI_LOADER_GUIDE.md](docs/OMNI_LOADER_GUIDE.md) | Universal Model Loader guide |
+| [NEXUS_V6_TECHNICAL_MANUAL.md](docs/NEXUS_V6_TECHNICAL_MANUAL.md) | Technical manual with loader section |
 
 ---
 

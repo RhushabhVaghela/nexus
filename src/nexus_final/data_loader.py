@@ -3,6 +3,7 @@ import json
 import glob
 from typing import List, Dict, Any, Generator, Optional
 import csv
+import zlib
 import pandas as pd # Optional, but good for parquet
 from tqdm import tqdm
 
@@ -48,8 +49,10 @@ class UniversalDataLoader:
         Args:
             dataset_name: Name of the dataset folder (e.g., 'general/google_smol')
             split: 'train', 'test', 'validation' (matched loosely in filenames)
-            limit: Max samples to yield
+            limit: int: Max samples to yield
+            min_entropy: float: Minimum zlib entropy required to yield a sample (e.g. 0.4)
         """
+        self.min_entropy = min_entropy
         full_path = os.path.join(self.data_root, dataset_name)
         
         # Heuristic 1: If it's a directory, look for common data files
@@ -95,6 +98,11 @@ class UniversalDataLoader:
                     raw_sample = json.loads(line)
                     normalized = self._normalize(raw_sample, file_path)
                     if normalized:
+                        if self.min_entropy:
+                            combined_text = " ".join([m["content"] for m in normalized["messages"]])
+                            entropy = self.calculate_entropy(combined_text)
+                            if entropy < self.min_entropy:
+                                continue
                         yield normalized
                         count += 1
                 except json.JSONDecodeError:
@@ -108,6 +116,11 @@ class UniversalDataLoader:
                 if limit and count >= limit: break
                 normalized = self._normalize(row, file_path)
                 if normalized:
+                    if self.min_entropy:
+                        combined_text = " ".join([m["content"] for m in normalized["messages"]])
+                        entropy = self.calculate_entropy(combined_text)
+                        if entropy < self.min_entropy:
+                            continue
                     yield normalized
                     count += 1
 
@@ -121,6 +134,11 @@ class UniversalDataLoader:
                 if limit and count >= limit: break
                 normalized = self._normalize(row.to_dict(), file_path)
                 if normalized:
+                    if self.min_entropy:
+                        combined_text = " ".join([m["content"] for m in normalized["messages"]])
+                        entropy = self.calculate_entropy(combined_text)
+                        if entropy < self.min_entropy:
+                            continue
                     yield normalized
                     count += 1
         except ImportError:
@@ -230,6 +248,16 @@ class UniversalDataLoader:
             pass
 
         return None
+
+    @staticmethod
+    def calculate_entropy(text: str) -> float:
+        """Calculates normalized zlib entropy: (compressed length / original length)"""
+        if not text: return 0.0
+        try:
+            compressed = zlib.compress(text.encode('utf-8'))
+            return len(compressed) / len(text)
+        except Exception:
+            return 0.0
 
 if __name__ == "__main__":
     # Test Driver

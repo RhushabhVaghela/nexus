@@ -1,28 +1,35 @@
 {
-  "current_stage": "done",
+  "current_stage": "profiling",
   "completed_stages": [
-    "metadata_discovery",
-    "knowledge_extraction",
-    "training",
-    "router_training",
-    "evaluation",
-    "export",
-    "cleanup"
+    "metadata_discovery"
   ],
   "config": {
-    "use_unsloth": true,
-    "sample_size": 5000,
     "router_epochs": 5,
     "router_lr": 0.0001,
     "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
     "target_models": [
-      "stepfun-ai_Step3-VL-10B"
-    ],
-    "target_datasets": [
-      "bigcode_the-stack-smol",
-      "mvp-lab_llava-onevision-1"
+      "reasoning_core",
+      "logic_heavy",
+      "interpretability",
+      "translation",
+      "base_small",
+      "coder",
+      "omni_base",
+      "omni_large",
+      "vision_main",
+      "object_detection",
+      "vision_enc",
+      "video_enc",
+      "video_gen",
+      "omni_speech",
+      "asr_long",
+      "asr_fast",
+      "tts_custom",
+      "tts_design",
+      "audio_tokenizer",
+      "image_gen"
     ],
     "hidden_size": 4096,
-    "vocab_size": 152064
+    "vocab_size": 256000
   }
 }
