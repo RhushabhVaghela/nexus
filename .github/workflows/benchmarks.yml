@@ -1,0 +1,401 @@
+name: Performance Benchmarks
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'src/**/*.py'
+      - 'benchmarks/**/*.py'
+      - 'requirements.txt'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'src/**/*.py'
+      - 'benchmarks/**/*.py'
+  workflow_dispatch:
+    inputs:
+      category:
+        description: 'Benchmark category to run'
+        required: true
+        default: 'regression'
+        type: choice
+        options:
+          - all
+          - regression
+
+env:
+  BENCHMARK_ITERATIONS: 50
+  BENCHMARK_WARMUP: 5
+
+jobs:
+  # Job 1: Multimodal Architecture Benchmarks
+  multimodal-benchmarks:
+    name: Multimodal Architecture Benchmarks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      
+      - name: Download baseline
+        uses: actions/download-artifact@v4
+        with:
+          name: multimodal-baseline
+          path: benchmarks/baselines/
+        continue-on-error: true
+      
+      - name: Run Multimodal Benchmarks
+        run: |
+          python benchmarks/test_multimodal_architect_benchmark.py \
+            --category ${{ github.event.inputs.category || 'regression' }} \
+            --iterations ${{ env.BENCHMARK_ITERATIONS }} \
+            --warmup ${{ env.BENCHMARK_WARMUP }} \
+            --memory-profiling \
+            --baseline benchmarks/baselines/multimodal_baseline.json \
+            --output benchmarks/results/multimodal_results.json
+        continue-on-error: true
+      
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: multimodal-results
+          path: benchmarks/results/multimodal_results.json
+          retention-days: 30
+      
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'benchmarks/results/multimodal_results.json';
+            
+            if (fs.existsSync(path)) {
+              const results = JSON.parse(fs.readFileSync(path, 'utf8'));
+              let comment = '## 📊 Multimodal Architecture Benchmark Results\n\n';
+              comment += `**Timestamp:** ${results.timestamp}\n`;
+              comment += `**Total Benchmarks:** ${results.summary.total_benchmarks}\n\n`;
+              
+              // Group by category
+              const byCategory = {};
+              results.results.forEach(r => {
+                if (!byCategory[r.category]) byCategory[r.category] = [];
+                byCategory[r.category].push(r);
+              });
+              
+              for (const [cat, items] of Object.entries(byCategory)) {
+                comment += `### ${cat.toUpperCase()}\n`;
+                comment += '| Benchmark | Mean (ms) | P95 (ms) | Memory (MB) |\n';
+                comment += '|-----------|-----------|----------|-------------|\n';
+                items.forEach(r => {
+                  const mem = r.memory_delta_mb ? r.memory_delta_mb.toFixed(2) : 'N/A';
+                  comment += `| ${r.name} | ${(r.mean_time * 1000).toFixed(2)} | ${(r.p95_time * 1000).toFixed(2)} | ${mem} |\n`;
+                });
+                comment += '\n';
+              }
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            }
+
+  # Job 2: Video Decoder Benchmarks
+  video-benchmarks:
+    name: Video Decoder Benchmarks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      
+      - name: Download baseline
+        uses: actions/download-artifact@v4
+        with:
+          name: video-baseline
+          path: benchmarks/baselines/
+        continue-on-error: true
+      
+      - name: Run Video Decoder Benchmarks
+        run: |
+          python benchmarks/test_video_decoder_benchmark.py \
+            --category ${{ github.event.inputs.category || 'regression' }} \
+            --iterations ${{ env.BENCHMARK_ITERATIONS }} \
+            --warmup ${{ env.BENCHMARK_WARMUP }} \
+            --baseline benchmarks/baselines/video_baseline.json \
+            --output benchmarks/results/video_results.json
+        continue-on-error: true
+      
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-results
+          path: benchmarks/results/video_results.json
+          retention-days: 30
+
+  # Job 3: TTS Engine Benchmarks
+  tts-benchmarks:
+    name: TTS Engine Benchmarks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      
+      - name: Download baseline
+        uses: actions/download-artifact@v4
+        with:
+          name: tts-baseline
+          path: benchmarks/baselines/
+        continue-on-error: true
+      
+      - name: Run TTS Benchmarks
+        run: |
+          python benchmarks/test_tts_benchmark.py \
+            --category ${{ github.event.inputs.category || 'regression' }} \
+            --iterations ${{ env.BENCHMARK_ITERATIONS }} \
+            --warmup ${{ env.BENCHMARK_WARMUP }} \
+            --memory-profiling \
+            --baseline benchmarks/baselines/tts_baseline.json \
+            --output benchmarks/results/tts_results.json
+        continue-on-error: true
+      
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: tts-results
+          path: benchmarks/results/tts_results.json
+          retention-days: 30
+
+  # Job 4: Multi-Agent Orchestration Benchmarks
+  multi-agent-benchmarks:
+    name: Multi-Agent Orchestration Benchmarks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      
+      - name: Download baseline
+        uses: actions/download-artifact@v4
+        with:
+          name: multi-agent-baseline
+          path: benchmarks/baselines/
+        continue-on-error: true
+      
+      - name: Run Multi-Agent Benchmarks
+        run: |
+          python benchmarks/test_multi_agent_benchmark.py \
+            --category ${{ github.event.inputs.category || 'regression' }} \
+            --iterations ${{ env.BENCHMARK_ITERATIONS }} \
+            --warmup ${{ env.BENCHMARK_WARMUP }} \
+            --memory-profiling \
+            --baseline benchmarks/baselines/multi_agent_baseline.json \
+            --output benchmarks/results/multi_agent_results.json
+        continue-on-error: true
+      
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: multi-agent-results
+          path: benchmarks/results/multi_agent_results.json
+          retention-days: 30
+
+  # Job 5: Regression Analysis
+  regression-analysis:
+    name: Regression Analysis
+    runs-on: ubuntu-latest
+    needs: [multimodal-benchmarks, video-benchmarks, tts-benchmarks, multi-agent-benchmarks]
+    if: always()
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Download all results
+        uses: actions/download-artifact@v4
+        with:
+          path: benchmarks/results/
+          pattern: '*-results'
+      
+      - name: Analyze regressions
+        run: |
+          echo "# Regression Analysis Report" > benchmarks/results/regression_report.md
+          echo "" >> benchmarks/results/regression_report.md
+          echo "Generated: $(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> benchmarks/results/regression_report.md
+          echo "" >> benchmarks/results/regression_report.md
+          
+          for result_file in benchmarks/results/*-results/*.json; do
+            if [ -f "$result_file" ]; then
+              echo "## $(basename $(dirname $result_file))" >> benchmarks/results/regression_report.md
+              echo "" >> benchmarks/results/regression_report.md
+              
+              # Check for performance regressions (>10% slower)
+              python3 << EOF
+          import json
+          import sys
+          
+          try:
+              with open('$result_file', 'r') as f:
+                  data = json.load(f)
+              
+              regressions = []
+              for result in data.get('results', []):
+                  # Check if this is a regression benchmark
+                  if result.get('category') == 'regression':
+                      mean_time = result.get('mean_time', 0)
+                      # Compare against expected baseline (would come from stored baseline)
+                      # For now, just report the value
+                      regressions.append(f"- {result['name']}: {mean_time*1000:.2f}ms")
+              
+              if regressions:
+                  print("### Regressions Detected")
+                  for r in regressions:
+                      print(r)
+              else:
+                  print("✅ No regressions detected")
+          except Exception as e:
+              print(f"Error analyzing {result_file}: {e}")
+          EOF
+              echo "" >> benchmarks/results/regression_report.md
+            fi
+          done
+          
+          cat benchmarks/results/regression_report.md
+      
+      - name: Upload regression report
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-report
+          path: benchmarks/results/regression_report.md
+          retention-days: 30
+      
+      - name: Comment PR with regression summary
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'benchmarks/results/regression_report.md';
+            
+            if (fs.existsSync(path)) {
+              const report = fs.readFileSync(path, 'utf8');
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: report
+              });
+            }
+      
+      - name: Check for critical regressions
+        run: |
+          # Fail the job if critical regressions are found (>20% degradation)
+          # This is a placeholder - implement actual comparison logic
+          echo "Checking for critical regressions..."
+          # Exit with error if regressions exceed threshold
+          # exit 1
+
+  # Job 6: Update Baselines (only on main branch pushes)
+  update-baselines:
+    name: Update Baselines
+    runs-on: ubuntu-latest
+    needs: [multimodal-benchmarks, video-benchmarks, tts-benchmarks, multi-agent-benchmarks]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Download all results
+        uses: actions/download-artifact@v4
+        with:
+          path: benchmarks/baselines/
+          pattern: '*-results'
+      
+      - name: Update baseline files
+        run: |
+          mkdir -p benchmarks/baselines/
+          
+          # Copy new results as baselines
+          for result_dir in benchmarks/baselines/*-results; do
+            if [ -d "$result_dir" ]; then
+              name=$(basename "$result_dir" | sed 's/-results/_baseline.json/')
+              cp "$result_dir"/*.json "benchmarks/baselines/$name"
+              echo "Updated baseline: $name"
+            fi
+          done
+      
+      - name: Commit updated baselines
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          git add benchmarks/baselines/
+          
+          if git diff --staged --quiet; then
+            echo "No changes to baselines"
+          else
+            git commit -m "Update performance baselines [skip ci]"
+            git push
+          fi

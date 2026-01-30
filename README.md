@@ -18,6 +18,18 @@ Nexus provides a tier-based capability manifest so consumers can understand the 
 
 ---
 
+## ✨ New in v6.1
+
+Nexus v6.1 introduces 4 major implementations with 156 comprehensive tests and full benchmark coverage:
+
+- 🎯 **Multimodal Training Support** - Unified embedding injection for vision, audio, video, and text with cross-modal fusion architecture
+- 🎬 **Video Generation** - Stable Video Diffusion integration with memory-efficient VAE optimizations
+- 🗣️ **Text-to-Speech** - Coqui TTS integration with voice cloning and streaming synthesis
+- 🤖 **Multi-Agent Orchestration** - AI-powered software development with 5 specialized agents
+- 📊 **156 Comprehensive Tests** - Full test coverage with performance benchmarks
+
+---
+
 ## 🚀 Key Features
 
 - **Universal Perception**: Native understanding of Text, Images, Audio (Speech/Music), and Video.

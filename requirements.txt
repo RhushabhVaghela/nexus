@@ -36,3 +36,14 @@ pydub>=0.25.1
 ipykernel
 jupyter
 faiss-cpu
+psutil
+
+# Production Hardening
+prometheus-client>=0.19.0
+opentelemetry-api>=1.21.0
+opentelemetry-sdk>=1.21.0
+opentelemetry-exporter-jaeger>=1.21.0
+redis>=5.0.0
+
+# Optional for enhanced monitoring
+pynvml>=11.5.0

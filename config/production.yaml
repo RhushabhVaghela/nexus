@@ -1,0 +1,249 @@
+# Production Configuration for Nexus
+# Production hardening and operational settings
+
+# Circuit Breaker Configuration
+circuit_breakers:
+  model_loader:
+    failure_threshold: 3
+    recovery_timeout: 60.0
+    half_open_max_calls: 1
+    success_threshold: 1
+  
+  api_calls:
+    failure_threshold: 5
+    recovery_timeout: 30.0
+    half_open_max_calls: 2
+    success_threshold: 2
+  
+  database:
+    failure_threshold: 3
+    recovery_timeout: 10.0
+    half_open_max_calls: 1
+    success_threshold: 1
+  
+  external_services:
+    failure_threshold: 5
+    recovery_timeout: 60.0
+    half_open_max_calls: 3
+    success_threshold: 2
+
+# Rate Limiting Configuration
+rate_limiting:
+  enabled: true
+  backend: local  # Options: local, redis
+  
+  redis:
+    host: localhost
+    port: 6379
+    db: 0
+    password: null
+  
+  limits:
+    api:
+      requests_per_second: 1.67  # 100 per minute
+      burst_size: 20
+      window_size: 60.0
+    
+    inference:
+      requests_per_second: 10.0
+      burst_size: 5
+      window_size: 60.0
+    
+    global:
+      requests_per_second: 1000.0
+      burst_size: 100
+      window_size: 60.0
+    
+    login:
+      requests_per_second: 0.083  # 5 per minute
+      burst_size: 5
+      window_size: 300.0
+      block_duration: 300.0
+
+# Metrics Configuration
+metrics:
+  enabled: true
+  namespace: nexus
+  
+  prometheus:
+    enabled: true
+    port: 9090
+    path: /metrics
+  
+  push_gateway:
+    enabled: false
+    url: http://localhost:9091
+    job: nexus
+    interval: 60
+  
+  gpu_monitoring:
+    enabled: true
+    update_interval: 10
+  
+  system_monitoring:
+    enabled: true
+    update_interval: 30
+
+# Distributed Tracing Configuration
+tracing:
+  enabled: true
+  service_name: nexus
+  sample_rate: 1.0
+  
+  jaeger:
+    enabled: true
+    agent_host: localhost
+    agent_port: 6831
+    collector_endpoint: null
+  
+  console_export:
+    enabled: false
+
+# Security Configuration
+security:
+  enabled: true
+  block_on_violation: true
+  min_security_level: low  # Options: low, medium, high, critical
+  
+  input_validation:
+    max_input_length: 10000
+    max_tokens: 4096
+    allowed_encodings:
+      - utf-8
+      - ascii
+  
+  content_filter:
+    toxicity_threshold: 0.8
+    blocklist: []  # Add blocked words/patterns
+  
+  injection_detection:
+    enabled: true
+    check_prompt_injection: true
+    check_jailbreak: true
+    check_code_injection: true
+    check_sql_injection: true
+    check_command_injection: true
+
+# Health Checks Configuration
+health_checks:
+  enabled: true
+  interval: 30
+  
+  checks:
+    system:
+      enabled: true
+      max_cpu_percent: 90.0
+      max_memory_percent: 90.0
+      min_disk_gb: 1.0
+    
+    gpu:
+      enabled: true
+      max_memory_percent: 95.0
+      max_temperature: 85.0
+    
+    model:
+      enabled: true
+      test_inference: false
+    
+    database:
+      enabled: false
+      connection_string: null
+    
+    external_apis:
+      enabled: false
+      endpoints: []
+
+# Kubernetes Probe Configuration
+kubernetes:
+  probes:
+    liveness:
+      enabled: true
+      path: /health/live
+      port: 8080
+      initial_delay_seconds: 30
+      period_seconds: 10
+      timeout_seconds: 5
+      failure_threshold: 3
+    
+    readiness:
+      enabled: true
+      path: /health/ready
+      port: 8080
+      initial_delay_seconds: 5
+      period_seconds: 5
+      timeout_seconds: 3
+      failure_threshold: 3
+    
+    startup:
+      enabled: true
+      path: /health/startup
+      port: 8080
+      initial_delay_seconds: 10
+      period_seconds: 10
+      timeout_seconds: 5
+      failure_threshold: 30
+
+# Logging Configuration
+logging:
+  level: INFO
+  format: json
+  
+  handlers:
+    console:
+      enabled: true
+    
+    file:
+      enabled: true
+      path: /var/log/nexus/app.log
+      max_bytes: 104857600  # 100MB
+      backup_count: 10
+    
+    syslog:
+      enabled: false
+      host: localhost
+      port: 514
+
+# Alerting Configuration
+alerting:
+  enabled: false
+  
+  thresholds:
+    error_rate: 0.05  # 5% error rate
+    response_time: 5.0  # 5 seconds
+    cpu_percent: 90.0
+    memory_percent: 90.0
+    gpu_temperature: 85.0
+  
+  channels:
+    email:
+      enabled: false
+      smtp_host: null
+      smtp_port: 587
+      from_address: null
+      to_addresses: []
+    
+    slack:
+      enabled: false
+      webhook_url: null
+      channel: null
+    
+    pagerduty:
+      enabled: false
+      service_key: null
+
+# Performance Tuning
+performance:
+  # Thread pool settings
+  max_workers: 4
+  
+  # Async settings
+  max_concurrent_requests: 100
+  
+  # Cache settings
+  cache_enabled: true
+  cache_ttl: 300
+  cache_max_size: 1000
+  
+  # Connection pooling
+  connection_pool_size: 20
+  connection_max_overflow: 10

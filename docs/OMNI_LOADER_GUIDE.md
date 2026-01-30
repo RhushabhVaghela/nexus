@@ -664,6 +664,238 @@ The OmniModelLoader provides a robust, extensible system for loading diverse mod
 
 ---
 
+## Model Loading for New Implementations
+
+### Loading Models for Multimodal Fusion
+
+The OmniModelLoader seamlessly integrates with the multimodal architecture for loading encoders:
+
+```python
+from src.omni.loader import load_omni_model
+from src.multimodal.architect import NeuralArchitect
+
+# Load multimodal encoders
+vision_encoder, vision_processor = load_omni_model(
+    "google/siglip-base-patch16-224",
+    mode="vision_only"
+)
+
+audio_encoder, audio_processor = load_omni_model(
+    "openai/whisper-base",
+    mode="audio_only"
+)
+
+# Initialize fusion architecture
+architect = NeuralArchitect(target_dim=4096)
+
+# Use encoders in multimodal pipeline
+image = vision_processor(images=input_image, return_tensors="pt")
+vision_emb = vision_encoder(**image).last_hidden_state
+
+audio = audio_processor(audio_input, return_tensors="pt")
+audio_emb = audio_encoder(**audio).last_hidden_state
+
+# Fuse embeddings
+fused = architect.project_and_fuse(
+    vision=vision_emb,
+    audio=audio_emb
+)
+```
+
+**Supported Multimodal Encoders:**
+
+| Modality | Model | Dimension | Loader Mode |
+|----------|-------|-----------|-------------|
+| Vision | SigLIP | 512 | `vision_only` |
+| Vision | CLIP | 512 | `vision_only` |
+| Audio | Whisper | 768 | `audio_only` |
+| Audio | Wav2Vec2 | 768 | `audio_only` |
+| Video | VideoMAE | 1024 | `video_only` |
+| Tools | Tool Adapter | 512 | `tool_only` |
+
+### Loading Video Generation Models
+
+```python
+from src.omni.loader import load_omni_model
+from src.video.decoder import VideoDecoder
+
+# Load video generation model
+model, config = load_omni_model(
+    "stabilityai/stable-video-diffusion-img2vid-xt",
+    mode="video_generation",
+    torch_dtype=torch.float16
+)
+
+# Initialize decoder with loaded model
+decoder = VideoDecoder(
+    model=model,
+    config=config,
+    enable_vae_slicing=True,
+    enable_vae_tiling=True
+)
+
+# Generate video
+video = decoder.generate_from_image(
+    image="input.jpg",
+    num_frames=16,
+    output_path="output.mp4"
+)
+```
+
+**Video Model Loading Modes:**
+
+| Mode | Use Case | Model Types |
+|------|----------|-------------|
+| `video_generation` | Video synthesis | SVD, AnimateDiff |
+| `video_encoding` | Video understanding | VideoMAE, TimeSformer |
+| `diffusion` | Image generation | Stable Diffusion |
+
+### Loading TTS Models
+
+```python
+from src.omni.loader import load_omni_model
+from src.tts.engine import TTSEngine
+
+# Load TTS model
+tts_model, tts_config = load_omni_model(
+    "coqui/XTTS-v2",
+    mode="talker_only",
+    device="cuda"
+)
+
+# Initialize TTS engine
+engine = TTSEngine(
+    model=tts_model,
+    config=tts_config
+)
+
+# Synthesize speech
+audio = engine.synthesize(
+    text="Hello world",
+    output_path="output.wav"
+)
+```
+
+**TTS Model Caching:**
+
+```python
+from src.omni.loader import OmniModelLoader
+
+loader = OmniModelLoader()
+
+# Cache TTS model for repeated use
+loader.cache_model(
+    model_id="coqui/XTTS-v2",
+    category="tts",
+    max_cache_size_gb=4
+)
+
+# Load from cache (instant)
+tts_model = loader.load_from_cache("coqui/XTTS-v2")
+```
+
+### Loading LLMs for Multi-Agent Systems
+
+```python
+from src.omni.loader import load_omni_model
+from src.agents.orchestrator import AgentOrchestrator
+from src.agents.types import PlanningAgent, BackendAgent
+
+# Load specialized code LLM
+code_llm, tokenizer = load_omni_model(
+    "deepseek-coder-33b",
+    mode="thinker_only",
+    load_in_8bit=True  # Reduce memory for agent system
+)
+
+# Create agents with loaded LLM
+planning_agent = PlanningAgent(llm_client=code_llm)
+backend_agent = BackendAgent(
+    llm_client=code_llm,
+    framework="fastapi"
+)
+
+# Initialize orchestrator
+orchestrator = AgentOrchestrator()
+orchestrator.register_agent("planning", planning_agent)
+orchestrator.register_agent("backend", backend_agent)
+
+# Execute development workflow
+result = orchestrator.execute_workflow(
+    workflow={
+        "steps": [
+            {"agent": "planning", "action": "design_architecture"},
+            {"agent": "backend", "action": "implement_api"}
+        ]
+    },
+    initial_context={"requirement": "Build a REST API"}
+)
+```
+
+**LLM Loading for Agents:**
+
+| Use Case | Model | Quantization | Memory |
+|----------|-------|--------------|--------|
+| Code Generation | deepseek-coder-33b | 8-bit | ~35GB |
+| General Tasks | Llama-2-70b | 4-bit | ~40GB |
+| Fast Inference | Qwen-72B | 8-bit | ~75GB |
+| Agent Coordination | GPT-4-class | API | N/A |
+
+### Complete Multimodal Pipeline Example
+
+```python
+from src.omni.loader import load_omni_model
+from src.multimodal.architect import NeuralArchitect, NexusBridge
+from src.video.decoder import VideoDecoder
+from src.tts.engine import TTSEngine
+from src.agents.orchestrator import AgentOrchestrator
+import torch
+
+# 1. Load all required models
+vision_encoder, _ = load_omni_model("google/siglip-base-patch16-224")
+audio_encoder, _ = load_omni_model("openai/whisper-base")
+llm, tokenizer = load_omni_model("nexus-student-8b")
+video_decoder = VideoDecoder()
+tts_engine = TTSEngine()
+
+# 2. Initialize multimodal architecture
+architect = NeuralArchitect(target_dim=llm.config.hidden_size)
+bridge = NexusBridge(llm_dim=llm.config.hidden_size)
+
+# 3. Process multimodal inputs
+image = load_image("scene.jpg")
+audio = load_audio("narration.wav")
+
+vision_emb = vision_encoder(image)
+audio_emb = audio_encoder(audio)
+
+# 4. Fuse and inject
+fused = architect.project_and_fuse(
+    vision=vision_emb,
+    audio=audio_emb
+)
+
+# 5. Generate with LLM
+inputs = bridge.inject_to_llm(fused, text_tokens)
+output = llm.generate(**inputs)
+
+# 6. Generate complementary video
+video = video_decoder.generate_from_text(
+    prompt=output.description,
+    output_path="generated_video.mp4"
+)
+
+# 7. Synthesize narration
+audio_output = tts_engine.synthesize(
+    text=output.narration,
+    output_path="narration.wav"
+)
+
+print("Multimodal pipeline complete!")
+```
+
+---
+
 *Document Version: 1.0*
 *Last Updated: 2026-01-30*
 *Maintainer: Nexus Documentation Team*

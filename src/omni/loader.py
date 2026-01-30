@@ -49,6 +49,16 @@ except ImportError:
     except ImportError:
         SequentialOmniPipeline = None
 
+# Cache manager integration
+try:
+    from ..utils.cache_manager import get_model_cache, ModelCache
+except ImportError:
+    try:
+        from src.utils.cache_manager import get_model_cache, ModelCache
+    except ImportError:
+        get_model_cache = None
+        ModelCache = None
+
 logger = logging.getLogger(__name__)
 
 # Patching hooks for testing
@@ -619,9 +629,19 @@ class OmniModelLoader:
             return "asr"
         return "transformers"
 
-    def load_for_inference(self, mode: str = "full", **kwargs) -> Any:
+    def load_for_inference(self, mode: str = "full", use_cache: bool = True, **kwargs) -> Any:
         global orig_get_submodule, orig_register_buffer, orig_setattr, orig_get_param_or_buf, orig_init_missing, orig_qu
         model_path = Path(kwargs.pop("model_path", self.model_path))
+        model_key = str(model_path)
+        
+        # Try to get from cache
+        if use_cache and get_model_cache:
+            cache = get_model_cache()
+            cached_model = cache.get_model(model_key)
+            if cached_model is not None:
+                logger.info(f"Using cached model from {model_path}")
+                return cached_model
+        
         logger.info(f"Loading Model from {model_path} (Mode: {mode})")
         trust_remote_code = kwargs.get("trust_remote_code", True) # Don't pop yet
         
@@ -686,6 +706,13 @@ class OmniModelLoader:
                     logger.warning(f"Failed to load PEFT adapter: {e}")
 
             self._model = model; self._config = self.get_model_info(model_path)
+            
+            # Cache the loaded model
+            if use_cache and get_model_cache:
+                cache = get_model_cache()
+                cache.cache_model(model_key, (model, self._tokenizer))
+                logger.debug(f"Cached model from {model_path}")
+            
             return model, self._tokenizer
             
         except Exception as e:
