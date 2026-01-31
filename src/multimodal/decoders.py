@@ -5,6 +5,7 @@ SigLIP 2 (512px) and Whisper V3 Turbo
 import sys
 from pathlib import Path
 from typing import Dict, Any
+from abc import ABC, abstractmethod
 
 # Mock torch/transformers if not present for CI/Tests
 try:
@@ -14,9 +15,11 @@ except ImportError:
     torch = None
     AutoProcessor = None
 
-class ContentDecoder:
+class ContentDecoder(ABC):
+    @abstractmethod
     def decode(self, file_path: str):
-        raise NotImplementedError
+        """Decode content from a file path. Must be implemented by subclasses."""
+        pass
 
 class ImageDecoder(ContentDecoder):
     """

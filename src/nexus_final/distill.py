@@ -375,5 +375,8 @@ class NexusTrainer:
                     torch.cuda.empty_cache()
                     import time
                     time.sleep(30)
-        except Exception:
-            pass # Skip if psutil or sensors not available
+        except Exception as e:
+            # Skip if psutil or sensors not available, but log it once
+            if not hasattr(self, '_thermal_check_warned'):
+                print(f"[Hardware] Thermal monitoring not available: {e}")
+                self._thermal_check_warned = True

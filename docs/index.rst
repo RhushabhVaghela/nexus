@@ -28,9 +28,11 @@ API Reference
    :maxdepth: 2
    :caption: API Modules:
 
+   api/modules
    api/nexus_core
    api/multimodal
-   api/inference
+   api/reasoning
+   api/omni
    api/utils
 
 Indices and tables

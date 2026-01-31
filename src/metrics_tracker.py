@@ -222,8 +222,8 @@ class MetricsTracker:
                     "gpu_memory_used_gb": torch.cuda.memory_allocated() / (1024**3),
                     "gpu_memory_peak_gb": torch.cuda.max_memory_allocated() / (1024**3),
                 }
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to get GPU metrics: {e}")
         return {"gpu_memory_used_gb": 0.0, "gpu_memory_peak_gb": 0.0}
 
 

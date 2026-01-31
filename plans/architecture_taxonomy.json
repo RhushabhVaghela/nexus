@@ -1,0 +1,554 @@
+{
+    "version": "1.0",
+    "total_models": 135,
+    "families": [
+        {
+            "family_id": "llama",
+            "family_name": "Llama-Based Architectures",
+            "model_count": 35,
+            "model_types": [
+                "llama",
+                "llama2",
+                "llama3",
+                "llama4",
+                "mistral",
+                "mixtral",
+                "qwen2",
+                "qwen2_5",
+                "yi",
+                "deepseek",
+                "codellama",
+                "vicuna",
+                "alpaca",
+                "wizardlm",
+                "openchat",
+                "zephyr",
+                "starling",
+                "neural-chat"
+            ],
+            "architectures": [
+                "LlamaForCausalLM",
+                "Llama4ForCausalLM",
+                "MistralForCausalLM",
+                "MixtralForCausalLM",
+                "Qwen2ForCausalLM",
+                "DeepseekForCausalLM",
+                "YiForCausalLM",
+                "CodellamaForCausalLM"
+            ],
+            "key_characteristics": {
+                "architecture_type": "decoder_only",
+                "normalization": "pre_norm_rms",
+                "activation": "swiglu",
+                "position_embedding": "rope",
+                "attention_variant": "grouped_query_attention"
+            },
+            "weight_naming": {
+                "layer_prefix": "model.layers.{idx}.",
+                "embedding": "model.embed_tokens",
+                "lm_head": "lm_head",
+                "final_norm": "model.norm"
+            },
+            "layer_class": "LlamaDecoderLayer",
+            "module_path": "transformers.models.llama.modeling_llama"
+        },
+        {
+            "family_id": "gpt",
+            "family_name": "GPT-Based Architectures",
+            "model_count": 18,
+            "model_types": [
+                "gpt2",
+                "gptj",
+                "gpt_neo",
+                "gpt_neox",
+                "pythia",
+                "falcon",
+                "gpt_bigcode",
+                "starcoder",
+                "santacoder",
+                "octocoder"
+            ],
+            "architectures": [
+                "GPT2LMHeadModel",
+                "GPTJForCausalLM",
+                "GPTNeoForCausalLM",
+                "GPTNeoXForCausalLM",
+                "GPTBigCodeForCausalLM",
+                "FalconForCausalLM",
+                "FalconH1ForCausalLM",
+                "GPTRefactForCausalLM"
+            ],
+            "key_characteristics": {
+                "architecture_type": "decoder_only",
+                "normalization": "post_norm_or_pre_norm",
+                "activation": "gelu_or_gelu_variant",
+                "position_embedding": "learned_absolute",
+                "attention_variant": "multi_head_attention"
+            },
+            "weight_naming": {
+                "layer_prefix": "transformer.h.{idx}.",
+                "embedding": "transformer.wte",
+                "lm_head": "lm_head",
+                "final_norm": "transformer.ln_f"
+            },
+            "layer_classes": {
+                "gpt2": "GPT2Block",
+                "gptj": "GPTJBlock",
+                "gpt_neo": "GPTNeoBlock",
+                "gpt_neox": "GPTNeoXLayer",
+                "gpt_bigcode": "GPTBigCodeBlock",
+                "falcon": "FalconDecoderLayer"
+            },
+            "module_paths": {
+                "gpt2": "transformers.models.gpt2.modeling_gpt2",
+                "gptj": "transformers.models.gptj.modeling_gptj",
+                "gpt_neo": "transformers.models.gpt_neo.modeling_gpt_neo",
+                "gpt_neox": "transformers.models.gpt_neox.modeling_gpt_neox",
+                "gpt_bigcode": "transformers.models.gpt_bigcode.modeling_gpt_bigcode",
+                "falcon": "transformers.models.falcon.modeling_falcon"
+            }
+        },
+        {
+            "family_id": "chatglm",
+            "family_name": "ChatGLM-Based Architectures",
+            "model_count": 8,
+            "model_types": [
+                "chatglm",
+                "chatglm2",
+                "chatglm3",
+                "glm4",
+                "glm4_moe",
+                "glm4_moe_lite"
+            ],
+            "architectures": [
+                "ChatGLMForConditionalGeneration",
+                "ChatGLMModel",
+                "Glm4ForCausalLM",
+                "Glm4MoeForCausalLM",
+                "Glm4MoeLiteForCausalLM",
+                "Glm4vForConditionalGeneration",
+                "Glm4vMoeForConditionalGeneration"
+            ],
+            "key_characteristics": {
+                "architecture_type": "prefix_decoder_or_causal",
+                "normalization": "pre_norm",
+                "activation": "gelu",
+                "position_embedding": "rope_2d_or_1d",
+                "attention_variant": "multi_query_or_grouped_query"
+            },
+            "weight_naming": {
+                "layer_prefix": "transformer.encoder.layers.{idx}.",
+                "embedding": "transformer.embedding.word_embeddings",
+                "lm_head": "transformer.output_layer",
+                "final_norm": "transformer.encoder.final_layernorm"
+            },
+            "layer_class": "GLMBlock",
+            "module_path": "modeling_chatglm",
+            "trust_remote_code": true
+        },
+        {
+            "family_id": "t5",
+            "family_name": "T5-Based Architectures",
+            "model_count": 12,
+            "model_types": [
+                "t5",
+                "t5v1_1",
+                "flan_t5",
+                "ul2",
+                "longt5",
+                "byt5",
+                "umt5"
+            ],
+            "architectures": [
+                "T5ForConditionalGeneration",
+                "T5EncoderModel",
+                "T5Model",
+                "LongT5ForConditionalGeneration",
+                "UMT5ForConditionalGeneration",
+                "MT5ForConditionalGeneration"
+            ],
+            "key_characteristics": {
+                "architecture_type": "encoder_decoder",
+                "normalization": "pre_norm",
+                "activation": "relu_then_gelu",
+                "position_embedding": "relative_bias",
+                "attention_variant": "multi_head_attention"
+            },
+            "weight_naming": {
+                "encoder_layer_prefix": "encoder.block.{idx}.",
+                "decoder_layer_prefix": "decoder.block.{idx}.",
+                "embedding": "shared",
+                "lm_head": "lm_head",
+                "final_norm": "encoder.final_layer_norm"
+            },
+            "layer_class": "T5Block",
+            "module_path": "transformers.models.t5.modeling_t5"
+        },
+        {
+            "family_id": "bloom",
+            "family_name": "BLOOM-Based Architectures",
+            "model_count": 5,
+            "model_types": [
+                "bloom",
+                "bloomz"
+            ],
+            "architectures": [
+                "BloomForCausalLM",
+                "BloomModel",
+                "BloomForSequenceClassification"
+            ],
+            "key_characteristics": {
+                "architecture_type": "decoder_only",
+                "normalization": "pre_norm",
+                "activation": "gelu",
+                "position_embedding": "alibi",
+                "attention_variant": "multi_head_attention"
+            },
+            "weight_naming": {
+                "layer_prefix": "transformer.h.{idx}.",
+                "embedding": "transformer.word_embeddings",
+                "lm_head": "lm_head",
+                "final_norm": "transformer.ln_f"
+            },
+            "layer_class": "BloomBlock",
+            "module_path": "transformers.models.bloom.modeling_bloom"
+        },
+        {
+            "family_id": "opt",
+            "family_name": "OPT-Based Architectures",
+            "model_count": 6,
+            "model_types": [
+                "opt",
+                "opt_iml"
+            ],
+            "architectures": [
+                "OPTForCausalLM",
+                "OPTModel",
+                "OPTForSequenceClassification"
+            ],
+            "key_characteristics": {
+                "architecture_type": "decoder_only",
+                "normalization": "pre_norm",
+                "activation": "relu",
+                "position_embedding": "learned_absolute",
+                "attention_variant": "multi_head_attention"
+            },
+            "weight_naming": {
+                "layer_prefix": "model.decoder.layers.{idx}.",
+                "embedding": "model.decoder.embed_tokens",
+                "lm_head": "lm_head",
+                "final_norm": "model.decoder.final_layer_norm"
+            },
+            "layer_class": "OPTDecoderLayer",
+            "module_path": "transformers.models.opt.modeling_opt"
+        },
+        {
+            "family_id": "mamba",
+            "family_name": "Mamba/State Space Models",
+            "model_count": 12,
+            "model_types": [
+                "mamba",
+                "mamba2",
+                "falcon_mamba",
+                "jamba",
+                "zamba",
+                "rwkv",
+                "rwkv6",
+                "rwkv7",
+                "rwkv Hybrid"
+            ],
+            "architectures": [
+                "MambaForCausalLM",
+                "Mamba2ForCausalLM",
+                "MambaLMHeadModel",
+                "FalconMambaForCausalLM",
+                "JambaForCausalLM",
+                "ZambaForCausalLM",
+                "Rwkv6ForCausalLM",
+                "Rwkv7ForCausalLM",
+                "RwkvHybridForCausalLM"
+            ],
+            "key_characteristics": {
+                "architecture_type": "decoder_only_ssm",
+                "normalization": "pre_norm",
+                "activation": "silu",
+                "position_embedding": "none_ssm_based",
+                "attention_variant": "selective_state_space"
+            },
+            "weight_naming": {
+                "layer_prefix": "backbone.layers.{idx}.",
+                "embedding": "backbone.embeddings",
+                "lm_head": "backbone.lm_head",
+                "final_norm": "backbone.norm_f"
+            },
+            "layer_classes": {
+                "mamba": "MambaBlock",
+                "mamba2": "Mamba2Block",
+                "jamba": "JambaMambaLayer",
+                "zamba": "ZambaBlock"
+            },
+            "module_paths": {
+                "mamba": "transformers.models.mamba.modeling_mamba",
+                "mamba2": "transformers.models.mamba2.modeling_mamba2",
+                "jamba": "transformers.models.jamba.modeling_jamba",
+                "zamba": "transformers.models.zamba.modeling_zamba"
+            }
+        },
+        {
+            "family_id": "moe",
+            "family_name": "Mixture of Experts Architectures",
+            "model_count": 15,
+            "model_types": [
+                "mixtral",
+                "qwen2_moe",
+                "deepseek_moe",
+                "grok",
+                "grok1",
+                "glm4_moe",
+                "qwen3_moe",
+                "phi_moe",
+                "granite_moe",
+                "olmoe"
+            ],
+            "architectures": [
+                "MixtralForCausalLM",
+                "Qwen2MoeForCausalLM",
+                "DeepseekMoeForCausalLM",
+                "GrokForCausalLM",
+                "Grok1ForCausalLM",
+                "Glm4MoeForCausalLM",
+                "Qwen3MoeForCausalLM",
+                "PhiMoEForCausalLM",
+                "GraniteMoeForCausalLM",
+                "GraniteMoeHybridForCausalLM",
+                "OlmoeForCausalLM"
+            ],
+            "key_characteristics": {
+                "architecture_type": "decoder_only_moe",
+                "normalization": "pre_norm_rms",
+                "activation": "swiglu_or_gelu",
+                "position_embedding": "rope",
+                "attention_variant": "grouped_query_attention",
+                "expert_routing": "top_k_sparse"
+            },
+            "weight_naming": {
+                "layer_prefix": "model.layers.{idx}.",
+                "embedding": "model.embed_tokens",
+                "lm_head": "lm_head",
+                "final_norm": "model.norm",
+                "expert_pattern": "model.layers.{idx}.block_sparse_moe.experts.{expert_idx}."
+            },
+            "layer_classes": {
+                "mixtral": "MixtralDecoderLayer",
+                "qwen2_moe": "Qwen2MoeDecoderLayer",
+                "deepseek": "DeepseekDecoderLayer",
+                "grok": "GrokDecoderLayer"
+            },
+            "module_paths": {
+                "mixtral": "transformers.models.mixtral.modeling_mixtral",
+                "qwen2_moe": "transformers.models.qwen2_moe.modeling_qwen2_moe",
+                "deepseek": "transformers.models.deepseek.modeling_deepseek",
+                "grok": "transformers.models.grok.modeling_grok"
+            }
+        },
+        {
+            "family_id": "phi",
+            "family_name": "Phi-Based Architectures",
+            "model_count": 6,
+            "model_types": [
+                "phi",
+                "phi2",
+                "phi3",
+                "phi4"
+            ],
+            "architectures": [
+                "PhiForCausalLM",
+                "Phi3ForCausalLM",
+                "Phi4ForCausalLM",
+                "PhiMoEForCausalLM"
+            ],
+            "key_characteristics": {
+                "architecture_type": "decoder_only",
+                "normalization": "pre_norm",
+                "activation": "gelu",
+                "position_embedding": "rope",
+                "attention_variant": "multi_head_attention"
+            },
+            "weight_naming": {
+                "layer_prefix": "model.layers.{idx}.",
+                "embedding": "model.embed_tokens",
+                "lm_head": "lm_head",
+                "final_norm": "model.final_layernorm"
+            },
+            "layer_class": "PhiDecoderLayer",
+            "module_path": "transformers.models.phi.modeling_phi"
+        },
+        {
+            "family_id": "gemma",
+            "family_name": "Gemma-Based Architectures",
+            "model_count": 8,
+            "model_types": [
+                "gemma",
+                "gemma2",
+                "gemma3",
+                "gemma3_text",
+                "gemma3n"
+            ],
+            "architectures": [
+                "GemmaForCausalLM",
+                "Gemma2ForCausalLM",
+                "Gemma3ForCausalLM",
+                "Gemma3ForConditionalGeneration",
+                "Gemma3TextModel",
+                "Gemma3nForCausalLM",
+                "Gemma3nForConditionalGeneration"
+            ],
+            "key_characteristics": {
+                "architecture_type": "decoder_only",
+                "normalization": "pre_norm_rms",
+                "activation": "gelu",
+                "position_embedding": "rope",
+                "attention_variant": "grouped_query_attention"
+            },
+            "weight_naming": {
+                "layer_prefix": "model.layers.{idx}.",
+                "embedding": "model.embed_tokens",
+                "lm_head": "lm_head",
+                "final_norm": "model.norm"
+            },
+            "layer_class": "GemmaDecoderLayer",
+            "module_path": "transformers.models.gemma.modeling_gemma"
+        },
+        {
+            "family_id": "qwen",
+            "family_name": "Qwen-Based Architectures",
+            "model_count": 14,
+            "model_types": [
+                "qwen",
+                "qwen2",
+                "qwen2_5",
+                "qwen2_vl",
+                "qwen2_omni",
+                "qwen2_5_omni",
+                "qwen2_5_vl",
+                "qwen3",
+                "qwen3_vl",
+                "qwen3_omni",
+                "qwen3_tts",
+                "qwen3_moe"
+            ],
+            "architectures": [
+                "Qwen2ForCausalLM",
+                "Qwen2VLForConditionalGeneration",
+                "Qwen2OmniTalkerForConditionalGeneration",
+                "Qwen2_5OmniForConditionalGeneration",
+                "Qwen2_5_VLForConditionalGeneration",
+                "Qwen3ForCausalLM",
+                "Qwen3VLForConditionalGeneration",
+                "Qwen3OmniForConditionalGeneration",
+                "Qwen3TTSForConditionalGeneration",
+                "Qwen3MoeForCausalLM",
+                "Qwen3NextForCausalLM",
+                "Qwen3VLMoeForConditionalGeneration"
+            ],
+            "key_characteristics": {
+                "architecture_type": "decoder_only_or_multimodal",
+                "normalization": "pre_norm_rms",
+                "activation": "swiglu",
+                "position_embedding": "rope",
+                "attention_variant": "grouped_query_attention"
+            },
+            "weight_naming": {
+                "layer_prefix": "model.layers.{idx}.",
+                "embedding": "model.embed_tokens",
+                "lm_head": "lm_head",
+                "final_norm": "model.norm"
+            },
+            "layer_class": "Qwen2DecoderLayer",
+            "module_path": "transformers.models.qwen2.modeling_qwen2"
+        },
+        {
+            "family_id": "encoder_only",
+            "family_name": "Encoder-Only Architectures",
+            "model_count": 16,
+            "model_types": [
+                "bert",
+                "roberta",
+                "deberta",
+                "modernbert",
+                "jinabert",
+                "nomic_bert",
+                "neobert",
+                "electra",
+                "xlm_roberta"
+            ],
+            "architectures": [
+                "BertModel",
+                "BertForMaskedLM",
+                "BertForSequenceClassification",
+                "RobertaModel",
+                "RobertaForSequenceClassification",
+                "DebertaModel",
+                "DebertaForSequenceClassification",
+                "ModernBertModel",
+                "ModernBertForSequenceClassification",
+                "JinaBertModel",
+                "NeoBERT",
+                "NeoBERTForSequenceClassification"
+            ],
+            "key_characteristics": {
+                "architecture_type": "encoder_only",
+                "normalization": "pre_norm_or_post_norm",
+                "activation": "gelu",
+                "position_embedding": "learned_absolute",
+                "attention_variant": "bidirectional_multi_head"
+            },
+            "weight_naming": {
+                "layer_prefix": "encoder.layer.{idx}.",
+                "embedding": "embeddings",
+                "pooler": "pooler",
+                "final_norm": null
+            },
+            "layer_class": "BertLayer",
+            "module_path": "transformers.models.bert.modeling_bert"
+        }
+    ],
+    "special_cases": {
+        "trust_remote_code": [
+            "chatglm",
+            "chatglm2",
+            "chatglm3",
+            "glm4",
+            "glm4_moe",
+            "step_robotics",
+            "agent_cpm"
+        ],
+        "custom_modeling_files": [
+            "glm4_moe_lite",
+            "step_robotics",
+            "agent_cpm",
+            "qwen3"
+        ],
+        "encoder_decoder": [
+            "t5",
+            "t5v1_1",
+            "flan_t5",
+            "ul2",
+            "longt5",
+            "byt5",
+            "umt5",
+            "mt5"
+        ],
+        "multimodal_backbones": [
+            "qwen2_vl",
+            "qwen2_omni",
+            "qwen2_5_vl",
+            "qwen2_5_omni",
+            "qwen3_vl",
+            "qwen3_omni",
+            "glm4v",
+            "idefics",
+            "llava"
+        ]
+    }
+}

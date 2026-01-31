@@ -9,6 +9,7 @@ import torch.nn as nn
 from typing import Dict, Any, List, Optional, Union, Tuple
 from dataclasses import dataclass
 import logging
+from abc import ABC, abstractmethod
 
 logger = logging.getLogger(__name__)
 
@@ -22,17 +23,18 @@ class EncoderOutput:
     repetition_metadata: Optional[Dict[str, Any]] = None
 
 
-class ModalityEncoder:
+class ModalityEncoder(ABC):
     """Base class for modality-specific encoders."""
     
     def __init__(self, modality: str, embedding_dim: int = 768):
         self.modality = modality
         self.embedding_dim = embedding_dim
     
+    @abstractmethod
     def encode(self, data: Any, apply_repetition: bool = False, 
                repetition_factor: int = 1) -> EncoderOutput:
         """Encode data to embeddings. Override in subclasses."""
-        raise NotImplementedError
+        pass
 
 
 class VisionEncoder(ModalityEncoder):
@@ -253,8 +255,90 @@ class MultimodalEncoder:
         self.vision_encoder = VisionEncoder(embedding_dim=embedding_dim) if enable_vision else None
         self.audio_encoder = AudioEncoder(embedding_dim=embedding_dim) if enable_audio else None
         
+        # Text encoder (lazy loaded)
+        self.text_encoder = None
+        self.text_tokenizer = None
+        
         # Projection layer to unify dimensions
         self.projection = nn.Linear(embedding_dim * 3, embedding_dim)  # Vision + Audio + Text
+    
+    def _load_text_encoder(self):
+        """Lazy load the text encoder model."""
+        if self.text_encoder is not None:
+            return
+        
+        try:
+            from transformers import AutoModel, AutoTokenizer
+            # Use a lightweight but effective sentence encoder
+            model_name = "sentence-transformers/all-MiniLM-L6-v2"
+            self.text_tokenizer = AutoTokenizer.from_pretrained(model_name)
+            self.text_encoder = AutoModel.from_pretrained(model_name)
+            logger.info(f"Loaded text encoder: {model_name}")
+        except Exception as e:
+            logger.warning(f"Could not load text encoder: {e}")
+    
+    def _encode_text(self, text: str, apply_repetition: bool = False, 
+                     repetition_factor: int = 1) -> torch.Tensor:
+        """
+        Encode text to embeddings using a transformer-based encoder.
+        
+        Args:
+            text: Input text string
+            apply_repetition: Whether to apply repetition
+            repetition_factor: Number of times to repeat features
+            
+        Returns:
+            Text embedding tensor of shape (1, embedding_dim)
+        """
+        self._load_text_encoder()
+        
+        if self.text_encoder is None:
+            logger.error("Text encoder not loaded")
+            # Return zero embedding as fallback
+            return torch.zeros(1, self.embedding_dim)
+        
+        try:
+            # Tokenize input
+            inputs = self.text_tokenizer(
+                text,
+                return_tensors="pt",
+                truncation=True,
+                max_length=512,
+                padding=True
+            )
+            
+            # Generate embeddings
+            with torch.no_grad():
+                outputs = self.text_encoder(**inputs)
+            
+            # Use mean pooling over token embeddings
+            # outputs.last_hidden_state: (batch_size, seq_len, hidden_dim)
+            token_embeddings = outputs.last_hidden_state
+            attention_mask = inputs['attention_mask']
+            
+            # Mean pooling with attention mask
+            mask_expanded = attention_mask.unsqueeze(-1).float()
+            sum_embeddings = (token_embeddings * mask_expanded).sum(dim=1)
+            mean_embeddings = sum_embeddings / mask_expanded.sum(dim=1).clamp(min=1e-9)
+            
+            # Project to target dimension if needed
+            if mean_embeddings.shape[-1] != self.embedding_dim:
+                projection = nn.Linear(mean_embeddings.shape[-1], self.embedding_dim)
+                mean_embeddings = projection(mean_embeddings)
+            
+            # Apply repetition at feature level
+            if apply_repetition and repetition_factor > 1:
+                mean_embeddings = mean_embeddings.repeat_interleave(repetition_factor, dim=0)
+                # Add slight variation to repeated features
+                if repetition_factor > 1:
+                    noise = torch.randn_like(mean_embeddings) * 0.01
+                    mean_embeddings = mean_embeddings + noise
+            
+            return mean_embeddings
+            
+        except Exception as e:
+            logger.error(f"Error encoding text: {e}")
+            return torch.zeros(1, self.embedding_dim)
     
     def encode_multimodal(self,
                          text: Optional[str] = None,
@@ -289,10 +373,9 @@ class MultimodalEncoder:
                 audio, apply_repetition, repetition_factor
             )
         
-        # Text encoding would use the text encoder (simplified here)
+        # Text encoding using transformer-based text encoder
         if text:
-            # In practice, use the text encoder model
-            text_embedding = torch.randn(1, self.embedding_dim)  # Placeholder
+            text_embedding = self._encode_text(text, apply_repetition, repetition_factor)
             outputs["text"] = EncoderOutput(
                 embeddings=text_embedding,
                 modality="text",

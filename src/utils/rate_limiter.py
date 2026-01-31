@@ -60,7 +60,13 @@ class RateLimitExceeded(Exception):
 
 
 class RateLimiterBackend(ABC):
-    """Abstract base class for rate limiter backends."""
+    """Abstract base class for rate limiter backends.
+    
+    Implementations must provide concrete methods for:
+    - Token bucket rate limiting
+    - Sliding window rate limiting
+    - Rate limit reset functionality
+    """
     
     @abstractmethod
     def check_token_bucket(
@@ -70,7 +76,17 @@ class RateLimiterBackend(ABC):
         burst_size: int,
         refill_rate: float
     ) -> RateLimitResult:
-        """Check rate limit using token bucket algorithm."""
+        """Check rate limit using token bucket algorithm.
+        
+        Args:
+            key: Unique identifier for the rate limit bucket
+            tokens: Number of tokens to consume
+            burst_size: Maximum number of tokens in the bucket
+            refill_rate: Rate at which tokens are refilled (tokens per second)
+            
+        Returns:
+            RateLimitResult indicating if request is allowed
+        """
         pass
     
     @abstractmethod
@@ -80,12 +96,28 @@ class RateLimiterBackend(ABC):
         limit: int,
         window_size: float
     ) -> RateLimitResult:
-        """Check rate limit using sliding window algorithm."""
+        """Check rate limit using sliding window algorithm.
+        
+        Args:
+            key: Unique identifier for the rate limit window
+            limit: Maximum number of requests in the window
+            window_size: Size of the sliding window in seconds
+            
+        Returns:
+            RateLimitResult indicating if request is allowed
+        """
         pass
     
     @abstractmethod
     def reset(self, key: str) -> bool:
-        """Reset rate limit for key."""
+        """Reset rate limit for key.
+        
+        Args:
+            key: Unique identifier to reset
+            
+        Returns:
+            True if rate limit was reset, False if key was not found
+        """
         pass
 
 

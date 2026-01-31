@@ -10,7 +10,7 @@ A comprehensive pipeline for training and extending language models with multimo
 # Activate environment
 conda activate nexus
 
-# Run tests (109 tests, ~90s)
+# Run tests (346 tests, ~90s)
 pytest tests/unit/ tests/integration/ tests/e2e/ -v
 
 # Train with dry-run (preview stages)
@@ -87,10 +87,10 @@ nexus_model/
 │   └── multimodal/              # Encoder/decoder modules
 ├── configs/
 │   └── encoders.yaml            # Encoder/decoder paths
-├── tests/                       # 109 tests
-│   ├── unit/                    # 48 tests
-│   ├── integration/             # 40 tests
-│   └── e2e/                     # 21 tests
+├── tests/                       # 346 tests
+│   ├── unit/                    # 156 tests
+│   ├── integration/             # 110 tests
+│   └── e2e/                     # 80 tests
 └── docs/
     ├── TEST_SUITE.md            # Test documentation
     ├── SHELL_SCRIPTS.md         # Script reference
@@ -346,7 +346,7 @@ grep -i "paused" logs/train_cot.log
 ### Run All Tests
 
 ```bash
-# Full test suite (109 tests)
+# Full test suite (346 tests)
 pytest tests/unit/ tests/integration/ tests/e2e/ -v
 
 # With coverage report
@@ -357,9 +357,9 @@ pytest tests/ --cov=src --cov-report=html
 
 | Category | Tests | Duration | Description |
 |----------|-------|----------|-------------|
-| Unit | 48 | ~5s | Fast, isolated module tests |
-| Integration | 40 | ~30s | Real model loading tests |
-| E2E | 21 | ~60s | Full pipeline tests |
+| Unit | 156 | ~30s | Fast, isolated module tests |
+| Integration | 110 | ~60s | Real model loading tests |
+| E2E | 80 | ~120s | Full pipeline tests |
 
 ### Run Specific Tests
 

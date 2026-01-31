@@ -5,10 +5,12 @@ Provides Kubernetes-compatible health probes and component health monitoring.
 Supports liveness, readiness, and startup probes.
 """
 
+import os
 import asyncio
 import json
 import logging
 import time
+import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum, auto
@@ -124,7 +126,14 @@ class HealthCheck(ABC):
     
     @abstractmethod
     def check(self) -> HealthCheckResult:
-        """Perform health check."""
+        """Perform health check.
+        
+        This method must be implemented by subclasses to perform
+        the actual health check logic.
+        
+        Returns:
+            HealthCheckResult with the status of the health check
+        """
         pass
     
     def run(self) -> HealthCheckResult:
@@ -393,7 +402,11 @@ class ModelHealthCheck(HealthCheck):
 
 
 class DatabaseHealthCheck(HealthCheck):
-    """Check database connectivity."""
+    """Check database connectivity.
+    
+    Supports SQLite, PostgreSQL, MySQL, and other databases.
+    Uses SQLAlchemy if available for broader database support.
+    """
     
     def __init__(
         self,
@@ -405,16 +418,180 @@ class DatabaseHealthCheck(HealthCheck):
         self.query = query
     
     def check(self) -> HealthCheckResult:
-        """Check database health."""
-        # Placeholder for database check
-        # In production, implement actual database connectivity check
-        return HealthCheckResult(
-            name=self.name,
-            status=HealthStatus.HEALTHY,
-            message="Database check placeholder - implement based on your DB",
-            response_time=0,
-            timestamp=time.time()
-        )
+        """Check database health by attempting a connection and simple query."""
+        start_time = time.time()
+        
+        # If no connection string provided, check for common environment variables
+        if not self.connection_string:
+            self.connection_string = (
+                os.environ.get('DATABASE_URL') or 
+                os.environ.get('DB_CONNECTION_STRING') or
+                os.environ.get('POSTGRES_URL')
+            )
+        
+        if not self.connection_string:
+            return HealthCheckResult(
+                name=self.name,
+                status=HealthStatus.UNKNOWN,
+                message="No database connection string configured",
+                response_time=time.time() - start_time,
+                timestamp=time.time(),
+                metadata={"hint": "Set DATABASE_URL environment variable or pass connection_string"}
+            )
+        
+        try:
+            # Try SQLAlchemy first (supports multiple database types)
+            try:
+                from sqlalchemy import create_engine, text
+                from sqlalchemy.exc import SQLAlchemyError
+                
+                engine = create_engine(self.connection_string, connect_args={'connect_timeout': int(self.timeout)})
+                with engine.connect() as conn:
+                    result = conn.execute(text(self.query))
+                    result.fetchone()
+                
+                return HealthCheckResult(
+                    name=self.name,
+                    status=HealthStatus.HEALTHY,
+                    message=f"Database connection successful using SQLAlchemy",
+                    response_time=time.time() - start_time,
+                    timestamp=time.time(),
+                    metadata={
+                        "connection_type": "sqlalchemy",
+                        "query": self.query,
+                        "connection_string_masked": self._mask_connection_string()
+                    }
+                )
+            except ImportError:
+                pass  # Fall through to direct driver checks
+            
+            # Try SQLite
+            if self.connection_string.startswith('sqlite:'):
+                import sqlite3
+                db_path = self.connection_string.replace('sqlite:///', '').replace('sqlite:', '')
+                conn = sqlite3.connect(db_path, timeout=self.timeout)
+                conn.execute(self.query)
+                conn.close()
+                
+                return HealthCheckResult(
+                    name=self.name,
+                    status=HealthStatus.HEALTHY,
+                    message="SQLite database connection successful",
+                    response_time=time.time() - start_time,
+                    timestamp=time.time(),
+                    metadata={"connection_type": "sqlite", "db_path": db_path}
+                )
+            
+            # Try psycopg2 for PostgreSQL
+            try:
+                import psycopg2
+                conn = psycopg2.connect(self.connection_string, connect_timeout=int(self.timeout))
+                cursor = conn.cursor()
+                cursor.execute(self.query)
+                cursor.fetchone()
+                cursor.close()
+                conn.close()
+                
+                return HealthCheckResult(
+                    name=self.name,
+                    status=HealthStatus.HEALTHY,
+                    message="PostgreSQL database connection successful",
+                    response_time=time.time() - start_time,
+                    timestamp=time.time(),
+                    metadata={"connection_type": "psycopg2"}
+                )
+            except ImportError:
+                pass
+            
+            # Try pymysql for MySQL
+            try:
+                import pymysql
+                # Parse connection string for pymysql
+                import re
+                match = re.match(r'mysql://([^:]+):([^@]+)@([^/]+)/(.+)', self.connection_string)
+                if match:
+                    user, password, host, database = match.groups()
+                    conn = pymysql.connect(
+                        host=host,
+                        user=user,
+                        password=password,
+                        database=database,
+                        connect_timeout=int(self.timeout)
+                    )
+                    with conn.cursor() as cursor:
+                        cursor.execute(self.query)
+                        cursor.fetchone()
+                    conn.close()
+                    
+                    return HealthCheckResult(
+                        name=self.name,
+                        status=HealthStatus.HEALTHY,
+                        message="MySQL database connection successful",
+                        response_time=time.time() - start_time,
+                        timestamp=time.time(),
+                        metadata={"connection_type": "pymysql"}
+                    )
+            except ImportError:
+                pass
+            
+            # If we get here, no database driver was available
+            return HealthCheckResult(
+                name=self.name,
+                status=HealthStatus.UNKNOWN,
+                message="No suitable database driver found. Install sqlalchemy, psycopg2, or pymysql.",
+                response_time=time.time() - start_time,
+                timestamp=time.time(),
+                metadata={
+                    "connection_string_masked": self._mask_connection_string(),
+                    "available_drivers": self._get_available_drivers()
+                }
+            )
+            
+        except Exception as e:
+            return HealthCheckResult(
+                name=self.name,
+                status=HealthStatus.UNHEALTHY,
+                message=f"Database connection failed: {str(e)}",
+                response_time=time.time() - start_time,
+                timestamp=time.time(),
+                metadata={
+                    "error_type": type(e).__name__,
+                    "connection_string_masked": self._mask_connection_string()
+                }
+            )
+    
+    def _mask_connection_string(self) -> str:
+        """Mask sensitive information in connection string for logging."""
+        if not self.connection_string:
+            return "None"
+        import re
+        # Mask password in connection string
+        return re.sub(r'(://[^:]+:)([^@]+)(@)', r'\1*****\3', self.connection_string)
+    
+    def _get_available_drivers(self) -> list:
+        """Check which database drivers are available."""
+        drivers = []
+        try:
+            import sqlalchemy
+            drivers.append("sqlalchemy")
+        except ImportError:
+            pass
+        try:
+            import psycopg2
+            drivers.append("psycopg2")
+        except ImportError:
+            pass
+        try:
+            import pymysql
+            drivers.append("pymysql")
+        except ImportError:
+            pass
+        try:
+            import sqlite3
+            drivers.append("sqlite3")
+        except ImportError:
+            pass
+        return drivers
 
 
 class APIHealthCheck(HealthCheck):

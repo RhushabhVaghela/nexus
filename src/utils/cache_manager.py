@@ -17,6 +17,7 @@ import time
 import pickle
 import hashlib
 import threading
+import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Callable, Tuple, Union, Set
 from dataclasses import dataclass, field
@@ -24,6 +25,9 @@ from collections import OrderedDict, defaultdict
 from enum import Enum
 import logging
 import json
+from abc import ABC, abstractmethod
+
+logger = logging.getLogger(__name__)
 
 logger = logging.getLogger(__name__)
 
@@ -110,10 +114,10 @@ class CacheStats:
         self.insertions = 0
 
 
-class BaseCache:
+class BaseCache(ABC):
     """Base class for cache implementations."""
     
-    def __init__(self, 
+    def __init__(self,
                  max_size: int = 1000,
                  max_memory_mb: float = 1024,
                  policy: EvictionPolicy = EvictionPolicy.LRU):
@@ -124,25 +128,30 @@ class BaseCache:
         self.stats = CacheStats()
         self._lock = threading.RLock()
     
+    @abstractmethod
     def get(self, key: str) -> Optional[Any]:
         """Get a value from the cache."""
-        raise NotImplementedError
+        pass
     
+    @abstractmethod
     def put(self, key: str, value: Any, **kwargs) -> bool:
         """Put a value into the cache."""
-        raise NotImplementedError
+        pass
     
+    @abstractmethod
     def delete(self, key: str) -> bool:
         """Delete a value from the cache."""
-        raise NotImplementedError
+        pass
     
+    @abstractmethod
     def clear(self):
         """Clear all entries from the cache."""
-        raise NotImplementedError
+        pass
     
+    @abstractmethod
     def evict(self) -> Optional[str]:
         """Evict an entry from the cache."""
-        raise NotImplementedError
+        pass
 
 
 class LRUCache(BaseCache):

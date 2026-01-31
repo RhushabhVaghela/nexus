@@ -22,6 +22,7 @@ from enum import Enum
 import subprocess
 import tempfile
 from pathlib import Path
+from abc import ABC, abstractmethod
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +73,7 @@ class RewardResult:
         return f"RewardResult(type={self.reward_type.value}, reward={self.reward:.4f})"
 
 
-class RewardFunction:
+class RewardFunction(ABC):
     """
     Base class for reward functions.
     
@@ -82,6 +83,7 @@ class RewardFunction:
     def __init__(self, config: Optional[RewardConfig] = None):
         self.config = config or RewardConfig()
     
+    @abstractmethod
     def compute(
         self, 
         response: str, 
@@ -90,7 +92,7 @@ class RewardFunction:
         **kwargs
     ) -> RewardResult:
         """Compute reward for a response."""
-        raise NotImplementedError("Subclasses must implement compute()")
+        pass
 
 
 class CorrectnessReward(RewardFunction):

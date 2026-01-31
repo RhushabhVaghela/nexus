@@ -4,8 +4,8 @@ import sys
 # Ensure unsloth is imported before any other heavy libraries if possible
 try:
     import unsloth
-except ImportError:
-    pass
+except ImportError as e:
+    print(f"[Info] unsloth not available: {e}. Continuing without unsloth optimizations.")
 
 import json
 import signal
@@ -67,9 +67,9 @@ class NexusPipeline:
                     print(f"        'run_nexus_master.sh' should have cleaned this up.")
                     print(f"        Please kill the process manually or run the master script.")
                     sys.exit(1)
-                except (OSError, ValueError):
+                except (OSError, ValueError) as e:
                     # Process dead or file corrupt
-                    pass
+                    print(f"[Lock Check] Process check failed (likely dead): {e}")
         
         # Acquire Lock
         with open(self.lock_file, 'w') as f:
@@ -435,7 +435,8 @@ class NexusPipeline:
                                         sub = cfg[k]
                                         hidden = max(hidden, sub.get("hidden_size", sub.get("d_model", 0)))
                                         vocab = max(vocab, sub.get("vocab_size", 0))
-                    except: pass
+                    except Exception as e:
+                        print(f"[Discovery] Config parsing failed for {config_path}: {e}")
 
             if not hidden and model_key in TEACHER_REGISTRY:
                 hidden = TEACHER_REGISTRY[model_key].get('dim', 2048)
@@ -649,14 +650,35 @@ class NexusPipeline:
             return
 
         print("\n=== STAGE 2: DISTILLATION LOOP ===")
-        profile_path = os.path.join(RESULTS_ROOT, "mock_critical_layers.json") 
+        
+        # Find the most recent valid profile, or generate one if none exists
+        profile_path = None
         if os.path.exists(RESULTS_ROOT):
             import glob
-            # Search recursively for the most recent profile
-            files = sorted(glob.glob(os.path.join(RESULTS_ROOT, "**/*.json"), recursive=True), key=os.path.getmtime, reverse=True)
-            if files:
-                profile_path = files[0]
-                print(f"[Pipeline] Using Profile: {profile_path}")
+            # Search recursively for valid profile files
+            profile_files = sorted(
+                glob.glob(os.path.join(RESULTS_ROOT, "**/*.json"), recursive=True),
+                key=os.path.getmtime,
+                reverse=True
+            )
+            # Filter out empty or invalid profiles
+            for f in profile_files:
+                try:
+                    with open(f, 'r') as fp:
+                        content = json.load(fp)
+                        # Check if it's a valid profile with required fields
+                        if isinstance(content, dict) and any(k in content for k in ['critical_layers', 'layer_importance', 'activation_stats']):
+                            profile_path = f
+                            print(f"[Pipeline] Using Profile: {profile_path}")
+                            break
+                except (json.JSONDecodeError, IOError):
+                    continue
+        
+        # If no valid profile found, generate a default one based on model metadata
+        if profile_path is None or not os.path.exists(profile_path):
+            print("[Pipeline] No valid NIWT profile found. Generating default profile...")
+            profile_path = self._generate_default_profile()
+            print(f"[Pipeline] Generated default profile: {profile_path}")
 
         hidden_size = self.state["config"].get("hidden_size", 2048)
         vocab_size = self.state["config"].get("vocab_size", 128256)
@@ -767,6 +789,67 @@ class NexusPipeline:
         self.state["completed_stages"].append("export")
         self.state["current_stage"] = "cleanup"
         self._save_state()
+
+    def _generate_default_profile(self) -> str:
+        """
+        Generate a default NIWT profile based on model metadata.
+        
+        This creates a heuristic-based profile when no real profiling data is available.
+        The profile focuses on middle-to-late layers which typically contain the most
+        semantic information for distillation.
+        
+        Returns:
+            Path to the generated profile JSON file
+        """
+        import math
+        
+        hidden_size = self.state["config"].get("hidden_size", 2048)
+        
+        # Estimate number of layers from hidden_size (rough heuristic)
+        # Common models: 768 -> 12 layers, 1024 -> 24 layers, 2048 -> 24-32 layers, etc.
+        estimated_layers = max(12, min(48, int(hidden_size / 64)))
+        
+        # Critical layers are typically in the middle-to-late portion of the network
+        # where high-level semantic features are formed
+        critical_layers = [
+            int(estimated_layers * 0.5),   # 50% - early semantic
+            int(estimated_layers * 0.67),  # 67% - mid semantic
+            int(estimated_layers * 0.83),  # 83% - late semantic
+            estimated_layers - 2,          # near end
+        ]
+        
+        # Generate layer importance scores (higher for critical layers)
+        layer_importance = {}
+        for i in range(estimated_layers):
+            if i in critical_layers:
+                layer_importance[str(i)] = 1.0
+            else:
+                # Decay importance away from critical layers
+                dist_to_critical = min(abs(i - cl) for cl in critical_layers)
+                layer_importance[str(i)] = max(0.1, 1.0 - (dist_to_critical * 0.1))
+        
+        profile = {
+            "generated": True,
+            "timestamp": datetime.now().isoformat(),
+            "hidden_size": hidden_size,
+            "estimated_layers": estimated_layers,
+            "critical_layers": critical_layers,
+            "layer_importance": layer_importance,
+            "activation_stats": {
+                "mean": 0.0,
+                "std": 1.0,
+                "sparsity": 0.3
+            },
+            "note": "This is a heuristic-generated profile. For optimal results, run NIWT profiling on actual teacher models."
+        }
+        
+        # Save the profile
+        os.makedirs(RESULTS_ROOT, exist_ok=True)
+        profile_path = os.path.join(RESULTS_ROOT, "default_generated_profile.json")
+        with open(profile_path, 'w') as f:
+            json.dump(profile, f, indent=2)
+        
+        return profile_path
 
     def stage_cleanup(self):
         if "cleanup" in self.state["completed_stages"]:
