@@ -20,9 +20,13 @@ import zipfile
 import gzip
 import shutil
 import subprocess
+import logging
 from pathlib import Path
 from typing import Optional
 import torch
+
+# Setup logging
+logger = logging.getLogger(__name__)
 
 # ============ CONSTANTS (DEFAULTS) ============
 COOLDOWN_INTERVAL_STEPS = 500  # Cooldown every N steps
@@ -83,16 +87,33 @@ def set_thresholds(gpu_temp: int = None, cpu_temp: int = None):
 
 
 def get_gpu_temperature() -> float:
-    """Get current GPU temperature in Celsius."""
+    """
+    Get current GPU temperature in Celsius using nvidia-smi.
+    
+    Returns:
+        GPU temperature in Celsius, or 0.0 if unable to determine
+        
+    Note:
+        Requires nvidia-smi to be installed and accessible in PATH.
+        Returns 0.0 on non-CUDA systems or if nvidia-smi is unavailable.
+    """
     try:
         output = subprocess.check_output(
             ["nvidia-smi", "--query-gpu=temperature.gpu", 
              "--format=csv,nounits,noheader"],
-            encoding="utf-8"
+            encoding="utf-8",
+            stderr=subprocess.DEVNULL
         )
         temps = [float(t.strip()) for t in output.strip().split("\n") if t.strip()]
         return max(temps) if temps else 0.0
-    except Exception:
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        logger.debug(f"nvidia-smi not available: {e}")
+        return 0.0
+    except ValueError as e:
+        logger.warning(f"Failed to parse GPU temperature: {e}")
+        return 0.0
+    except Exception as e:
+        logger.warning(f"Unexpected error getting GPU temperature: {e}")
         return 0.0
 
 
@@ -100,15 +121,27 @@ def get_cpu_temperature() -> float:
     """
     Get current CPU temperature in Celsius.
     Works on Linux via /sys or sensors command.
-    """
-    try:
-        # Method 1: Try /sys thermal zones (most reliable on Linux)
-        thermal_path = Path("/sys/class/thermal/thermal_zone0/temp")
-        if thermal_path.exists():
-            with open(thermal_path) as f:
-                return float(f.read().strip()) / 1000.0
+    
+    Returns:
+        CPU temperature in Celsius, or 0.0 if unable to determine
         
-        # Method 2: Try lm-sensors
+    Note:
+        Tries multiple methods in order of reliability:
+        1. /sys/class/thermal/thermal_zone0/temp (most reliable on Linux)
+        2. lm-sensors command (sensors -u)
+    """
+    # Method 1: Try /sys thermal zones (most reliable on Linux)
+    thermal_path = Path("/sys/class/thermal/thermal_zone0/temp")
+    if thermal_path.exists():
+        try:
+            with open(thermal_path) as f:
+                temp_millidegrees = float(f.read().strip())
+                return temp_millidegrees / 1000.0
+        except (IOError, OSError, ValueError) as e:
+            logger.debug(f"Failed to read thermal zone temperature: {e}")
+    
+    # Method 2: Try lm-sensors
+    try:
         output = subprocess.check_output(
             ["sensors", "-u"],
             encoding="utf-8",
@@ -118,9 +151,15 @@ def get_cpu_temperature() -> float:
             if "temp1_input" in line or "Core 0" in line:
                 parts = line.split(":")
                 if len(parts) > 1:
-                    return float(parts[1].strip())
-    except Exception:
-        pass
+                    try:
+                        return float(parts[1].strip())
+                    except ValueError:
+                        continue
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        logger.debug(f"lm-sensors not available or failed: {e}")
+    except Exception as e:
+        logger.warning(f"Unexpected error getting CPU temperature: {e}")
+    
     return 0.0
 
 
