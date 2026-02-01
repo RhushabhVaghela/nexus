@@ -258,9 +258,18 @@ Nexus is currently a research codebase. To run the automated pipeline:
 # 1. Activate Environment
 conda activate nexus
 
-# 2. Run the Self-Driving Pipeline
-./run_nexus_master.sh [OPTIONS]
+# 2. Use the Unified CLI
+./scripts/nexus.sh help                    # Show all commands
+./scripts/nexus.sh master --reset          # Run full pipeline
+./scripts/nexus.sh tests --unit-only       # Run tests
+
+# Or run individual pipelines
+./scripts/nexus.sh pipeline all            # Text/code training
+./scripts/nexus.sh multimodal all          # Multimodal training
+./scripts/nexus.sh universal --enable-cot  # Universal capabilities
 ```
+
+See [examples/README.md](examples/README.md) for usage examples.
 
 ### 2. Available Options
 
@@ -387,9 +396,18 @@ Nexus is currently a research codebase. To run the automated pipeline:
 # 1. Activate Environment
 conda activate nexus
 
-# 2. Run the Self-Driving Pipeline
-./run_nexus_master.sh [OPTIONS]
+# 2. Use the Unified CLI
+./scripts/nexus.sh help                    # Show all commands
+./scripts/nexus.sh master --reset          # Run full pipeline
+./scripts/nexus.sh tests --unit-only       # Run tests
+
+# Or run individual pipelines
+./scripts/nexus.sh pipeline all            # Text/code training
+./scripts/nexus.sh multimodal all          # Multimodal training
+./scripts/nexus.sh universal --enable-cot  # Universal capabilities
 ```
+
+See [examples/README.md](examples/README.md) for usage examples.
 
 ### 2. Available Options
 
