@@ -706,6 +706,351 @@ class BERTFamilyHandler(ArchitectureFamily):
         return True
 
 
+class CohereFamilyHandler(ArchitectureFamily):
+    """Handler for Cohere Command family architectures."""
+    
+    family_id = "cohere"
+    family_name = "Cohere Command Architectures"
+    model_types = [
+        "cohere", "command", "command-r", "command-r-plus",
+        "command-r-08-2024", "command-r-plus-08-2024"
+    ]
+    architectures = [
+        "CohereForCausalLM", "Cohere2ForCausalLM", "CohereModel",
+        "CohereForSequenceClassification", "CohereForTokenClassification"
+    ]
+    
+    def _detect_subtype(self, config: PretrainedConfig) -> str:
+        """Detect Cohere subtype from config."""
+        model_type = getattr(config, "model_type", "").lower()
+        architectures = getattr(config, "architectures", [])
+        
+        if "cohere2" in model_type or any("Cohere2" in a for a in architectures):
+            return "cohere2"
+        elif "command-r-plus" in model_type or any("CommandRPlus" in a for a in architectures):
+            return "command_r_plus"
+        elif "command-r" in model_type or any("CommandR" in a for a in architectures):
+            return "command_r"
+        else:
+            return "cohere"
+    
+    def get_layer_prefix(self, layer_idx: int, layer_type: str = "decoder") -> str:
+        return f"model.layers.{layer_idx}."
+    
+    def create_layer(self, config: PretrainedConfig, layer_idx: int,
+                     layer_type: str = "decoder") -> nn.Module:
+        subtype = self._detect_subtype(config)
+        
+        try:
+            # Cohere uses similar architecture to Llama
+            if subtype in ["cohere2", "command_r_plus"]:
+                from transformers.models.cohere2.modeling_cohere2 import Cohere2DecoderLayer
+                return Cohere2DecoderLayer(config, layer_idx=layer_idx)
+            else:
+                from transformers.models.cohere.modeling_cohere import CohereDecoderLayer
+                return CohereDecoderLayer(config, layer_idx=layer_idx)
+        except ImportError as e:
+            raise LayerCreationError(layer_idx, self.family_id, e)
+    
+    def get_embedding_name(self) -> str:
+        return "model.embed_tokens"
+    
+    def get_lm_head_name(self) -> str:
+        return "lm_head"
+
+
+class CLIPFamilyHandler(ArchitectureFamily):
+    """Handler for CLIP vision encoder architectures."""
+    
+    family_id = "clip"
+    family_name = "CLIP Vision Architectures"
+    model_types = [
+        "clip", "clip_vision", "siglip", "siglip_vision_model",
+        "japanese_clip", "chinese_clip"
+    ]
+    architectures = [
+        "CLIPModel", "CLIPVisionModel", "CLIPVisionModelWithProjection",
+        "SigLIPModel", "SigLIPVisionModel",
+        "JapaneseCLIPModel", "ChineseCLIPModel",
+        "CLIPForImageClassification"
+    ]
+    
+    def _detect_subtype(self, config: PretrainedConfig) -> str:
+        """Detect CLIP subtype from config."""
+        model_type = getattr(config, "model_type", "").lower()
+        architectures = getattr(config, "architectures", [])
+        
+        if "siglip" in model_type or any("SigLIP" in a for a in architectures):
+            return "siglip"
+        elif "japanese" in model_type or any("Japanese" in a for a in architectures):
+            return "japanese"
+        elif "chinese" in model_type or any("Chinese" in a for a in architectures):
+            return "chinese"
+        else:
+            return "clip"
+    
+    def get_layer_prefix(self, layer_idx: int, layer_type: str = "encoder") -> str:
+        """Get weight prefix for vision encoder layer."""
+        subtype = getattr(self, '_last_subtype', 'clip')
+        
+        if subtype == "siglip":
+            return f"vision_model.encoder.layers.{layer_idx}."
+        else:
+            return f"vision_model.encoder.layers.{layer_idx}."
+    
+    def create_layer(self, config: PretrainedConfig, layer_idx: int,
+                     layer_type: str = "encoder") -> nn.Module:
+        subtype = self._detect_subtype(config)
+        self._last_subtype = subtype  # Store for get_layer_prefix
+        
+        try:
+            if subtype == "siglip":
+                from transformers.models.siglip.modeling_siglip import SiglipEncoderLayer
+                return SiglipEncoderLayer(config)
+            else:
+                from transformers.models.clip.modeling_clip import CLIPEncoderLayer
+                return CLIPEncoderLayer(config)
+        except ImportError as e:
+            raise LayerCreationError(layer_idx, self.family_id, e)
+    
+    def get_embedding_name(self) -> str:
+        return "vision_model.embeddings"
+    
+    def get_lm_head_name(self) -> str:
+        """CLIP vision models don't have LM heads."""
+        return None
+    
+    def is_encoder_only(self) -> bool:
+        """CLIP is encoder-only for vision tasks."""
+        return True
+    
+    def get_num_layers(self, config: PretrainedConfig) -> int:
+        """Get number of vision encoder layers."""
+        # CLIP uses num_hidden_layers in vision_config
+        if hasattr(config, "vision_config"):
+            return getattr(config.vision_config, "num_hidden_layers",
+                          getattr(config.vision_config, "num_layers", 12))
+        for attr in ["num_hidden_layers", "n_layer", "num_layers", "vision_layers"]:
+            if hasattr(config, attr):
+                return getattr(config, attr)
+        return 12  # Default for CLIP
+
+
+class SAMFamilyHandler(ArchitectureFamily):
+    """Handler for SAM (Segment Anything Model) architectures."""
+    
+    family_id = "sam"
+    family_name = "SAM Segmentation Architectures"
+    model_types = [
+        "sam", "sam_vision", "sam2", "sam2_vision"
+    ]
+    architectures = [
+        "SamModel", "Sam2Model", "SamProcessor",
+        "SamVisionModel", "Sam2VisionModel"
+    ]
+    
+    def _detect_subtype(self, config: PretrainedConfig) -> str:
+        """Detect SAM subtype from config."""
+        model_type = getattr(config, "model_type", "").lower()
+        architectures = getattr(config, "architectures", [])
+        
+        if "sam2" in model_type or any("Sam2" in a for a in architectures):
+            return "sam2"
+        else:
+            return "sam"
+    
+    def get_layer_prefix(self, layer_idx: int, layer_type: str = "encoder") -> str:
+        """Get weight prefix for SAM vision encoder layer."""
+        subtype = getattr(self, '_last_subtype', 'sam')
+        
+        if subtype == "sam2":
+            return f"vision_encoder.layers.{layer_idx}."
+        else:
+            return f"vision_encoder.layers.{layer_idx}."
+    
+    def create_layer(self, config: PretrainedConfig, layer_idx: int,
+                     layer_type: str = "encoder") -> nn.Module:
+        subtype = self._detect_subtype(config)
+        self._last_subtype = subtype
+        
+        try:
+            if subtype == "sam2":
+                from transformers.models.sam2.modeling_sam2 import Sam2VisionEncoderLayer
+                return Sam2VisionEncoderLayer(config)
+            else:
+                from transformers.models.sam.modeling_sam import SamVisionLayer
+                return SamVisionLayer(config)
+        except ImportError as e:
+            raise LayerCreationError(layer_idx, self.family_id, e)
+    
+    def get_embedding_name(self) -> str:
+        return "vision_encoder.embeddings"
+    
+    def get_lm_head_name(self) -> str:
+        """SAM doesn't have an LM head."""
+        return None
+    
+    def is_encoder_only(self) -> bool:
+        """SAM vision encoder is encoder-only."""
+        return True
+    
+    def get_num_layers(self, config: PretrainedConfig) -> int:
+        """Get number of vision encoder layers."""
+        # SAM uses vision_config for encoder layers
+        if hasattr(config, "vision_config"):
+            return getattr(config.vision_config, "num_hidden_layers", 12)
+        for attr in ["num_hidden_layers", "vision_layers", "encoder_layers"]:
+            if hasattr(config, attr):
+                return getattr(config, attr)
+        return 12  # Default for SAM
+
+
+class WhisperFamilyHandler(ArchitectureFamily):
+    """Handler for Whisper audio encoder architectures."""
+    
+    family_id = "whisper"
+    family_name = "Whisper Audio Architectures"
+    model_types = [
+        "whisper", "whisper-large", "whisper-medium", "whisper-small",
+        "whisper-base", "whisper-tiny"
+    ]
+    architectures = [
+        "WhisperModel", "WhisperForConditionalGeneration",
+        "WhisperForAudioClassification", "WhisperEncoder"
+    ]
+    
+    def get_layer_prefix(self, layer_idx: int, layer_type: str = "encoder") -> str:
+        """Get weight prefix for Whisper encoder layer."""
+        if layer_type == "decoder":
+            return f"model.decoder.layers.{layer_idx}."
+        else:
+            return f"model.encoder.layers.{layer_idx}."
+    
+    def create_layer(self, config: PretrainedConfig, layer_idx: int,
+                     layer_type: str = "encoder") -> nn.Module:
+        try:
+            if layer_type == "decoder":
+                from transformers.models.whisper.modeling_whisper import WhisperDecoderLayer
+                return WhisperDecoderLayer(config, layer_idx=layer_idx)
+            else:
+                from transformers.models.whisper.modeling_whisper import WhisperEncoderLayer
+                return WhisperEncoderLayer(config)
+        except ImportError as e:
+            raise LayerCreationError(layer_idx, self.family_id, e)
+    
+    def get_embedding_name(self) -> str:
+        return "model.encoder.embed_conv"
+    
+    def get_lm_head_name(self) -> str:
+        return "proj_out"
+    
+    def get_num_layers(self, config: PretrainedConfig, layer_type: str = "encoder") -> int:
+        """Get number of encoder or decoder layers."""
+        if layer_type == "decoder":
+            return getattr(config, "decoder_layers",
+                          getattr(config, "num_decoder_layers", 4))
+        else:
+            return getattr(config, "encoder_layers",
+                          getattr(config, "num_encoder_layers", 6))
+
+
+class AudioEncoderHandler(ArchitectureFamily):
+    """Handler for audio encoder architectures (wav2vec2, HuBERT, etc.)."""
+    
+    family_id = "audio_encoder"
+    family_name = "Audio Encoder Architectures"
+    model_types = [
+        "wav2vec2", "wav2vec2-conformer", "wavlm", "hubert",
+        "unispeech", "unispeech-sat", "data2vec-audio",
+        "wav2vec2-bert", "sew", "sew-d"
+    ]
+    architectures = [
+        "Wav2Vec2Model", "Wav2Vec2ForCTC", "Wav2Vec2ForSequenceClassification",
+        "WavLMModel", "WavLMForCTC", "WavLMForSequenceClassification",
+        "HubertModel", "HubertForCTC", "HubertForSequenceClassification",
+        "UniSpeechModel", "UniSpeechSatModel",
+        "Data2VecAudioModel", "Data2VecAudioForCTC",
+        "SEWModel", "SEWDModel",
+        "Wav2Vec2ConformerModel"
+    ]
+    
+    def _detect_subtype(self, config: PretrainedConfig) -> str:
+        """Detect audio encoder subtype from config."""
+        model_type = getattr(config, "model_type", "").lower()
+        architectures = getattr(config, "architectures", [])
+        
+        if "wavlm" in model_type or any("WavLM" in a for a in architectures):
+            return "wavlm"
+        elif "hubert" in model_type or any("Hubert" in a for a in architectures):
+            return "hubert"
+        elif "unispeech-sat" in model_type or any("UniSpeechSat" in a for a in architectures):
+            return "unispeech_sat"
+        elif "unispeech" in model_type or any("UniSpeech" in a for a in architectures):
+            return "unispeech"
+        elif "data2vec" in model_type or any("Data2VecAudio" in a for a in architectures):
+            return "data2vec"
+        elif "sew-d" in model_type or any("SEWD" in a for a in architectures):
+            return "sew_d"
+        elif "sew" in model_type or any("SEW" in a for a in architectures):
+            return "sew"
+        elif "wav2vec2-conformer" in model_type or any("Wav2Vec2Conformer" in a for a in architectures):
+            return "wav2vec2_conformer"
+        elif "wav2vec2" in model_type or any("Wav2Vec2" in a for a in architectures):
+            return "wav2vec2"
+        else:
+            return "wav2vec2"  # Default fallback
+    
+    def get_layer_prefix(self, layer_idx: int, layer_type: str = "encoder") -> str:
+        """Get weight prefix for audio encoder layer."""
+        return f"encoder.layers.{layer_idx}."
+    
+    def create_layer(self, config: PretrainedConfig, layer_idx: int,
+                     layer_type: str = "encoder") -> nn.Module:
+        subtype = self._detect_subtype(config)
+        
+        try:
+            if subtype == "wavlm":
+                from transformers.models.wavlm.modeling_wavlm import WavLMEncoderLayer
+                return WavLMEncoderLayer(config)
+            elif subtype == "hubert":
+                from transformers.models.hubert.modeling_hubert import HubertEncoderLayer
+                return HubertEncoderLayer(config)
+            elif subtype == "unispeech_sat":
+                from transformers.models.unispeech_sat.modeling_unispeech_sat import UniSpeechSatEncoderLayer
+                return UniSpeechSatEncoderLayer(config)
+            elif subtype == "unispeech":
+                from transformers.models.unispeech.modeling_unispeech import UniSpeechEncoderLayer
+                return UniSpeechEncoderLayer(config)
+            elif subtype == "data2vec":
+                from transformers.models.data2vec.modeling_data2vec_audio import Data2VecAudioEncoderLayer
+                return Data2VecAudioEncoderLayer(config)
+            elif subtype == "sew_d":
+                from transformers.models.sew_d.modeling_sew_d import SEWDEncoderLayer
+                return SEWDEncoderLayer(config)
+            elif subtype == "sew":
+                from transformers.models.sew.modeling_sew import SEWEncoderLayer
+                return SEWEncoderLayer(config)
+            elif subtype == "wav2vec2_conformer":
+                from transformers.models.wav2vec2_conformer.modeling_wav2vec2_conformer import Wav2Vec2ConformerEncoderLayer
+                return Wav2Vec2ConformerEncoderLayer(config)
+            else:  # wav2vec2 default
+                from transformers.models.wav2vec2.modeling_wav2vec2 import Wav2Vec2EncoderLayer
+                return Wav2Vec2EncoderLayer(config)
+        except ImportError as e:
+            raise LayerCreationError(layer_idx, self.family_id, e)
+    
+    def get_embedding_name(self) -> str:
+        return "encoder.pos_conv_embed"
+    
+    def get_lm_head_name(self) -> str:
+        """Audio encoders typically don't have LM heads."""
+        return None
+    
+    def is_encoder_only(self) -> bool:
+        """Audio encoders are encoder-only."""
+        return True
+
+
 class ArchitectureRegistry:
     """
     Registry for all supported architecture families.
@@ -748,6 +1093,12 @@ class ArchitectureRegistry:
             PhiFamilyHandler(),
             GemmaFamilyHandler(),
             BERTFamilyHandler(),  # Encoder-only architectures (BERT, RoBERTa, DeBERTa, etc.)
+            # Phase 3: Additional architecture handlers
+            CohereFamilyHandler(),  # Command, Command-R, Command-R+
+            CLIPFamilyHandler(),    # Vision encoder support
+            SAMFamilyHandler(),     # Segmentation models
+            WhisperFamilyHandler(), # Audio encoders
+            AudioEncoderHandler(),  # wav2vec2, HuBERT, WavLM, etc.
         ]
         
         for family in families:

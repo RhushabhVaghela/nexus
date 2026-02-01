@@ -1,0 +1,135 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "nexus.fullname" . }}-config
+  labels:
+    {{- include "nexus.labels" . | nindent 4 }}
+data:
+  # Application Configuration
+  NEXUS_LOG_LEVEL: {{ .Values.config.logLevel | quote }}
+  NEXUS_LOG_FORMAT: {{ .Values.config.logFormat | quote }}
+  
+  # API Configuration
+  NEXUS_API_HOST: {{ .Values.config.api.host | quote }}
+  NEXUS_API_PORT: {{ .Values.config.api.port | quote }}
+  NEXUS_API_WORKERS: {{ .Values.config.api.workers | quote }}
+  NEXUS_API_MAX_REQUESTS: {{ .Values.config.api.maxRequestsPerWorker | quote }}
+  NEXUS_API_TIMEOUT: {{ .Values.config.api.timeout | quote }}
+  
+  # Model Configuration
+  NEXUS_MODEL_CACHE_DIR: {{ .Values.config.model.cacheDir | quote }}
+  NEXUS_MODEL_MAX_SIZE: {{ .Values.config.model.maxModelSize | quote }}
+  NEXUS_MODEL_DEFAULT: {{ .Values.config.model.defaultModel | quote }}
+  NEXUS_MODEL_QUANTIZATION: {{ .Values.config.model.quantization | quote }}
+  
+  # Processing Configuration
+  NEXUS_PROCESSING_MAX_BATCH_SIZE: {{ .Values.config.processing.maxBatchSize | quote }}
+  NEXUS_PROCESSING_MAX_QUEUE_SIZE: {{ .Values.config.processing.maxQueueSize | quote }}
+  NEXUS_PROCESSING_WORKER_THREADS: {{ .Values.config.processing.workerThreads | quote }}
+  NEXUS_PROCESSING_ENABLE_GPU: {{ .Values.config.processing.enableGpu | quote }}
+  NEXUS_PROCESSING_GPU_MEMORY_FRACTION: {{ .Values.config.processing.gpuMemoryFraction | quote }}
+  
+  # Storage Configuration
+  NEXUS_STORAGE_TYPE: {{ .Values.config.storage.type | quote }}
+  NEXUS_STORAGE_BUCKET: {{ .Values.config.storage.bucket | quote }}
+  NEXUS_STORAGE_REGION: {{ .Values.config.storage.region | quote }}
+  {{- if .Values.config.storage.endpoint }}
+  NEXUS_STORAGE_ENDPOINT: {{ .Values.config.storage.endpoint | quote }}
+  {{- end }}
+  
+  # Feature Flags
+  NEXUS_FEATURE_MULTIMODAL: {{ .Values.config.features.enableMultimodal | quote }}
+  NEXUS_FEATURE_TRAINING: {{ .Values.config.features.enableTraining | quote }}
+  NEXUS_FEATURE_STREAMING: {{ .Values.config.features.enableStreaming | quote }}
+  NEXUS_FEATURE_CACHING: {{ .Values.config.features.enableCaching | quote }}
+  NEXUS_FEATURE_METRICS: {{ .Values.config.features.enableMetrics | quote }}
+  
+  # Database Configuration (read-only, secrets in env)
+  NEXUS_DATABASE_HOST: {{ include "nexus.postgresql.fullname" . | quote }}
+  NEXUS_DATABASE_PORT: "5432"
+  NEXUS_DATABASE_NAME: {{ .Values.postgresql.auth.database | quote }}
+  
+  # Redis Configuration
+  NEXUS_REDIS_HOST: {{ include "nexus.redis.fullname" . | quote }}
+  NEXUS_REDIS_PORT: "6379"
+  
+  # MinIO Configuration
+  {{- if .Values.minio.enabled }}
+  NEXUS_MINIO_ENDPOINT: {{ printf "http://%s:9000" (include "nexus.minio.fullname" .) | quote }}
+  NEXUS_MINIO_BUCKET: {{ .Values.config.storage.bucket | quote }}
+  {{- end }}
+
+  # Application Config Files
+  config.yaml: |
+    version: "2.0.0"
+    environment: {{ .Release.Namespace }}
+    
+    logging:
+      level: {{ .Values.config.logLevel }}
+      format: {{ .Values.config.logFormat }}
+      output: stdout
+    
+    server:
+      host: {{ .Values.config.api.host }}
+      port: {{ .Values.config.api.port }}
+      workers: {{ .Values.config.api.workers }}
+      max_requests: {{ .Values.config.api.maxRequestsPerWorker }}
+      timeout: {{ .Values.config.api.timeout }}
+      keepalive: 60
+      
+    models:
+      cache_dir: {{ .Values.config.model.cacheDir }}
+      max_cache_size: {{ .Values.config.model.maxModelSize }}
+      default_model: {{ .Values.config.model.defaultModel }}
+      quantization: {{ .Values.config.model.quantization }}
+      preload_on_startup: true
+      
+    processing:
+      max_batch_size: {{ .Values.config.processing.maxBatchSize }}
+      max_queue_size: {{ .Values.config.processing.maxQueueSize }}
+      worker_threads: {{ .Values.config.processing.workerThreads }}
+      enable_gpu: {{ .Values.config.processing.enableGpu }}
+      gpu_memory_fraction: {{ .Values.config.processing.gpuMemoryFraction }}
+      mixed_precision: true
+      
+    storage:
+      type: {{ .Values.config.storage.type }}
+      bucket: {{ .Values.config.storage.bucket }}
+      region: {{ .Values.config.storage.region }}
+      {{- if .Values.config.storage.endpoint }}
+      endpoint: {{ .Values.config.storage.endpoint }}
+      {{- end }}
+      
+    features:
+      multimodal: {{ .Values.config.features.enableMultimodal }}
+      training: {{ .Values.config.features.enableTraining }}
+      streaming: {{ .Values.config.features.enableStreaming }}
+      caching: {{ .Values.config.features.enableCaching }}
+      metrics: {{ .Values.config.features.enableMetrics }}
+      
+    database:
+      host: {{ include "nexus.postgresql.fullname" . }}
+      port: 5432
+      database: {{ .Values.postgresql.auth.database }}
+      pool_size: 20
+      max_overflow: 10
+      pool_timeout: 30
+      
+    cache:
+      type: redis
+      host: {{ include "nexus.redis.fullname" . }}
+      port: 6379
+      db: 0
+      default_ttl: 3600
+      
+    metrics:
+      enabled: {{ .Values.config.features.enableMetrics }}
+      port: 9090
+      path: /metrics
+      
+    security:
+      cors_origins:
+        - "*"
+      max_request_size: 536870912  # 512MB
+      rate_limit: 1000
+      rate_limit_window: 60

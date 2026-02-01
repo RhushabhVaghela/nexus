@@ -1,0 +1,413 @@
+# Production values for nexus
+# Override default values for production deployment
+
+# =============================================================================
+# Global Configuration
+# =============================================================================
+global:
+  imageRegistry: "ghcr.io/nexus-platform"
+  imagePullSecrets:
+    - nexus-registry-secret
+
+# =============================================================================
+# Nexus Application Configuration
+# =============================================================================
+replicaCount: 5
+
+image:
+  repository: nexus
+  pullPolicy: Always
+  tag: "v2.0.0"
+
+# =============================================================================
+# Pod Configuration
+# =============================================================================
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8000"
+  prometheus.io/path: "/metrics"
+  vault.hashicorp.com/agent-inject: "true"
+  vault.hashicorp.com/role: "nexus"
+  vault.hashicorp.com/agent-inject-secret-config: "secret/data/nexus"
+
+# =============================================================================
+# Service Configuration
+# =============================================================================
+service:
+  type: ClusterIP
+  port: 8000
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8000"
+
+# =============================================================================
+# Ingress Configuration
+# =============================================================================
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "2g"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-buffering: "on"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    external-dns.alpha.kubernetes.io/hostname: "api.nexus-platform.io"
+  hosts:
+    - host: api.nexus-platform.io
+      paths:
+        - path: /
+          pathType: Prefix
+        - path: /api
+          pathType: Prefix
+        - path: /health
+          pathType: Prefix
+        - path: /metrics
+          pathType: Prefix
+  tls:
+    - secretName: nexus-tls-prod
+      hosts:
+        - api.nexus-platform.io
+
+# =============================================================================
+# Resource Configuration - Production Grade
+# =============================================================================
+resources:
+  limits:
+    cpu: 8000m
+    memory: 32Gi
+    nvidia.com/gpu: 2
+  requests:
+    cpu: 4000m
+    memory: 16Gi
+    nvidia.com/gpu: 2
+
+# =============================================================================
+# Autoscaling Configuration - Production
+# =============================================================================
+autoscaling:
+  enabled: true
+  minReplicas: 5
+  maxReplicas: 50
+  targetCPUUtilizationPercentage: 60
+  targetMemoryUtilizationPercentage: 70
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 600
+      policies:
+        - type: Percent
+          value: 5
+          periodSeconds: 120
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 60
+        - type: Pods
+          value: 10
+          periodSeconds: 60
+      selectPolicy: Max
+
+# =============================================================================
+# Persistence Configuration - Production
+# =============================================================================
+persistence:
+  enabled: true
+  storageClass: "premium-rwo"
+  accessMode: ReadWriteOnce
+  size: 500Gi
+  annotations:
+    helm.sh/resource-policy: keep
+
+# =============================================================================
+# Configuration Management - Production
+# =============================================================================
+config:
+  logLevel: warn
+  logFormat: json
+  
+  api:
+    host: "0.0.0.0"
+    port: 8000
+    workers: 8
+    maxRequestsPerWorker: 5000
+    timeout: 600
+    
+  model:
+    cacheDir: "/data/models"
+    maxModelSize: "200Gi"
+    defaultModel: "unsloth/Meta-Llama-3.1-70B-Instruct"
+    quantization: "Q4_K_M"
+    
+  processing:
+    maxBatchSize: 64
+    maxQueueSize: 5000
+    workerThreads: 16
+    enableGpu: true
+    gpuMemoryFraction: 0.95
+    
+  storage:
+    type: "s3"
+    bucket: "nexus-production-data"
+    region: "us-east-1"
+    endpoint: ""
+    
+  features:
+    enableMultimodal: true
+    enableTraining: true
+    enableStreaming: true
+    enableCaching: true
+    enableMetrics: true
+
+# =============================================================================
+# Environment Variables - Production
+# =============================================================================
+env:
+  - name: PYTHONUNBUFFERED
+    value: "1"
+  - name: PYTHONDONTWRITEBYTECODE
+    value: "1"
+  - name: CUDA_VISIBLE_DEVICES
+    value: "0,1"
+  - name: TRANSFORMERS_CACHE
+    value: "/data/models"
+  - name: HF_HOME
+    value: "/data/models"
+  - name: OMP_NUM_THREADS
+    value: "8"
+  - name: MKL_NUM_THREADS
+    value: "8"
+  - name: TOKENIZERS_PARALLELISM
+    value: "false"
+
+# =============================================================================
+# Secrets - External Secret Management
+# =============================================================================
+secrets:
+  enabled: false
+  externalSecret:
+    enabled: true
+    secretStore:
+      name: vault-backend
+      kind: SecretStore
+    dataFrom:
+      - extract:
+          key: secret/data/nexus/production
+
+# =============================================================================
+# Probes - Production Tuning
+# =============================================================================
+livenessProbe:
+  httpGet:
+    path: /health/live
+    port: http
+  initialDelaySeconds: 120
+  periodSeconds: 20
+  timeoutSeconds: 10
+  failureThreshold: 5
+
+readinessProbe:
+  httpGet:
+    path: /health/ready
+    port: http
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 5
+
+startupProbe:
+  httpGet:
+    path: /health/startup
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 15
+  timeoutSeconds: 10
+  failureThreshold: 60
+
+# =============================================================================
+# Node Selection - GPU Nodes
+# =============================================================================
+nodeSelector:
+  node-type: gpu
+  gpu-type: nvidia-a100
+
+tolerations:
+  - key: nvidia.com/gpu
+    operator: Exists
+    effect: NoSchedule
+  - key: dedicated
+    operator: Equal
+    value: nexus
+    effect: NoSchedule
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: nvidia.com/gpu.product
+              operator: In
+              values:
+                - NVIDIA-A100-SXM4-40GB
+                - NVIDIA-A100-SXM4-80GB
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+            - key: app.kubernetes.io/name
+              operator: In
+              values:
+                - nexus
+        topologyKey: kubernetes.io/hostname
+
+# =============================================================================
+# Topology Spread Constraints
+# =============================================================================
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: nexus
+  - maxSkew: 2
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: nexus
+
+# =============================================================================
+# Monitoring - Production
+# =============================================================================
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 15s
+    scrapeTimeout: 10s
+    path: /metrics
+    labels:
+      release: prometheus
+  prometheusRule:
+    enabled: true
+    labels:
+      release: prometheus
+    rules:
+      - alert: NexusHighErrorRate
+        expr: |
+          (
+            sum(rate(nexus_requests_total{status=~"5.."}[5m]))
+            /
+            sum(rate(nexus_requests_total[5m]))
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Nexus high error rate detected"
+          description: "Error rate is above 5% for {{ $labels.instance }}"
+      
+      - alert: NexusHighLatency
+        expr: |
+          histogram_quantile(0.95, 
+            sum(rate(nexus_request_duration_seconds_bucket[5m])) by (le)
+          ) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Nexus high latency detected"
+          description: "95th percentile latency is above 5s"
+      
+      - alert: NexusPodCrashLooping
+        expr: |
+          rate(kube_pod_container_status_restarts_total[15m]) > 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Nexus pod is crash looping"
+          description: "Pod {{ $labels.pod }} is restarting frequently"
+
+# =============================================================================
+# Database Dependencies - Production
+# =============================================================================
+postgresql:
+  enabled: true
+  auth:
+    existingSecret: nexus-postgres-secret
+    secretKeys:
+      adminPasswordKey: postgres-password
+      userPasswordKey: password
+  primary:
+    persistence:
+      enabled: true
+      storageClass: "premium-rwo"
+      size: 500Gi
+    resources:
+      limits:
+        memory: 8Gi
+        cpu: 4000m
+      requests:
+        memory: 4Gi
+        cpu: 2000m
+    podAnnotations:
+      backup.velero.io/backup-volumes: data
+  volumePermissions:
+    enabled: true
+
+redis:
+  enabled: true
+  auth:
+    existingSecret: nexus-redis-secret
+    existingSecretPasswordKey: password
+  architecture: replication
+  replica:
+    replicaCount: 2
+  master:
+    persistence:
+      enabled: true
+      storageClass: "premium-rwo"
+      size: 100Gi
+    resources:
+      limits:
+        memory: 8Gi
+        cpu: 2000m
+      requests:
+        memory: 4Gi
+        cpu: 1000m
+  replica:
+    resources:
+      limits:
+        memory: 8Gi
+        cpu: 2000m
+      requests:
+        memory: 4Gi
+        cpu: 1000m
+
+minio:
+  enabled: true
+  auth:
+    existingSecret: nexus-minio-secret
+  persistence:
+    enabled: true
+    storageClass: "premium-rwo"
+    size: 2Ti
+  resources:
+    limits:
+      memory: 16Gi
+      cpu: 8000m
+    requests:
+      memory: 8Gi
+      cpu: 4000m
+  mode: distributed
+  statefulset:
+    replicaCount: 4

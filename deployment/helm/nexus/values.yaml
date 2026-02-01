@@ -1,0 +1,343 @@
+# Default values for nexus.
+# This is a YAML-formatted file.
+
+# =============================================================================
+# Global Configuration
+# =============================================================================
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+
+# =============================================================================
+# Nexus Application Configuration
+# =============================================================================
+replicaCount: 2
+
+image:
+  repository: nexus-platform/nexus
+  pullPolicy: IfNotPresent
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+# =============================================================================
+# Pod Configuration
+# =============================================================================
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+# =============================================================================
+# Service Configuration
+# =============================================================================
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+  annotations: {}
+
+# =============================================================================
+# Ingress Configuration
+# =============================================================================
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "500m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: nexus.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: nexus-tls
+      hosts:
+        - nexus.local
+
+# =============================================================================
+# Resource Configuration
+# =============================================================================
+resources:
+  limits:
+    cpu: 2000m
+    memory: 8Gi
+    nvidia.com/gpu: 1
+  requests:
+    cpu: 500m
+    memory: 2Gi
+
+# =============================================================================
+# Autoscaling Configuration
+# =============================================================================
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 10
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+        - type: Pods
+          value: 4
+          periodSeconds: 60
+      selectPolicy: Max
+
+# =============================================================================
+# Persistence Configuration
+# =============================================================================
+persistence:
+  enabled: true
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 100Gi
+  annotations: {}
+
+# =============================================================================
+# Configuration Management
+# =============================================================================
+config:
+  logLevel: info
+  logFormat: json
+  
+  # API Configuration
+  api:
+    host: "0.0.0.0"
+    port: 8000
+    workers: 4
+    maxRequestsPerWorker: 1000
+    timeout: 300
+    
+  # Model Configuration
+  model:
+    cacheDir: "/data/models"
+    maxModelSize: "50Gi"
+    defaultModel: "unsloth/Llama-3.2-1B-Instruct"
+    quantization: "Q4_K_M"
+    
+  # Processing Configuration
+  processing:
+    maxBatchSize: 32
+    maxQueueSize: 1000
+    workerThreads: 8
+    enableGpu: true
+    gpuMemoryFraction: 0.9
+    
+  # Storage Configuration
+  storage:
+    type: "s3"
+    bucket: "nexus-data"
+    region: "us-east-1"
+    endpoint: ""
+    
+  # Feature Flags
+  features:
+    enableMultimodal: true
+    enableTraining: true
+    enableStreaming: true
+    enableCaching: true
+    enableMetrics: true
+
+# =============================================================================
+# Environment Variables
+# =============================================================================
+env:
+  - name: PYTHONUNBUFFERED
+    value: "1"
+  - name: PYTHONDONTWRITEBYTECODE
+    value: "1"
+  - name: CUDA_VISIBLE_DEVICES
+    value: "0"
+  - name: TRANSFORMERS_CACHE
+    value: "/data/models"
+  - name: HF_HOME
+    value: "/data/models"
+
+# =============================================================================
+# Secrets
+# =============================================================================
+secrets:
+  enabled: true
+  data: {}
+  # AWS_ACCESS_KEY_ID: ""
+  # AWS_SECRET_ACCESS_KEY: ""
+  # HUGGINGFACE_TOKEN: ""
+  # DATABASE_URL: ""
+
+# =============================================================================
+# Probes
+# =============================================================================
+livenessProbe:
+  httpGet:
+    path: /health/live
+    port: http
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health/ready
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+startupProbe:
+  httpGet:
+    path: /health/startup
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 30
+
+# =============================================================================
+# Node Selection
+# =============================================================================
+nodeSelector: {}
+
+tolerations:
+  - key: nvidia.com/gpu
+    operator: Exists
+    effect: NoSchedule
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - nexus
+          topologyKey: kubernetes.io/hostname
+
+# =============================================================================
+# Topology Spread Constraints
+# =============================================================================
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: nexus
+
+# =============================================================================
+# Monitoring
+# =============================================================================
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 15s
+    scrapeTimeout: 10s
+    path: /metrics
+    labels: {}
+  prometheusRule:
+    enabled: true
+    labels: {}
+    rules: []
+
+# =============================================================================
+# Database Dependencies
+# =============================================================================
+postgresql:
+  enabled: true
+  auth:
+    username: nexus
+    password: nexus
+    database: nexus
+  primary:
+    persistence:
+      enabled: true
+      size: 50Gi
+    resources:
+      limits:
+        memory: 2Gi
+        cpu: 1000m
+      requests:
+        memory: 512Mi
+        cpu: 250m
+
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    password: nexus
+  master:
+    persistence:
+      enabled: true
+      size: 20Gi
+    resources:
+      limits:
+        memory: 2Gi
+        cpu: 1000m
+      requests:
+        memory: 256Mi
+        cpu: 100m
+
+minio:
+  enabled: false
+  auth:
+    rootUser: nexus
+    rootPassword: nexus123
+  persistence:
+    enabled: true
+    size: 500Gi
+  resources:
+    limits:
+      memory: 4Gi
+      cpu: 2000m
+    requests:
+      memory: 1Gi
+      cpu: 500m
+
+# =============================================================================
+# Prometheus Dependency
+# =============================================================================
+prometheus:
+  enabled: false

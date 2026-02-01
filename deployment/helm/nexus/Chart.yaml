@@ -1,0 +1,40 @@
+apiVersion: v2
+name: nexus
+version: 1.0.0
+appVersion: "2.0.0"
+description: Nexus - Advanced AI/ML Data Processing Platform
+type: application
+keywords:
+  - ai
+  - ml
+  - data-processing
+  - multimodal
+  - training
+home: https://github.com/nexus-platform/nexus
+sources:
+  - https://github.com/nexus-platform/nexus
+maintainers:
+  - name: Nexus Team
+    email: team@nexus-platform.io
+    url: https://nexus-platform.io
+dependencies:
+  - name: postgresql
+    version: "15.x.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+    alias: postgres
+  - name: redis
+    version: "19.x.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+  - name: minio
+    version: "14.x.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: minio.enabled
+  - name: prometheus
+    version: "25.x.x"
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: prometheus.enabled
+annotations:
+  category: AI/ML Platform
+  licenses: MIT
