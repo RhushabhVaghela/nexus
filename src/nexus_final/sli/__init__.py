@@ -1,83 +1,73 @@
 """
-Universal SLI (Sequential Layer Ingestion) Module
+Nexus SLI (Selective Layer Inference) Module
 
-This module provides universal support for 130+ model architectures
-in the Sequential Layer Ingestion pipeline.
-
-Supported Architecture Families:
-- Llama-based (Llama, Mistral, Mixtral, Qwen2, etc.)
-- GPT-based (GPT-2, GPT-J, GPT-NeoX, etc.)
-- ChatGLM-based (ChatGLM, GLM-4, etc.)
-- T5-based (T5, FLAN-T5, UL2, etc.)
-- BLOOM-based
-- OPT-based
-- Mamba/State Space Models
-- MoE Architectures (Mixtral, DeepSeek-MoE, etc.)
-- Phi-based
-- Gemma-based
-- Encoder-only (BERT, RoBERTa, etc.)
-
-Usage:
-    from src.nexus_final.sli import UniversalSLIIntegrator
-    
-    integrator = UniversalSLIIntegrator("mistralai/Mistral-7B-v0.1")
-    integrator.run_sli(dataset)
+Advanced Selective Layer Inference with caching, quantization,
+and I/O optimization for running large models on limited GPU memory.
 """
 
-from .architecture_registry import (
-    ArchitectureRegistry,
-    ArchitectureFamily,
-    LlamaFamilyHandler,
-    GPTFamilyHandler,
-    ChatGLMFamilyHandler,
-    T5FamilyHandler,
-    BLOOMFamilyHandler,
-    OPTFamilyHandler,
-    MambaFamilyHandler,
-    MoEFamilyHandler,
-    PhiFamilyHandler,
-    GemmaFamilyHandler,
-    QwenFamilyHandler,
+from .layer_cache import (
+    LayerCache,
+    LayerCacheManager,
+    get_layer_cache,
+    CacheEntry,
+    CacheStats,
 )
-from .layer_factory import UniversalLayerFactory
-from .weight_loader import UniversalWeightLoader
-from .moe_handler import MoEHandler, MoEConfig
-from .universal_sli_integrator import UniversalSLIIntegrator
-from .exceptions import (
-    UnsupportedArchitectureError,
-    WeightLoadingError,
-    LayerCreationError,
-    MoEConfigurationError,
+
+from .quantization import (
+    LayerQuantizer,
+    AdaptiveQuantizer,
+    QuantizationConfig,
+    QuantizationMode,
+    QuantizationRegistry,
+    quantize_layer,
+    dequantize_layer,
+    get_int8_config,
+    get_nf4_config,
+    get_fp4_config,
+    get_mixed_precision_config,
+)
+
+from .io_optimizer import (
+    IOOptimizer,
+    AsyncLayerPrefetcher,
+    ComputeIOOverlap,
+    SSDWearLeveling,
+    ParallelDownloader,
+    IOPriority,
+    IORequest,
+    IOStats,
+    get_io_optimizer,
 )
 
 __all__ = [
-    # Core classes
-    "UniversalSLIIntegrator",
-    "ArchitectureRegistry",
-    "ArchitectureFamily",
-    "UniversalLayerFactory",
-    "UniversalWeightLoader",
-    "MoEHandler",
-    "MoEConfig",
+    # Layer Cache
+    'LayerCache',
+    'LayerCacheManager',
+    'get_layer_cache',
+    'CacheEntry',
+    'CacheStats',
     
-    # Family handlers
-    "LlamaFamilyHandler",
-    "GPTFamilyHandler",
-    "ChatGLMFamilyHandler",
-    "T5FamilyHandler",
-    "BLOOMFamilyHandler",
-    "OPTFamilyHandler",
-    "MambaFamilyHandler",
-    "MoEFamilyHandler",
-    "PhiFamilyHandler",
-    "GemmaFamilyHandler",
-    "QwenFamilyHandler",
+    # Quantization
+    'LayerQuantizer',
+    'AdaptiveQuantizer',
+    'QuantizationConfig',
+    'QuantizationMode',
+    'QuantizationRegistry',
+    'quantize_layer',
+    'dequantize_layer',
+    'get_int8_config',
+    'get_nf4_config',
+    'get_fp4_config',
+    'get_mixed_precision_config',
     
-    # Exceptions
-    "UnsupportedArchitectureError",
-    "WeightLoadingError",
-    "LayerCreationError",
-    "MoEConfigurationError",
+    # I/O Optimization
+    'IOOptimizer',
+    'AsyncLayerPrefetcher',
+    'ComputeIOOverlap',
+    'SSDWearLeveling',
+    'ParallelDownloader',
+    'IOPriority',
+    'IORequest',
+    'IOStats',
+    'get_io_optimizer',
 ]
-
-__version__ = "1.0.0"
