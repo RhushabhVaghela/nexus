@@ -19,14 +19,14 @@ sys.path.insert(0, str(PROJECT_ROOT))
 import torch
 import torch.nn as nn
 
-from src.nexus_final.sli.layer_factory import UniversalLayerFactory
-from src.nexus_final.sli.architecture_registry import (
+from src.nexus.models.sli.layer_factory import UniversalLayerFactory
+from src.nexus.models.sli.architecture_registry import (
     ArchitectureRegistry,
     LlamaFamilyHandler,
     GPTFamilyHandler,
     T5FamilyHandler,
 )
-from src.nexus_final.sli.exceptions import LayerCreationError
+from src.nexus.models.sli.exceptions import LayerCreationError
 
 
 # =============================================================================

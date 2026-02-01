@@ -9,7 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.capability_registry import CapabilityRegistry
-from src.metrics_tracker import get_capability_datasets
+from src.nexus.utils.metrics_tracker import get_capability_datasets
 
 class TestRemotionIntegration:
     """Integration tests for Remotion capability (MOCKED)."""

@@ -15,7 +15,7 @@ from unittest.mock import Mock, MagicMock
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../..'))
 
-from src.nexus_final.auditor import DistillationReport
+from src.nexus.models.auditor import DistillationReport
 
 
 class TestHardVsSoftComparison:

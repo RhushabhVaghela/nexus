@@ -28,7 +28,7 @@ class TestVoiceConfig:
     
     def test_default_config(self):
         """Test default voice configuration."""
-        from src.streaming.tts import VoiceConfig
+        from src.nexus.streaming.tts import VoiceConfig
         config = VoiceConfig()
         
         assert config.voice_id == "default"
@@ -41,7 +41,7 @@ class TestVoiceConfig:
     
     def test_custom_config(self):
         """Test custom voice configuration."""
-        from src.streaming.tts import VoiceConfig
+        from src.nexus.streaming.tts import VoiceConfig
         config = VoiceConfig(
             voice_id="custom_voice",
             language="es",
@@ -66,7 +66,7 @@ class TestAudioOutput:
     
     def test_default_output(self):
         """Test default audio output."""
-        from src.streaming.tts import AudioOutput
+        from src.nexus.streaming.tts import AudioOutput
         audio_array = np.array([0.1, 0.2, 0.3])
         output = AudioOutput(audio_array=audio_array, sample_rate=24000)
         
@@ -84,8 +84,8 @@ class TestTTSEngine:
     @pytest.fixture
     def engine(self, tmp_path):
         """Fixture for TTSEngine instance."""
-        with patch('src.streaming.tts.COQUI_TTS_AVAILABLE', True):
-            from src.streaming.tts import TTSEngine
+        with patch('src.nexus.streaming.tts.COQUI_TTS_AVAILABLE', True):
+            from src.nexus.streaming.tts import TTSEngine
             return TTSEngine(
                 model_key="xtts_v2",
                 device="cpu",
@@ -113,36 +113,36 @@ class TestTTSEngine:
     
     def test_initialization_auto_device(self, tmp_path):
         """Test TTS engine with auto device selection."""
-        with patch('src.streaming.tts.COQUI_TTS_AVAILABLE', True), \
+        with patch('src.nexus.streaming.tts.COQUI_TTS_AVAILABLE', True), \
              patch('torch.cuda.is_available', return_value=True):
             
-            from src.streaming.tts import TTSEngine
+            from src.nexus.streaming.tts import TTSEngine
             engine = TTSEngine(cache_dir=str(tmp_path / "cache"))
             
             assert engine.device == "cuda"
     
     def test_initialization_cpu_fallback(self, tmp_path):
         """Test TTS engine falls back to CPU."""
-        with patch('src.streaming.tts.COQUI_TTS_AVAILABLE', True), \
+        with patch('src.nexus.streaming.tts.COQUI_TTS_AVAILABLE', True), \
              patch('torch.cuda.is_available', return_value=False):
             
-            from src.streaming.tts import TTSEngine
+            from src.nexus.streaming.tts import TTSEngine
             engine = TTSEngine(cache_dir=str(tmp_path / "cache"))
             
             assert engine.device == "cpu"
     
     def test_initialization_without_coqui(self, tmp_path):
         """Test TTS engine raises error when Coqui TTS not available."""
-        with patch('src.streaming.tts.COQUI_TTS_AVAILABLE', False):
-            from src.streaming.tts import TTSEngine
+        with patch('src.nexus.streaming.tts.COQUI_TTS_AVAILABLE', False):
+            from src.nexus.streaming.tts import TTSEngine
             
             with pytest.raises(RuntimeError, match="Coqui TTS is required"):
                 TTSEngine(cache_dir=str(tmp_path / "cache"))
     
     def test_supported_models(self):
         """Test supported models registry."""
-        with patch('src.streaming.tts.COQUI_TTS_AVAILABLE', True):
-            from src.streaming.tts import TTSEngine
+        with patch('src.nexus.streaming.tts.COQUI_TTS_AVAILABLE', True):
+            from src.nexus.streaming.tts import TTSEngine
             
             assert "xtts_v2" in TTSEngine.SUPPORTED_MODELS
             assert "tacotron2" in TTSEngine.SUPPORTED_MODELS
@@ -154,7 +154,7 @@ class TestTTSEngine:
             assert "en" in xtts["languages"]
             assert "es" in xtts["languages"]
     
-    @patch('src.streaming.tts.TTS')
+    @patch('src.nexus.streaming.tts.TTS')
     def test_load_model_success(self, mock_tts_class, engine, mock_tts_model):
         """Test successful model loading."""
         mock_tts_class.return_value = mock_tts_model
@@ -167,7 +167,7 @@ class TestTTSEngine:
         )
         mock_tts_model.to.assert_called_once_with("cpu")
     
-    @patch('src.streaming.tts.TTS')
+    @patch('src.nexus.streaming.tts.TTS')
     def test_load_model_already_loaded(self, mock_tts_class, engine, mock_tts_model):
         """Test loading when model is already loaded."""
         mock_tts_class.return_value = mock_tts_model
@@ -178,7 +178,7 @@ class TestTTSEngine:
         # Should not call TTS again
         mock_tts_class.assert_not_called()
     
-    @patch('src.streaming.tts.TTS')
+    @patch('src.nexus.streaming.tts.TTS')
     def test_load_model_failure(self, mock_tts_class, engine):
         """Test handling of model loading failure."""
         mock_tts_class.side_effect = Exception("Download failed")
@@ -193,7 +193,7 @@ class TestTTSEngine:
         engine._model = mock_tts_model
         assert engine.is_model_loaded() is True
     
-    @patch('src.streaming.tts.TTS')
+    @patch('src.nexus.streaming.tts.TTS')
     def test_ensure_loaded(self, mock_tts_class, engine, mock_tts_model):
         """Test lazy loading."""
         mock_tts_class.return_value = mock_tts_model
@@ -202,13 +202,13 @@ class TestTTSEngine:
         
         assert engine._model is mock_tts_model
     
-    @patch('src.streaming.tts.TTS')
+    @patch('src.nexus.streaming.tts.TTS')
     def test_synthesize_standard(self, mock_tts_class, engine, mock_tts_model):
         """Test standard synthesis without voice cloning."""
         mock_tts_class.return_value = mock_tts_model
         engine._model = mock_tts_model
         
-        from src.streaming.tts import VoiceConfig
+        from src.nexus.streaming.tts import VoiceConfig
         config = VoiceConfig(language="en")
         
         output = engine.synthesize("Hello world", config=config)
@@ -218,7 +218,7 @@ class TestTTSEngine:
         assert output.text_hash != ""
         assert output.voice_id == "default"
     
-    @patch('src.streaming.tts.TTS')
+    @patch('src.nexus.streaming.tts.TTS')
     def test_synthesize_with_cloning(self, mock_tts_class, engine, mock_tts_model, tmp_path):
         """Test synthesis with voice cloning."""
         mock_tts_class.return_value = mock_tts_model
@@ -228,7 +228,7 @@ class TestTTSEngine:
         speaker_path = tmp_path / "speaker.wav"
         speaker_path.write_bytes(b"fake audio data")
         
-        from src.streaming.tts import VoiceConfig
+        from src.nexus.streaming.tts import VoiceConfig
         config = VoiceConfig(language="en", speaker_wav=str(speaker_path))
         
         output = engine.synthesize("Hello world", config=config)
@@ -239,13 +239,13 @@ class TestTTSEngine:
         call_kwargs = mock_tts_model.tts.call_args.kwargs
         assert "speaker_wav" in call_kwargs
     
-    @patch('src.streaming.tts.TTS')
+    @patch('src.nexus.streaming.tts.TTS')
     def test_synthesize_caching(self, mock_tts_class, engine, mock_tts_model):
         """Test synthesis caching."""
         mock_tts_class.return_value = mock_tts_model
         engine._model = mock_tts_model
         
-        from src.streaming.tts import VoiceConfig
+        from src.nexus.streaming.tts import VoiceConfig
         config = VoiceConfig()
         
         # First synthesis
@@ -259,14 +259,14 @@ class TestTTSEngine:
         assert engine.stats["cache_hits"] == 1
         assert engine.stats["cache_misses"] == 1
     
-    @patch('src.streaming.tts.TTS')
+    @patch('src.nexus.streaming.tts.TTS')
     def test_synthesize_cache_disabled(self, mock_tts_class, engine, mock_tts_model):
         """Test synthesis with cache disabled."""
         mock_tts_class.return_value = mock_tts_model
         engine._model = mock_tts_model
         engine.enable_cache = False
         
-        from src.streaming.tts import VoiceConfig
+        from src.nexus.streaming.tts import VoiceConfig
         config = VoiceConfig()
         
         # Two syntheses
@@ -276,13 +276,13 @@ class TestTTSEngine:
         # Model should be called twice
         assert mock_tts_model.tts.call_count == 2
     
-    @patch('src.streaming.tts.TTS')
+    @patch('src.nexus.streaming.tts.TTS')
     def test_synthesize_different_params_no_cache_match(self, mock_tts_class, engine, mock_tts_model):
         """Test that different parameters create different cache keys."""
         mock_tts_class.return_value = mock_tts_model
         engine._model = mock_tts_model
         
-        from src.streaming.tts import VoiceConfig
+        from src.nexus.streaming.tts import VoiceConfig
         
         # Synthesize with different languages
         config1 = VoiceConfig(language="en")
@@ -294,29 +294,29 @@ class TestTTSEngine:
         # Should be cache miss for second
         assert engine.stats["cache_misses"] == 2
     
-    @patch('src.streaming.tts.TTS')
+    @patch('src.nexus.streaming.tts.TTS')
     def test_synthesize_with_mp3_output(self, mock_tts_class, engine, mock_tts_model):
         """Test synthesis with MP3 output format."""
         mock_tts_class.return_value = mock_tts_model
         engine._model = mock_tts_model
         
-        with patch('src.streaming.tts.PYDUB_AVAILABLE', True), \
-             patch('src.streaming.tts.AudioSegment'):
+        with patch('src.nexus.streaming.tts.PYDUB_AVAILABLE', True), \
+             patch('src.nexus.streaming.tts.AudioSegment'):
             
-            from src.streaming.tts import VoiceConfig
+            from src.nexus.streaming.tts import VoiceConfig
             config = VoiceConfig()
             
             output = engine.synthesize("Hello", config=config, output_format="mp3")
             
             assert output.format == "mp3"
     
-    @patch('src.streaming.tts.TTS')
+    @patch('src.nexus.streaming.tts.TTS')
     def test_synthesize_stats_tracking(self, mock_tts_class, engine, mock_tts_model):
         """Test synthesis statistics tracking."""
         mock_tts_class.return_value = mock_tts_model
         engine._model = mock_tts_model
         
-        from src.streaming.tts import VoiceConfig
+        from src.nexus.streaming.tts import VoiceConfig
         config = VoiceConfig()
         
         engine.synthesize("Hello", config=config)
@@ -326,13 +326,13 @@ class TestTTSEngine:
     
     def test_synthesize_without_model(self, engine):
         """Test synthesis without loaded model."""
-        from src.streaming.tts import VoiceConfig
+        from src.nexus.streaming.tts import VoiceConfig
         config = VoiceConfig()
         
         with pytest.raises(RuntimeError, match="Synthesis failed"):
             engine.synthesize("Hello", config=config)
     
-    @patch('src.streaming.tts.TTS')
+    @patch('src.nexus.streaming.tts.TTS')
     def test_clone_voice(self, mock_tts_class, engine, mock_tts_model, tmp_path):
         """Test voice cloning registration."""
         mock_tts_class.return_value = mock_tts_model
@@ -354,7 +354,7 @@ class TestTTSEngine:
         with pytest.raises(FileNotFoundError):
             engine.clone_voice("/nonexistent/voice.wav", "MyVoice")
     
-    @patch('src.streaming.tts.TTS')
+    @patch('src.nexus.streaming.tts.TTS')
     def test_get_available_voices(self, mock_tts_class, engine, mock_tts_model):
         """Test getting available voices."""
         mock_tts_class.return_value = mock_tts_model
@@ -366,7 +366,7 @@ class TestTTSEngine:
         assert voices[0]["id"] == "default"
         assert voices[0]["type"] == "builtin"
     
-    @patch('src.streaming.tts.TTS')
+    @patch('src.nexus.streaming.tts.TTS')
     def test_get_available_voices_with_cloned(self, mock_tts_class, engine, mock_tts_model, tmp_path):
         """Test getting voices including cloned ones."""
         mock_tts_class.return_value = mock_tts_model
@@ -383,13 +383,13 @@ class TestTTSEngine:
         assert len(cloned_voices) == 1
         assert cloned_voices[0]["name"] == "TestVoice"
     
-    @patch('src.streaming.tts.TTS')
+    @patch('src.nexus.streaming.tts.TTS')
     def test_get_stats(self, mock_tts_class, engine, mock_tts_model):
         """Test getting engine statistics."""
         mock_tts_class.return_value = mock_tts_model
         engine._model = mock_tts_model
         
-        from src.streaming.tts import VoiceConfig
+        from src.nexus.streaming.tts import VoiceConfig
         config = VoiceConfig()
         
         engine.synthesize("Hello", config=config)
@@ -408,14 +408,14 @@ class TestTTSEngine:
         assert stats["synthesis_count"] == 0
         assert stats["avg_latency_ms"] == 0.0
     
-    @patch('src.streaming.tts.TTS')
+    @patch('src.nexus.streaming.tts.TTS')
     def test_clear_cache(self, mock_tts_class, engine, mock_tts_model, tmp_path):
         """Test clearing cache."""
         mock_tts_class.return_value = mock_tts_model
         engine._model = mock_tts_model
         
         # Add something to cache
-        from src.streaming.tts import VoiceConfig, AudioOutput
+        from src.nexus.streaming.tts import VoiceConfig, AudioOutput
         config = VoiceConfig()
         engine._cache["test"] = AudioOutput(
             audio_array=np.array([0.1, 0.2]),
@@ -445,7 +445,7 @@ class TestTTSStreamer:
         """Fixture for mocked TTSEngine."""
         mock = MagicMock()
         
-        from src.streaming.tts import AudioOutput
+        from src.nexus.streaming.tts import AudioOutput
         mock.synthesize.return_value = AudioOutput(
             audio_array=np.array([0.1, 0.2, 0.3]),
             sample_rate=24000,
@@ -457,7 +457,7 @@ class TestTTSStreamer:
     @pytest.fixture
     def streamer(self, mock_engine):
         """Fixture for TTSStreamer instance."""
-        from src.streaming.tts import TTSStreamer
+        from src.nexus.streaming.tts import TTSStreamer
         return TTSStreamer(
             model_name="TestModel",
             engine=mock_engine,
@@ -473,11 +473,11 @@ class TestTTSStreamer:
     
     def test_initialization_default_engine(self):
         """Test TTSStreamer with default engine."""
-        with patch('src.streaming.tts.TTSEngine') as mock_engine_class:
+        with patch('src.nexus.streaming.tts.TTSEngine') as mock_engine_class:
             mock_engine = MagicMock()
             mock_engine_class.return_value = mock_engine
             
-            from src.streaming.tts import TTSStreamer
+            from src.nexus.streaming.tts import TTSStreamer
             streamer = TTSStreamer()
             
             mock_engine_class.assert_called_once_with(model_key="xtts_v2")
@@ -532,7 +532,7 @@ class TestTTSStreamer:
         assert len(chunks) == 1
         assert chunks[0]["text"] == "Hello"
     
-    @patch('src.streaming.tts.sf')
+    @patch('src.nexus.streaming.tts.sf')
     def test_synthesize_to_file_wav(self, mock_sf, streamer, tmp_path):
         """Test synthesizing to WAV file."""
         output_path = tmp_path / "output.wav"
@@ -542,7 +542,7 @@ class TestTTSStreamer:
         assert result == str(output_path)
         assert Path(result).exists()
     
-    @patch('src.streaming.tts.sf')
+    @patch('src.nexus.streaming.tts.sf')
     def test_synthesize_to_file_mp3(self, mock_sf, streamer, tmp_path):
         """Test synthesizing to MP3 file."""
         output_path = tmp_path / "output.mp3"
@@ -552,7 +552,7 @@ class TestTTSStreamer:
         assert result == str(output_path)
         assert Path(result).suffix == ".mp3"
     
-    @patch('src.streaming.tts.sf')
+    @patch('src.nexus.streaming.tts.sf')
     def test_synthesize_to_file_invalid_format(self, mock_sf, streamer, tmp_path):
         """Test synthesizing with invalid format defaults to WAV."""
         output_path = tmp_path / "output.xyz"
@@ -577,15 +577,15 @@ class TestTTSEngineFormatConversion:
     @pytest.fixture
     def engine_with_model(self):
         """Engine with mocked model."""
-        with patch('src.streaming.tts.COQUI_TTS_AVAILABLE', True), \
-             patch('src.streaming.tts.TTS') as mock_tts_class:
+        with patch('src.nexus.streaming.tts.COQUI_TTS_AVAILABLE', True), \
+             patch('src.nexus.streaming.tts.TTS') as mock_tts_class:
             
             mock_model = MagicMock()
             mock_model.synthesizer.output_sample_rate = 24000
             mock_model.tts.return_value = np.array([0.1, 0.2, 0.3])
             mock_tts_class.return_value = mock_model
             
-            from src.streaming.tts import TTSEngine
+            from src.nexus.streaming.tts import TTSEngine
             engine = TTSEngine(device="cpu")
             engine._model = mock_model
             
@@ -598,8 +598,8 @@ class TestTTSEngineFormatConversion:
         
         assert np.array_equal(result, audio)
     
-    @patch('src.streaming.tts.PYDUB_AVAILABLE', True)
-    @patch('src.streaming.tts.AudioSegment')
+    @patch('src.nexus.streaming.tts.PYDUB_AVAILABLE', True)
+    @patch('src.nexus.streaming.tts.AudioSegment')
     def test_convert_format_mp3(self, mock_audio_segment, engine_with_model):
         """Test MP3 format conversion."""
         mock_segment = MagicMock()
@@ -614,7 +614,7 @@ class TestTTSEngineFormatConversion:
         
         assert result == b"mp3data"
     
-    @patch('src.streaming.tts.PYDUB_AVAILABLE', False)
+    @patch('src.nexus.streaming.tts.PYDUB_AVAILABLE', False)
     def test_convert_format_mp3_no_pydub(self, engine_with_model):
         """Test MP3 conversion falls back to WAV when pydub unavailable."""
         audio = np.array([0.1, 0.2, 0.3])
@@ -623,12 +623,12 @@ class TestTTSEngineFormatConversion:
         # Should return original array
         assert np.array_equal(result, audio)
     
-    @patch('src.streaming.tts.sf')
+    @patch('src.nexus.streaming.tts.sf')
     def test_save_to_disk_cache(self, mock_sf, engine_with_model, tmp_path):
         """Test saving to disk cache."""
         engine_with_model.cache_dir = tmp_path
         
-        from src.streaming.tts import AudioOutput
+        from src.nexus.streaming.tts import AudioOutput
         output = AudioOutput(
             audio_array=np.array([0.1, 0.2, 0.3]),
             sample_rate=24000
@@ -643,33 +643,33 @@ class TestTTSEngineFormatConversion:
 class TestFactoryFunctions:
     """Tests for factory functions."""
     
-    @patch('src.streaming.tts.COQUI_TTS_AVAILABLE', True)
-    @patch('src.streaming.tts.TTS')
+    @patch('src.nexus.streaming.tts.COQUI_TTS_AVAILABLE', True)
+    @patch('src.nexus.streaming.tts.TTS')
     def test_create_tts_engine(self, mock_tts_class):
         """Test create_tts_engine factory."""
-        from src.streaming.tts import create_tts_engine
+        from src.nexus.streaming.tts import create_tts_engine
         
         engine = create_tts_engine(model="xtts_v2", device="cpu")
         
         assert engine.model_key == "xtts_v2"
         assert engine.device == "cpu"
     
-    @patch('src.streaming.tts.COQUI_TTS_AVAILABLE', True)
-    @patch('src.streaming.tts.TTS')
+    @patch('src.nexus.streaming.tts.COQUI_TTS_AVAILABLE', True)
+    @patch('src.nexus.streaming.tts.TTS')
     def test_create_streamer(self, mock_tts_class):
         """Test create_streamer factory."""
-        from src.streaming.tts import create_streamer, TTSEngine
+        from src.nexus.streaming.tts import create_streamer, TTSEngine
         
         mock_engine = MagicMock()
         streamer = create_streamer(engine=mock_engine)
         
         assert streamer.engine == mock_engine
     
-    @patch('src.streaming.tts.COQUI_TTS_AVAILABLE', True)
-    @patch('src.streaming.tts.TTS')
+    @patch('src.nexus.streaming.tts.COQUI_TTS_AVAILABLE', True)
+    @patch('src.nexus.streaming.tts.TTS')
     def test_create_streamer_default(self, mock_tts_class):
         """Test create_streamer with default engine."""
-        from src.streaming.tts import create_streamer
+        from src.nexus.streaming.tts import create_streamer
         
         streamer = create_streamer()
         

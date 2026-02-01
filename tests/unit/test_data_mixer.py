@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch, mock_open
 
-from src.utils.data_mixer import normalize_to_messages, mix_datasets, split_and_save
+from src.nexus.utils.data_mixer import normalize_to_messages, mix_datasets, split_and_save
 
 class TestDataMixer:
     
@@ -76,7 +76,7 @@ class TestDataMixer:
 
     def test_split_and_save(self):
         samples = [{"id": i} for i in range(100)]
-        with patch("src.utils.data_mixer.Path.mkdir"), \
+        with patch("src.nexus.utils.data_mixer.Path.mkdir"), \
              patch("builtins.open", mock_open()) as mock_file:
             
             splits = split_and_save(samples, "output", train_ratio=0.8, val_ratio=0.1)

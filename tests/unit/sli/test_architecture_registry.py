@@ -21,7 +21,7 @@ from unittest.mock import MagicMock, patch, PropertyMock
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.nexus_final.sli.architecture_registry import (
+from src.nexus.models.sli.architecture_registry import (
     ArchitectureRegistry,
     ArchitectureFamily,
     LlamaFamilyHandler,
@@ -37,7 +37,7 @@ from src.nexus_final.sli.architecture_registry import (
     GemmaFamilyHandler,
     get_registry,
 )
-from src.nexus_final.sli.exceptions import UnsupportedArchitectureError, LayerCreationError
+from src.nexus.models.sli.exceptions import UnsupportedArchitectureError, LayerCreationError
 
 
 # =============================================================================

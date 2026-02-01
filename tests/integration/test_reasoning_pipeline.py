@@ -8,9 +8,9 @@ from unittest.mock import patch, MagicMock
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.stages.reasoning_sft import main as sft_main
-from src.stages.reasoning_grpo import main as grpo_main
-from src.stages.agent_finetune import main as agent_main
+from src.nexus.training.stages.reasoning_sft import main as sft_main
+from src.nexus.training.stages.reasoning_grpo import main as grpo_main
+from src.nexus.training.stages.agent_finetune import main as agent_main
 
 # Real Model Path
 REAL_MODEL_PATH = "/mnt/e/data/models/Qwen2.5-0.5B"
@@ -65,7 +65,7 @@ def mock_agent_args(clean_output, fake_model_path):
 # We STILL patch UniversalDatasetManager to avoid needing massive datasets
 # But we let Model and Trainer be REAL (now mocked).
 
-@patch("src.stages.reasoning_sft.UniversalDatasetManager")
+@patch("src.nexus.training.stages.reasoning_sft.UniversalDatasetManager")
 @patch("transformers.AutoModelForCausalLM.from_pretrained")
 @patch("transformers.AutoTokenizer.from_pretrained")
 def test_sft_pipeline_real_model(mock_tokenizer, mock_model_load, mock_manager_cls, mock_sft_args):
@@ -87,7 +87,7 @@ def test_sft_pipeline_real_model(mock_tokenizer, mock_model_load, mock_manager_c
     
     with patch.object(sys, 'argv', mock_sft_args):
         # Patch the Trainer class itself to avoid running ANY real training code
-        with patch("src.stages.reasoning_sft.ReasoningSFTTrainer") as mock_trainer_cls:
+        with patch("src.nexus.training.stages.reasoning_sft.ReasoningSFTTrainer") as mock_trainer_cls:
              mock_trainer = mock_trainer_cls.return_value
              sft_main()
              # Verify it was initialized with config
@@ -99,7 +99,7 @@ def test_sft_pipeline_real_model(mock_tokenizer, mock_model_load, mock_manager_c
     assert True
 
 
-@patch("src.stages.reasoning_grpo.UniversalDatasetManager")
+@patch("src.nexus.training.stages.reasoning_grpo.UniversalDatasetManager")
 @patch("transformers.AutoModelForCausalLM.from_pretrained")
 @patch("transformers.AutoTokenizer.from_pretrained")
 def test_grpo_pipeline_real_model(mock_tokenizer, mock_model_load, mock_manager_cls, mock_grpo_args):
@@ -109,7 +109,7 @@ def test_grpo_pipeline_real_model(mock_tokenizer, mock_model_load, mock_manager_
     mock_manager.get_unified_train_dataset.return_value = [{"question": "q", "answer": "a"}] * 4
     
     with patch.object(sys, 'argv', mock_grpo_args):
-         with patch("src.stages.reasoning_grpo.GRPOTrainer") as mock_trainer_cls:
+         with patch("src.nexus.training.stages.reasoning_grpo.GRPOTrainer") as mock_trainer_cls:
              mock_trainer = mock_trainer_cls.return_value
              grpo_main()
              assert mock_trainer_cls.call_count == 1
@@ -118,7 +118,7 @@ def test_grpo_pipeline_real_model(mock_tokenizer, mock_model_load, mock_manager_
     assert True
 
 
-@patch("src.stages.agent_finetune.UniversalDatasetManager")
+@patch("src.nexus.training.stages.agent_finetune.UniversalDatasetManager")
 @patch("transformers.AutoModelForCausalLM.from_pretrained")
 @patch("transformers.AutoTokenizer.from_pretrained")
 def test_agent_pipeline_real_model(mock_tokenizer, mock_model_load, mock_manager_cls, mock_agent_args):
@@ -128,7 +128,7 @@ def test_agent_pipeline_real_model(mock_tokenizer, mock_model_load, mock_manager
     mock_manager.get_unified_train_dataset.return_value = [{"messages": [{"role": "user", "content": "Help me with coding"}]}] * 4
     
     with patch.object(sys, 'argv', mock_agent_args):
-        with patch("src.stages.agent_finetune.AgentFinetuner") as mock_trainer_cls:
+        with patch("src.nexus.training.stages.agent_finetune.AgentFinetuner") as mock_trainer_cls:
             mock_trainer = mock_trainer_cls.return_value
             agent_main()
             assert mock_trainer_cls.call_count == 1

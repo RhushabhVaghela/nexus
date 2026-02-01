@@ -22,14 +22,14 @@ class TestTrainingMethodConfig:
     
     def test_import_training_methods(self):
         """Verify training_methods module imports correctly."""
-        from src.training_methods import TrainingMethod, get_training_config, get_all_methods
+        from src.nexus.training.methods import TrainingMethod, get_training_config, get_all_methods
         assert TrainingMethod is not None
         assert callable(get_training_config)
         assert callable(get_all_methods)
     
     def test_all_methods_available(self):
         """Verify all 10 training methods are defined."""
-        from src.training_methods import get_all_methods
+        from src.nexus.training.methods import get_all_methods
         methods = get_all_methods()
         
         expected = ['sft', 'lora', 'qlora', 'dora', 'dpo', 'grpo', 'orpo', 'ppo', 'distillation', 'cpt']
@@ -37,7 +37,7 @@ class TestTrainingMethodConfig:
     
     def test_get_training_config_sft(self):
         """Test SFT config retrieval."""
-        from src.training_methods import TrainingMethod, get_training_config
+        from src.nexus.training.methods import TrainingMethod, get_training_config
         config = get_training_config(TrainingMethod.SFT)
         
         assert config.method == TrainingMethod.SFT
@@ -46,7 +46,7 @@ class TestTrainingMethodConfig:
     
     def test_get_training_config_lora(self):
         """Test LoRA config retrieval."""
-        from src.training_methods import TrainingMethod, get_training_config
+        from src.nexus.training.methods import TrainingMethod, get_training_config
         config = get_training_config(TrainingMethod.LORA)
         
         assert config.use_peft == True
@@ -55,7 +55,7 @@ class TestTrainingMethodConfig:
     
     def test_get_training_config_qlora(self):
         """Test QLoRA config with quantization."""
-        from src.training_methods import TrainingMethod, get_training_config
+        from src.nexus.training.methods import TrainingMethod, get_training_config
         config = get_training_config(TrainingMethod.QLORA)
         
         assert config.use_peft == True
@@ -65,7 +65,7 @@ class TestTrainingMethodConfig:
     
     def test_get_training_config_dpo(self):
         """Test DPO config with preference settings."""
-        from src.training_methods import TrainingMethod, get_training_config
+        from src.nexus.training.methods import TrainingMethod, get_training_config
         config = get_training_config(TrainingMethod.DPO)
         
         assert config.use_preference_data == True
@@ -73,7 +73,7 @@ class TestTrainingMethodConfig:
     
     def test_get_training_config_grpo(self):
         """Test GRPO config (DeepSeek method)."""
-        from src.training_methods import TrainingMethod, get_training_config
+        from src.nexus.training.methods import TrainingMethod, get_training_config
         config = get_training_config(TrainingMethod.GRPO)
         
         assert config.use_preference_data == True
@@ -81,7 +81,7 @@ class TestTrainingMethodConfig:
     
     def test_get_training_config_distillation(self):
         """Test distillation config."""
-        from src.training_methods import TrainingMethod, get_training_config
+        from src.nexus.training.methods import TrainingMethod, get_training_config
         config = get_training_config(TrainingMethod.DISTILLATION)
         
         assert config.use_distillation == True
@@ -90,7 +90,7 @@ class TestTrainingMethodConfig:
     
     def test_parse_training_method_valid(self):
         """Test parsing valid method strings."""
-        from src.training_methods import parse_training_method, TrainingMethod
+        from src.nexus.training.methods import parse_training_method, TrainingMethod
         
         assert parse_training_method("sft") == TrainingMethod.SFT
         assert parse_training_method("QLORA") == TrainingMethod.QLORA
@@ -98,14 +98,14 @@ class TestTrainingMethodConfig:
     
     def test_parse_training_method_invalid(self):
         """Test parsing invalid method raises error."""
-        from src.training_methods import parse_training_method
+        from src.nexus.training.methods import parse_training_method
         
         with pytest.raises(ValueError, match="Unknown training method"):
             parse_training_method("invalid_method")
     
     def test_config_to_dict(self):
         """Test config serialization."""
-        from src.training_methods import TrainingMethod, get_training_config
+        from src.nexus.training.methods import TrainingMethod, get_training_config
         config = get_training_config(TrainingMethod.QLORA)
         config_dict = config.to_dict()
         

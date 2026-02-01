@@ -1,9 +1,9 @@
 import pytest
 import os
 import torch
-from src.nexus_final.distill import NexusTrainer
-from src.nexus_final.distill_knowledge import KnowledgeDistiller
-from src.nexus_final.loss_functions import ActivationAnchoringLoss
+from src.nexus.models.distill import NexusTrainer
+from src.nexus.models.distill_knowledge import KnowledgeDistiller
+from src.nexus.models.loss_functions import ActivationAnchoringLoss
 
 @pytest.fixture
 def trainer_setup(tmp_path):
@@ -105,15 +105,15 @@ def test_activation_anchoring_loss():
 def test_smart_model_loading_strategies(tmp_path):
     # We need to mock KnowledgeDistiller dependencies to test __init__ logic
     from unittest.mock import MagicMock, patch
-    from src.nexus_final.distill_knowledge import KnowledgeDistiller
+    from src.nexus.models.distill_knowledge import KnowledgeDistiller
     
     tower_mock = MagicMock()
 
     
     # CASE 1: Omni Model Detection
-    with patch("src.nexus_final.distill_knowledge.AutoConfig.from_pretrained") as mock_conf, \
+    with patch("src.nexus.models.distill_knowledge.AutoConfig.from_pretrained") as mock_conf, \
          patch("transformers.Qwen2ForCausalLM.from_pretrained") as mock_qwen, \
-         patch("src.nexus_final.distill_knowledge.AutoModel.from_pretrained") as mock_auto:
+         patch("src.nexus.models.distill_knowledge.AutoModel.from_pretrained") as mock_auto:
         
         # Setup specific config response
         mock_conf.return_value.model_type = "qwen2_5_omni"
@@ -127,9 +127,9 @@ def test_smart_model_loading_strategies(tmp_path):
         print("Omni Smart Load: PASSED")
 
     # CASE 2: Standard Model Fallback
-    with patch("src.nexus_final.distill_knowledge.AutoConfig.from_pretrained") as mock_conf, \
+    with patch("src.nexus.models.distill_knowledge.AutoConfig.from_pretrained") as mock_conf, \
          patch("transformers.Qwen2ForCausalLM.from_pretrained") as mock_qwen, \
-         patch("src.nexus_final.distill_knowledge.AutoModel.from_pretrained") as mock_auto:
+         patch("src.nexus.models.distill_knowledge.AutoModel.from_pretrained") as mock_auto:
         
         mock_conf.return_value.model_type = "llama"
 

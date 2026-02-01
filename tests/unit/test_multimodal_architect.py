@@ -26,7 +26,7 @@ class TestNeuralArchitect:
     @pytest.fixture
     def architect(self, tmp_path):
         """Fixture for NeuralArchitect instance."""
-        from src.nexus_final.architect import NeuralArchitect
+        from src.nexus.models.architect import NeuralArchitect
         return NeuralArchitect(output_dir=str(tmp_path / "architect_output"))
     
     @pytest.fixture
@@ -142,7 +142,7 @@ class TestNexusBridge:
     @pytest.fixture
     def bridge(self):
         """Fixture for NexusBridge instance."""
-        from src.nexus_final.architect import NexusBridge
+        from src.nexus.models.architect import NexusBridge
         return NexusBridge(in_features=1024, out_features=512)
     
     def test_initialization(self, bridge):
@@ -199,11 +199,11 @@ class TestNexusStudentMultimodal:
     @pytest.fixture
     def student(self, mock_base_model, mock_alignment):
         """Fixture for NexusStudent with mocked dependencies."""
-        with patch('src.nexus_final.architect.AutoModelForCausalLM') as mock_model_class, \
-             patch('src.nexus_final.architect.AutoTokenizer') as mock_tokenizer_class, \
-             patch('src.nexus_final.architect.get_peft_model') as mock_get_peft, \
-             patch('src.nexus_final.architect.LoraConfig'), \
-             patch('src.nexus_final.architect.CrossModalAlignment', mock_alignment):
+        with patch('src.nexus.models.architect.AutoModelForCausalLM') as mock_model_class, \
+             patch('src.nexus.models.architect.AutoTokenizer') as mock_tokenizer_class, \
+             patch('src.nexus.models.architect.get_peft_model') as mock_get_peft, \
+             patch('src.nexus.models.architect.LoraConfig'), \
+             patch('src.nexus.models.architect.CrossModalAlignment', mock_alignment):
             
             mock_base, mock_peft = mock_base_model
             mock_model_class.from_pretrained.return_value = mock_base
@@ -214,7 +214,7 @@ class TestNexusStudentMultimodal:
             mock_tokenizer.eos_token = "[EOS]"
             mock_tokenizer_class.from_pretrained.return_value = mock_tokenizer
             
-            from src.nexus_final.architect import NexusStudent
+            from src.nexus.models.architect import NexusStudent
             student = NexusStudent(base_model_id="test-model")
             return student
     
@@ -434,15 +434,15 @@ class TestMultimodalEmbeddingInjectionEdgeCases:
     @pytest.fixture
     def student_with_mocks(self):
         """Create student with comprehensive mocking."""
-        with patch('src.nexus_final.architect.AutoModelForCausalLM'), \
-             patch('src.nexus_final.architect.AutoTokenizer'), \
-             patch('src.nexus_final.architect.get_peft_model'), \
-             patch('src.nexus_final.architect.LoraConfig'), \
-             patch('src.nexus_final.architect.CrossModalAlignment') as mock_align:
+        with patch('src.nexus.models.architect.AutoModelForCausalLM'), \
+             patch('src.nexus.models.architect.AutoTokenizer'), \
+             patch('src.nexus.models.architect.get_peft_model'), \
+             patch('src.nexus.models.architect.LoraConfig'), \
+             patch('src.nexus.models.architect.CrossModalAlignment') as mock_align:
             
             mock_align.return_value.return_value = torch.randn(2, 5, 512)
             
-            from src.nexus_final.architect import NexusStudent
+            from src.nexus.models.architect import NexusStudent
             student = NexusStudent()
             student.base_model = MagicMock()
             student.base_model.config.hidden_size = 512

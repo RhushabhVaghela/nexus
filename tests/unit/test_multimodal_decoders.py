@@ -2,7 +2,7 @@ import pytest
 import torch
 from unittest.mock import MagicMock, patch
 from pathlib import Path
-from src.multimodal.decoders import ImageDecoder, AudioDecoder, VideoDecoder, OmniDecoder, ContentDecoder
+from src.nexus.multimodal.decoders import ImageDecoder, AudioDecoder, VideoDecoder, OmniDecoder, ContentDecoder
 
 @pytest.fixture
 def mock_image(tmp_path):
@@ -116,7 +116,7 @@ def test_video_decoder_file_not_found():
     assert result["modality"] == "video"
 
 def test_video_decoder_success():
-    with patch("src.multimodal.decoders.Path.exists", return_value=True):
+    with patch("src.nexus.multimodal.decoders.Path.exists", return_value=True):
         decoder = VideoDecoder()
         result = decoder.decode("test.mp4")
         assert result["modality"] == "video"

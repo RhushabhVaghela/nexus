@@ -8,12 +8,12 @@ import sys
 import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-from src.benchmarks.benchmark_repetition import RepetitionBenchmark
+from src.nexus.benchmarks.benchmark_repetition import RepetitionBenchmark
 
 class TestRepetitionBenchmark:
     @pytest.fixture
     def repetition_benchmark(self):
-        with patch("src.benchmarks.benchmark_repetition.OmniMultimodalLM"):
+        with patch("src.nexus.benchmarks.benchmark_repetition.OmniMultimodalLM"):
             return RepetitionBenchmark("/fake/path", device="cpu")
 
     def test_gen_text_task(self, repetition_benchmark):
@@ -50,7 +50,7 @@ class TestRepetitionBenchmark:
         assert Path("repetition_benchmark_results.json").exists()
 
     def test_main_execution(self):
-        from src.benchmarks.benchmark_repetition import main
+        from src.nexus.benchmarks.benchmark_repetition import main
         with patch("sys.argv", ["bench.py", "--model-path", "/fake", "--iterations", "1"]), \
-             patch("src.benchmarks.benchmark_repetition.RepetitionBenchmark.run_suite"):
+             patch("src.nexus.benchmarks.benchmark_repetition.RepetitionBenchmark.run_suite"):
             main()

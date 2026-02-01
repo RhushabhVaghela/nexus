@@ -1,6 +1,6 @@
 
 import pytest
-from src.data.universal_manager import UniversalDatasetManager
+from src.nexus.data.universal_manager import UniversalDatasetManager
 
 # This test requires the reorganization to have run, OR it mocks appropriately.
 # Since we haven't run reorganization yet, we should use a mock root or skip if on real data not found.

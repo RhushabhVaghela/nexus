@@ -3,7 +3,7 @@ import torch
 import os
 import shutil
 import tempfile
-from src.nexus_final.architect import NeuralArchitect
+from src.nexus.models.architect import NeuralArchitect
 
 class TestNexusStudent(unittest.TestCase):
     def setUp(self):

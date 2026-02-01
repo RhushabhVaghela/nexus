@@ -116,12 +116,12 @@ class TestPipelineComponentsIntegration:
     
     def test_training_controller_integration(self, tmp_path):
         """Test training controller can be instantiated."""
-        from src.training_controller import (
+        from src.nexus.training.controller import (
             setup_signal_handlers,
             check_pause_state,
             check_and_cooldown,
         )
-        import src.training_controller as tc
+        import src.nexus.training.controller as tc
         
         # Verify the module works
         tc._paused = False

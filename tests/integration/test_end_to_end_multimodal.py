@@ -53,15 +53,15 @@ class TestMultimodalTrainingPipeline:
     @pytest.fixture
     def student_model(self, mock_multimodal_model, mock_alignment_module):
         """Create student model with all dependencies mocked."""
-        with patch('src.nexus_final.architect.AutoModelForCausalLM') as mock_model_class, \
-             patch('src.nexus_final.architect.AutoTokenizer'), \
-             patch('src.nexus_final.architect.get_peft_model'), \
-             patch('src.nexus_final.architect.LoraConfig'), \
-             patch('src.nexus_final.architect.CrossModalAlignment', mock_alignment_module):
+        with patch('src.nexus.models.architect.AutoModelForCausalLM') as mock_model_class, \
+             patch('src.nexus.models.architect.AutoTokenizer'), \
+             patch('src.nexus.models.architect.get_peft_model'), \
+             patch('src.nexus.models.architect.LoraConfig'), \
+             patch('src.nexus.models.architect.CrossModalAlignment', mock_alignment_module):
             
             mock_model_class.from_pretrained.return_value = mock_multimodal_model
             
-            from src.nexus_final.architect import NexusStudent
+            from src.nexus.models.architect import NexusStudent
             model = NexusStudent(base_model_id="test-model")
             return model
     
@@ -278,11 +278,11 @@ class TestMultimodalTrainingPipeline:
 class TestMultimodalWithVideoDecoder:
     """Integration tests combining multimodal model with video decoder."""
     
-    @patch('src.nexus_final.decoders.StableVideoDiffusionPipeline')
+    @patch('src.nexus.models.decoders.StableVideoDiffusionPipeline')
     def test_video_generation_to_understanding_pipeline(self, mock_pipeline_class):
         """Test pipeline from video generation to video understanding."""
-        from src.nexus_final.decoders import VideoDecoder
-        from src.nexus_final.architect import NexusStudent
+        from src.nexus.models.decoders import VideoDecoder
+        from src.nexus.models.architect import NexusStudent
         
         # Mock video decoder
         mock_pipeline = MagicMock()
@@ -366,13 +366,13 @@ class TestMultimodalExportImport:
     
     def test_model_save_load(self, tmp_path):
         """Test saving and loading multimodal model."""
-        with patch('src.nexus_final.architect.AutoModelForCausalLM'), \
-             patch('src.nexus_final.architect.AutoTokenizer'), \
-             patch('src.nexus_final.architect.get_peft_model'), \
-             patch('src.nexus_final.architect.LoraConfig'), \
-             patch('src.nexus_final.architect.CrossModalAlignment'):
+        with patch('src.nexus.models.architect.AutoModelForCausalLM'), \
+             patch('src.nexus.models.architect.AutoTokenizer'), \
+             patch('src.nexus.models.architect.get_peft_model'), \
+             patch('src.nexus.models.architect.LoraConfig'), \
+             patch('src.nexus.models.architect.CrossModalAlignment'):
             
-            from src.nexus_final.architect import NexusStudent
+            from src.nexus.models.architect import NexusStudent
             
             # Create model
             model = NexusStudent()

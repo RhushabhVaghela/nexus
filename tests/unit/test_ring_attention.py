@@ -11,7 +11,7 @@ import sys
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.reasoning.ring_attention import (
+from src.nexus.reasoning.ring_attention import (
     RingAttention, RingAttentionConfig, RingAttentionWrapper,
     RingCommunicator, create_ring_attention
 )

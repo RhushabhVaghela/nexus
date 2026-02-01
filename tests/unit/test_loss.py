@@ -1,7 +1,7 @@
 import unittest
 import torch
 import torch.nn as nn
-from src.nexus_final.loss_functions import ActivationAnchoringLoss
+from src.nexus.models.loss_functions import ActivationAnchoringLoss
 
 class TestNexusLoss(unittest.TestCase):
     def setUp(self):

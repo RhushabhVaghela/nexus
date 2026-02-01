@@ -3,10 +3,10 @@ import os
 import json
 import torch
 from pathlib import Path
-from src.utils.data_mixer import normalize_to_messages, mix_datasets
-from src.utils.diversity_enforcement import create_zipfian_weights, EntropyTracker, DiversityEnforcedGenerator
-from src.utils.hardware_optimizer import optimize_for_hardware
-from src.utils.quality_metrics import QualityMetrics, QualityScoringPipeline
+from src.nexus.utils.data_mixer import normalize_to_messages, mix_datasets
+from src.nexus.utils.diversity_enforcement import create_zipfian_weights, EntropyTracker, DiversityEnforcedGenerator
+from src.nexus.utils.hardware_optimizer import optimize_for_hardware
+from src.nexus.utils.quality_metrics import QualityMetrics, QualityScoringPipeline
 
 # --- Data Mixer Tests ---
 

@@ -22,12 +22,12 @@ class TestVisionEncoderIntegration:
     
     def test_vision_encoder_import(self):
         """Test VisionEncoder can be imported."""
-        from src.multimodal.model import VisionEncoder
+        from src.nexus.multimodal.model import VisionEncoder
         assert VisionEncoder is not None
     
     def test_vision_encoder_default_path(self):
         """Test VisionEncoder uses correct default path."""
-        from src.multimodal.model import VisionEncoder
+        from src.nexus.multimodal.model import VisionEncoder
         
         # Check default parameter
         import inspect
@@ -54,13 +54,13 @@ class TestVisionEncoderIntegration:
             from unittest.mock import patch
             
             with patch("pathlib.Path.exists", return_value=True), \
-                 patch("src.multimodal.model.AutoModel.from_pretrained") as mock_auto:
+                 patch("src.nexus.multimodal.model.AutoModel.from_pretrained") as mock_auto:
                 
                 mock_model = MagicMock()
                 mock_model.vision_model.return_value = MagicMock(last_hidden_state=torch.randn(1, 10, 1152))
                 mock_auto.return_value = mock_model
                 
-                from src.multimodal.model import VisionEncoder
+                from src.nexus.multimodal.model import VisionEncoder
                 encoder = VisionEncoder(
                     model_name=vision_encoder_path,
                     load_in_8bit=True,
@@ -70,7 +70,7 @@ class TestVisionEncoderIntegration:
                 assert hasattr(encoder, 'forward')
         else:
             # Real test
-            from src.multimodal.model import VisionEncoder
+            from src.nexus.multimodal.model import VisionEncoder
             
             encoder = VisionEncoder(
                 model_name=vision_encoder_path,
@@ -86,12 +86,12 @@ class TestAudioEncoderIntegration:
     
     def test_audio_encoder_import(self):
         """Test AudioEncoder can be imported."""
-        from src.multimodal.model import AudioEncoder
+        from src.nexus.multimodal.model import AudioEncoder
         assert AudioEncoder is not None
     
     def test_audio_encoder_default_path(self):
         """Test AudioEncoder uses correct default path."""
-        from src.multimodal.model import AudioEncoder
+        from src.nexus.multimodal.model import AudioEncoder
         
         import inspect
         sig = inspect.signature(AudioEncoder.__init__)
@@ -148,12 +148,12 @@ class TestPerceiverResampler:
     
     def test_resampler_import(self):
         """Test PerceiverResampler can be imported."""
-        from src.multimodal.model import PerceiverResampler
+        from src.nexus.multimodal.model import PerceiverResampler
         assert PerceiverResampler is not None
     
     def test_resampler_initialization(self):
         """Test resampler initializes correctly."""
-        from src.multimodal.model import PerceiverResampler
+        from src.nexus.multimodal.model import PerceiverResampler
         
         dim = 1024
         num_latents = 64
@@ -164,7 +164,7 @@ class TestPerceiverResampler:
     
     def test_resampler_reduces_sequence(self):
         """Test resampler reduces sequence length."""
-        from src.multimodal.model import PerceiverResampler
+        from src.nexus.multimodal.model import PerceiverResampler
         
         dim = 1024
         num_latents = 64
@@ -190,12 +190,12 @@ class TestModularMultimodalWrapper:
     
     def test_wrapper_import(self):
         """Test wrapper can be imported."""
-        from src.multimodal.model import ModularMultimodalWrapper
+        from src.nexus.multimodal.model import ModularMultimodalWrapper
         assert ModularMultimodalWrapper is not None
     
     def test_wrapper_default_paths(self):
         """Test wrapper uses correct default encoder paths."""
-        from src.multimodal.model import ModularMultimodalWrapper
+        from src.nexus.multimodal.model import ModularMultimodalWrapper
         
         import inspect
         sig = inspect.signature(ModularMultimodalWrapper.__init__)
@@ -214,27 +214,27 @@ class TestDecoderInterfaces:
     
     def test_image_decoder_import(self):
         """Test ImageDecoder can be imported."""
-        from src.multimodal.decoders import ImageDecoder
+        from src.nexus.multimodal.decoders import ImageDecoder
         assert ImageDecoder is not None
     
     def test_audio_decoder_import(self):
         """Test AudioDecoder can be imported."""
-        from src.multimodal.decoders import AudioDecoder
+        from src.nexus.multimodal.decoders import AudioDecoder
         assert AudioDecoder is not None
     
     def test_video_decoder_import(self):
         """Test VideoDecoder can be imported."""
-        from src.multimodal.decoders import VideoDecoder
+        from src.nexus.multimodal.decoders import VideoDecoder
         assert VideoDecoder is not None
     
     def test_omni_decoder_import(self):
         """Test OmniDecoder can be imported."""
-        from src.multimodal.decoders import OmniDecoder
+        from src.nexus.multimodal.decoders import OmniDecoder
         assert OmniDecoder is not None
     
     def test_image_decoder_decode(self):
         """Test ImageDecoder decode method."""
-        from src.multimodal.decoders import ImageDecoder
+        from src.nexus.multimodal.decoders import ImageDecoder
         
         decoder = ImageDecoder()
         result = decoder.decode("test.png")
@@ -245,7 +245,7 @@ class TestDecoderInterfaces:
     
     def test_audio_decoder_decode(self):
         """Test AudioDecoder decode method."""
-        from src.multimodal.decoders import AudioDecoder
+        from src.nexus.multimodal.decoders import AudioDecoder
         
         decoder = AudioDecoder()
         result = decoder.decode("test.mp3")
@@ -255,7 +255,7 @@ class TestDecoderInterfaces:
     
     def test_video_decoder_decode(self):
         """Test VideoDecoder decode method."""
-        from src.multimodal.decoders import VideoDecoder
+        from src.nexus.multimodal.decoders import VideoDecoder
         
         decoder = VideoDecoder()
         result = decoder.decode("test.mp4")
@@ -265,7 +265,7 @@ class TestDecoderInterfaces:
     
     def test_omni_decoder_routes_correctly(self):
         """Test OmniDecoder routes to correct sub-decoder."""
-        from src.multimodal.decoders import OmniDecoder
+        from src.nexus.multimodal.decoders import OmniDecoder
         
         decoder = OmniDecoder()
         

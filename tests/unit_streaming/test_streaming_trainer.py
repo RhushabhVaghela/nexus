@@ -52,25 +52,25 @@ class TestStreamingDatasetLoader:
     
     def test_import_streaming_loader(self):
         """Test that streaming loader imports correctly."""
-        from src.data.streaming_trainer import StreamingDatasetLoader, StreamingConfig
+        from src.nexus.data.streaming_trainer import StreamingDatasetLoader, StreamingConfig
         assert StreamingDatasetLoader is not None
         assert StreamingConfig is not None
     
     def test_init_with_single_path(self, sample_jsonl_file):
         """Test initialization with single path."""
-        from src.data.streaming_trainer import StreamingDatasetLoader
+        from src.nexus.data.streaming_trainer import StreamingDatasetLoader
         loader = StreamingDatasetLoader(sample_jsonl_file)
         assert len(loader.paths) == 1
     
     def test_init_with_multiple_paths(self, sample_jsonl_file, sample_gzip_file):
         """Test initialization with multiple paths."""
-        from src.data.streaming_trainer import StreamingDatasetLoader
+        from src.nexus.data.streaming_trainer import StreamingDatasetLoader
         loader = StreamingDatasetLoader([sample_jsonl_file, sample_gzip_file])
         assert len(loader.paths) == 2
     
     def test_stream_jsonl_file(self, sample_jsonl_file):
         """Test streaming from JSONL file."""
-        from src.data.streaming_trainer import StreamingDatasetLoader
+        from src.nexus.data.streaming_trainer import StreamingDatasetLoader
         loader = StreamingDatasetLoader(sample_jsonl_file)
         
         samples = list(loader._stream_jsonl_file(sample_jsonl_file))
@@ -79,7 +79,7 @@ class TestStreamingDatasetLoader:
     
     def test_stream_gzip_file(self, sample_gzip_file):
         """Test streaming from gzipped file."""
-        from src.data.streaming_trainer import StreamingDatasetLoader
+        from src.nexus.data.streaming_trainer import StreamingDatasetLoader
         loader = StreamingDatasetLoader(sample_gzip_file)
         
         samples = list(loader._stream_jsonl_file(sample_gzip_file))
@@ -88,7 +88,7 @@ class TestStreamingDatasetLoader:
     
     def test_stream_directory(self, sample_directory):
         """Test streaming from directory with multiple files."""
-        from src.data.streaming_trainer import StreamingDatasetLoader
+        from src.nexus.data.streaming_trainer import StreamingDatasetLoader
         loader = StreamingDatasetLoader(sample_directory)
         
         samples = list(loader._stream_directory(sample_directory))
@@ -96,7 +96,7 @@ class TestStreamingDatasetLoader:
     
     def test_get_streaming_dataset(self, sample_jsonl_file):
         """Test creating IterableDataset."""
-        from src.data.streaming_trainer import StreamingDatasetLoader, StreamingConfig
+        from src.nexus.data.streaming_trainer import StreamingDatasetLoader, StreamingConfig
         
         config = StreamingConfig(buffer_size=100)
         loader = StreamingDatasetLoader(sample_jsonl_file, config)
@@ -114,7 +114,7 @@ class TestStreamingDatasetLoader:
     
     def test_estimate_size(self, sample_jsonl_file, sample_gzip_file):
         """Test size estimation."""
-        from src.data.streaming_trainer import StreamingDatasetLoader
+        from src.nexus.data.streaming_trainer import StreamingDatasetLoader
         loader = StreamingDatasetLoader([sample_jsonl_file, sample_gzip_file])
         
         stats = loader.estimate_size()
@@ -124,7 +124,7 @@ class TestStreamingDatasetLoader:
     
     def test_max_samples_limit(self, sample_jsonl_file):
         """Test max_samples config."""
-        from src.data.streaming_trainer import StreamingDatasetLoader, StreamingConfig
+        from src.nexus.data.streaming_trainer import StreamingDatasetLoader, StreamingConfig
         
         config = StreamingConfig(max_samples=10)
         loader = StreamingDatasetLoader(sample_jsonl_file, config)
@@ -134,7 +134,7 @@ class TestStreamingDatasetLoader:
     
     def test_convenience_function(self, sample_jsonl_file):
         """Test load_streaming_datasets convenience function."""
-        from src.data.streaming_trainer import load_streaming_datasets
+        from src.nexus.data.streaming_trainer import load_streaming_datasets
         
         dataset = load_streaming_datasets(
             paths=[str(sample_jsonl_file)],
@@ -154,7 +154,7 @@ class TestStreamingIntegration:
     
     def test_multiple_datasets_interleaved(self, tmp_path):
         """Test interleaving multiple datasets."""
-        from src.data.streaming_trainer import StreamingDatasetLoader
+        from src.nexus.data.streaming_trainer import StreamingDatasetLoader
         
         # Create two distinct datasets
         ds1 = tmp_path / "ds1.jsonl"
@@ -186,7 +186,7 @@ class TestStreamingIntegration:
     def test_large_file_memory_efficiency(self, tmp_path):
         """Test that streaming doesn't load everything into memory."""
         import sys
-        from src.data.streaming_trainer import StreamingDatasetLoader
+        from src.nexus.data.streaming_trainer import StreamingDatasetLoader
         
         # Create a larger file
         file_path = tmp_path / "large.jsonl"
@@ -216,7 +216,7 @@ class TestStreamingWithTrainer:
     
     def test_streaming_with_sft_trainer(self, tmp_path, real_text_model, real_text_tokenizer):
         """Test streaming dataset with SFTTrainer."""
-        from src.data.streaming_trainer import StreamingDatasetLoader
+        from src.nexus.data.streaming_trainer import StreamingDatasetLoader
         
         try:
             from trl import SFTTrainer, SFTConfig
@@ -285,19 +285,19 @@ class TestChunkedSampleProcessor:
     
     def test_import_chunked_processor(self):
         """Test that ChunkedSampleProcessor imports correctly."""
-        from src.data.streaming_trainer import ChunkedSampleProcessor, ChunkConfig
+        from src.nexus.data.streaming_trainer import ChunkedSampleProcessor, ChunkConfig
         assert ChunkedSampleProcessor is not None
         assert ChunkConfig is not None
     
     def test_init_with_file(self, large_text_file):
         """Test initialization with file path."""
-        from src.data.streaming_trainer import ChunkedSampleProcessor
+        from src.nexus.data.streaming_trainer import ChunkedSampleProcessor
         processor = ChunkedSampleProcessor(large_text_file)
         assert processor.file_size > 0
     
     def test_get_chunk_count(self, large_text_file):
         """Test chunk count estimation."""
-        from src.data.streaming_trainer import ChunkedSampleProcessor, ChunkConfig
+        from src.nexus.data.streaming_trainer import ChunkedSampleProcessor, ChunkConfig
         
         config = ChunkConfig(chunk_size_mb=1)  # 1MB chunks
         processor = ChunkedSampleProcessor(large_text_file, config)
@@ -309,7 +309,7 @@ class TestChunkedSampleProcessor:
     
     def test_stream_text_chunks(self, large_text_file):
         """Test streaming text file in chunks."""
-        from src.data.streaming_trainer import ChunkedSampleProcessor, ChunkConfig
+        from src.nexus.data.streaming_trainer import ChunkedSampleProcessor, ChunkConfig
         
         config = ChunkConfig(chunk_size_mb=1)
         processor = ChunkedSampleProcessor(large_text_file, config)
@@ -327,7 +327,7 @@ class TestChunkedSampleProcessor:
     
     def test_max_chunks_limit(self, large_text_file):
         """Test max_chunks configuration."""
-        from src.data.streaming_trainer import ChunkedSampleProcessor, ChunkConfig
+        from src.nexus.data.streaming_trainer import ChunkedSampleProcessor, ChunkConfig
         
         config = ChunkConfig(chunk_size_mb=1, max_chunks=3)
         processor = ChunkedSampleProcessor(large_text_file, config)
@@ -337,7 +337,7 @@ class TestChunkedSampleProcessor:
     
     def test_chunk_overlap(self, large_text_file):
         """Test that chunks have proper overlap for context."""
-        from src.data.streaming_trainer import ChunkedSampleProcessor, ChunkConfig
+        from src.nexus.data.streaming_trainer import ChunkedSampleProcessor, ChunkConfig
         
         config = ChunkConfig(chunk_size_mb=1, overlap_mb=0)  # No overlap
         processor = ChunkedSampleProcessor(large_text_file, config)
@@ -351,7 +351,7 @@ class TestChunkedSampleProcessor:
     
     def test_auto_detect_file_type(self, sample_video_file, large_text_file):
         """Test auto-detection of file type for chunking."""
-        from src.data.streaming_trainer import ChunkedSampleProcessor
+        from src.nexus.data.streaming_trainer import ChunkedSampleProcessor
         
         # Text file should use text chunking
         text_processor = ChunkedSampleProcessor(large_text_file)
@@ -362,7 +362,7 @@ class TestChunkedSampleProcessor:
     
     def test_chunk_contains_data(self, large_text_file):
         """Test that chunks contain actual data."""
-        from src.data.streaming_trainer import ChunkedSampleProcessor, ChunkConfig
+        from src.nexus.data.streaming_trainer import ChunkedSampleProcessor, ChunkConfig
         
         config = ChunkConfig(chunk_size_mb=1)
         processor = ChunkedSampleProcessor(large_text_file, config)
@@ -379,7 +379,7 @@ class TestChunkedProcessorEdgeCases:
     
     def test_empty_file(self, tmp_path):
         """Test handling of empty file."""
-        from src.data.streaming_trainer import ChunkedSampleProcessor
+        from src.nexus.data.streaming_trainer import ChunkedSampleProcessor
         
         empty_file = tmp_path / "empty.txt"
         empty_file.touch()
@@ -390,7 +390,7 @@ class TestChunkedProcessorEdgeCases:
     
     def test_small_file_single_chunk(self, tmp_path):
         """Test that small file produces single chunk."""
-        from src.data.streaming_trainer import ChunkedSampleProcessor, ChunkConfig
+        from src.nexus.data.streaming_trainer import ChunkedSampleProcessor, ChunkConfig
         
         small_file = tmp_path / "small.txt"
         small_file.write_text("Hello, World!")
@@ -404,7 +404,7 @@ class TestChunkedProcessorEdgeCases:
     
     def test_unicode_content(self, tmp_path):
         """Test handling of unicode content."""
-        from src.data.streaming_trainer import ChunkedSampleProcessor
+        from src.nexus.data.streaming_trainer import ChunkedSampleProcessor
         
         unicode_file = tmp_path / "unicode.txt"
         unicode_file.write_text("Hello 世界 🌍 مرحبا" * 10000, encoding='utf-8')
@@ -421,7 +421,7 @@ class TestLoaderDelegation:
     
     def test_delegates_media_file(self, tmp_path):
         """Test delegation of .mp4 file."""
-        from src.data.streaming_trainer import StreamingDatasetLoader
+        from src.nexus.data.streaming_trainer import StreamingDatasetLoader
         
         # Create a mock mp4
         media_file = tmp_path / "test.mp4"
@@ -430,7 +430,7 @@ class TestLoaderDelegation:
         loader = StreamingDatasetLoader(media_file)
         
         # We access the internal generator to verify delegation
-        with patch('src.data.streaming_trainer.ChunkedSampleProcessor') as MockProcessor:
+        with patch('src.nexus.data.streaming_trainer.ChunkedSampleProcessor') as MockProcessor:
             MockProcessor.return_value.stream_chunks.return_value = iter([{'mock': 'chunk'}])
             
             # Consume one sample
@@ -446,7 +446,7 @@ class TestLoaderDelegation:
             
     def test_delegates_giant_file(self, tmp_path):
         """Test delegation of >1GB file."""
-        from src.data.streaming_trainer import StreamingDatasetLoader
+        from src.nexus.data.streaming_trainer import StreamingDatasetLoader
         
         giant_file = tmp_path / "giant.txt"
         giant_file.touch()
@@ -459,7 +459,7 @@ class TestLoaderDelegation:
             mock_stat_method.return_value.st_size = 2 * 1024**3 # 2GB
             mock_stat_method.return_value.st_mode = stat.S_IFREG | 0o644 # Regular file
             
-            with patch('src.data.streaming_trainer.ChunkedSampleProcessor') as MockProcessor:
+            with patch('src.nexus.data.streaming_trainer.ChunkedSampleProcessor') as MockProcessor:
                 MockProcessor.return_value.stream_chunks.return_value = iter([{'mock': 'chunk'}])
                 
                 gen = loader._stream_path(giant_file)

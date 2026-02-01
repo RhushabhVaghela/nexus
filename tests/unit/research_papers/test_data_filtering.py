@@ -16,7 +16,7 @@ from unittest.mock import Mock, MagicMock, patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../..'))
 
-from src.nexus_final.data_loader import MemorizationFilter, UniversalDataLoader
+from src.nexus.models.data_loader import MemorizationFilter, UniversalDataLoader
 
 
 class TestMemorizationFilterInitialization:

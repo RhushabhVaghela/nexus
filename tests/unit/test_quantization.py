@@ -17,7 +17,7 @@ import torch.nn as nn
 from unittest.mock import patch, MagicMock
 
 # Import the module under test
-from src.nexus_final.sli.quantization import (
+from src.nexus.models.sli.quantization import (
     QuantizationMode,
     QuantizationConfig,
     LayerQuantizer,
@@ -318,7 +318,7 @@ class TestLayerQuantizerGracefulDegradation:
 
         with patch.object(quantizer, '_check_dependencies'):
             # Force BITSANDBYTES_AVAILABLE to False for this test
-            with patch('src.nexus_final.sli.quantization.BITSANDBYTES_AVAILABLE', False):
+            with patch('src.nexus.models.sli.quantization.BITSANDBYTES_AVAILABLE', False):
                 layer = nn.Linear(100, 100)
                 result = quantizer._quantize_int8(layer)
 
@@ -330,7 +330,7 @@ class TestLayerQuantizerGracefulDegradation:
         config = QuantizationConfig(mode=QuantizationMode.NF4)
         quantizer = LayerQuantizer(config)
 
-        with patch('src.nexus_final.sli.quantization.BITSANDBYTES_AVAILABLE', False):
+        with patch('src.nexus.models.sli.quantization.BITSANDBYTES_AVAILABLE', False):
             layer = nn.Linear(100, 100)
             result = quantizer._quantize_4bit(layer)
 
@@ -342,7 +342,7 @@ class TestLayerQuantizerGracefulDegradation:
         config = QuantizationConfig(mode=QuantizationMode.INT8)
         quantizer = LayerQuantizer(config)
 
-        with patch('src.nexus_final.sli.quantization.BITSANDBYTES_AVAILABLE', False):
+        with patch('src.nexus.models.sli.quantization.BITSANDBYTES_AVAILABLE', False):
             with pytest.raises(ImportError) as exc_info:
                 quantizer._check_dependencies()
 
@@ -353,7 +353,7 @@ class TestLayerQuantizerGracefulDegradation:
         config = QuantizationConfig(mode=QuantizationMode.NF4)
         quantizer = LayerQuantizer(config)
 
-        with patch('src.nexus_final.sli.quantization.BITSANDBYTES_AVAILABLE', False):
+        with patch('src.nexus.models.sli.quantization.BITSANDBYTES_AVAILABLE', False):
             weight = torch.randn(100, 100)
             result = quantizer._quantize_to_nf4(weight)
 

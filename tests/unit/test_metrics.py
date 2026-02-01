@@ -18,7 +18,7 @@ import time
 import asyncio
 from unittest.mock import patch, MagicMock, Mock
 
-from src.utils.metrics import (
+from src.nexus.utils.metrics import (
     MetricType,
     MetricValue,
     LocalMetric,
@@ -210,7 +210,7 @@ class TestMetricsCollector:
 class TestGPUMetricsCollector:
     """Test GPUMetricsCollector class."""
     
-    @patch("src.utils.metrics.TORCH_AVAILABLE", False)
+    @patch("src.nexus.utils.metrics.TORCH_AVAILABLE", False)
     def test_update_no_torch(self):
         """Test update when torch is not available."""
         collector = MetricsCollector()
@@ -385,7 +385,7 @@ class TestSystemMetrics:
         # Should not raise
         sys_metrics.update()
     
-    @patch("src.utils.metrics.TORCH_AVAILABLE", False)
+    @patch("src.nexus.utils.metrics.TORCH_AVAILABLE", False)
     def test_update_no_psutil(self):
         """Test update when psutil is not available."""
         with patch.dict("sys.modules", {"psutil": None}):

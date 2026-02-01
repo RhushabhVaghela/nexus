@@ -9,7 +9,7 @@ import os
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.omni.sequential_pipeline import run_sequential_training
+from src.nexus.models.omni.sequential_pipeline import run_sequential_training
 
 class TestSequentialPipeline(unittest.TestCase):
     def setUp(self):

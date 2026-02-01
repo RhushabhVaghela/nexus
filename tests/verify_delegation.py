@@ -9,7 +9,7 @@ from unittest.mock import patch, MagicMock
 # Add project root to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.data.streaming_trainer import StreamingDatasetLoader
+from src.nexus.data.streaming_trainer import StreamingDatasetLoader
 
 class TestLoaderDelegation(unittest.TestCase):
     """Test that StreamingDatasetLoader delegates giant/media files correctly."""
@@ -30,7 +30,7 @@ class TestLoaderDelegation(unittest.TestCase):
         loader = StreamingDatasetLoader(media_file)
         
         # We access the internal generator to verify delegation
-        with patch('src.data.streaming_trainer.ChunkedSampleProcessor') as MockProcessor:
+        with patch('src.nexus.data.streaming_trainer.ChunkedSampleProcessor') as MockProcessor:
             MockProcessor.return_value.stream_chunks.return_value = iter([{'mock': 'chunk'}])
             
             # Consume one sample
@@ -59,7 +59,7 @@ class TestLoaderDelegation(unittest.TestCase):
             mock_stat_method.return_value.st_size = 2 * 1024**3 # 2GB
             mock_stat_method.return_value.st_mode = stat.S_IFREG | 0o644 # Regular file
             
-            with patch('src.data.streaming_trainer.ChunkedSampleProcessor') as MockProcessor:
+            with patch('src.nexus.data.streaming_trainer.ChunkedSampleProcessor') as MockProcessor:
                 MockProcessor.return_value.stream_chunks.return_value = iter([{'mock': 'chunk'}])
                 
                 gen = loader._stream_path(giant_file)

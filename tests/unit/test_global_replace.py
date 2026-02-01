@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from src.utils.global_replace import replace_in_files
+from src.nexus.utils.global_replace import replace_in_files
 
 def test_replace_in_files(tmp_path):
     # Create test files

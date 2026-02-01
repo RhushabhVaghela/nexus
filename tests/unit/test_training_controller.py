@@ -21,7 +21,7 @@ from unittest.mock import patch, MagicMock
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.training_controller import (
+from src.nexus.training.controller import (
     setup_signal_handlers,
     check_pause_state,
     check_and_cooldown,
@@ -59,7 +59,7 @@ class TestCheckPauseState:
     
     def test_check_pause_state_not_paused(self):
         """Test check_pause_state returns immediately when not paused."""
-        import src.training_controller as tc
+        import src.nexus.training.controller as tc
         
         # Ensure not paused
         tc._paused = False
@@ -71,7 +71,7 @@ class TestCheckPauseState:
     
     def test_check_pause_state_paused_then_resumed(self):
         """Test check_pause_state blocks when paused."""
-        import src.training_controller as tc
+        import src.nexus.training.controller as tc
         import threading
         
         tc._paused = True
@@ -105,7 +105,7 @@ class TestCooldownLogic:
     
     def test_check_and_cooldown_not_at_interval(self):
         """Test no cooldown at non-interval step."""
-        with patch('src.training_controller.get_gpu_temperature', return_value=50):
+        with patch('src.nexus.training.controller.get_gpu_temperature', return_value=50):
             with patch('time.sleep') as mock_sleep:
                 result = check_and_cooldown(1)  # Not at interval
                 
@@ -114,7 +114,7 @@ class TestCooldownLogic:
     
     def test_check_and_cooldown_at_interval(self):
         """Test cooldown triggers at step interval."""
-        with patch('src.training_controller.get_gpu_temperature', return_value=50):
+        with patch('src.nexus.training.controller.get_gpu_temperature', return_value=50):
             with patch('time.sleep') as mock_sleep:
                 with patch('torch.cuda.empty_cache'):
                     result = check_and_cooldown(COOLDOWN_INTERVAL_STEPS)
@@ -214,16 +214,16 @@ class TestTrainingStepHook:
     
     def test_hook_runs_without_error(self, real_text_model):
         """Test hook runs without error."""
-        import src.training_controller as tc
+        import src.nexus.training.controller as tc
         
         tc._paused = False
         tc._checkpoint_requested = False
         
         mock_optimizer = MagicMock()
         
-        with patch('src.training_controller.check_pause_state'):
-            with patch('src.training_controller.check_and_cooldown', return_value=False):
-                with patch('src.training_controller.check_checkpoint_request', return_value=False):
+        with patch('src.nexus.training.controller.check_pause_state'):
+            with patch('src.nexus.training.controller.check_and_cooldown', return_value=False):
+                with patch('src.nexus.training.controller.check_checkpoint_request', return_value=False):
                     # Should not raise
                     training_step_hook(real_text_model, mock_optimizer, 1, "/tmp")
     
@@ -231,9 +231,9 @@ class TestTrainingStepHook:
         """Test hook calls pause state check."""
         mock_optimizer = MagicMock()
         
-        with patch('src.training_controller.check_pause_state') as mock_pause:
-            with patch('src.training_controller.check_and_cooldown', return_value=False):
-                with patch('src.training_controller.check_checkpoint_request', return_value=False):
+        with patch('src.nexus.training.controller.check_pause_state') as mock_pause:
+            with patch('src.nexus.training.controller.check_and_cooldown', return_value=False):
+                with patch('src.nexus.training.controller.check_checkpoint_request', return_value=False):
                     training_step_hook(real_text_model, mock_optimizer, 1, "/tmp")
                     
                     mock_pause.assert_called_once()
@@ -242,9 +242,9 @@ class TestTrainingStepHook:
         """Test hook calls cooldown check."""
         mock_optimizer = MagicMock()
         
-        with patch('src.training_controller.check_pause_state'):
-            with patch('src.training_controller.check_and_cooldown') as mock_cool:
-                with patch('src.training_controller.check_checkpoint_request', return_value=False):
+        with patch('src.nexus.training.controller.check_pause_state'):
+            with patch('src.nexus.training.controller.check_and_cooldown') as mock_cool:
+                with patch('src.nexus.training.controller.check_checkpoint_request', return_value=False):
                     training_step_hook(real_text_model, mock_optimizer, 5, "/tmp")
                     
                     mock_cool.assert_called_once_with(5)
@@ -255,7 +255,7 @@ class TestGlobalState:
     
     def test_paused_state_toggleable(self):
         """Test _paused global can be toggled."""
-        import src.training_controller as tc
+        import src.nexus.training.controller as tc
         
         original = tc._paused
         tc._paused = not original
@@ -265,7 +265,7 @@ class TestGlobalState:
     
     def test_checkpoint_requested_state(self):
         """Test _checkpoint_requested global."""
-        import src.training_controller as tc
+        import src.nexus.training.controller as tc
         
         tc._checkpoint_requested = True
         assert tc._checkpoint_requested is True

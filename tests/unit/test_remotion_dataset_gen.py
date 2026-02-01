@@ -1,7 +1,7 @@
 import pytest
 import json
 from unittest.mock import patch, MagicMock
-from src.utils.generate_remotion_dataset import generate_sample, CATEGORIES
+from src.nexus.utils.generate_remotion_dataset import generate_sample, CATEGORIES
 
 def test_generate_sample_basic():
     # Test without weights
@@ -21,7 +21,7 @@ def test_generate_sample_with_weights():
     assert sample["instruction"] == "Explain Euler's Identity."
     assert "NexusMath" in sample["output"]
 
-@patch("src.utils.generate_remotion_dataset.KB", {
+@patch("src.nexus.utils.generate_remotion_dataset.KB", {
     "history": {"timelines": [{"topic": "WW2", "events": []}]},
     "business": {
         "charts": [{"topic": "Sales", "type": "bar", "data": []}],

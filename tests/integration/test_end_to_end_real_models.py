@@ -480,7 +480,7 @@ class TestEndToEndVideo:
         video_feats = torch.randn(1, num_frames, 512)  # batch=1, 8 frames, 512 dim
         
         # Test video feature processing
-        from src.nexus_final.alignment import CrossModalAlignment
+        from src.nexus.models.alignment import CrossModalAlignment
         
         alignment = CrossModalAlignment(core_dim=512)
         
@@ -495,8 +495,8 @@ class TestEndToEndVideo:
     def test_video_generation_to_understanding(self):
         """Test pipeline from video generation to understanding."""
         # Mock test for video generation pipeline
-        with patch('src.nexus_final.decoders.StableVideoDiffusionPipeline'):
-            from src.nexus_final.decoders import VideoDecoder
+        with patch('src.nexus.models.decoders.StableVideoDiffusionPipeline'):
+            from src.nexus.models.decoders import VideoDecoder
             
             # Create mock decoder
             mock_decoder = MagicMock()
@@ -540,7 +540,7 @@ class TestEndToEndTTS:
     
     def test_streaming_tts_integration(self):
         """Test streaming TTS integration."""
-        from src.streaming.tts import TTSEngine
+        from src.nexus.streaming.tts import TTSEngine
         
         # Mock the TTS engine
         with patch.object(TTSEngine, '_load_model') as mock_load:
@@ -562,7 +562,7 @@ class TestEndToEndAgents:
     
     def test_agent_workflow_execution(self):
         """Test agent workflow execution."""
-        from src.stages.agent_finetune import AgentTrainingStage
+        from src.nexus.training.stages.agent_finetune import AgentTrainingStage
         
         # Create agent stage
         stage = AgentTrainingStage(

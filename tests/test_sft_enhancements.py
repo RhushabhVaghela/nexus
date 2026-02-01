@@ -15,9 +15,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 with patch('transformers.TrainerCallback'), \
      patch('transformers.AutoModelForCausalLM'), \
      patch('transformers.AutoTokenizer'):
-    import src.metrics_tracker
+    import src.nexus.utils.metrics_tracker
     # We might need to import specific classes if they are not exposed at top level
-    from src.metrics_tracker import MetricsTracker, TrainingMetrics
+    from src.nexus.utils.metrics_tracker import MetricsTracker, TrainingMetrics
 
 class TestSFTEnhancements(unittest.TestCase):
     def setUp(self):

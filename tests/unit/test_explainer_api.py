@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import MagicMock, patch
-from src.api.explainer_api import app
+from src.nexus.api.explainer_api import app
 
 client = TestClient(app)
 
@@ -12,7 +12,7 @@ class TestExplainerAPI:
         assert response.status_code == 200
         assert response.json()["status"] == "healthy"
 
-    @patch("src.api.explainer_api.RemotionExplainerEngine")
+    @patch("src.nexus.api.explainer_api.RemotionExplainerEngine")
     def test_generate_endpoint(self, mock_engine_class):
         # Setup mock engine
         mock_engine = mock_engine_class.return_value
@@ -25,7 +25,7 @@ class TestExplainerAPI:
             pass
             
         # Simplified test for now
-        with patch("src.api.explainer_api.engine", mock_engine):
+        with patch("src.nexus.api.explainer_api.engine", mock_engine):
             with patch("builtins.open", MagicMock(return_value=MagicMock(__enter__=lambda x: MagicMock(read=lambda: "import React from 'react';")))):
                 response = client.post("/generate", json={"prompt": "test prompt"})
                 

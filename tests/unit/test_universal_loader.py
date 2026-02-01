@@ -94,19 +94,19 @@ class TestUniversalLoaderImport:
     """Test module imports."""
     
     def test_import_module(self):
-        from src.data import universal_loader
+        from src.nexus.data import universal_loader
         assert hasattr(universal_loader, 'UniversalDataLoader')
     
     def test_import_class(self):
-        from src.data.universal_loader import UniversalDataLoader
+        from src.nexus.data.universal_loader import UniversalDataLoader
         assert UniversalDataLoader is not None
     
     def test_import_function(self):
-        from src.data.universal_loader import load_dataset_universal
+        from src.nexus.data.universal_loader import load_dataset_universal
         assert callable(load_dataset_universal)
     
     def test_import_load_result(self):
-        from src.data.universal_loader import LoadResult
+        from src.nexus.data.universal_loader import LoadResult
         assert LoadResult is not None
 
 
@@ -114,37 +114,37 @@ class TestFormatDetection:
     """Test format auto-detection."""
     
     def test_detect_json_array(self, json_array_file):
-        from src.data.universal_loader import UniversalDataLoader
+        from src.nexus.data.universal_loader import UniversalDataLoader
         loader = UniversalDataLoader(json_array_file)
         fmt = loader.detect_format()
         assert fmt in ("json_array", "json")
     
     def test_detect_json_dict(self, json_dict_file):
-        from src.data.universal_loader import UniversalDataLoader
+        from src.nexus.data.universal_loader import UniversalDataLoader
         loader = UniversalDataLoader(json_dict_file)
         fmt = loader.detect_format()
         assert fmt in ("json_dict", "json")
     
     def test_detect_jsonl(self, jsonl_file):
-        from src.data.universal_loader import UniversalDataLoader
+        from src.nexus.data.universal_loader import UniversalDataLoader
         loader = UniversalDataLoader(jsonl_file)
         fmt = loader.detect_format()
         assert fmt in ("jsonl", "json", "json_array", "json_dict")
     
     def test_detect_csv(self, csv_file):
-        from src.data.universal_loader import UniversalDataLoader
+        from src.nexus.data.universal_loader import UniversalDataLoader
         loader = UniversalDataLoader(csv_file)
         fmt = loader.detect_format()
         assert fmt == "csv"
     
     def test_detect_text(self, text_file):
-        from src.data.universal_loader import UniversalDataLoader
+        from src.nexus.data.universal_loader import UniversalDataLoader
         loader = UniversalDataLoader(text_file)
         fmt = loader.detect_format()
         assert fmt == "text"
     
     def test_detect_nonexistent(self, temp_dir):
-        from src.data.universal_loader import UniversalDataLoader
+        from src.nexus.data.universal_loader import UniversalDataLoader
         loader = UniversalDataLoader(temp_dir / "nonexistent.json")
         with pytest.raises(FileNotFoundError):
             loader.detect_format()
@@ -154,7 +154,7 @@ class TestJsonLoading:
     """Test JSON format loading."""
     
     def test_load_json_array(self, json_array_file):
-        from src.data.universal_loader import UniversalDataLoader
+        from src.nexus.data.universal_loader import UniversalDataLoader
         loader = UniversalDataLoader(json_array_file)
         result = loader.load()
         
@@ -164,7 +164,7 @@ class TestJsonLoading:
         assert result.error is None
     
     def test_load_json_dict(self, json_dict_file):
-        from src.data.universal_loader import UniversalDataLoader
+        from src.nexus.data.universal_loader import UniversalDataLoader
         loader = UniversalDataLoader(json_dict_file)
         result = loader.load()
         
@@ -173,7 +173,7 @@ class TestJsonLoading:
         assert result.error is None
     
     def test_load_json_with_sample_size(self, json_array_file):
-        from src.data.universal_loader import UniversalDataLoader
+        from src.nexus.data.universal_loader import UniversalDataLoader
         loader = UniversalDataLoader(json_array_file)
         result = loader.load(sample_size=2)
         
@@ -184,7 +184,7 @@ class TestJsonlLoading:
     """Test JSONL format loading."""
     
     def test_load_jsonl(self, jsonl_file):
-        from src.data.universal_loader import UniversalDataLoader
+        from src.nexus.data.universal_loader import UniversalDataLoader
         loader = UniversalDataLoader(jsonl_file)
         result = loader.load()
         
@@ -193,14 +193,14 @@ class TestJsonlLoading:
         assert "text" in result.columns
     
     def test_load_jsonl_sample_size(self, jsonl_file):
-        from src.data.universal_loader import UniversalDataLoader
+        from src.nexus.data.universal_loader import UniversalDataLoader
         loader = UniversalDataLoader(jsonl_file)
         result = loader.load(sample_size=2)
         
         assert result.num_samples == 2
     
     def test_load_jsonl_content(self, jsonl_file):
-        from src.data.universal_loader import UniversalDataLoader
+        from src.nexus.data.universal_loader import UniversalDataLoader
         loader = UniversalDataLoader(jsonl_file)
         result = loader.load()
         
@@ -212,7 +212,7 @@ class TestCsvLoading:
     """Test CSV format loading."""
     
     def test_load_csv(self, csv_file):
-        from src.data.universal_loader import UniversalDataLoader
+        from src.nexus.data.universal_loader import UniversalDataLoader
         loader = UniversalDataLoader(csv_file)
         result = loader.load()
         
@@ -225,7 +225,7 @@ class TestTextLoading:
     """Test text format loading."""
     
     def test_load_text(self, text_file):
-        from src.data.universal_loader import UniversalDataLoader
+        from src.nexus.data.universal_loader import UniversalDataLoader
         loader = UniversalDataLoader(text_file)
         result = loader.load()
         
@@ -234,7 +234,7 @@ class TestTextLoading:
         assert "text" in result.columns
     
     def test_load_text_content(self, text_file):
-        from src.data.universal_loader import UniversalDataLoader
+        from src.nexus.data.universal_loader import UniversalDataLoader
         loader = UniversalDataLoader(text_file)
         result = loader.load()
         
@@ -245,7 +245,7 @@ class TestLoadResult:
     """Test LoadResult dataclass."""
     
     def test_load_result_fields(self, json_array_file):
-        from src.data.universal_loader import UniversalDataLoader
+        from src.nexus.data.universal_loader import UniversalDataLoader
         loader = UniversalDataLoader(json_array_file)
         result = loader.load()
         
@@ -258,7 +258,7 @@ class TestLoadResult:
         assert hasattr(result, 'error')
     
     def test_load_result_source_path(self, json_array_file):
-        from src.data.universal_loader import UniversalDataLoader
+        from src.nexus.data.universal_loader import UniversalDataLoader
         loader = UniversalDataLoader(json_array_file)
         result = loader.load()
         
@@ -269,14 +269,14 @@ class TestConvenienceFunction:
     """Test the convenience function."""
     
     def test_load_dataset_universal(self, json_array_file):
-        from src.data.universal_loader import load_dataset_universal
+        from src.nexus.data.universal_loader import load_dataset_universal
         result = load_dataset_universal(json_array_file)
         
         assert result.dataset is not None
         assert result.num_samples == 3
     
     def test_load_dataset_universal_sample_size(self, jsonl_file):
-        from src.data.universal_loader import load_dataset_universal
+        from src.nexus.data.universal_loader import load_dataset_universal
         result = load_dataset_universal(jsonl_file, sample_size=2)
         
         assert result.num_samples == 2
@@ -311,7 +311,7 @@ class TestRealDatasets:
             with open(target, 'w') as f:
                 json.dump({"1": {"instruction": "think", "output": "ok"}}, f)
         
-        from src.data.universal_loader import load_dataset_universal
+        from src.nexus.data.universal_loader import load_dataset_universal
         result = load_dataset_universal(target, sample_size=5)
         assert result.dataset is not None
         assert result.num_samples > 0
@@ -324,7 +324,7 @@ class TestRealDatasets:
             with open(target, 'w') as f:
                 json.dump([{"instruction": "call", "output": "ok"}], f)
         
-        from src.data.universal_loader import load_dataset_universal
+        from src.nexus.data.universal_loader import load_dataset_universal
         result = load_dataset_universal(target, sample_size=5)
         assert result.dataset is not None
         assert result.num_samples > 0
@@ -337,7 +337,7 @@ class TestRealDatasets:
             with open(target, 'w') as f:
                 f.write(json.dumps({"text": "thinking..."}) + "\n")
         
-        from src.data.universal_loader import load_dataset_universal
+        from src.nexus.data.universal_loader import load_dataset_universal
         result = load_dataset_universal(target, sample_size=5)
         assert result.dataset is not None
     
@@ -349,7 +349,7 @@ class TestRealDatasets:
             with open(target, 'w') as f:
                 f.write(json.dumps({"question": "1+1?", "answer": "2"}) + "\n")
 
-        from src.data.universal_loader import load_dataset_universal
+        from src.nexus.data.universal_loader import load_dataset_universal
         result = load_dataset_universal(target, sample_size=5)
         assert result.dataset is not None
         assert result.num_samples > 0
@@ -363,7 +363,7 @@ class TestEdgeCases:
         path = temp_dir / "empty.json"
         path.touch()
         
-        from src.data.universal_loader import UniversalDataLoader
+        from src.nexus.data.universal_loader import UniversalDataLoader
         loader = UniversalDataLoader(path)
         result = loader.load()
         assert result.error is not None or result.num_samples == 0
@@ -374,21 +374,21 @@ class TestEdgeCases:
         with open(path, 'w') as f:
             f.write("not valid json {{{")
         
-        from src.data.universal_loader import UniversalDataLoader
+        from src.nexus.data.universal_loader import UniversalDataLoader
         loader = UniversalDataLoader(path)
         result = loader.load()
         assert result.error is not None
     
     def test_zero_sample_size(self, json_array_file):
         """Test with sample_size=0."""
-        from src.data.universal_loader import UniversalDataLoader
+        from src.nexus.data.universal_loader import UniversalDataLoader
         loader = UniversalDataLoader(json_array_file)
         result = loader.load(sample_size=0)
         assert result.num_samples >= 0
     
     def test_large_sample_size(self, json_array_file):
         """Test with sample_size larger than dataset."""
-        from src.data.universal_loader import UniversalDataLoader
+        from src.nexus.data.universal_loader import UniversalDataLoader
         loader = UniversalDataLoader(json_array_file)
         result = loader.load(sample_size=1000)
         assert result.num_samples == 3

@@ -2,10 +2,10 @@ import pytest
 import torch
 import torch.nn as nn
 from unittest.mock import MagicMock, patch
-from src.multimodal.model import OmniMultimodalLM, PerceiverResampler, ModularMultimodalWrapper, VisionEncoder, AudioEncoder, VideoDecoder, SpeechDecoder
+from src.nexus.multimodal.model import OmniMultimodalLM, PerceiverResampler, ModularMultimodalWrapper, VisionEncoder, AudioEncoder, VideoDecoder, SpeechDecoder
 
 class TestMultimodalComponents:
-    @patch("src.multimodal.model.AutoModel.from_pretrained")
+    @patch("src.nexus.multimodal.model.AutoModel.from_pretrained")
     def test_vision_encoder(self, mock_from):
         mock_model = MagicMock()
         mock_model.vision_model.return_value = MagicMock(last_hidden_state=torch.randn(1, 10, 1152))
@@ -14,7 +14,7 @@ class TestMultimodalComponents:
         out = enc(torch.randn(1, 3, 512, 512))
         assert out.shape == (1, 10, 1152)
 
-    @patch("src.multimodal.model.WhisperModel.from_pretrained")
+    @patch("src.nexus.multimodal.model.WhisperModel.from_pretrained")
     def test_audio_encoder(self, mock_from):
         mock_model = MagicMock()
         mock_model.encoder.return_value = MagicMock(last_hidden_state=torch.randn(1, 10, 1280))
@@ -23,7 +23,7 @@ class TestMultimodalComponents:
         out = enc(torch.randn(1, 80, 3000))
         assert out.shape == (1, 10, 1280)
 
-    @patch("src.multimodal.model.AutoModel.from_pretrained")
+    @patch("src.nexus.multimodal.model.AutoModel.from_pretrained")
     def test_speech_decoder_fail(self, mock_from):
         mock_from.side_effect = Exception("Fail")
         with pytest.raises(Exception):
@@ -31,15 +31,15 @@ class TestMultimodalComponents:
 
     def test_save_pretrained(self, tmp_path):
         base = MagicMock()
-        with patch("src.multimodal.model.VisionEncoder"), \
-             patch("src.multimodal.model.AudioEncoder"), \
-             patch("src.multimodal.model.VideoDecoder"), \
-             patch("src.multimodal.model.SpeechDecoder"):
+        with patch("src.nexus.multimodal.model.VisionEncoder"), \
+             patch("src.nexus.multimodal.model.AudioEncoder"), \
+             patch("src.nexus.multimodal.model.VideoDecoder"), \
+             patch("src.nexus.multimodal.model.SpeechDecoder"):
             wrapper = ModularMultimodalWrapper(base, inject_vision=True, inject_audio=True, llm_dim=512)
             wrapper.save_pretrained(str(tmp_path))
             assert base.save_pretrained.called
 
-    @patch("src.multimodal.model.AutoModel.from_pretrained")
+    @patch("src.nexus.multimodal.model.AutoModel.from_pretrained")
     def test_video_decoder(self, mock_from):
         mock_model = MagicMock()
         mock_model.config.hidden_size = 512
@@ -65,10 +65,10 @@ class TestMultimodalComponents:
         mock_out.last_hidden_state = torch.randn(1, 10, 512).to(device, dtype=torch.float16)
         base.return_value = mock_out
         
-        with patch("src.multimodal.model.VisionEncoder") as mv, \
-             patch("src.multimodal.model.AudioEncoder") as ma, \
-             patch("src.multimodal.model.VideoDecoder") as mvd, \
-             patch("src.multimodal.model.SpeechDecoder") as msd:
+        with patch("src.nexus.multimodal.model.VisionEncoder") as mv, \
+             patch("src.nexus.multimodal.model.AudioEncoder") as ma, \
+             patch("src.nexus.multimodal.model.VideoDecoder") as mvd, \
+             patch("src.nexus.multimodal.model.SpeechDecoder") as msd:
             
             mv.return_value.output_dim = 1152
             mv.return_value.return_value = torch.randn(1, 10, 1152).to(device, dtype=torch.float16)
@@ -104,11 +104,11 @@ class TestMultimodalComponents:
             assert out_s is not None
 
 class TestOmniMultimodalLM:
-    @patch("src.multimodal.model.AutoConfig.from_pretrained")
-    @patch("src.multimodal.model.AutoModelForCausalLM.from_pretrained")
-    @patch("src.multimodal.model.AutoModel.from_pretrained")
-    @patch("src.multimodal.model.VideoDecoder")
-    @patch("src.multimodal.model.SpeechDecoder")
+    @patch("src.nexus.multimodal.model.AutoConfig.from_pretrained")
+    @patch("src.nexus.multimodal.model.AutoModelForCausalLM.from_pretrained")
+    @patch("src.nexus.multimodal.model.AutoModel.from_pretrained")
+    @patch("src.nexus.multimodal.model.VideoDecoder")
+    @patch("src.nexus.multimodal.model.SpeechDecoder")
     def test_init_with_injection(self, mock_speech, mock_video, mock_vision_fn, mock_llm_fn, mock_config_fn, device):
         mock_llm = MagicMock()
         mock_llm.config = MagicMock(hidden_size=4096)
@@ -128,10 +128,10 @@ class TestOmniMultimodalLM:
         model = OmniMultimodalLM(llm_name="fake_llm", inject_vision=True, inject_audio=False)
         assert hasattr(model.wrapper, "vision_encoder")
 
-    @patch("src.multimodal.model.AutoConfig.from_pretrained")
-    @patch("src.multimodal.model.AutoModelForCausalLM.from_pretrained")
-    @patch("src.multimodal.model.VideoDecoder")
-    @patch("src.multimodal.model.SpeechDecoder")
+    @patch("src.nexus.multimodal.model.AutoConfig.from_pretrained")
+    @patch("src.nexus.multimodal.model.AutoModelForCausalLM.from_pretrained")
+    @patch("src.nexus.multimodal.model.VideoDecoder")
+    @patch("src.nexus.multimodal.model.SpeechDecoder")
     def test_forward_text_only(self, mock_speech, mock_video, mock_llm_fn, mock_config_fn, device):
         mock_llm = MagicMock()
         mock_llm.config = MagicMock(hidden_size=4096)
@@ -151,13 +151,13 @@ class TestOmniMultimodalLM:
         outputs = model(input_ids=input_ids, labels=input_ids)
         assert outputs.loss == 1.0
 
-    @patch("src.multimodal.model.AutoConfig.from_pretrained")
-    @patch("src.multimodal.model.AutoModelForCausalLM.from_pretrained")
-    @patch("src.multimodal.model.AutoModel.from_pretrained")
-    @patch("src.multimodal.model.VideoDecoder")
-    @patch("src.multimodal.model.SpeechDecoder")
-    @patch("src.multimodal.model.VisionEncoder")
-    @patch("src.multimodal.model.AudioEncoder")
+    @patch("src.nexus.multimodal.model.AutoConfig.from_pretrained")
+    @patch("src.nexus.multimodal.model.AutoModelForCausalLM.from_pretrained")
+    @patch("src.nexus.multimodal.model.AutoModel.from_pretrained")
+    @patch("src.nexus.multimodal.model.VideoDecoder")
+    @patch("src.nexus.multimodal.model.SpeechDecoder")
+    @patch("src.nexus.multimodal.model.VisionEncoder")
+    @patch("src.nexus.multimodal.model.AudioEncoder")
     def test_transplantation_success(self, mock_audio, mock_vision, mock_speech, mock_video, mock_auto_model, mock_llm_fn, mock_config_fn, device):
         # Setup AutoModel mock to behave correctly for different calls
         def auto_side_effect(name, **kwargs):
@@ -192,8 +192,8 @@ class TestOmniMultimodalLM:
         model = OmniMultimodalLM(llm_name="fail_native")
         assert model.wrapper is not None
 
-    @patch("src.multimodal.model.AutoModelForCausalLM.from_pretrained")
-    @patch("src.multimodal.model.AutoConfig.from_pretrained")
+    @patch("src.nexus.multimodal.model.AutoModelForCausalLM.from_pretrained")
+    @patch("src.nexus.multimodal.model.AutoConfig.from_pretrained")
     def test_gptq_fix(self, mock_cfg, mock_llm_fn):
         mock_model = MagicMock()
         mock_module = MagicMock()
@@ -204,7 +204,7 @@ class TestOmniMultimodalLM:
         mock_llm_fn.return_value = mock_model
         mock_cfg.return_value.model_type = "qwen2"
         
-        with patch("src.multimodal.model.VideoDecoder"), patch("src.multimodal.model.SpeechDecoder"):
+        with patch("src.nexus.multimodal.model.VideoDecoder"), patch("src.nexus.multimodal.model.SpeechDecoder"):
             model = OmniMultimodalLM(llm_name="gptq_model")
             assert mock_module.qzeros.dtype == torch.int32
             assert mock_module.qweight.dtype == torch.int32
@@ -213,12 +213,12 @@ class TestOmniMultimodalLM:
         # Create a real wrapper but mock the encoders
         base = MagicMock()
         base.config.hidden_size = 512
-        with patch("src.multimodal.model.VisionEncoder"), \
-             patch("src.multimodal.model.AudioEncoder"), \
-             patch("src.multimodal.model.VideoDecoder"), \
-             patch("src.multimodal.model.SpeechDecoder"), \
-             patch("src.multimodal.model.AutoModelForCausalLM.from_pretrained") as ml, \
-             patch("src.multimodal.model.AutoConfig.from_pretrained") as mc:
+        with patch("src.nexus.multimodal.model.VisionEncoder"), \
+             patch("src.nexus.multimodal.model.AudioEncoder"), \
+             patch("src.nexus.multimodal.model.VideoDecoder"), \
+             patch("src.nexus.multimodal.model.SpeechDecoder"), \
+             patch("src.nexus.multimodal.model.AutoModelForCausalLM.from_pretrained") as ml, \
+             patch("src.nexus.multimodal.model.AutoConfig.from_pretrained") as mc:
             
             ml.return_value = base
             # Ensure it is NOT treated as native omni so injection happens

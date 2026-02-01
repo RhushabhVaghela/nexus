@@ -3,7 +3,7 @@ import pytest
 import shutil
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-from src.data.universal_manager import UniversalDatasetManager
+from src.nexus.data.universal_manager import UniversalDatasetManager
 
 # Mock data structure for testing
 @pytest.fixture
@@ -58,7 +58,7 @@ def test_detect_format(mock_data_root):
 def test_load_dataset_by_name_nested(mock_data_root):
     manager = UniversalDatasetManager(data_root=str(mock_data_root))
     
-    with patch("src.data.universal_manager.load_dataset") as mock_load:
+    with patch("src.nexus.data.universal_manager.load_dataset") as mock_load:
         mock_ds = MagicMock()
         mock_ds.__len__.return_value = 1
         mock_load.return_value = mock_ds
@@ -82,7 +82,7 @@ def test_load_dataset_by_name_nested(mock_data_root):
 def test_load_category(mock_data_root):
     manager = UniversalDatasetManager(data_root=str(mock_data_root))
     
-    with patch("src.data.universal_manager.load_dataset") as mock_load:
+    with patch("src.nexus.data.universal_manager.load_dataset") as mock_load:
         mock_ds = MagicMock()
         mock_ds.__len__.return_value = 1
         mock_load.return_value = mock_ds
@@ -95,8 +95,8 @@ def test_load_category(mock_data_root):
 def test_unified_train_dataset(mock_data_root):
     manager = UniversalDatasetManager(data_root=str(mock_data_root))
     
-    with patch("src.data.universal_manager.load_dataset") as mock_load, \
-         patch("src.data.universal_manager.concatenate_datasets") as mock_concat:
+    with patch("src.nexus.data.universal_manager.load_dataset") as mock_load, \
+         patch("src.nexus.data.universal_manager.concatenate_datasets") as mock_concat:
         
         # Mock dataset with 'messages' feature
         mock_ds = MagicMock()
@@ -122,7 +122,7 @@ def test_split_dataset(mock_data_root):
     # We mock load_dataset, so file content doesn't matter much but path existence does for discovery
     (large_ds_path / "data.jsonl").touch()
     
-    with patch("src.data.universal_manager.load_dataset") as mock_load:
+    with patch("src.nexus.data.universal_manager.load_dataset") as mock_load:
         # Mock split behavior
         mock_ds = MagicMock()
         mock_train = MagicMock()

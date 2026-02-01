@@ -19,7 +19,7 @@ import torch
 import torch.nn as nn
 
 # Import the module under test
-from src.nexus_final.sli.architecture_registry import BERTFamilyHandler
+from src.nexus.models.sli.architecture_registry import BERTFamilyHandler
 
 
 class TestBERTFamilyHandlerInitialization:

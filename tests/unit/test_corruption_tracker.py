@@ -1,7 +1,7 @@
 import pytest
 import os
 from pathlib import Path
-from src.utils.corruption_tracker import CorruptionTracker
+from src.nexus.utils.corruption_tracker import CorruptionTracker
 
 def test_corruption_tracker(tmp_path):
     log_file = tmp_path / "corrupted.log"

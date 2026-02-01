@@ -1,10 +1,10 @@
 import pytest
 import torch
 from unittest.mock import MagicMock, patch
-from src.omni.inference import OmniInference, GenerationConfig
+from src.nexus.models.omni.inference import OmniInference, GenerationConfig
 
 class TestOmniInference:
-    @patch("src.omni.loader.OmniModelLoader.load_for_inference")
+    @patch("src.nexus.models.omni.loader.OmniModelLoader.load_for_inference")
     def test_init(self, mock_load):
         mock_model = MagicMock()
         mock_tokenizer = MagicMock()
@@ -15,7 +15,7 @@ class TestOmniInference:
         assert inference.tokenizer == mock_tokenizer
         assert not inference.enable_audio
 
-    @patch("src.omni.loader.OmniModelLoader.load_for_inference")
+    @patch("src.nexus.models.omni.loader.OmniModelLoader.load_for_inference")
     def test_generate(self, mock_load):
         mock_model = MagicMock()
         mock_model.device = "cpu"
@@ -32,7 +32,7 @@ class TestOmniInference:
         assert res == "Hello"
         assert mock_model.generate.called
 
-    @patch("src.omni.loader.OmniModelLoader.load_for_inference")
+    @patch("src.nexus.models.omni.loader.OmniModelLoader.load_for_inference")
     @patch("transformers.TextIteratorStreamer")
     def test_generate_stream(self, mock_streamer_cls, mock_load):
         mock_model = MagicMock()
@@ -50,7 +50,7 @@ class TestOmniInference:
         results = list(stream)
         assert results == ["Hel", "lo"]
 
-    @patch("src.omni.loader.OmniModelLoader.load_for_inference")
+    @patch("src.nexus.models.omni.loader.OmniModelLoader.load_for_inference")
     def test_generate_with_audio(self, mock_load):
         mock_model = MagicMock()
         mock_model.device = "cpu"
@@ -68,7 +68,7 @@ class TestOmniInference:
             assert res["text"] == "Hello"
             assert res["audio"] == "fake_audio"
 
-    @patch("src.omni.loader.OmniModelLoader.load_for_inference")
+    @patch("src.nexus.models.omni.loader.OmniModelLoader.load_for_inference")
     def test_chat(self, mock_load):
         mock_model = MagicMock()
         mock_tokenizer = MagicMock()

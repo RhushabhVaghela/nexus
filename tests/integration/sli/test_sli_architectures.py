@@ -20,8 +20,8 @@ sys.path.insert(0, str(PROJECT_ROOT))
 import torch
 import torch.nn as nn
 
-from src.nexus_final.sli import UniversalSLIIntegrator, ArchitectureRegistry
-from src.nexus_final.sli.architecture_registry import (
+from src.nexus.models.sli import UniversalSLIIntegrator, ArchitectureRegistry
+from src.nexus.models.sli.architecture_registry import (
     LlamaFamilyHandler,
     QwenFamilyHandler,
     GPTFamilyHandler,
@@ -71,7 +71,7 @@ class TestArchitectureRegistryIntegration:
     
     def test_registry_singleton_integration(self):
         """Test that registry singleton works correctly."""
-        from src.nexus_final.sli.architecture_registry import get_registry
+        from src.nexus.models.sli.architecture_registry import get_registry
         
         reg1 = get_registry()
         reg2 = get_registry()
@@ -157,7 +157,7 @@ class TestLlamaBasedIntegration:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_llama_model_initialization(self, mock_weight_loader, mock_tokenizer, mock_config, integration_dirs):
         """Test Llama model initialization."""
         config = MagicMock()
@@ -187,7 +187,7 @@ class TestLlamaBasedIntegration:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_mistral_model_initialization(self, mock_weight_loader, mock_tokenizer, mock_config, integration_dirs):
         """Test Mistral model initialization."""
         config = MagicMock()
@@ -221,7 +221,7 @@ class TestGPTBasedIntegration:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_gpt2_model_initialization(self, mock_weight_loader, mock_tokenizer, mock_config, integration_dirs):
         """Test GPT-2 model initialization."""
         config = MagicMock()
@@ -248,7 +248,7 @@ class TestGPTBasedIntegration:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_falcon_model_initialization(self, mock_weight_loader, mock_tokenizer, mock_config, integration_dirs):
         """Test Falcon model initialization (GPT family)."""
         config = MagicMock()
@@ -280,7 +280,7 @@ class TestChatGLMBasedIntegration:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_chatglm_model_initialization(self, mock_weight_loader, mock_tokenizer, mock_config, integration_dirs):
         """Test ChatGLM model initialization."""
         config = MagicMock()
@@ -315,7 +315,7 @@ class TestMoEModelsIntegration:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_mixtral_model_initialization(self, mock_weight_loader, mock_tokenizer, mock_config, integration_dirs):
         """Test Mixtral MoE model initialization."""
         config = MagicMock()
@@ -344,7 +344,7 @@ class TestMoEModelsIntegration:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_qwen2_moe_model_initialization(self, mock_weight_loader, mock_tokenizer, mock_config, integration_dirs):
         """Test Qwen2-MoE model initialization."""
         config = MagicMock()
@@ -373,7 +373,7 @@ class TestMoEModelsIntegration:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_deepseek_moe_model_initialization(self, mock_weight_loader, mock_tokenizer, mock_config, integration_dirs):
         """Test DeepSeek-MoE model initialization."""
         config = MagicMock()
@@ -411,7 +411,7 @@ class TestOtherArchitectureIntegration:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_t5_model_initialization(self, mock_weight_loader, mock_tokenizer, mock_config, integration_dirs):
         """Test T5 model initialization."""
         config = MagicMock()
@@ -435,7 +435,7 @@ class TestOtherArchitectureIntegration:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_bloom_model_initialization(self, mock_weight_loader, mock_tokenizer, mock_config, integration_dirs):
         """Test BLOOM model initialization."""
         config = MagicMock()
@@ -459,7 +459,7 @@ class TestOtherArchitectureIntegration:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_opt_model_initialization(self, mock_weight_loader, mock_tokenizer, mock_config, integration_dirs):
         """Test OPT model initialization."""
         config = MagicMock()
@@ -483,7 +483,7 @@ class TestOtherArchitectureIntegration:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_phi_model_initialization(self, mock_weight_loader, mock_tokenizer, mock_config, integration_dirs):
         """Test Phi model initialization."""
         config = MagicMock()
@@ -507,7 +507,7 @@ class TestOtherArchitectureIntegration:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_gemma_model_initialization(self, mock_weight_loader, mock_tokenizer, mock_config, integration_dirs):
         """Test Gemma model initialization."""
         config = MagicMock()
@@ -531,7 +531,7 @@ class TestOtherArchitectureIntegration:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_mamba_model_initialization(self, mock_weight_loader, mock_tokenizer, mock_config, integration_dirs):
         """Test Mamba model initialization."""
         config = MagicMock()
@@ -563,7 +563,7 @@ class TestEndToEndPipeline:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_end_to_end_llama_pipeline(self, mock_weight_loader_cls, mock_tokenizer, mock_config, 
                                         integration_dirs, sample_text_dataset):
         """Test end-to-end pipeline for Llama-style model."""
@@ -610,7 +610,7 @@ class TestEndToEndPipeline:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_end_to_end_moe_pipeline(self, mock_weight_loader_cls, mock_tokenizer, mock_config,
                                       integration_dirs, sample_text_dataset):
         """Test end-to-end pipeline for MoE model."""
@@ -721,8 +721,8 @@ class TestErrorRecovery:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
-    @patch('src.nexus_final.sli.universal_sli_integrator.get_registry')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.get_registry')
     def test_unsupported_architecture_fallback(self, mock_get_registry, mock_weight_loader, 
                                                 mock_tokenizer, mock_config, integration_dirs):
         """Test fallback behavior for unsupported architectures."""
@@ -737,7 +737,7 @@ class TestErrorRecovery:
         
         # Mock registry to raise UnsupportedArchitectureError
         mock_registry = MagicMock()
-        from src.nexus_final.sli.exceptions import UnsupportedArchitectureError
+        from src.nexus.models.sli.exceptions import UnsupportedArchitectureError
         mock_registry.detect_family.side_effect = UnsupportedArchitectureError("unknown")
         mock_registry.get_family.return_value = LlamaFamilyHandler()
         mock_get_registry.return_value = mock_registry

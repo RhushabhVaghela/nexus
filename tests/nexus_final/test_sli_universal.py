@@ -5,9 +5,9 @@ import torch
 import torch.nn as nn
 from transformers import PretrainedConfig
 
-from src.nexus_final.sli.universal_sli_integrator import UniversalSLIIntegrator
-from src.nexus_final.sli.architecture_registry import ArchitectureRegistry, ArchitectureFamily
-from src.nexus_final.sli.exceptions import UnsupportedArchitectureError
+from src.nexus.models.sli.universal_sli_integrator import UniversalSLIIntegrator
+from src.nexus.models.sli.architecture_registry import ArchitectureRegistry, ArchitectureFamily
+from src.nexus.models.sli.exceptions import UnsupportedArchitectureError
 
 # Mock families
 class MockLlamaFamily(ArchitectureFamily):
@@ -32,9 +32,9 @@ def mock_registry():
     registry.register("gpt", MockGPTFamily())
     return registry
 
-@patch("src.nexus_final.sli.universal_sli_integrator.AutoConfig")
-@patch("src.nexus_final.sli.universal_sli_integrator.AutoTokenizer")
-@patch("src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader")
+@patch("src.nexus.models.sli.universal_sli_integrator.AutoConfig")
+@patch("src.nexus.models.sli.universal_sli_integrator.AutoTokenizer")
+@patch("src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader")
 def test_initialization_llama(mock_loader, mock_tokenizer, mock_config, mock_registry):
     # Setup mocks
     config = MagicMock(spec=PretrainedConfig)
@@ -55,9 +55,9 @@ def test_initialization_llama(mock_loader, mock_tokenizer, mock_config, mock_reg
     assert integrator.family.family_id == "llama"
     assert integrator.model_info["num_layers"] == 2
 
-@patch("src.nexus_final.sli.universal_sli_integrator.AutoConfig")
-@patch("src.nexus_final.sli.universal_sli_integrator.AutoTokenizer")
-@patch("src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader")
+@patch("src.nexus.models.sli.universal_sli_integrator.AutoConfig")
+@patch("src.nexus.models.sli.universal_sli_integrator.AutoTokenizer")
+@patch("src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader")
 def test_initialization_gpt(mock_loader, mock_tokenizer, mock_config, mock_registry):
     # Setup mocks
     config = MagicMock(spec=PretrainedConfig)
@@ -78,9 +78,9 @@ def test_initialization_gpt(mock_loader, mock_tokenizer, mock_config, mock_regis
     assert integrator.family.family_id == "gpt"
     assert integrator.model_info["num_layers"] == 4
 
-@patch("src.nexus_final.sli.universal_sli_integrator.AutoConfig")
-@patch("src.nexus_final.sli.universal_sli_integrator.AutoTokenizer")
-@patch("src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader")
+@patch("src.nexus.models.sli.universal_sli_integrator.AutoConfig")
+@patch("src.nexus.models.sli.universal_sli_integrator.AutoTokenizer")
+@patch("src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader")
 def test_fallback_behavior(mock_loader, mock_tokenizer, mock_config, mock_registry):
     # Setup mocks for unknown model
     config = MagicMock(spec=PretrainedConfig)

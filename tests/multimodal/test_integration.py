@@ -25,7 +25,7 @@ class TestOmniIntegration(unittest.TestCase):
 
     def test_decoders_sota_format(self):
         """Test proper SOTA processor IDs"""
-        from src.multimodal.decoders import ImageDecoder, AudioDecoder
+        from src.nexus.multimodal.decoders import ImageDecoder, AudioDecoder
         
         img_decoder = ImageDecoder()
         res = img_decoder.decode("test.png")

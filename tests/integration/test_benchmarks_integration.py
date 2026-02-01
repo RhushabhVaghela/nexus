@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig, main as runner_main
+from src.nexus.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig, main as runner_main
 
 @pytest.mark.benchmark
 def test_generation_benchmark(omni_model_path, real_text_model, real_text_tokenizer):
@@ -23,7 +23,7 @@ def test_generation_benchmark(omni_model_path, real_text_model, real_text_tokeni
     )
     
     try:
-        with patch("src.omni.loader.OmniModelLoader.load", return_value=(real_text_model, real_text_tokenizer)):
+        with patch("src.nexus.models.omni.loader.OmniModelLoader.load", return_value=(real_text_model, real_text_tokenizer)):
             runner = BenchmarkRunner(config)
             # We assume prompts loading works (fallback exists)
             prompt = "Hello world"
@@ -42,7 +42,7 @@ def test_perplexity_benchmark(omni_model_path, real_text_model, real_text_tokeni
     )
     
     try:
-        with patch("src.omni.loader.OmniModelLoader.load", return_value=(real_text_model, real_text_tokenizer)):
+        with patch("src.nexus.models.omni.loader.OmniModelLoader.load", return_value=(real_text_model, real_text_tokenizer)):
             runner = BenchmarkRunner(config)
             result = runner.benchmark_perplexity("Test text", "test_ppl")
             assert result.success, f"Perplexity benchmark failed: {result.error}"

@@ -20,9 +20,9 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 import torch
 
-from src.nexus_final.sli.weight_loader import UniversalWeightLoader
-from src.nexus_final.sli.exceptions import FormatDetectionError, WeightMapError, WeightLoadingError
-from src.nexus_final.sli.architecture_registry import LlamaFamilyHandler
+from src.nexus.models.sli.weight_loader import UniversalWeightLoader
+from src.nexus.models.sli.exceptions import FormatDetectionError, WeightMapError, WeightLoadingError
+from src.nexus.models.sli.architecture_registry import LlamaFamilyHandler
 
 
 # =============================================================================

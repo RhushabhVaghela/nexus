@@ -5,14 +5,14 @@ from pathlib import Path
 import os
 import json
 
-from src.api.explainer_api import app
+from src.nexus.api.explainer_api import app
 
 client = TestClient(app)
 
 class TestDashboardFlow:
     """Tests the flow from prompt to video generation."""
     
-    @patch("src.api.explainer_api.RemotionExplainerEngine")
+    @patch("src.nexus.api.explainer_api.RemotionExplainerEngine")
     def test_end_to_end_generation_logic(self, mock_engine_class, tmp_path):
         """Verify the full generation flow triggered by the API."""
         # 1. Setup Mock Engine
@@ -26,7 +26,7 @@ class TestDashboardFlow:
         tsx_file.write_text("import React from 'react';\nexport const Scene = () => <div />;")
         
         # 3. Call API
-        with patch("src.api.explainer_api.engine", mock_engine):
+        with patch("src.nexus.api.explainer_api.engine", mock_engine):
             response = client.post("/generate", json={
                 "prompt": "Explain the concept of entropy",
                 "narrate": True

@@ -15,8 +15,8 @@ PROJECT_ROOT = Path(__file__).parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.stages.base import StageConfig
-from src.stages.stage_reasoning import ReasoningStage
+from src.nexus.training.stages.base import StageConfig
+from src.nexus.training.stages.stage_reasoning import ReasoningStage
 # We don't import ModularMultimodalWrapper here because we just test the torch logic
 # or we mock it. The previous test_embedding_repetition_logic was good.
 
@@ -44,7 +44,7 @@ class TestRepetitionIntegration(unittest.TestCase):
         )
         
         # Mocking to avoid loading real model or datasets
-        with patch('src.stages.stage_reasoning.ReasoningStage._setup_logger'):
+        with patch('src.nexus.training.stages.stage_reasoning.ReasoningStage._setup_logger'):
             stage = ReasoningStage(config)
             sample = {"problem": "1+1", "solution": "2"}
             formatted = stage._format_reasoning(sample)

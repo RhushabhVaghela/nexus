@@ -1,7 +1,7 @@
 import pytest
 import json
 from unittest.mock import patch, MagicMock
-from src.utils.validate_dataset_diversity import validate_diversity
+from src.nexus.utils.validate_dataset_diversity import validate_diversity
 
 def test_validate_diversity(tmp_path):
     # Create mock dataset
@@ -16,7 +16,7 @@ def test_validate_diversity(tmp_path):
             f.write(json.dumps(s) + "\n")
             
     # Mock rich Console to avoid printing during test
-    with patch("src.utils.validate_dataset_diversity.Console") as mock_console_cls:
+    with patch("src.nexus.utils.validate_dataset_diversity.Console") as mock_console_cls:
         mock_console = MagicMock()
         mock_console_cls.return_value = mock_console
         

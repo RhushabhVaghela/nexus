@@ -20,9 +20,9 @@ sys.path.insert(0, str(PROJECT_ROOT))
 import torch
 import torch.nn as nn
 
-from src.nexus_final.sli.universal_sli_integrator import UniversalSLIIntegrator, SequentialLayerIntegrator
-from src.nexus_final.sli.exceptions import UnsupportedArchitectureError
-from src.nexus_final.sli.architecture_registry import LlamaFamilyHandler
+from src.nexus.models.sli.universal_sli_integrator import UniversalSLIIntegrator, SequentialLayerIntegrator
+from src.nexus.models.sli.exceptions import UnsupportedArchitectureError
+from src.nexus.models.sli.architecture_registry import LlamaFamilyHandler
 
 
 # =============================================================================
@@ -99,7 +99,7 @@ class TestIntegratorInitialization:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_integrator_initializes_with_model_id(self, mock_weight_loader, mock_tokenizer_cls, mock_config_cls,
                                                    temp_output_dir, temp_cache_dir, temp_activation_dir, mock_model_id, mock_config, mock_tokenizer):
         """Test integrator initializes with model ID."""
@@ -120,7 +120,7 @@ class TestIntegratorInitialization:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_integrator_creates_directories(self, mock_weight_loader, mock_tokenizer_cls, mock_config_cls,
                                              tmp_path, mock_model_id, mock_config, mock_tokenizer):
         """Test integrator creates necessary directories."""
@@ -145,7 +145,7 @@ class TestIntegratorInitialization:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_integrator_sets_pad_token_if_none(self, mock_weight_loader, mock_tokenizer_cls, mock_config_cls,
                                                 temp_output_dir, mock_model_id, mock_config):
         """Test integrator sets pad_token to eos_token if pad_token is None."""
@@ -165,7 +165,7 @@ class TestIntegratorInitialization:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_integrator_detects_architecture_family(self, mock_weight_loader, mock_tokenizer_cls, mock_config_cls,
                                                      temp_output_dir, mock_model_id, mock_config, mock_tokenizer):
         """Test integrator detects architecture family from config."""
@@ -183,7 +183,7 @@ class TestIntegratorInitialization:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_integrator_detects_moe_model(self, mock_weight_loader, mock_tokenizer_cls, mock_config_cls,
                                            temp_output_dir, mock_model_id, mock_tokenizer):
         """Test integrator detects MoE models."""
@@ -213,7 +213,7 @@ class TestMoEModelDetection:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_is_moe_model_by_num_local_experts(self, mock_weight_loader, mock_tokenizer_cls, mock_config_cls,
                                                 temp_output_dir, mock_model_id, mock_tokenizer):
         """Test MoE detection by num_local_experts."""
@@ -235,7 +235,7 @@ class TestMoEModelDetection:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_is_moe_model_by_n_routed_experts(self, mock_weight_loader, mock_tokenizer_cls, mock_config_cls,
                                                temp_output_dir, mock_model_id, mock_tokenizer):
         """Test MoE detection by n_routed_experts."""
@@ -257,7 +257,7 @@ class TestMoEModelDetection:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_is_not_moe_model(self, mock_weight_loader, mock_tokenizer_cls, mock_config_cls,
                               temp_output_dir, mock_model_id, mock_tokenizer):
         """Test non-MoE detection."""
@@ -287,7 +287,7 @@ class TestModelSummary:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_get_model_summary(self, mock_weight_loader, mock_tokenizer_cls, mock_config_cls,
                                temp_output_dir, mock_model_id, mock_config, mock_tokenizer):
         """Test getting model summary."""
@@ -312,7 +312,7 @@ class TestModelSummary:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_get_model_summary_for_moe(self, mock_weight_loader, mock_tokenizer_cls, mock_config_cls,
                                        temp_output_dir, mock_model_id, mock_tokenizer):
         """Test model summary for MoE model."""
@@ -351,7 +351,7 @@ class TestLayerCreation:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_create_layer_calls_factory(self, mock_weight_loader, mock_tokenizer_cls, mock_config_cls,
                                         temp_output_dir, mock_model_id, mock_config, mock_tokenizer):
         """Test create_layer calls factory method."""
@@ -382,7 +382,7 @@ class TestEmbeddingProcessing:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_process_embeddings(self, mock_weight_loader_cls, mock_tokenizer_cls, mock_config_cls,
                                 tmp_path, mock_model_id, mock_config, mock_tokenizer):
         """Test processing embeddings."""
@@ -419,7 +419,7 @@ class TestForwardPass:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_forward_batch_sli(self, mock_weight_loader, mock_tokenizer_cls, mock_config_cls,
                                tmp_path, mock_model_id, mock_config, mock_tokenizer):
         """Test forward batch SLI."""
@@ -450,7 +450,7 @@ class TestForwardPass:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_forward_batch_handles_tuple_output(self, mock_weight_loader, mock_tokenizer_cls, mock_config_cls,
                                                  tmp_path, mock_model_id, mock_config, mock_tokenizer):
         """Test forward batch handles tuple output from layer."""
@@ -488,7 +488,7 @@ class TestCacheClearing:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_clear_cache(self, mock_weight_loader, mock_tokenizer_cls, mock_config_cls,
                          tmp_path, mock_model_id, mock_config, mock_tokenizer):
         """Test clearing cache."""
@@ -528,8 +528,8 @@ class TestArchitectureFallback:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
-    @patch('src.nexus_final.sli.universal_sli_integrator.get_registry')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.get_registry')
     def test_fallback_to_llama_on_unsupported(self, mock_get_registry, mock_weight_loader, mock_tokenizer_cls, mock_config_cls,
                                                temp_output_dir, mock_model_id, mock_tokenizer):
         """Test fallback to Llama family when architecture detection fails."""
@@ -565,7 +565,7 @@ class TestLegacyCompatibility:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_sequential_layer_integrator_is_subclass(self, mock_weight_loader, mock_tokenizer_cls, mock_config_cls,
                                                       temp_output_dir, mock_model_id, mock_config, mock_tokenizer):
         """Test SequentialLayerIntegrator is a subclass of UniversalSLIIntegrator."""
@@ -591,7 +591,7 @@ class TestConfigurationParameters:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_custom_registry(self, mock_weight_loader, mock_tokenizer_cls, mock_config_cls,
                              temp_output_dir, mock_model_id, mock_config, mock_tokenizer):
         """Test using custom registry."""
@@ -612,7 +612,7 @@ class TestConfigurationParameters:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_trust_remote_code_parameter(self, mock_weight_loader, mock_tokenizer_cls, mock_config_cls,
                                           temp_output_dir, mock_model_id, mock_config, mock_tokenizer):
         """Test trust_remote_code parameter."""
@@ -638,7 +638,7 @@ class TestRunSLI:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_run_sli_calls_process_embeddings(self, mock_weight_loader_cls, mock_tokenizer_cls, mock_config_cls,
                                                tmp_path, mock_model_id, mock_config, mock_tokenizer, sample_dataset):
         """Test run_sli processes embeddings."""
@@ -675,7 +675,7 @@ class TestRunSLI:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_run_sli_processes_all_layers(self, mock_weight_loader_cls, mock_tokenizer_cls, mock_config_cls,
                                            tmp_path, mock_model_id, mock_config, mock_tokenizer, sample_dataset):
         """Test run_sli processes all layers."""
@@ -717,7 +717,7 @@ class TestModelInfoStorage:
     
     @patch('transformers.AutoConfig.from_pretrained')
     @patch('transformers.AutoTokenizer.from_pretrained')
-    @patch('src.nexus_final.sli.universal_sli_integrator.UniversalWeightLoader')
+    @patch('src.nexus.models.sli.universal_sli_integrator.UniversalWeightLoader')
     def test_model_info_stored_after_init(self, mock_weight_loader, mock_tokenizer_cls, mock_config_cls,
                                           temp_output_dir, mock_model_id, mock_config, mock_tokenizer):
         """Test that model_info is stored after initialization."""

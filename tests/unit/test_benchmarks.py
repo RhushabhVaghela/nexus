@@ -25,7 +25,7 @@ class TestBenchmarkImports:
             pytest.skip("Multimodal module not available")
     
     def test_import_benchmarks_init(self):
-        from src.benchmarks import __init__
+        from src.nexus.benchmarks import __init__
         assert __init__ is not None
 
 
@@ -56,9 +56,9 @@ class TestBenchmarkBaseline:
 class TestBenchmarkRunnerMocked:
     """Detailed tests for BenchmarkRunner using mocks."""
     
-    @patch("src.omni.loader.OmniModelLoader.load")
+    @patch("src.nexus.models.omni.loader.OmniModelLoader.load")
     def test_runner_setup(self, mock_load):
-        from src.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig
+        from src.nexus.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig
         mock_model = MagicMock()
         mock_tokenizer = MagicMock()
         mock_load.return_value = (mock_model, mock_tokenizer)
@@ -71,9 +71,9 @@ class TestBenchmarkRunnerMocked:
         assert runner.tokenizer == mock_tokenizer
         assert mock_model.eval.called
 
-    @patch("src.omni.loader.OmniModelLoader.load")
+    @patch("src.nexus.models.omni.loader.OmniModelLoader.load")
     def test_generation_benchmark_logic(self, mock_load):
-        from src.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig
+        from src.nexus.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig
         import torch
         
         mock_model = MagicMock()
@@ -100,9 +100,9 @@ class TestBenchmarkRunnerMocked:
         assert result.tokens_per_second > 0
         assert mock_model.generate.called
 
-    @patch("src.omni.loader.OmniModelLoader.load")
+    @patch("src.nexus.models.omni.loader.OmniModelLoader.load")
     def test_perplexity_benchmark_logic(self, mock_load):
-        from src.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig
+        from src.nexus.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig
         import torch
         
         mock_model = MagicMock()
@@ -131,11 +131,11 @@ class TestExpandedEvalSuite:
     """Tests for expanded evaluation suite."""
     
     def test_import_expanded_eval(self):
-        from src.benchmarks import expanded_eval_suite
+        from src.nexus.benchmarks import expanded_eval_suite
         assert expanded_eval_suite is not None
     
     def test_has_evaluator_class(self):
-        from src.benchmarks import expanded_eval_suite
+        from src.nexus.benchmarks import expanded_eval_suite
         assert hasattr(expanded_eval_suite, '__file__')
 
 
@@ -143,7 +143,7 @@ class TestFullstackEval:
     """Tests for fullstack evaluation module."""
     
     def test_import_fullstack_eval(self):
-        from src.benchmarks import fullstack_eval
+        from src.nexus.benchmarks import fullstack_eval
         assert fullstack_eval is not None
 
 
@@ -151,7 +151,7 @@ class TestLovableBenchmark:
     """Tests for lovable benchmark module."""
     
     def test_import_lovable_benchmark(self):
-        from src.benchmarks import lovable_benchmark
+        from src.nexus.benchmarks import lovable_benchmark
         assert lovable_benchmark is not None
 
 import torch

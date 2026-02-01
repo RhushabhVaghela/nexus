@@ -28,7 +28,7 @@ import torch
 import torch.nn as nn
 
 # Import the module under test
-from src.nexus_final.sli.layer_cache import (
+from src.nexus.models.sli.layer_cache import (
     CacheEntry,
     CacheStats,
     LayerCache,

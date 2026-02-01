@@ -8,7 +8,7 @@ import sys
 import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-from src.benchmarks.fullstack_eval import (
+from src.nexus.benchmarks.fullstack_eval import (
     FullstackEval, EvalCase, EvalResult,
     RESTApiEvaluator, SQLEvaluator, ReactAccessibilityEvaluator,
     KubernetesEvaluator, TerraformEvaluator, CICDEvaluator
@@ -111,11 +111,11 @@ class TestFullstackEval:
     def test_main_eval_all(self, tmp_path):
         out = tmp_path / "fullstack.json"
         with patch("sys.argv", ["fullstack.py", "--eval", "all", "--output", str(out)]):
-            from src.benchmarks.fullstack_eval import main
+            from src.nexus.benchmarks.fullstack_eval import main
             main()
             assert out.exists()
 
     def test_main_list_cases(self):
         with patch("sys.argv", ["fullstack.py", "--list-cases"]):
-            from src.benchmarks.fullstack_eval import main
+            from src.nexus.benchmarks.fullstack_eval import main
             main()

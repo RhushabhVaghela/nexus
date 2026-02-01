@@ -1,5 +1,5 @@
 import pytest
-from src.utils.schema_normalizer import SchemaNormalizer
+from src.nexus.utils.schema_normalizer import SchemaNormalizer
 
 def test_normalize_musiccaps():
     sample = {

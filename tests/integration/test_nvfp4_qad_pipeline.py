@@ -17,7 +17,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 # Import the modules under test
-from src.nexus_final.sli import (
+from src.nexus.models.sli import (
     NVFP4StreamingLoader,
     NVFP4Quantizer,
     NVFP4Config,

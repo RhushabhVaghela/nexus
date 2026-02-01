@@ -25,7 +25,7 @@ class TestVideoDecoder:
     @pytest.fixture
     def decoder(self):
         """Fixture for VideoDecoder instance."""
-        from src.nexus_final.decoders import VideoDecoder
+        from src.nexus.models.decoders import VideoDecoder
         return VideoDecoder(
             model_id="stabilityai/stable-video-diffusion-img2vid-xt",
             device="cpu",
@@ -68,7 +68,7 @@ class TestVideoDecoder:
     
     def test_initialization_with_defaults(self):
         """Test VideoDecoder with default parameters."""
-        from src.nexus_final.decoders import VideoDecoder
+        from src.nexus.models.decoders import VideoDecoder
         decoder = VideoDecoder()
         
         assert decoder.model_id == "stabilityai/stable-video-diffusion-img2vid-xt"
@@ -77,7 +77,7 @@ class TestVideoDecoder:
         assert decoder._enable_model_cpu_offload is True
         assert decoder._enable_vae_slicing is True
     
-    @patch('src.nexus_final.decoders.StableVideoDiffusionPipeline')
+    @patch('src.nexus.models.decoders.StableVideoDiffusionPipeline')
     def test_load_success(self, mock_pipeline_class, decoder, mock_pipeline):
         """Test successful model loading."""
         mock_pipeline_class.from_pretrained.return_value = mock_pipeline
@@ -88,10 +88,10 @@ class TestVideoDecoder:
         assert decoder.pipeline is not None
         mock_pipeline_class.from_pretrained.assert_called_once()
     
-    @patch('src.nexus_final.decoders.StableVideoDiffusionPipeline')
+    @patch('src.nexus.models.decoders.StableVideoDiffusionPipeline')
     def test_load_with_cpu_offload(self, mock_pipeline_class, mock_pipeline):
         """Test loading with CPU offloading enabled."""
-        from src.nexus_final.decoders import VideoDecoder
+        from src.nexus.models.decoders import VideoDecoder
         decoder = VideoDecoder(
             device="cuda",
             enable_model_cpu_offload=True
@@ -102,31 +102,31 @@ class TestVideoDecoder:
         
         mock_pipeline.enable_model_cpu_offload.assert_called_once()
     
-    @patch('src.nexus_final.decoders.StableVideoDiffusionPipeline')
+    @patch('src.nexus.models.decoders.StableVideoDiffusionPipeline')
     def test_load_with_vae_slicing(self, mock_pipeline_class, mock_pipeline):
         """Test loading with VAE slicing enabled."""
         mock_pipeline_class.from_pretrained.return_value = mock_pipeline
         
-        from src.nexus_final.decoders import VideoDecoder
+        from src.nexus.models.decoders import VideoDecoder
         decoder = VideoDecoder(enable_vae_slicing=True)
         
         decoder.load()
         
         mock_pipeline.enable_vae_slicing.assert_called_once()
     
-    @patch('src.nexus_final.decoders.StableVideoDiffusionPipeline')
+    @patch('src.nexus.models.decoders.StableVideoDiffusionPipeline')
     def test_load_with_vae_tiling(self, mock_pipeline_class, mock_pipeline):
         """Test loading with VAE tiling enabled."""
         mock_pipeline_class.from_pretrained.return_value = mock_pipeline
         
-        from src.nexus_final.decoders import VideoDecoder
+        from src.nexus.models.decoders import VideoDecoder
         decoder = VideoDecoder(enable_vae_tiling=True)
         
         decoder.load()
         
         mock_pipeline.enable_vae_tiling.assert_called_once()
     
-    @patch('src.nexus_final.decoders.StableVideoDiffusionPipeline')
+    @patch('src.nexus.models.decoders.StableVideoDiffusionPipeline')
     def test_load_failure(self, mock_pipeline_class, decoder):
         """Test handling of model loading failure."""
         mock_pipeline_class.from_pretrained.side_effect = RuntimeError("Model not found")
@@ -139,7 +139,7 @@ class TestVideoDecoder:
         with pytest.raises(RuntimeError, match="VideoDecoder not loaded"):
             decoder.generate(Image.new('RGB', (256, 256)))
     
-    @patch('src.nexus_final.decoders.StableVideoDiffusionPipeline')
+    @patch('src.nexus.models.decoders.StableVideoDiffusionPipeline')
     def test_generate_with_pil_image(self, mock_pipeline_class, decoder, mock_pipeline):
         """Test generation with PIL Image input."""
         mock_pipeline_class.from_pretrained.return_value = mock_pipeline
@@ -151,8 +151,8 @@ class TestVideoDecoder:
         assert len(frames) == 5
         assert all(isinstance(f, Image.Image) for f in frames)
     
-    @patch('src.nexus_final.decoders.StableVideoDiffusionPipeline')
-    @patch('src.nexus_final.decoders.load_image')
+    @patch('src.nexus.models.decoders.StableVideoDiffusionPipeline')
+    @patch('src.nexus.models.decoders.load_image')
     def test_generate_with_image_path(self, mock_load_image, mock_pipeline_class, decoder, mock_pipeline):
         """Test generation with image path input."""
         mock_pipeline_class.from_pretrained.return_value = mock_pipeline
@@ -164,7 +164,7 @@ class TestVideoDecoder:
         assert len(frames) == 5
         mock_load_image.assert_called_once_with("/path/to/image.jpg")
     
-    @patch('src.nexus_final.decoders.StableVideoDiffusionPipeline')
+    @patch('src.nexus.models.decoders.StableVideoDiffusionPipeline')
     def test_generate_with_latent_tensor(self, mock_pipeline_class, decoder, mock_pipeline):
         """Test generation with latent tensor input."""
         mock_pipeline_class.from_pretrained.return_value = mock_pipeline
@@ -182,7 +182,7 @@ class TestVideoDecoder:
         with pytest.raises(ValueError, match="Conditioning must be PIL Image"):
             decoder.generate(12345)  # Invalid type
     
-    @patch('src.nexus_final.decoders.StableVideoDiffusionPipeline')
+    @patch('src.nexus.models.decoders.StableVideoDiffusionPipeline')
     def test_generate_with_seed(self, mock_pipeline_class, decoder, mock_pipeline):
         """Test generation with random seed for reproducibility."""
         mock_pipeline_class.from_pretrained.return_value = mock_pipeline
@@ -195,7 +195,7 @@ class TestVideoDecoder:
         call_kwargs = mock_pipeline.call_args.kwargs
         assert call_kwargs.get('generator') is not None
     
-    @patch('src.nexus_final.decoders.StableVideoDiffusionPipeline')
+    @patch('src.nexus.models.decoders.StableVideoDiffusionPipeline')
     def test_generate_parameters_passed(self, mock_pipeline_class, decoder, mock_pipeline):
         """Test that all generation parameters are passed correctly."""
         mock_pipeline_class.from_pretrained.return_value = mock_pipeline
@@ -224,7 +224,7 @@ class TestVideoDecoder:
         assert call_kwargs['noise_aug_strength'] == 0.05
         assert call_kwargs['decode_chunk_size'] == 4
     
-    @patch('src.nexus_final.decoders.StableVideoDiffusionPipeline')
+    @patch('src.nexus.models.decoders.StableVideoDiffusionPipeline')
     def test_generate_failure(self, mock_pipeline_class, decoder, mock_pipeline):
         """Test handling of generation failure."""
         mock_pipeline_class.from_pretrained.return_value = mock_pipeline
@@ -236,7 +236,7 @@ class TestVideoDecoder:
         with pytest.raises(RuntimeError, match="Video generation failed"):
             decoder.generate(conditioning)
     
-    @patch('src.nexus_final.decoders.StableVideoDiffusionPipeline')
+    @patch('src.nexus.models.decoders.StableVideoDiffusionPipeline')
     def test_generate_from_text_with_image_generator(self, mock_pipeline_class, decoder, mock_pipeline):
         """Test text-to-video generation with image generator."""
         mock_pipeline_class.from_pretrained.return_value = mock_pipeline
@@ -256,7 +256,7 @@ class TestVideoDecoder:
         assert len(frames) == 5
         mock_image_gen.assert_called_once()
     
-    @patch('src.nexus_final.decoders.StableVideoDiffusionPipeline')
+    @patch('src.nexus.models.decoders.StableVideoDiffusionPipeline')
     def test_generate_from_text_without_image_generator(self, mock_pipeline_class, decoder, mock_pipeline):
         """Test text-to-video without image generator raises error."""
         mock_pipeline_class.from_pretrained.return_value = mock_pipeline
@@ -275,7 +275,7 @@ class TestVideoDecoder:
         assert video_array.shape == (5, 256, 256, 3)
         assert video_array.dtype == np.uint8
     
-    @patch('src.nexus_final.decoders.imageio')
+    @patch('src.nexus.models.decoders.imageio')
     def test_save_video_mp4(self, mock_imageio, decoder, tmp_path):
         """Test saving video as MP4."""
         frames = [Image.new('RGB', (256, 256)) for _ in range(5)]
@@ -296,7 +296,7 @@ class TestVideoDecoder:
         assert result == str(output_path)
         # GIF is saved using PIL's save method
     
-    @patch('src.nexus_final.decoders.imageio')
+    @patch('src.nexus.models.decoders.imageio')
     def test_save_video_webm(self, mock_imageio, decoder, tmp_path):
         """Test saving video as WebM."""
         frames = [Image.new('RGB', (256, 256)) for _ in range(5)]
@@ -316,7 +316,7 @@ class TestVideoDecoder:
             with pytest.raises(ImportError, match="imageio is required"):
                 decoder.save_video(frames, str(output_path))
     
-    @patch('src.nexus_final.decoders.StableVideoDiffusionPipeline')
+    @patch('src.nexus.models.decoders.StableVideoDiffusionPipeline')
     def test_latent_to_image(self, mock_pipeline_class, decoder, mock_pipeline):
         """Test conversion of latent tensor to image."""
         mock_pipeline_class.from_pretrained.return_value = mock_pipeline
@@ -388,40 +388,40 @@ class TestVideoDecoder:
 class TestNexusDecoders:
     """Tests for NexusDecoders factory class."""
     
-    @patch('src.nexus_final.decoders.SpeechT5HifiGan')
+    @patch('src.nexus.models.decoders.SpeechT5HifiGan')
     def test_load_audio_vocoder(self, mock_vocoder_class):
         """Test loading audio vocoder."""
         mock_vocoder = MagicMock()
         mock_vocoder_class.from_pretrained.return_value = mock_vocoder
         
-        from src.nexus_final.decoders import NexusDecoders
+        from src.nexus.models.decoders import NexusDecoders
         result = NexusDecoders.load_audio_vocoder(device="cpu")
         
         assert result == mock_vocoder
         mock_vocoder.eval.assert_called_once()
         mock_vocoder.to.assert_called_once_with("cpu")
     
-    @patch('src.nexus_final.decoders.AutoencoderKL')
+    @patch('src.nexus.models.decoders.AutoencoderKL')
     def test_load_image_decoder(self, mock_vae_class):
         """Test loading image VAE decoder."""
         mock_vae = MagicMock()
         mock_vae_class.from_pretrained.return_value = mock_vae
         
-        from src.nexus_final.decoders import NexusDecoders
+        from src.nexus.models.decoders import NexusDecoders
         result = NexusDecoders.load_image_decoder(device="cpu")
         
         assert result == mock_vae
         mock_vae.eval.assert_called_once()
         mock_vae.to.assert_called_once_with("cpu")
     
-    @patch('src.nexus_final.decoders.VideoDecoder')
+    @patch('src.nexus.models.decoders.VideoDecoder')
     def test_load_video_decoder(self, mock_decoder_class):
         """Test loading video decoder."""
         mock_decoder = MagicMock()
         mock_decoder_class.return_value = mock_decoder
         mock_decoder.load.return_value = mock_decoder
         
-        from src.nexus_final.decoders import NexusDecoders
+        from src.nexus.models.decoders import NexusDecoders
         result = NexusDecoders.load_video_decoder(device="cuda")
         
         assert result == mock_decoder
@@ -431,14 +431,14 @@ class TestNexusDecoders:
         )
         mock_decoder.load.assert_called_once()
     
-    @patch('src.nexus_final.decoders.VideoDecoder')
+    @patch('src.nexus.models.decoders.VideoDecoder')
     def test_load_video_decoder_with_kwargs(self, mock_decoder_class):
         """Test loading video decoder with additional kwargs."""
         mock_decoder = MagicMock()
         mock_decoder_class.return_value = mock_decoder
         mock_decoder.load.return_value = mock_decoder
         
-        from src.nexus_final.decoders import NexusDecoders
+        from src.nexus.models.decoders import NexusDecoders
         result = NexusDecoders.load_video_decoder(
             device="cuda",
             torch_dtype=torch.float16,
@@ -459,7 +459,7 @@ class TestVideoDecoderEdgeCases:
     @pytest.fixture
     def loaded_decoder(self):
         """Create a loaded decoder with mocked pipeline."""
-        from src.nexus_final.decoders import VideoDecoder
+        from src.nexus.models.decoders import VideoDecoder
         decoder = VideoDecoder(device="cpu")
         decoder.pipeline = MagicMock()
         

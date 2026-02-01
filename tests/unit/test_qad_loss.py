@@ -21,7 +21,7 @@ import time
 from unittest.mock import MagicMock, patch
 
 # Import the module under test
-from src.nexus_final.sli.qad_loss import (
+from src.nexus.models.sli.qad_loss import (
     QADDistillationLoss,
     QADLossConfig,
     QADLossType,
@@ -31,7 +31,7 @@ from src.nexus_final.sli.qad_loss import (
     get_qad_loss_config,
     compute_distillation_loss,
 )
-from src.nexus_final.sli.exceptions import SLIError
+from src.nexus.models.sli.exceptions import SLIError
 
 
 # ============================================================================

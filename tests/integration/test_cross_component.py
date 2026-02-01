@@ -50,8 +50,8 @@ class TestLoaderTrainingIntegration:
     
     def test_loader_to_training_pipeline(self):
         """Test data flows correctly from loader to training."""
-        from src.data.universal_loader import load_dataset_universal, LoadResult
-        from src.stages.base import TrainingStage
+        from src.nexus.data.universal_loader import load_dataset_universal, LoadResult
+        from src.nexus.training.stages.base import TrainingStage
         
         # Create mock training stage
         stage = MagicMock(spec=TrainingStage)
@@ -66,7 +66,7 @@ class TestLoaderTrainingIntegration:
             source_path="/fake/path"
         )
         
-        with patch('src.data.universal_loader.load_dataset_universal', return_value=mock_result):
+        with patch('src.nexus.data.universal_loader.load_dataset_universal', return_value=mock_result):
             result = load_dataset_universal("/fake/path", sample_size=2)
             
             assert result.num_samples == 2
@@ -142,13 +142,13 @@ class TestTrainingInferenceIntegration:
     
     def test_checkpoint_save_load(self, tmp_path):
         """Test checkpoint can be saved and loaded between training and inference."""
-        from src.nexus_final.architect import NexusStudent
+        from src.nexus.models.architect import NexusStudent
         
-        with patch('src.nexus_final.architect.AutoModelForCausalLM') as mock_model_class, \
-             patch('src.nexus_final.architect.AutoTokenizer'), \
-             patch('src.nexus_final.architect.get_peft_model'), \
-             patch('src.nexus_final.architect.LoraConfig'), \
-             patch('src.nexus_final.architect.CrossModalAlignment'):
+        with patch('src.nexus.models.architect.AutoModelForCausalLM') as mock_model_class, \
+             patch('src.nexus.models.architect.AutoTokenizer'), \
+             patch('src.nexus.models.architect.get_peft_model'), \
+             patch('src.nexus.models.architect.LoraConfig'), \
+             patch('src.nexus.models.architect.CrossModalAlignment'):
             
             mock_model = MagicMock()
             mock_model_class.from_pretrained.return_value = mock_model
@@ -249,7 +249,7 @@ class TestTTSStreamingIntegration:
     
     def test_tts_to_streaming_pipeline(self):
         """Test TTS output can be streamed."""
-        from src.streaming.tts import TTSEngine
+        from src.nexus.streaming.tts import TTSEngine
         
         # Mock TTS engine
         with patch.object(TTSEngine, '_load_model'):
@@ -300,10 +300,10 @@ class TestErrorPropagation:
     
     def test_loader_error_propagation(self):
         """Test errors in loader are properly handled."""
-        from src.data.universal_loader import load_dataset_universal
+        from src.nexus.data.universal_loader import load_dataset_universal
         
         # Simulate loader error
-        with patch('src.data.universal_loader.UniversalDataLoader.load') as mock_load:
+        with patch('src.nexus.data.universal_loader.UniversalDataLoader.load') as mock_load:
             mock_load.return_value = MagicMock(
                 dataset=[],
                 error="File not found",

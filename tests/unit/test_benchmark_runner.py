@@ -10,8 +10,8 @@ import json
 import os
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-from src.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig
-from src.metrics_tracker import BenchmarkMetrics
+from src.nexus.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig
+from src.nexus.utils.metrics_tracker import BenchmarkMetrics
 
 class TestBenchmarkResult:
     """Test BenchmarkMetrics dataclass."""
@@ -111,13 +111,13 @@ class TestBenchmarkMethods:
 
     def test_get_sample_prompts_fallback(self, mock_runner):
         # Force exception in real sampling to hit fallbacks
-        with patch("src.data.universal_loader.load_dataset_universal", side_effect=Exception("No data")):
+        with patch("src.nexus.data.universal_loader.load_dataset_universal", side_effect=Exception("No data")):
             prompts = mock_runner.get_sample_prompts()
             assert len(prompts) >= 5
             assert "Explain quantum computing" in prompts[0]
 
     def test_runner_setup(self, mock_runner):
-        with patch("src.omni.loader.OmniModelLoader.load", return_value=(MagicMock(), MagicMock())):
+        with patch("src.nexus.models.omni.loader.OmniModelLoader.load", return_value=(MagicMock(), MagicMock())):
             mock_runner.setup()
             assert mock_runner.model is not None
             assert mock_runner.tokenizer is not None
@@ -166,7 +166,7 @@ class TestBenchmarkMethods:
             p = tmp_path / f"d_{i}.jsonl"
             with open(p, 'w') as f: f.write(json.dumps(fmt) + "\n")
             
-            with patch("src.benchmarks.benchmark_runner.ALL_DATASETS", {"t": [str(p)]}), \
+            with patch("src.nexus.benchmarks.benchmark_runner.ALL_DATASETS", {"t": [str(p)]}), \
                  patch("pathlib.Path.exists", return_value=True):
                 prompts = mock_runner.get_sample_prompts()
                 # Check if it was picked up
@@ -196,9 +196,9 @@ class TestBenchmarkMethods:
 
     def test_main_execution(self):
         with patch("sys.argv", ["runner.py", "--model", "/fake", "--runs", "1"]), \
-             patch("src.benchmarks.benchmark_runner.BenchmarkRunner.run_all"), \
-             patch("src.benchmarks.benchmark_runner.BenchmarkRunner.print_summary"):
-            from src.benchmarks.benchmark_runner import main
+             patch("src.nexus.benchmarks.benchmark_runner.BenchmarkRunner.run_all"), \
+             patch("src.nexus.benchmarks.benchmark_runner.BenchmarkRunner.print_summary"):
+            from src.nexus.benchmarks.benchmark_runner import main
             assert main() == 0
 
     def test_memory_stats(self, mock_runner):

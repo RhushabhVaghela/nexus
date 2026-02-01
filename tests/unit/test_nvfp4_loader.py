@@ -20,7 +20,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch, mock_open
 
 # Import the module under test
-from src.nexus_final.sli.nvfp4_loader import (
+from src.nexus.models.sli.nvfp4_loader import (
     NVFP4StreamingLoader,
     NVFP4Quantizer,
     NVFP4Config,
@@ -32,7 +32,7 @@ from src.nexus_final.sli.nvfp4_loader import (
     dequantize_from_nvfp4,
     NVFP4_AVAILABLE,
 )
-from src.nexus_final.sli.exceptions import SLIError, WeightLoadingError
+from src.nexus.models.sli.exceptions import SLIError, WeightLoadingError
 
 
 # ============================================================================
@@ -215,8 +215,8 @@ class TestNVFP4Config:
 
     def test_config_hardware_fallback(self):
         """Test that hardware mode falls back to software when TE unavailable."""
-        with patch('src.nexus_final.sli.nvfp4_loader.NVFP4_AVAILABLE', False):
-            with patch('src.nexus_final.sli.nvfp4_loader.logger') as mock_logger:
+        with patch('src.nexus.models.sli.nvfp4_loader.NVFP4_AVAILABLE', False):
+            with patch('src.nexus.models.sli.nvfp4_loader.logger') as mock_logger:
                 config = NVFP4Config(mode=NVFP4Mode.HARDWARE)
                 
                 # Should fall back to software mode
@@ -428,7 +428,7 @@ class TestNVFP4Quantizer:
 
     def test_quantize_hardware_unavailable(self):
         """Test hardware quantization falls back when TE unavailable."""
-        with patch('src.nexus_final.sli.nvfp4_loader.NVFP4_AVAILABLE', False):
+        with patch('src.nexus.models.sli.nvfp4_loader.NVFP4_AVAILABLE', False):
             config = NVFP4Config(mode=NVFP4Mode.HARDWARE)
             quantizer = NVFP4Quantizer(config)
             
@@ -440,7 +440,7 @@ class TestNVFP4Quantizer:
 
     def test_dequantize_hardware_unavailable(self):
         """Test hardware dequantization falls back when TE unavailable."""
-        with patch('src.nexus_final.sli.nvfp4_loader.NVFP4_AVAILABLE', False):
+        with patch('src.nexus.models.sli.nvfp4_loader.NVFP4_AVAILABLE', False):
             config = NVFP4Config(mode=NVFP4Mode.HARDWARE)
             quantizer = NVFP4Quantizer(config)
             
@@ -809,7 +809,7 @@ class TestHardwareAcceleration:
 
     def test_hardware_mode_fallback_warning(self):
         """Test that hardware mode produces fallback warning when TE unavailable."""
-        with patch('src.nexus_final.sli.nvfp4_loader.NVFP4_AVAILABLE', False):
+        with patch('src.nexus.models.sli.nvfp4_loader.NVFP4_AVAILABLE', False):
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
                 config = NVFP4Config(mode=NVFP4Mode.HARDWARE)
@@ -822,7 +822,7 @@ class TestHardwareAcceleration:
 
     def test_quantize_with_hardware_mode_unavailable(self):
         """Test quantization when hardware mode is unavailable."""
-        with patch('src.nexus_final.sli.nvfp4_loader.NVFP4_AVAILABLE', False):
+        with patch('src.nexus.models.sli.nvfp4_loader.NVFP4_AVAILABLE', False):
             config = NVFP4Config(mode=NVFP4Mode.HARDWARE)
             quantizer = NVFP4Quantizer(config)
             tensor = torch.randn(64, 64)

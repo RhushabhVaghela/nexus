@@ -9,7 +9,7 @@ import sys
 import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-from src.benchmarks.ruler_benchmark import RULERBenchmark, RULERConfig, TaskResult, RULERResult
+from src.nexus.benchmarks.ruler_benchmark import RULERBenchmark, RULERConfig, TaskResult, RULERResult
 
 class TestRULERConfig:
     def test_config_defaults(self):
@@ -39,13 +39,13 @@ class TestRULERBenchmark:
         assert latency >= 0
 
     def test_format_prompt(self, mock_benchmark):
-        from src.benchmarks.ruler_tasks import TaskSample
+        from src.nexus.benchmarks.ruler_tasks import TaskSample
         sample = TaskSample(context="Ctx", question="Q?", expected_answer="A")
         prompt = mock_benchmark.format_prompt(sample)
         assert "Ctx" in prompt
         assert "Q?" in prompt
 
-    @patch("src.benchmarks.ruler_benchmark.get_task")
+    @patch("src.nexus.benchmarks.ruler_benchmark.get_task")
     def test_evaluate_task(self, mock_get_task, mock_benchmark):
         mock_task = MagicMock()
         mock_task_instance = mock_task.return_value
@@ -71,7 +71,7 @@ class TestRULERBenchmark:
             assert result.accuracy == 1.0
             assert result.correct_count == 1
 
-    @patch("src.benchmarks.ruler_benchmark.get_task")
+    @patch("src.nexus.benchmarks.ruler_benchmark.get_task")
     def test_run(self, mock_get_task, mock_benchmark):
         class FakeTask:
             def __init__(self, cfg): 
@@ -109,16 +109,16 @@ class TestRULERBenchmark:
     def test_main_execution(self, tmp_path):
         out = tmp_path / "res.json"
         with patch("sys.argv", ["ruler.py", "--model", "/fake", "--lengths", "1024", "--samples", "1", "--output", str(out)]), \
-             patch("src.benchmarks.ruler_benchmark.RULERBenchmark.setup"), \
-             patch("src.benchmarks.ruler_benchmark.RULERBenchmark.run") as m_run:
+             patch("src.nexus.benchmarks.ruler_benchmark.RULERBenchmark.setup"), \
+             patch("src.nexus.benchmarks.ruler_benchmark.RULERBenchmark.run") as m_run:
             
             m_run.return_value = RULERResult("/fake", [], 1024, {1024: 0.9}, {})
-            from src.benchmarks.ruler_benchmark import main
+            from src.nexus.benchmarks.ruler_benchmark import main
             main()
             assert out.exists()
 
-    @patch("src.benchmarks.ruler_benchmark.RULERBenchmark.setup", side_effect=Exception("Fail"))
+    @patch("src.nexus.benchmarks.ruler_benchmark.RULERBenchmark.setup", side_effect=Exception("Fail"))
     def test_main_fail(self, mock_setup):
         with patch("sys.argv", ["ruler.py", "--model", "/fake"]):
-            from src.benchmarks.ruler_benchmark import main
+            from src.nexus.benchmarks.ruler_benchmark import main
             main() # Should handle exception and print usage

@@ -5,8 +5,8 @@ from pathlib import Path
 import json
 import logging
 from unittest.mock import MagicMock, patch
-import src.omni.loader as loader_mod
-from src.omni.loader import OmniModelLoader, load_omni_model, OmniModelConfig
+import src.nexus.models.omni.loader as loader_mod
+from src.nexus.models.omni.loader import OmniModelLoader, load_omni_model, OmniModelConfig
 from transformers import PreTrainedModel, PretrainedConfig
 
 # Configure logging
@@ -53,7 +53,7 @@ class TestOmniModelLoaderSurgical:
 
     def test_get_model_info_exception(self, tmp_path):
         # Trigger Exception in get_model_info (Line 177)
-        with patch("src.omni.loader.json.load", side_effect=Exception("Mock Fail")):
+        with patch("src.nexus.models.omni.loader.json.load", side_effect=Exception("Mock Fail")):
             model_dir = tmp_path / "except_test"
             model_dir.mkdir()
             with open(model_dir / "config.json", "w") as f: f.write("{}")
@@ -124,8 +124,8 @@ class TestOmniModelLoaderSurgical:
                 self.layer1 = nn.Linear(10, 10)
         
         mod = CustomModule()
-        with patch("src.omni.loader.AutoTokenizer.from_pretrained"), \
-             patch("src.omni.loader.AutoModelForCausalLM.from_pretrained"):
+        with patch("src.nexus.models.omni.loader.AutoTokenizer.from_pretrained"), \
+             patch("src.nexus.models.omni.loader.AutoModelForCausalLM.from_pretrained"):
             loader.load()
         
         # Test get_submodule patch
@@ -176,20 +176,20 @@ class TestOmniModelLoaderSurgical:
         class MockOmni:
             def __init__(self, **kwargs): pass
             
-        with patch("src.omni.loader.AutoTokenizer.from_pretrained"), \
-             patch("src.omni.loader.OmniModelLoader.is_omni_model", return_value=True), \
-             patch("src.omni.loader.OmniMultimodalLM", MockOmni, create=True):
+        with patch("src.nexus.models.omni.loader.AutoTokenizer.from_pretrained"), \
+             patch("src.nexus.models.omni.loader.OmniModelLoader.is_omni_model", return_value=True), \
+             patch("src.nexus.models.omni.loader.OmniMultimodalLM", MockOmni, create=True):
                  m, t = loader.load()
                  assert isinstance(m, MockOmni)
 
     def test_strategy_fail_loop(self, mock_model_dir):
         loader = OmniModelLoader(mock_model_dir)
-        with patch("src.omni.loader.AutoTokenizer.from_pretrained"), \
-             patch("src.omni.loader.AutoModelForCausalLM.from_pretrained", side_effect=Exception("Fail")), \
-             patch("src.omni.loader.AutoModelForVision2Seq.from_pretrained", side_effect=Exception("Fail")), \
-             patch("src.omni.loader.AutoModelForImageTextToText.from_pretrained", side_effect=Exception("Fail")), \
-             patch("src.omni.loader.AutoModelForSeq2SeqLM.from_pretrained", side_effect=Exception("Fail")), \
-             patch("src.omni.loader.AutoModel.from_pretrained", side_effect=Exception("Fail")):
+        with patch("src.nexus.models.omni.loader.AutoTokenizer.from_pretrained"), \
+             patch("src.nexus.models.omni.loader.AutoModelForCausalLM.from_pretrained", side_effect=Exception("Fail")), \
+             patch("src.nexus.models.omni.loader.AutoModelForVision2Seq.from_pretrained", side_effect=Exception("Fail")), \
+             patch("src.nexus.models.omni.loader.AutoModelForImageTextToText.from_pretrained", side_effect=Exception("Fail")), \
+             patch("src.nexus.models.omni.loader.AutoModelForSeq2SeqLM.from_pretrained", side_effect=Exception("Fail")), \
+             patch("src.nexus.models.omni.loader.AutoModel.from_pretrained", side_effect=Exception("Fail")):
              
              with pytest.raises(RuntimeError) as exc:
                  loader.load()
@@ -200,8 +200,8 @@ class TestOmniModelLoaderSurgical:
             json.dump({}, f)
         loader = OmniModelLoader(mock_model_dir)
         mock_model = MagicMock()
-        with patch("src.omni.loader.AutoTokenizer.from_pretrained"), \
-             patch("src.omni.loader.AutoModelForCausalLM.from_pretrained", return_value=mock_model), \
+        with patch("src.nexus.models.omni.loader.AutoTokenizer.from_pretrained"), \
+             patch("src.nexus.models.omni.loader.AutoModelForCausalLM.from_pretrained", return_value=mock_model), \
              patch("peft.PeftModel.from_pretrained", return_value="peft_model"):
              m, t = loader.load()
              assert m == "peft_model"
@@ -217,13 +217,13 @@ class TestOmniModelLoaderSurgical:
                 self.gradient_checkpointing_enabled = True
         
         model = MockModel()
-        with patch("src.omni.loader.OmniModelLoader.load", return_value=(model, MagicMock())):
+        with patch("src.nexus.models.omni.loader.OmniModelLoader.load", return_value=(model, MagicMock())):
             m, t = loader.load_for_training()
             assert not any(p.requires_grad for p in model.talker.parameters())
             assert model.gradient_checkpointing_enabled
 
     def test_convenience_function(self, mock_model_dir):
-        with patch("src.omni.loader.OmniModelLoader.load", return_value=("model", "tok")):
+        with patch("src.nexus.models.omni.loader.OmniModelLoader.load", return_value=("model", "tok")):
             m, t = load_omni_model(mock_model_dir)
             assert m == "model"
 
@@ -241,6 +241,6 @@ class TestOmniModelLoaderSurgical:
 
     def test_misc_methods(self, mock_model_dir):
         loader = OmniModelLoader(mock_model_dir)
-        with patch("src.omni.loader.OmniModelLoader.load"):
+        with patch("src.nexus.models.omni.loader.OmniModelLoader.load"):
             loader.load_thinker_only()
             loader.load_talker_only()

@@ -1,7 +1,7 @@
 import pytest
 import shutil
 import os
-from src.nexus_final.architect import NeuralArchitect
+from src.nexus.models.architect import NeuralArchitect
 
 @pytest.fixture
 def architect_setup(tmp_path):

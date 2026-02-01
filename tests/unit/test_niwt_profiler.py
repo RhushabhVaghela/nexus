@@ -4,7 +4,7 @@ import numpy as np
 import shutil
 import tempfile
 import os
-from src.nexus_final.profiler import StreamingPCAProfiler
+from src.nexus.models.profiler import StreamingPCAProfiler
 
 class TestNIWTProfiler(unittest.TestCase):
     def setUp(self):

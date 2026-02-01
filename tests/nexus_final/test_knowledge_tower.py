@@ -2,12 +2,12 @@ import pytest
 import torch
 import os
 from unittest.mock import MagicMock, patch
-from src.nexus_final.knowledge import KnowledgeTower, FileMemoryManager
+from src.nexus.models.knowledge import KnowledgeTower, FileMemoryManager
 
 def test_knowledge_tower_projection():
     # Mock Tokenizer and Model
-    with patch("src.nexus_final.knowledge.AutoTokenizer") as mock_tokenizer, \
-         patch("src.nexus_final.knowledge.AutoModel") as mock_model:
+    with patch("src.nexus.models.knowledge.AutoTokenizer") as mock_tokenizer, \
+         patch("src.nexus.models.knowledge.AutoModel") as mock_model:
         
         # Setup mock outputs
         mock_model.from_pretrained.return_value = MagicMock()
@@ -52,8 +52,8 @@ def test_init_custom_model():
 
 def test_text_retrieval():
     # Mock Tokenizer and Model for retrieval
-    with patch("src.nexus_final.knowledge.AutoTokenizer.from_pretrained") as mock_tok_cls, \
-         patch("src.nexus_final.knowledge.AutoModel.from_pretrained") as mock_model_cls:
+    with patch("src.nexus.models.knowledge.AutoTokenizer.from_pretrained") as mock_tok_cls, \
+         patch("src.nexus.models.knowledge.AutoModel.from_pretrained") as mock_model_cls:
         
         tower = KnowledgeTower(student_dim=128)
         # Mock lazy init components
@@ -94,7 +94,7 @@ def test_file_memory_manager(tmp_path):
 
 def test_session_persistence(tmp_path):
     # Mocking memory root via KnowledgeTower
-    with patch("src.nexus_final.knowledge.FileMemoryManager") as MockMem:
+    with patch("src.nexus.models.knowledge.FileMemoryManager") as MockMem:
         mem_instance = MockMem.return_value
         tower = KnowledgeTower(student_dim=128)
         tower.memory_manager = mem_instance
@@ -109,7 +109,7 @@ def test_session_persistence(tmp_path):
 
 def test_real_file_persistence(tmp_path):
     # Integration test for FileMemoryManager real file IO
-    from src.nexus_final.knowledge import FileMemoryManager
+    from src.nexus.models.knowledge import FileMemoryManager
     mem_root = str(tmp_path / "memory")
     manager = FileMemoryManager(memory_root=mem_root)
     

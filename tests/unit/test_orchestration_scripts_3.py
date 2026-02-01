@@ -45,7 +45,7 @@ def test_script_24_main():
             del sys.modules["deepspeed"]
             
         with patch("sys.argv", ["24.py", "--data-path", "fake"]), \
-             patch("src.multimodal.model.OmniMultimodalLM"), \
+             patch("src.nexus.multimodal.model.OmniMultimodalLM"), \
              patch("transformers.Trainer"), \
              patch("transformers.TrainingArguments"), \
              patch("src.24_multimodal_training.os.environ.get", return_value="nexus"), \
@@ -68,10 +68,10 @@ def test_script_25_main():
             del sys.modules["deepspeed"]
             
         with patch("sys.argv", ["25.py"]), \
-             patch("src.streaming.memory.StreamingMemory"), \
-             patch("src.streaming.tts.TTSStreamer"), \
-             patch("src.streaming.vision.VisionStreamBuffer"), \
-             patch("src.multimodal.model.OmniMultimodalLM"), \
+             patch("src.nexus.streaming.memory.StreamingMemory"), \
+             patch("src.nexus.streaming.tts.TTSStreamer"), \
+             patch("src.nexus.streaming.vision.VisionStreamBuffer"), \
+             patch("src.nexus.multimodal.model.OmniMultimodalLM"), \
              patch("importlib.util.find_spec", return_value=None):
             
             if "src.25_realtime_streaming" in sys.modules:

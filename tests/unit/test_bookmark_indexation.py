@@ -12,7 +12,7 @@ import sys
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.reasoning.bookmark_indexation import (
+from src.nexus.reasoning.bookmark_indexation import (
     BookmarkIndexation, BookmarkConfig, BookmarkEntry, BookmarkIndex,
     TieredKVCache, DiskCache, StorageTier, create_bookmark_indexation
 )

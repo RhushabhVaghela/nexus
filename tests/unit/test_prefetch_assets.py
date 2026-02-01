@@ -1,7 +1,7 @@
 import pytest
 import json
 from unittest.mock import patch, MagicMock
-from src.utils.prefetch_assets import extract_urls_from_json, download_asset
+from src.nexus.utils.prefetch_assets import extract_urls_from_json, download_asset
 
 def test_extract_urls():
     data = {
@@ -21,7 +21,7 @@ def test_download_asset(mock_get, tmp_path):
     mock_resp.content = b"image_data"
     mock_get.return_value = mock_resp
     
-    with patch("src.utils.prefetch_assets.PUBLIC_DIR", tmp_path):
+    with patch("src.nexus.utils.prefetch_assets.PUBLIC_DIR", tmp_path):
         download_asset("http://example.com/logo.png")
         
         dest = tmp_path / "logo.png"
@@ -33,7 +33,7 @@ def test_download_asset_skip_existing(mock_get, tmp_path):
     dest = tmp_path / "already.png"
     dest.write_bytes(b"old_data")
     
-    with patch("src.utils.prefetch_assets.PUBLIC_DIR", tmp_path):
+    with patch("src.nexus.utils.prefetch_assets.PUBLIC_DIR", tmp_path):
         download_asset("http://example.com/already.png")
         assert not mock_get.called
         assert dest.read_bytes() == b"old_data"

@@ -21,7 +21,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch, mock_open
 
 # Import the module under test
-from src.nexus_final.sli.hierarchical_cache import (
+from src.nexus.models.sli.hierarchical_cache import (
     HierarchicalLayerCache,
     HierarchicalCacheConfig,
     HierarchicalCacheEntry,
@@ -29,7 +29,7 @@ from src.nexus_final.sli.hierarchical_cache import (
     EvictionPolicy,
     HierarchicalCacheError,
 )
-from src.nexus_final.sli.exceptions import SLIError
+from src.nexus.models.sli.exceptions import SLIError
 
 
 # ============================================================================
