@@ -1,0 +1,87 @@
+# Nexus Multimodal Dataset Configuration
+# Source of Truth: src/nexus_core/towers/registry.py (DATASET_REGISTRY)
+
+# ═══════════════════════════════════════════════════════════════
+# AUDIO DATASETS
+# ═══════════════════════════════════════════════════════════════
+audio_datasets:
+  - name: "birgermoell/ravdess"
+    path: "/mnt/e/data/datasets/multimodal/birgermoell_ravdess"
+    type: "emotion_audio"
+    tags: ["multimodal", "audio"]
+    
+  - name: "CREMA-D-1.0"
+    path: "/mnt/e/data/datasets/multimodal/CREMA-D-1.0"
+    type: "emotion_audio"
+    tags: ["multimodal", "audio"]
+    
+  - name: "google/MusicCaps"
+    path: "/mnt/e/data/datasets/multimodal/google_MusicCaps"
+    type: "music_captioning"
+    tags: ["multimodal", "audio"]
+    
+  - name: "google/speech_commands"
+    path: "/mnt/e/data/datasets/multimodal/google_speech_commands"
+    type: "speech_commands"
+    tags: ["multimodal", "audio"]
+    
+  - name: "Mozilla/Common-Voice"
+    path: "/mnt/e/data/datasets/multimodal/Mozilla_Common-Voice"
+    type: "asr"
+    tags: ["multimodal", "audio"]
+    
+  - name: "nvidia/AudioSkills"
+    path: "/mnt/e/data/datasets/multimodal/nvidia_AudioSkills"
+    type: "audio_skills"
+    tags: ["multimodal", "audio"]
+    
+  - name: "UniDataPro/speech-emotion-recognition"
+    path: "/mnt/e/data/datasets/multimodal/UniDataPro_speech-emotion-recognition"
+    type: "emotion_audio"
+    tags: ["multimodal", "audio"]
+
+# ═══════════════════════════════════════════════════════════════
+# VISION & VIDEO DATASETS
+# ═══════════════════════════════════════════════════════════════
+vision_datasets:
+  - name: "CASIA-IVA-Lab/valor-32k-annotations"
+    path: "/mnt/e/data/datasets/multimodal/CASIA-IVA-Lab_valor-32k-annotations"
+    type: "vision_text"
+    tags: ["multimodal"]
+    
+  - name: "E-MM1-100M"
+    path: "/mnt/e/data/datasets/multimodal/E-MM1-100M"
+    type: "massive_visual"
+    tags: ["multimodal"]
+    
+  - name: "LucasFang/JourneyDB-GoT"
+    path: "/mnt/e/data/datasets/multimodal/LucasFang_JourneyDB-GoT"
+    type: "image_generation"
+    tags: ["multimodal", "image"]
+    
+  - name: "mvp-lab/LLaVA-OneVision-1.5-RL-Data"
+    path: "/mnt/e/data/datasets/multimodal/mvp-lab_LLaVA-OneVision-1.5-RL-Data"
+    type: "vision_rl"
+    tags: ["multimodal"]
+    
+  - name: "qingy2024/VaTeX"
+    path: "/mnt/e/data/datasets/multimodal/qingy2024_VaTeX"
+    type: "video_text"
+    tags: ["multimodal", "video"]
+    
+  - name: "XiangpengYang/VideoCoF-50k"
+    path: "/mnt/e/data/datasets/multimodal/XiangpengYang_VideoCoF-50k"
+    type: "video_captioning"
+    tags: ["multimodal"]
+    
+  - name: "VoiceAssistant/Lite"
+    path: "/mnt/e/data/datasets/multimodal/VoiceAssistant_Lite"
+    type: "multimodal_assistant"
+    tags: ["multimodal"]
+
+# ═══════════════════════════════════════════════════════════════
+# PROCESSING CONFIGURATION
+# ═══════════════════════════════════════════════════════════════
+processing:
+  mode: "local"
+  base_dir: "/mnt/e/data/datasets/multimodal"

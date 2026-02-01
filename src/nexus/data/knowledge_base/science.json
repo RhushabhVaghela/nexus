@@ -1,0 +1,17 @@
+{
+  "processes": [
+    {
+      "topic": "Photosynthesis",
+      "steps": ["Light Absorption", "Electron Transport", "ATP Synthesis", "Calvin Cycle"]
+    },
+    {
+      "topic": "Water Cycle",
+      "steps": ["Evaporation", "Condensation", "Precipitation", "Collection"]
+    }
+  ],
+  "formulas": [
+    {"name": "Newton's Second Law", "latex": "F = ma"},
+    {"name": "Mass-Energy Equivalence", "latex": "E = mc^2"},
+    {"name": "Heisenberg Uncertainty", "latex": "\\Delta x \\Delta p \\ge \\frac{\\hbar}{2}"}
+  ]
+}
