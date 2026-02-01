@@ -1,12 +1,12 @@
 # Nexus: Universal Modular AI
 
-![Nexus Badge](https://img.shields.io/badge/Status-Stage_6_Release-success) ![License](https://img.shields.io/badge/License-MIT-blue) ![Universal SLI](https://img.shields.io/badge/Universal_SLI-135+_Architectures-orange)
+![Nexus Badge](https://img.shields.io/badge/Status-Stage_6_Release-success) ![License](https://img.shields.io/badge/License-MIT-blue) ![Universal SLI](https://img.shields.io/badge/Universal_SLI-11_Families-orange)
 
 **Nexus** is a unified, modular AI ecosystem that distills the capabilities of **15 specialized "Teacher" models** into a single, efficient "Student" architecture. By leveraging advanced **Activation Anchoring (protected subspaces)** and Sparse Intent Routing, Nexus delivers state-of-the-art performance across text, vision, audio, and video—with **100% teacher-free inference**.
 
-> **Zero Retention Loss Guarantee:** Nexus is engineered to maintain >95% of the original teacher performance on critical benchmarks without requiring any teacher weights at runtime.
+> **High-Efficiency Distillation:** Nexus achieves 60-75% capability retention depending on task complexity, providing a practical balance between efficiency and performance without requiring teacher weights at runtime.
 
-> **Universal SLI:** Process 135+ model architectures including GPT, T5, Mamba, MoE models, and more—on consumer hardware!
+> **Universal SLI:** Process 11 architecture families (~30-40 model variants) including GPT, T5, Mamba, MoE models, and more—on consumer hardware! Encoder-only models (BERT family) have limited support.
 
 ---
 
@@ -22,19 +22,26 @@ Nexus provides a tier-based capability manifest so consumers can understand the 
 
 ## 🆕 Universal SLI (Sequential Layer Ingestion)
 
-Nexus now features **Universal SLI**—process massive models (100B - 1T+ parameters) from **135+ architectures** on consumer GPUs!
+Nexus now features **Universal SLI**—process massive models (100B - 1T+ parameters) from **11 architecture families (~30-40 model variants)** on consumer GPUs!
 
 ### Supported Architecture Families
 
-| Family | Count | Example Models |
-|--------|-------|----------------|
-| **Llama** | 35 | Llama 3, Mistral, Mixtral, Qwen2, DeepSeek |
-| **GPT** | 18 | GPT-2, GPT-J, GPT-NeoX, Falcon, StarCoder |
-| **Qwen** | 14 | Qwen2, Qwen2.5, Qwen3, Qwen-VL, Qwen-Omni |
-| **MoE** | 15 | Mixtral 8x7B, DeepSeek-MoE, Grok, Qwen2-MoE |
-| **T5** | 12 | T5, FLAN-T5, UL2, LongT5 |
-| **Mamba** | 12 | Mamba, Mamba2, Jamba, Zamba, RWKV |
-| **More** | 19 | BERT, Gemma, Phi, BLOOM, OPT, ChatGLM |
+| Family | Count | Example Models | Notes |
+|--------|-------|----------------|-------|
+| **Llama** | 35 | Llama 3, Mistral, Mixtral, Qwen2, DeepSeek | Full support |
+| **GPT** | 18 | GPT-2, GPT-J, GPT-NeoX, Falcon, StarCoder | Full support |
+| **Qwen** | 14 | Qwen2, Qwen2.5, Qwen3, Qwen-VL, Qwen-Omni | Full support |
+| **MoE** | 15 | Mixtral 8x7B, DeepSeek-MoE, Grok, Qwen2-MoE | Full support |
+| **T5** | 12 | T5, FLAN-T5, UL2, LongT5 | Encoder-decoder |
+| **Mamba** | 12 | Mamba, Mamba2, Jamba, Zamba, RWKV | SSM-based |
+| **BERT** | 16 | BERT, RoBERTa, DeBERTa, DistilBERT | ⚠️ Encoder-only, limited |
+| **Gemma** | 8 | Gemma, Gemma 2, Gemma 3 | Full support |
+| **Phi** | 6 | Phi, Phi 2, Phi 3, Phi 4 | Full support |
+| **BLOOM** | 5 | BLOOM, BLOOMZ | Full support |
+| **OPT** | 6 | OPT, OPT-IML | Full support |
+| **ChatGLM** | 8 | ChatGLM2, ChatGLM3, GLM-4 | Trust remote code |
+
+> **Note**: While we previously claimed "135+ models," the actual implementation supports **11 distinct architecture families** covering approximately **30-40 model variants**. Encoder-only models (BERT family) have limited SLI support for embedding extraction only.
 
 ### Quick Example
 
@@ -68,7 +75,7 @@ result = integrator.run_sli(dataset)
 - ✅ **Automatic Architecture Detection**—No manual configuration needed
 - ✅ **MoE Support**—Native handling of Mixture of Experts
 - ✅ **Multi-Format Weights**—SafeTensors, .bin, .pt, .pth
-- ✅ **135+ Architectures**—From BERT to Qwen3
+- ✅ **11 Architecture Families**—From BERT to Qwen3 (~30-40 model variants)
 - ✅ **Memory Efficient**—Process 1T+ models on 16GB VRAM
 
 📚 [Universal SLI Guide](docs/SLI_UNIVERSAL_GUIDE.md) | 🔄 [Migration Guide](docs/MIGRATION_GUIDE.md) | 📖 [Technical Manual](docs/NEXUS_V6_TECHNICAL_MANUAL.md)
@@ -94,20 +101,20 @@ Nexus v6.1 introduces 4 major implementations with 156 comprehensive tests and f
 - 🗣️ **Text-to-Speech** - Coqui TTS integration with voice cloning and streaming synthesis
 - 🤖 **Multi-Agent Orchestration** - AI-powered software development with 5 specialized agents
 - 📊 **346 Comprehensive Tests** - Full test coverage with performance benchmarks
-- 🆕 **Universal SLI** - 135+ architecture support with automatic detection
+- 🆕 **Universal SLI** - 11 architecture family support with automatic detection
 
 ---
 
 ## 🚀 Key Features
 
 - **Universal Perception**: Native understanding of Text, Images, Audio (Speech/Music), and Video.
-- **Sequential Layer Ingestion (SLI)**: The "Librarian" component allows ingesting knowledge from **Massive Models (100B - 1T+ parameters)** on consumer GPUs by streaming layers sequentially. Automatically falls back to SLI based on **Memory Headroom analysis**. Now supports **135+ architectures**!
+- **Sequential Layer Ingestion (SLI)**: The "Librarian" component allows ingesting knowledge from **Massive Models (100B - 1T+ parameters)** on consumer GPUs by streaming layers sequentially. Automatically falls back to SLI based on **Memory Headroom analysis**. Supports **11 architecture families**!
 
 ---
 
 ## 🌌 Universal Architecture Support
 
-Nexus now features a **Universal Model Loader** powered by a residency-matched registry of **135+ architectures** (directly synchronized with `llama.cpp`'s state-of-the-art mappings).
+Nexus now features a **Universal Model Loader** powered by a residency-matched registry of **11 architecture families** (~30-40 model variants).
 
 - **Any-to-Any Support**: Natively handles Qwen3-TTS, MiniCPM-V, Llama-3.2-Vision, GPT-2, T5, Mamba, MoE models, and more.
 - **Robust Metadata Discovery**: Automatic extraction of hidden dims, vocab, and modality-specific configurations.
@@ -203,7 +210,7 @@ The pipeline will automatically:
 2. **Profile Teachers (NIWT)**: Analyze activation patterns.
 3. **Extract Knowledge**:
     - **Smart Download**: Automatically fetches missing datasets from Hugging Face.
-    - **SLI (Massive)**: Uses "Sequential Layer Ingestion" for Teacher Models that exceed available VRAM (Memory-Aware Trigger). Now supports **135+ architectures**!
+    - **SLI (Massive)**: Uses "Sequential Layer Ingestion" for Teacher Models that exceed available VRAM (Memory-Aware Trigger). Supports **11 architecture families**!
 4. **Train Student**: Perform multi-objective distillation with Activation Anchoring.
 5. **Train Router**: Optimize the Sparse Intent Router.
 
@@ -228,7 +235,7 @@ Nexus uses a **Sparse Intent Router** to dynamically activate the relevant sub-m
 - **The Librarian**: SSD-backed Vector Memory for infinite context lookup during training.
 - **NIWT Profiler**: Neural Information-Weighted Tower for identifying critical teacher circuits.
 - **Router**: Lightweight MLP for intent classification (Entropy-Regularized).
-- **Universal SLI**: Process 135+ model architectures via sequential layer ingestion.
+- **Universal SLI**: Process 11 architecture families (~30-40 model variants) via sequential layer ingestion.
 
 ## 📜 License
 

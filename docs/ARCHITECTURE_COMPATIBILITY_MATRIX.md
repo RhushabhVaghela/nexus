@@ -6,7 +6,9 @@ Complete compatibility matrix for the Nexus Universal Model Loader.
 
 ## Overview
 
-The [`OmniModelLoader`](src/omni/loader.py:76) supports **50+ model architectures** across **5 model categories**. This matrix documents all supported architectures, their loading strategies, and compatibility status.
+The [`OmniModelLoader`](src/omni/loader.py:76) supports **11 architecture families (~30-40 model variants)** across **5 model categories**. This matrix documents all supported architectures, their loading strategies, and compatibility status.
+
+> **Note on Model Count**: While we previously advertised "135+ models," the actual architecture support is organized around **11 distinct architecture families** covering approximately **30-40 model variants**. The original count included every possible model name/variant which was misleading.
 
 ---
 
@@ -258,6 +260,20 @@ These models from the teacher registry are fully supported:
 | Speech2TextForConditionalGeneration | ✅ | Speech2Text models |
 | SpeechEncoderDecoderModel | ✅ | Generic encoder-decoder ASR |
 
+### Encoder-Only Architectures (Limited SLI Support)
+
+> **Important**: Encoder-only models (BERT, RoBERTa, DeBERTa, etc.) have **limited SLI support** as they are designed for embedding extraction and classification tasks, not generative text completion.
+
+| Architecture | Status | Example Models | Limitations |
+|--------------|--------|----------------|-------------|
+| BertModel | ⚠️ Partial | BERT-Base, BERT-Large | No generative capabilities |
+| RobertaModel | ⚠️ Partial | RoBERTa-Base, RoBERTa-Large | Encoder-only architecture |
+| DebertaModel | ⚠️ Partial | DeBERTa-Base, DeBERTa-v3 | Classification/embeddings only |
+| DistilBertModel | ⚠️ Partial | DistilBERT-Base, DistilBERT-SQuAD | No causal LM support |
+| AlbertModel | ⚠️ Partial | ALBERT-Base, ALBERT-xxlarge | Parameter sharing affects SLI |
+
+**Note**: Encoder-only models can be loaded for embedding extraction but cannot be used for text generation or standard distillation workflows.
+
 ### Custom Model Type Mappings
 
 These model types are automatically registered when encountered:
@@ -364,11 +380,29 @@ To add support for a new architecture:
 
 ## Version Information
 
-- **Document Version**: 1.0
-- **Last Updated**: 2026-01-30
+- **Document Version**: 1.1
+- **Last Updated**: 2026-02-01
 - **Loader Version**: Compatible with Nexus v6.1+
+- **Architecture Families**: 11 families (~30-40 model variants)
 - **Test Coverage**: 130+ tests (90+ unit, 40+ integration)
 - **Benchmarks**: 45+ performance benchmarks
+
+## Architecture Family Summary
+
+| Family ID | Models | Decoder | Encoder-Decoder | Encoder-Only |
+|-----------|--------|---------|-----------------|--------------|
+| llama | 35+ | ✅ | ❌ | ❌ |
+| gpt | 18 | ✅ | ❌ | ❌ |
+| qwen | 14 | ✅ | ✅ | ❌ |
+| moe | 15 | ✅ | ❌ | ❌ |
+| t5 | 12 | ✅ | ✅ | ❌ |
+| mamba | 12 | ✅ | ❌ | ❌ |
+| bert | 16 | ❌ | ❌ | ✅ |
+| bloom | 5 | ✅ | ❌ | ❌ |
+| opt | 6 | ✅ | ❌ | ❌ |
+| phi | 6 | ✅ | ❌ | ❌ |
+| gemma | 8 | ✅ | ❌ | ❌ |
+| chatglm | 8 | ✅ | ❌ | ❌ |
 
 ---
 

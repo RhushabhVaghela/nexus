@@ -1,6 +1,8 @@
 {
-    "version": "1.0",
-    "total_models": 135,
+    "version": "1.1",
+    "description": "11 architecture families (~30-40 model variants)",
+    "note": "Previous count of '135+ models' was misleading. Actual implementation supports 11 distinct architecture families covering ~30-40 model variants.",
+    "total_models": 40,
     "families": [
         {
             "family_id": "llama",

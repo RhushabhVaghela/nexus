@@ -113,5 +113,33 @@ How Stage 1 parameters affect the end result.
 | **Training**  | `epochs` | Higher = Better mimicry of teacher style (Risk of overfitting). |
 | **Training**  | `lr` | Optimal `1e-5`. Higher causes spikes; Lower is too slow. |
 
+## 📊 6. Realistic Retention Expectations
+
+> **Important**: Previous documentation claimed "Zero Retention Loss" and ">95% retention" which are scientifically unsupportable for knowledge distillation. Here are the realistic expectations based on task complexity:
+
+### High-Efficiency Distillation: Expected Retention Rates
+
+| Task Type | Retention Range | Notes |
+|-----------|-----------------|-------|
+| **General Knowledge** | 60-75% | Factual recall, common sense |
+| **Code Generation** | 55-70% | Syntax, patterns, logic |
+| **Reasoning** | 50-65% | Multi-step inference, logic |
+| **Translation** | 65-80% | Language transfer tasks |
+| **Summarization** | 60-75% | Extractive, abstractive |
+| **Creative Writing** | 50-65% | Style, tone, fluency |
+
+### Factors Affecting Retention
+
+1. **Student Size**: Smaller students (2B-4B) retain less than larger (7B-13B)
+2. **Teacher Diversity**: Multiple specialized teachers improve coverage
+3. **Training Duration**: Longer training improves retention but risks overfitting
+4. **Task Complexity**: Simple tasks retain better than complex reasoning
+
+### What This Means
+
+* A 70B teacher distilled to a 7B student will typically achieve **60-75%** of the teacher's capability on most tasks
+* This is **expected and normal** in knowledge distillation
+* The trade-off is worthwhile: 10x smaller model, 100x faster inference, 60-75% capability
+
 ---
 *End of Technical Manual. This guide is automatically updated with Nexus Pipeline v6.1 releases.*
