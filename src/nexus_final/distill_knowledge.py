@@ -1,11 +1,19 @@
 import os
 import sys
+import logging
+
+# Configure logging early
+logger = logging.getLogger(__name__)
 
 # Ensure unsloth is imported before any other heavy libraries if possible
 try:
     import unsloth
+    logger.info("Unsloth library loaded successfully")
 except ImportError:
-    pass
+    logger.warning(
+        "Unsloth library not available. This is optional but recommended for optimized training. "
+        "Install with: pip install unsloth"
+    )
 
 import torch
 import torch.nn as nn

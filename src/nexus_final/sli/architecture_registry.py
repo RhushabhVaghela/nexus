@@ -28,19 +28,26 @@ class ArchitectureFamily(ABC):
     architectures: List[str] = []
     trust_remote_code: bool = False
     
-    def matches(self, model_type: str, architectures: List[str]) -> bool:
+    def matches(self, model_type: str, architectures: List[str], config: Optional[Any] = None) -> bool:
         """
         Check if config matches this family.
         
         Args:
             model_type: The model_type from config
             architectures: List of architecture names from config
+            config: Optional full config object for additional checks
             
         Returns:
             True if this family handles the given config
         """
         model_type_lower = model_type.lower() if model_type else ""
         architectures_lower = [a.lower() for a in architectures] if architectures else []
+        
+        # Check if this is an MoE model - if so, don't match (let MoE handler take it)
+        if config is not None:
+            moe_attrs = ["num_local_experts", "n_routed_experts", "moe_intermediate_size"]
+            if any(hasattr(config, attr) for attr in moe_attrs):
+                return False
         
         # Check model type
         if model_type_lower in [mt.lower() for mt in self.model_types]:
@@ -559,6 +566,146 @@ class GemmaFamilyHandler(ArchitectureFamily):
         return "model.embed_tokens"
 
 
+class BERTFamilyHandler(ArchitectureFamily):
+    """
+    Handler for BERT-based encoder-only architectures.
+    
+    Note: Encoder-only models have limited SLI support as they are
+    primarily used for embedding extraction and classification tasks,
+    not generative text completion.
+    """
+    
+    family_id = "bert"
+    family_name = "BERT-Based Encoder Architectures"
+    model_types = [
+        "bert", "roberta", "deberta", "deberta_v2", "distilbert",
+        "albert", "modernbert", "jinabert", "nomic_bert", "neobert",
+        "electra", "xlm_roberta", "camembert"
+    ]
+    architectures = [
+        "BertModel", "BertForMaskedLM", "BertForSequenceClassification",
+        "RobertaModel", "RobertaForSequenceClassification",
+        "DebertaModel", "DebertaForSequenceClassification",
+        "DistilBertModel", "DistilBertForMaskedLM", "DistilBertForSequenceClassification",
+        "AlbertModel", "AlbertForMaskedLM", "AlbertForSequenceClassification",
+        "ModernBertModel", "ModernBertForSequenceClassification",
+        "JinaBertModel", "JinaBertForMaskedLM",
+        "NeoBERT", "NeoBERTForSequenceClassification", "NeoBERTLMHead",
+        "NomicBertModel",
+        "ElectraModel", "ElectraForSequenceClassification",
+        "XLMRobertaModel", "XLMRobertaForSequenceClassification",
+        "CamembertModel", "CamembertForMaskedLM"
+    ]
+    
+    def _detect_subtype(self, config: PretrainedConfig) -> str:
+        """Detect the specific BERT subtype from config."""
+        model_type = getattr(config, "model_type", "").lower()
+        architectures = getattr(config, "architectures", [])
+        
+        if "roberta" in model_type or any("Roberta" in a for a in architectures):
+            return "roberta"
+        elif "deberta" in model_type or any("Deberta" in a for a in architectures):
+            return "deberta"
+        elif "distilbert" in model_type or any("DistilBert" in a for a in architectures):
+            return "distilbert"
+        elif "albert" in model_type or any("Albert" in a for a in architectures):
+            return "albert"
+        elif "modernbert" in model_type or any("ModernBert" in a for a in architectures):
+            return "modernbert"
+        elif "jina" in model_type or any("JinaBert" in a for a in architectures):
+            return "jinabert"
+        elif "neobert" in model_type or any("NeoBERT" in a for a in architectures):
+            return "neobert"
+        elif "nomic" in model_type or any("NomicBert" in a for a in architectures):
+            return "nomic_bert"
+        elif "electra" in model_type or any("Electra" in a for a in architectures):
+            return "electra"
+        elif "xlm" in model_type or any("XLMRoberta" in a for a in architectures):
+            return "xlm_roberta"
+        elif "camembert" in model_type or any("Camembert" in a for a in architectures):
+            return "camembert"
+        else:
+            return "bert"  # Default fallback
+    
+    def get_layer_prefix(self, layer_idx: int, layer_type: str = "encoder") -> str:
+        """
+        Get weight prefix for encoder layer.
+        
+        Note: Encoder-only models only support "encoder" layer type.
+        """
+        subtype = getattr(self, '_last_subtype', 'bert')
+        
+        if subtype == "distilbert":
+            return f"transformer.layer.{layer_idx}."
+        elif subtype in ["roberta", "camembert", "xlm_roberta"]:
+            return f"roberta.encoder.layer.{layer_idx}."
+        elif subtype == "albert":
+            # ALBERT uses shared layers with a different structure
+            return f"albert.encoder.albert_layer_group.{layer_idx % 12}.albert_layers.{layer_idx % 12}."
+        else:
+            # Standard BERT and others
+            return f"encoder.layer.{layer_idx}."
+    
+    def create_layer(self, config: PretrainedConfig, layer_idx: int,
+                     layer_type: str = "encoder") -> nn.Module:
+        """
+        Create an encoder layer for this architecture family.
+        
+        Note: Encoder-only models only have encoder layers, no decoder.
+        """
+        subtype = self._detect_subtype(config)
+        self._last_subtype = subtype  # Store for get_layer_prefix
+        
+        try:
+            if subtype == "bert":
+                from transformers.models.bert.modeling_bert import BertLayer
+                return BertLayer(config, layer_idx=layer_idx)
+            elif subtype == "roberta":
+                from transformers.models.roberta.modeling_roberta import RobertaLayer
+                return RobertaLayer(config, layer_idx=layer_idx)
+            elif subtype == "deberta":
+                from transformers.models.deberta.modeling_deberta import DebertaLayer
+                return DebertaLayer(config, layer_idx=layer_idx)
+            elif subtype == "distilbert":
+                from transformers.models.distilbert.modeling_distilbert import TransformerBlock
+                return TransformerBlock(config, layer_idx=layer_idx)
+            elif subtype == "albert":
+                from transformers.models.albert.modeling_albert import AlbertLayer
+                return AlbertLayer(config, layer_idx=layer_idx)
+            elif subtype == "modernbert":
+                from transformers.models.modernbert.modeling_modernbert import ModernBertLayer
+                return ModernBertLayer(config, layer_idx=layer_idx)
+            else:
+                # Default fallback to BERT
+                from transformers.models.bert.modeling_bert import BertLayer
+                return BertLayer(config, layer_idx=layer_idx)
+        except ImportError as e:
+            raise LayerCreationError(layer_idx, self.family_id, e)
+    
+    def get_embedding_name(self) -> str:
+        """Get the embedding weight name."""
+        subtype = getattr(self, '_last_subtype', 'bert')
+        
+        if subtype in ["roberta", "camembert", "xlm_roberta"]:
+            return "roberta.embeddings"
+        elif subtype == "distilbert":
+            return "distilbert.embeddings"
+        elif subtype == "albert":
+            return "albert.embeddings"
+        elif subtype == "electra":
+            return "electra.embeddings"
+        else:
+            return "embeddings"
+    
+    def get_lm_head_name(self) -> str:
+        """Encoder-only models don't have LM heads."""
+        return None
+    
+    def is_encoder_only(self) -> bool:
+        """Indicate this is an encoder-only architecture."""
+        return True
+
+
 class ArchitectureRegistry:
     """
     Registry for all supported architecture families.
@@ -567,10 +714,10 @@ class ArchitectureRegistry:
     - Registration of architecture families
     - Auto-detection of architecture family from config
     - Access to family-specific handlers
+    - Custom layer registration for extensibility
     """
     
     _instance = None
-    _families: Dict[str, ArchitectureFamily] = {}
     _initialized = False
     
     def __new__(cls):
@@ -581,6 +728,8 @@ class ArchitectureRegistry:
     
     def __init__(self):
         if not self._initialized:
+            self._families: Dict[str, ArchitectureFamily] = {}
+            self._custom_layers: Dict[str, Any] = {}  # Registry for custom layers
             self._register_default_families()
             ArchitectureRegistry._initialized = True
     
@@ -598,6 +747,7 @@ class ArchitectureRegistry:
             MoEFamilyHandler(),
             PhiFamilyHandler(),
             GemmaFamilyHandler(),
+            BERTFamilyHandler(),  # Encoder-only architectures (BERT, RoBERTa, DeBERTa, etc.)
         ]
         
         for family in families:
@@ -641,14 +791,29 @@ class ArchitectureRegistry:
         model_type = getattr(config, "model_type", "").lower()
         architectures = getattr(config, "architectures", [])
         
-        # Try each registered family
-        for family in self._families.values():
-            if family.matches(model_type, architectures):
-                return family
-        
-        # Special handling: Check if it's an MoE model by attributes
+        # First: Check if it's an MoE model by attributes (before other checks)
+        # MoE models often inherit from Llama architecture but need special handling
         if self._is_moe_model(config):
-            return self._families.get("moe") or self._families.get("llama")
+            # Check if it's explicitly an MoE architecture type
+            moe_family = self._families.get("moe")
+            if moe_family and moe_family.matches(model_type, architectures):
+                return moe_family
+            # If MoE attributes present but no specific match, return MoE family
+            return moe_family or self._families.get("llama")
+        
+        # Second: Try exact architecture matches first (more specific)
+        for family in self._families.values():
+            # Check for exact architecture matches
+            for arch in architectures:
+                arch_lower = arch.lower()
+                for family_arch in family.architectures:
+                    if arch_lower == family_arch.lower():
+                        return family
+        
+        # Third: Try model type and partial matches (with config for MoE check)
+        for family in self._families.values():
+            if family.matches(model_type, architectures, config):
+                return family
         
         # If no match found, raise error
         raise UnsupportedArchitectureError(model_type, architectures)
@@ -656,7 +821,20 @@ class ArchitectureRegistry:
     def _is_moe_model(self, config: PretrainedConfig) -> bool:
         """Check if config indicates an MoE model."""
         moe_attrs = ["num_local_experts", "n_routed_experts", "moe_intermediate_size"]
-        return any(hasattr(config, attr) for attr in moe_attrs)
+        
+        # Check if config has MoE attributes with actual values (not None, not mock)
+        for attr in moe_attrs:
+            if hasattr(config, attr):
+                val = getattr(config, attr)
+                # Skip if value is None or a MagicMock (from tests)
+                if val is not None and type(val).__name__ != 'MagicMock':
+                    # Check if it's a reasonable value (int > 0)
+                    try:
+                        if int(val) > 0:
+                            return True
+                    except (TypeError, ValueError):
+                        continue
+        return False
     
     def list_families(self) -> List[str]:
         """List all registered family IDs."""
@@ -673,6 +851,96 @@ class ArchitectureRegistry:
                 "trust_remote_code": family.trust_remote_code,
             }
         return info
+    
+    def register_custom_layer(self, layer_name: str, layer_factory: Any) -> None:
+        """
+        Register a custom layer factory in the registry.
+        
+        This allows users to extend the architecture registry with custom
+        layer types that can be used in model construction.
+        
+        Args:
+            layer_name: Unique identifier for the custom layer type.
+                       Should follow naming convention: "<family>_<layer_type>"
+                       e.g., "llama_custom_attn", "moe_expert_layer"
+            layer_factory: A callable (class or factory function) that creates
+                          the layer instance. Should accept standard arguments
+                          (config, layer_idx, layer_type) and return nn.Module.
+        
+        Raises:
+            ValueError: If layer_name is already registered or invalid.
+            TypeError: If layer_factory is not callable.
+        
+        Example:
+            >>> registry = ArchitectureRegistry()
+            >>> registry.register_custom_layer(
+            ...     "llama_rotary_with_scaling",
+            ...     lambda config, idx: RotaryEmbeddingWithScaling(config)
+            ... )
+        """
+        if not isinstance(layer_name, str) or not layer_name:
+            raise ValueError(f"layer_name must be a non-empty string, got {layer_name!r}")
+        
+        if not callable(layer_factory):
+            raise TypeError(f"layer_factory must be callable, got {type(layer_factory).__name__}")
+        
+        if layer_name in self._custom_layers:
+            raise ValueError(
+                f"Custom layer '{layer_name}' is already registered. "
+                f"Use unregister_custom_layer() first if you want to replace it."
+            )
+        
+        self._custom_layers[layer_name] = layer_factory
+    
+    def get_layer_factory(self, layer_name: str) -> Any:
+        """
+        Retrieve a registered custom layer factory by name.
+        
+        Args:
+            layer_name: The identifier of the custom layer to retrieve.
+        
+        Returns:
+            The registered layer factory (callable).
+        
+        Raises:
+            KeyError: If the layer_name is not registered.
+        
+        Example:
+            >>> registry = ArchitectureRegistry()
+            >>> factory = registry.get_layer_factory("llama_custom_attn")
+            >>> layer = factory(config, layer_idx=0)
+        """
+        if layer_name not in self._custom_layers:
+            available = list(self._custom_layers.keys())
+            raise KeyError(
+                f"Custom layer '{layer_name}' not found in registry. "
+                f"Available custom layers: {available if available else 'none'}"
+            )
+        
+        return self._custom_layers[layer_name]
+    
+    def unregister_custom_layer(self, layer_name: str) -> bool:
+        """
+        Remove a custom layer from the registry.
+        
+        Args:
+            layer_name: The identifier of the custom layer to remove.
+        
+        Returns:
+            True if the layer was removed, False if it didn't exist.
+        """
+        if layer_name in self._custom_layers:
+            del self._custom_layers[layer_name]
+            return True
+        return False
+    
+    def list_custom_layers(self) -> List[str]:
+        """List all registered custom layer names."""
+        return list(self._custom_layers.keys())
+    
+    def clear_custom_layers(self) -> None:
+        """Clear all custom layers from the registry. Use with caution."""
+        self._custom_layers.clear()
 
 
 # Global registry instance

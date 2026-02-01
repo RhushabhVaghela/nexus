@@ -343,22 +343,111 @@ class NexusTrainer:
         return total_val_loss / max(steps, 1)
 
     def run_memorization_audit(self):
-        """Runs the Discoverable Memorization check on a subset of the previous batch."""
-        if not self.auditor: return
+        """
+        Runs the Discoverable Memorization check on validation data.
+        
+        This method implements memorization detection logic using the MemorizationAuditor
+        to check if the student model is reproducing training data verbatim.
+        Based on Carlini et al. "Extracting Training Data from Large Language Models"
+        
+        The audit:
+        1. Samples validation texts as a proxy for potential training data leakage
+        2. Uses 50/50 prefix-suffix matching to detect exact memorization
+        3. Calculates zlib entropy to detect compressible/memorizable text
+        4. Logs results and returns audit metrics for monitoring
+        
+        Returns:
+            Dict containing audit results with memorization rate and entropy metrics,
+            or None if auditor is not available
+        """
+        if not self.auditor:
+            print("[Audit] Warning: MemorizationAuditor not initialized, skipping audit")
+            return None
         
         print(f"\n[Audit] Running Discoverable Memorization check at step {self.global_step}...")
         
-        # We audit a small subset of the current training data for efficiency
-        # Ideally we'd have a 'training_history' buffer, but we'll use the val_loader for now
-        # or just a few strings if we can extract them.
-        
-        # Real implementation should track training samples.
-        # For now, we use the paper's 50/50 prefix/suffix logic on validation text as a proxy
-        # for 'leaked' patterns if they overlap.
-        
-        # In a real run, we'd feed the actual training text here.
-        # This is a placeholder for the integration pattern.
-        pass
+        try:
+            # Collect sample texts from validation loader
+            # We use a small batch to avoid slowing down training
+            audit_texts = []
+            max_samples = 10  # Configurable: number of samples to audit
+            
+            # Get samples from validation loader
+            val_iter = iter(self.val_loader)
+            for _ in range(min(max_samples, len(self.val_loader))):
+                try:
+                    batch = next(val_iter)
+                    if 'text' in batch:
+                        # If text field exists, decode it
+                        for text in batch['text']:
+                            if isinstance(text, str) and len(text) > 100:
+                                audit_texts.append(text)
+                    elif 'input_ids' in batch and hasattr(self.auditor.tokenizer, 'decode'):
+                        # Decode input_ids to text
+                        for ids in batch['input_ids']:
+                            text = self.auditor.tokenizer.decode(ids, skip_special_tokens=True)
+                            if len(text) > 100:
+                                audit_texts.append(text)
+                except StopIteration:
+                    break
+            
+            if not audit_texts:
+                print("[Audit] No valid text samples found for memorization audit")
+                return {"status": "no_data", "sample_count": 0}
+            
+            # Run batch audit using the MemorizationAuditor
+            # The auditor checks for exact suffix matches using greedy generation
+            self.student.eval()  # Ensure model is in eval mode
+            audit_results = self.auditor.batch_audit(
+                model=self.student,
+                texts=audit_texts[:5],  # Limit to 5 samples for performance
+                device=self.device
+            )
+            self.student.train()  # Restore training mode
+            
+            # Calculate additional metrics
+            avg_entropy = audit_results.get("avg_entropy", 0.0)
+            mem_rate = audit_results.get("avg_memorization_rate", 0.0)
+            sample_count = audit_results.get("sample_count", 0)
+            
+            # Log results with appropriate warning level
+            if mem_rate > 0.1:  # >10% memorization is concerning
+                print(f"[Audit] ⚠️ HIGH MEMORIZATION DETECTED: {mem_rate:.2%} of samples show verbatim reproduction")
+                print(f"[Audit]   Avg Zlib Entropy: {avg_entropy:.4f} (lower = more compressible/memorizable)")
+                print(f"[Audit]   Samples audited: {sample_count}")
+                print("[Audit]   Recommendation: Consider increasing temperature in generation or adding privacy safeguards")
+            elif mem_rate > 0.05:  # >5% is moderate concern
+                print(f"[Audit] ⚡ MODERATE MEMORIZATION: {mem_rate:.2%} of samples")
+                print(f"[Audit]   Avg Zlib Entropy: {avg_entropy:.4f}")
+                print(f"[Audit]   Samples audited: {sample_count}")
+            else:
+                print(f"[Audit] ✓ Low memorization: {mem_rate:.2%} of samples")
+                print(f"[Audit]   Avg Zlib Entropy: {avg_entropy:.4f}")
+            
+            # Return comprehensive audit results
+            results = {
+                "status": "success",
+                "step": self.global_step,
+                "memorization_rate": mem_rate,
+                "avg_entropy": avg_entropy,
+                "sample_count": sample_count,
+                "risk_level": "high" if mem_rate > 0.1 else "moderate" if mem_rate > 0.05 else "low",
+                "timestamp": torch.cuda.Event(enable_timing=False) if torch.cuda.is_available() else None
+            }
+            
+            return results
+            
+        except RuntimeError as e:
+            if "out of memory" in str(e):
+                print(f"[Audit] OOM during memorization audit, skipping: {e}")
+                torch.cuda.empty_cache()
+                return {"status": "oom_error", "error": str(e)}
+            else:
+                print(f"[Audit] Error during memorization audit: {e}")
+                return {"status": "error", "error": str(e)}
+        except Exception as e:
+            print(f"[Audit] Unexpected error during memorization audit: {e}")
+            return {"status": "error", "error": str(e)}
 
     def check_thermal_status(self):
         """Checks hardware temperature and pauses if too hot."""
