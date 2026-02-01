@@ -11,7 +11,7 @@ The Nexus Pipeline is now "Self-Driving" with a high-fidelity Terminal UI (TUI).
 
 ### **Integrated Live Dashboard**
 
-When you run any pipeline script (`run_nexus_master.sh`, `run_multimodal_pipeline.sh`), you will see a real-time status line:
+When you run any pipeline script (`./scripts/nexus.sh master`, `./scripts/nexus.sh multimodal`), you will see a real-time status line:
 
 ```text
 [Phase 2: Distill] ⏱️ 02:14:35 | Step: 4500 | ETA: 1h20m | GPU: 72°C
@@ -126,7 +126,7 @@ We use a multi-layered approach to ensure the Student truly "understands" like t
 **Full Pipeline (Resume Mode):**
 
 ```bash
-./run_nexus_master.sh
+./scripts/nexus.sh master
 ```
 
 **Interactive Inference:**

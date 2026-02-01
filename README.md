@@ -252,23 +252,39 @@ To execute a full 5-teacher multimodal run:
 
 ### 1. Development Implementation
 
-Nexus is currently a research codebase. To run the automated pipeline:
+Nexus is currently a research codebase. To run the automated pipeline, use the **Unified CLI**:
 
 ```bash
 # 1. Activate Environment
 conda activate nexus
 
-# 2. Use the Unified CLI
+# 2. Use the Unified CLI (single entry point for all operations)
 ./scripts/nexus.sh help                    # Show all commands
 ./scripts/nexus.sh master --reset          # Run full pipeline
 ./scripts/nexus.sh tests --unit-only       # Run tests
+./scripts/nexus.sh status                  # Check pipeline status
+./scripts/nexus.sh monitor                 # Real-time monitoring
 
-# Or run individual pipelines
+# Capability pipelines
 ./scripts/nexus.sh pipeline all            # Text/code training
 ./scripts/nexus.sh multimodal all          # Multimodal training
 ./scripts/nexus.sh universal --enable-cot  # Universal capabilities
+./scripts/nexus.sh training-suite          # Generate training scripts
+./scripts/nexus.sh setup-voice             # Setup voice models
+
+# Utility commands
+./scripts/nexus.sh reset                   # Reset pipeline state
+./scripts/nexus.sh cleanup                 # Clean up temporary files
 ```
 
+The Unified CLI (`scripts/nexus.sh`) consolidates all previous scripts into one tool with:
+
+- ✅ Extensive progress tracking (progress bars, ETA, spinners)
+- ✅ Real-time system monitoring (GPU, memory)
+- ✅ Unified command interface
+- ✅ Color-coded output
+
+See [docs/UNIFIED_CLI.md](docs/UNIFIED_CLI.md) for complete command reference.
 See [examples/README.md](examples/README.md) for usage examples.
 
 ### 2. Available Options
@@ -390,23 +406,39 @@ To execute a full 5-teacher multimodal run:
 
 ### 1. Development Implementation
 
-Nexus is currently a research codebase. To run the automated pipeline:
+Nexus is currently a research codebase. To run the automated pipeline, use the **Unified CLI**:
 
 ```bash
 # 1. Activate Environment
 conda activate nexus
 
-# 2. Use the Unified CLI
+# 2. Use the Unified CLI (single entry point for all operations)
 ./scripts/nexus.sh help                    # Show all commands
 ./scripts/nexus.sh master --reset          # Run full pipeline
 ./scripts/nexus.sh tests --unit-only       # Run tests
+./scripts/nexus.sh status                  # Check pipeline status
+./scripts/nexus.sh monitor                 # Real-time monitoring
 
-# Or run individual pipelines
+# Capability pipelines
 ./scripts/nexus.sh pipeline all            # Text/code training
 ./scripts/nexus.sh multimodal all          # Multimodal training
 ./scripts/nexus.sh universal --enable-cot  # Universal capabilities
+./scripts/nexus.sh training-suite          # Generate training scripts
+./scripts/nexus.sh setup-voice             # Setup voice models
+
+# Utility commands
+./scripts/nexus.sh reset                   # Reset pipeline state
+./scripts/nexus.sh cleanup                 # Clean up temporary files
 ```
 
+The Unified CLI (`scripts/nexus.sh`) consolidates all previous scripts into one tool with:
+
+- ✅ Extensive progress tracking (progress bars, ETA, spinners)
+- ✅ Real-time system monitoring (GPU, memory)
+- ✅ Unified command interface
+- ✅ Color-coded output
+
+See [docs/UNIFIED_CLI.md](docs/UNIFIED_CLI.md) for complete command reference.
 See [examples/README.md](examples/README.md) for usage examples.
 
 ### 2. Available Options

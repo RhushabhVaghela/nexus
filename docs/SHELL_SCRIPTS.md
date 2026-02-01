@@ -409,19 +409,22 @@ Clean up temporary files, caches, and old artifacts.
 
 ---
 
-## Legacy Scripts (Deprecated)
+## Legacy Scripts (Consolidated)
 
-The following individual scripts are deprecated and replaced by the unified CLI:
+The following individual scripts have been **consolidated into the unified CLI**:
 
-| Old Script | New Command |
-|------------|-------------|
+| Old Script (Removed) | New Command |
+|----------------------|-------------|
 | `run_pipeline.sh` | `./scripts/nexus.sh pipeline` |
 | `run_multimodal_pipeline.sh` | `./scripts/nexus.sh multimodal` |
 | `run_reasoning_pipeline.sh` | `./scripts/nexus.sh reasoning` |
 | `run_universal_pipeline.sh` | `./scripts/nexus.sh universal` |
 | `run_nexus_master.sh` | `./scripts/nexus.sh master` |
+| `scripts/run_nexus_master.sh` | `./scripts/nexus.sh master` |
 | `scripts/run_distillation.sh` | `./scripts/nexus.sh distillation` |
 | `scripts/run_profiling.sh` | `./scripts/nexus.sh profiling` |
+| `scripts/setup_voice_models.sh` | `./scripts/nexus.sh setup-voice` |
+| `generate_training_scripts.sh` | `./scripts/nexus.sh training-suite` |
 | `cleanup.sh` | `./scripts/nexus.sh cleanup` |
 
 ---

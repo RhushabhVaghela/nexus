@@ -47,7 +47,7 @@ config = get_training_config(TrainingMethod.SFT)
 **Command:**
 
 ```bash
-./run_universal_pipeline.sh --base-model /path/to/model --training-method=sft --enable-cot
+./scripts/nexus.sh universal --base-model /path/to/model --training-method=sft --enable-cot
 ```
 
 ---
@@ -362,23 +362,23 @@ config = get_training_config(TrainingMethod.CPT)
 
 ## Shell Script Usage
 
-All training methods are available via `run_universal_pipeline.sh`:
+All training methods are available via `./scripts/nexus.sh universal`:
 
 ```bash
 # SFT (default)
-./run_universal_pipeline.sh --base-model /path/to/model --training-method=sft --enable-cot
+./scripts/nexus.sh universal --base-model /path/to/model --training-method=sft --enable-cot
 
 # LoRA
-./run_universal_pipeline.sh --base-model /path/to/model --training-method=lora --enable-reasoning
+./scripts/nexus.sh universal --base-model /path/to/model --training-method=lora --enable-reasoning
 
 # QLoRA (for large models)
-./run_universal_pipeline.sh --base-model /path/to/model --training-method=qlora --enable-tools
+./scripts/nexus.sh universal --base-model /path/to/model --training-method=qlora --enable-tools
 
 # DPO
-./run_universal_pipeline.sh --base-model /path/to/model --training-method=dpo --enable-thinking
+./scripts/nexus.sh universal --base-model /path/to/model --training-method=dpo --enable-thinking
 
 # Distillation
-./run_universal_pipeline.sh --base-model /path/to/model --training-method=distillation --enable-cot
+./scripts/nexus.sh universal --base-model /path/to/model --training-method=distillation --enable-cot
 ```
 
 ---
@@ -393,8 +393,8 @@ All training methods are available via `run_universal_pipeline.sh`:
 | `src/stages/reasoning_grpo.py` | GRPO training stage for reasoning |
 | `src/reasoning/` | Reasoning module (CoT, rewards, context) |
 | `src/multimodal/distillation.py` | Distillation engine |
-| `run_universal_pipeline.sh` | Main orchestration script |
-| `run_reasoning_pipeline.sh` | Reasoning training pipeline |
+| `./scripts/nexus.sh universal` | Main orchestration script |
+| `./scripts/nexus.sh reasoning` | Reasoning training pipeline |
 
 ---
 
@@ -403,9 +403,9 @@ All training methods are available via `run_universal_pipeline.sh`:
 For training models with advanced reasoning capabilities (like DeepSeek-R1 or Claude Thinking), see:
 
 - **[REASONING_TRAINING.md](./REASONING_TRAINING.md)** - Complete reasoning training guide
-- **`run_reasoning_pipeline.sh`** - Dedicated reasoning training pipeline
+- **`./scripts/nexus.sh reasoning`** - Dedicated reasoning training pipeline
 
 ```bash
 # Train with CoT + GRPO for reasoning capabilities
-./run_reasoning_pipeline.sh --base-model /path/to/model --enable-cot --enable-grpo
+./scripts/nexus.sh reasoning --base-model /path/to/model --enable-cot
 ```

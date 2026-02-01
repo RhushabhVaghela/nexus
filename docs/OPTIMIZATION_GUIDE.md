@@ -9,10 +9,10 @@ This guide details the advanced training and inference optimizations integrated 
 Nexus now supports [Unsloth](https://github.com/unslothai/unsloth) for significantly faster training and lower VRAM usage.
 
 **Usage:**
-Add the `--use_unsloth` flag to `run_nexus_master.sh` or `scripts/nexus_pipeline.py`.
+Add the `--use-unsloth` flag to `./scripts/nexus.sh master` or `scripts/nexus_pipeline.py`.
 
 ```bash
-./run_nexus_master.sh --use-unsloth --models qwen_main
+./scripts/nexus.sh master --use-unsloth --models qwen_main
 ```
 
 **Benefits:**
@@ -29,7 +29,7 @@ Sequence packing bins multiple short sequences together to reduce padding overhe
 Add the `--packing` flag.
 
 ```bash
-./run_nexus_master.sh --packing
+./scripts/nexus.sh master --packing
 ```
 
 ### 3. Long Context Support
@@ -40,7 +40,7 @@ Train with up to 500k context windows using optimized RoPE scaling.
 Specify the `--max-seq-length` parameter.
 
 ```bash
-./run_nexus_master.sh --max-seq-length 32768
+./scripts/nexus.sh master --max-seq-length 32768
 ```
 
 ---
@@ -55,7 +55,7 @@ Distill reasoning capabilities from large thinking models (like DeepSeek-R1) int
 Add the `--grpo` flag to activate the reasoning evolution stage.
 
 ```bash
-./run_nexus_master.sh --grpo
+./scripts/nexus.sh master --grpo
 ```
 
 ---

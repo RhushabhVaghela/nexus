@@ -68,26 +68,26 @@ conda activate nexus
 
 ```bash
 # Standard Run (all models, all stages)
-./run_nexus_master.sh
+./scripts/nexus.sh master
 
 # Target specific teachers and datasets
-./run_nexus_master.sh --models "DeepSeek-V3" --datasets "reasoning/AI4Math_IneqMath"
+./scripts/nexus.sh master --models "DeepSeek-V3" --datasets "reasoning/AI4Math_IneqMath"
 
 # Advanced Configuration (Configurable Parameters)
-./run_nexus_master.sh --epochs 2 --lr 1e-5 --router-epochs 10 --router-lr 2e-4
+./scripts/nexus.sh master --epochs 2 --lr 1e-5 --router-epochs 10 --router-lr 2e-4
 
 # Custom Embedding Model (for Knowledge Index)
-./run_nexus_master.sh --embedding-model "sentence-transformers/all-mpnet-base-v2"
+./scripts/nexus.sh master --embedding-model "sentence-transformers/all-mpnet-base-v2"
 
 # Reset and fresh start (clears previous artifacts)
-./run_nexus_master.sh --reset
+./scripts/nexus.sh master --reset
 ```
 
 ---
 
 ## 🔄 The Pipeline Stages
 
-- **Resume:** If you interrupt the process (Ctrl+C), simply run `./run_nexus_master.sh` again. It will skip completed stages and resume instantly.
+- **Resume:** If you interrupt the process (Ctrl+C), simply run `./scripts/nexus.sh master` again. It will skip completed stages and resume instantly.
 - **Reset:** If you want to force a re-run or clear disk space, use `--reset`. This will delete the saved state file, all previous extraction shards in `memory/`, checkpoints in `checkpoints/`, and the final model in `nexus-release-v1/`.
 
 | Stage | What it does | Magic component |

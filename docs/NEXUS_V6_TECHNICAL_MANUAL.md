@@ -59,7 +59,7 @@ Traditional LLM loading greedily allocates massive RAM. We implemented:
 
 ### Persistent Timer Fix
 
-A `trap` handler was integrated into `run_nexus_master.sh`.
+A `trap` handler was integrated into `./scripts/nexus.sh master`.
 
 - **Logic**: Senses `SIGINT`, `SIGTERM`, and `EXIT` signals.
 - **Action**: Immediately terminates the background monitoring thread and clears the terminal progress line, preventing log leakage after the script exits.

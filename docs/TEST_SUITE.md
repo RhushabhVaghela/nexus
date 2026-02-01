@@ -213,8 +213,8 @@ Full pipeline validation with real orchestrator execution.
 
 | Test | Description |
 |------|-------------|
-| `test_script_exists` | run_universal_pipeline.sh exists |
-| `test_script_is_executable` | Script has execute permission |
+| `test_script_exists` | nexus.sh CLI exists |
+| `test_script_is_executable` | CLI has execute permission |
 | `test_help_output` | --help shows usage |
 | `test_help_lists_all_capabilities` | All 12 capabilities in help |
 | `test_detect_modalities_for_text_model` | Detection returns correct flags |
