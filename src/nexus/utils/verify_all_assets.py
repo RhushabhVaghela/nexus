@@ -10,9 +10,9 @@ import multiprocessing
 # Add src to path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from src.data.universal_loader import UniversalDataLoader
-from src.multimodal.decoders import OmniDecoder
-from src.utils.corruption_tracker import tracker as corruption_tracker
+from src.nexus.data.universal_loader import UniversalDataLoader
+from src.nexus.multimodal.decoders import OmniDecoder
+from src.nexus.utils.corruption_tracker import tracker as corruption_tracker
 
 class AssetVerifier:
     def __init__(self, data_dir: str, parallel: int = 4):

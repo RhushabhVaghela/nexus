@@ -3,7 +3,7 @@ import logging
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-from src.inference.remotion_engine import RemotionExplainerEngine
+from src.nexus.optimization.remotion_engine import RemotionExplainerEngine
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

@@ -14,7 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.capability_registry import CapabilityRegistry, Capability
+from src.nexus.core.capability_registry import CapabilityRegistry, Capability
 
 
 class TestCapabilityRegistry:

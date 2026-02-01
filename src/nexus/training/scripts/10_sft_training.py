@@ -130,7 +130,7 @@ if args.quick:
 
 # Custom Callback for Metrics Tracking
 from transformers import TrainerCallback
-from src.metrics_tracker import MetricsTracker, TrainingMetrics
+from src.nexus.core.metrics_tracker import MetricsTracker, TrainingMetrics
 import time
 
 class CSVMetricsCallback(TrainerCallback):
@@ -371,7 +371,7 @@ def load_datasets(use_streaming: bool = False, streaming_paths: list = None) -> 
     if use_streaming:
         logger.info("📂 Loading datasets in STREAMING mode (memory-efficient)")
         try:
-            from src.data.streaming_trainer import StreamingDatasetLoader, StreamingConfig
+            from src.nexus.data.streaming_trainer import StreamingDatasetLoader, StreamingConfig
             
             if not streaming_paths:
                 streaming_paths = ["/mnt/e/data/datasets"]

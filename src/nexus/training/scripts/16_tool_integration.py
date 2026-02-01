@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List, Dict, Optional
 try:
     from datasets import Dataset
-    from src.multimodal.model import OmniMultimodalLM
+    from src.nexus.multimodal.model import OmniMultimodalLM
 except ImportError:
     pass
 import os

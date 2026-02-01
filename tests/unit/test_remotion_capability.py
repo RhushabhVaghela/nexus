@@ -6,7 +6,7 @@ from unittest.mock import patch, MagicMock
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.capability_registry import CapabilityRegistry
+from src.nexus.core.capability_registry import CapabilityRegistry
 from src.nexus.training.stages.stage_remotion_gen import RemotionGenStage
 from src.nexus.training.stages.base import StageConfig
 
@@ -153,6 +153,6 @@ class TestDatasetGenerator:
 
     def test_system_prompt_exists(self):
         """Verify the 3B1B system prompt is defined."""
-        from src.capability_registry import REMOTION_EXPLAINER_SYSTEM_PROMPT
+        from src.nexus.core.capability_registry import REMOTION_EXPLAINER_SYSTEM_PROMPT
         assert "3Blue1Brown" in REMOTION_EXPLAINER_SYSTEM_PROMPT
         assert "NexusLib" in REMOTION_EXPLAINER_SYSTEM_PROMPT

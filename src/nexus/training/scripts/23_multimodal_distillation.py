@@ -18,9 +18,9 @@ PROJECT_ROOT = Path(__file__).parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.utils.logging_config import setup_logger, log_header, log_completion
+from src.nexus.utils.logging_config import setup_logger, log_header, log_completion
 try:
-    from src.multimodal import MultimodalDataProcessor
+    from src.nexus.multimodal import MultimodalDataProcessor
 except ImportError:
     MultimodalDataProcessor = None
 

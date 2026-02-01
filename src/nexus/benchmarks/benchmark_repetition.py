@@ -15,8 +15,8 @@ from typing import Dict, List, Any, Tuple
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 
-from src.multimodal.model import OmniMultimodalLM
-from src.utils.repetition import PromptRepetitionEngine
+from src.nexus.multimodal.model import OmniMultimodalLM
+from src.nexus.utils.repetition import PromptRepetitionEngine
 
 class RepetitionBenchmark:
     def __init__(self, model_path: str, device: str = "cuda"):

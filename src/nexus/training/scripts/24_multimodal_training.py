@@ -35,9 +35,9 @@ def check_env():
     """Verify environment dependencies."""
     global OmniMultimodalLM, OmniDecoder, UniversalDataLoader
     try:
-        from src.multimodal.model import OmniMultimodalLM as _OmniMultimodalLM
-        from src.multimodal.decoders import OmniDecoder as _OmniDecoder
-        from src.data.universal_loader import UniversalDataLoader as _UniversalDataLoader
+        from src.nexus.multimodal.model import OmniMultimodalLM as _OmniMultimodalLM
+        from src.nexus.multimodal.decoders import OmniDecoder as _OmniDecoder
+        from src.nexus.data.universal_loader import UniversalDataLoader as _UniversalDataLoader
         OmniMultimodalLM = _OmniMultimodalLM
         OmniDecoder = _OmniDecoder
         UniversalDataLoader = _UniversalDataLoader
@@ -85,7 +85,7 @@ class OmniDataset(torch.utils.data.IterableDataset):
                 logger.error(f"❌ Data path not found: {self.base_path}")
             
         # 1. Discover Datasets (recursive discovery)
-        from src.metrics_tracker import discover_datasets
+        from src.nexus.core.metrics_tracker import discover_datasets
         discovered = discover_datasets(str(self.base_path))
         
         # Flatten discovery into a category map
@@ -106,7 +106,7 @@ class OmniDataset(torch.utils.data.IterableDataset):
                 logger.info(f"🔁 Repetition Engine: Active (Factor={self.repetition_factor}, Style={self.repetition_style})")
         
         if self.repetition_factor > 1:
-            from src.utils.repetition import PromptRepetitionEngine
+            from src.nexus.utils.repetition import PromptRepetitionEngine
             self.repetition_engine = PromptRepetitionEngine(self.repetition_factor, self.repetition_style)
             
     def _get_stream(self, file_path: Path):
@@ -206,7 +206,7 @@ class DynamicDataCollator:
         self.report_key = schema["report_key"]
         self.persona_key = schema["persona_key"]
         self.text_key = schema["text_key"]
-        from src.multimodal.decoders import OmniDecoder
+        from src.nexus.multimodal.decoders import OmniDecoder
         self.decoder = OmniDecoder()
         
     def __call__(self, batch):

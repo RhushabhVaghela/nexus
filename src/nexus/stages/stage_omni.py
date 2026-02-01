@@ -27,8 +27,8 @@ import torch
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.stages.base import BaseStage, StageConfig
-from src.utils.repetition import PromptRepetitionEngine
+from src.nexus.stages.base import BaseStage, StageConfig
+from src.nexus.utils.repetition import PromptRepetitionEngine
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ class OmniTrainingStage(BaseStage):
     
     def setup(self):
         """Setup Omni model and tokenizer."""
-        from src.omni.loader import OmniModelLoader
+        from src.nexus.models.sli.io_optimizer import OmniLoader
         
         logger.info(f"Setting up Omni training stage")
         logger.info(f"Base model: {self.config.base_model_path}")
@@ -122,7 +122,7 @@ class OmniTrainingStage(BaseStage):
             self.logger.info("Using dynamic dataset discovery for Omni stage")
             return self.load_dynamic_datasets()
             
-        from src.data.universal_loader import load_dataset_universal
+        from src.nexus.data.universal_loader import load_dataset_universal
         logger.info(f"Loading data from {data_path}")
         result = load_dataset_universal(data_path, sample_size=self.config.sample_size)
         
@@ -247,7 +247,7 @@ class OmniTrainingStage(BaseStage):
         final_loss = losses[-1] if losses else 0.0
         
         # Log metrics to CSV
-        from src.metrics_tracker import MetricsTracker, TrainingMetrics
+        from src.nexus.core.metrics_tracker import MetricsTracker, TrainingMetrics
         tracker = MetricsTracker()
         
         metrics = TrainingMetrics(

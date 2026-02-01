@@ -2,15 +2,15 @@ import pytest
 import os
 from unittest.mock import MagicMock, patch
 from pathlib import Path
-from src.inference.remotion_engine import RemotionExplainerEngine
+from src.nexus.optimization.remotion_engine import RemotionExplainerEngine
 
 class TestRemotionEngine:
     
     @pytest.fixture
     def engine(self, tmp_path):
         # Mock dependencies
-        with patch("src.inference.remotion_engine.OmniInference") as mock_inf, \
-             patch("src.inference.remotion_engine.AssetManager"):
+        with patch("src.nexus.optimization.remotion_engine.OmniInference") as mock_inf, \
+             patch("src.nexus.optimization.remotion_engine.AssetManager"):
             
             remotion_dir = tmp_path / "remotion"
             src_dir = remotion_dir / "src"
@@ -55,7 +55,7 @@ class TestRemotionEngine:
         assert engine.inference.chat.called
 
     @patch("subprocess.run")
-    @patch("src.inference.remotion_engine.RemotionExplainerEngine._save_narration")
+    @patch("src.nexus.optimization.remotion_engine.RemotionExplainerEngine._save_narration")
     def test_generate_video_with_narration(self, mock_save, mock_run, engine):
         # Mock model response with audio
         engine.inference.chat_with_audio.return_value = {

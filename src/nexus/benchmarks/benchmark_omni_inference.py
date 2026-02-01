@@ -14,14 +14,14 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.omni.inference import OmniInference, GenerationConfig
-from src.metrics_tracker import MetricsTracker, BenchmarkMetrics
+from src.nexus.streaming import OmniInference, GenerationConfig
+from src.nexus.core.metrics_tracker import MetricsTracker, BenchmarkMetrics
 
 def benchmark_omni_inference():
     print("Benchmarking OmniInference (Mocked Weights)...")
     
     # Mocking loader to avoid loading 7B model
-    with patch("src.omni.loader.OmniModelLoader.load_for_inference") as mock_load:
+    with patch("src.nexus.models.sli.io_optimizer.OmniLoader.load_for_inference") as mock_load:
         mock_model = MagicMock()
         mock_model.device = "cpu"
         mock_tokenizer = MagicMock()

@@ -23,14 +23,14 @@ from datetime import datetime
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.training_controller import (
+from src.nexus.training.training_controller import (
     setup_signal_handlers,
     training_step_hook,
     check_pause_state,
     scan_and_extract_datasets,
 )
-from src.metrics_tracker import ALL_DATASETS
-from src.data.universal_loader import load_dataset_universal
+from src.nexus.core.metrics_tracker import ALL_DATASETS
+from src.nexus.data.universal_loader import load_dataset_universal
 
 
 @dataclass
@@ -161,7 +161,7 @@ class BaseStage(ABC):
         Looks up paths in ALL_DATASETS and combines them.
         """
         from datasets import concatenate_datasets
-        from src.metrics_tracker import get_capability_datasets
+        from src.nexus.core.metrics_tracker import get_capability_datasets
         
         paths = get_capability_datasets(self.config.capability_name)
         if not paths:

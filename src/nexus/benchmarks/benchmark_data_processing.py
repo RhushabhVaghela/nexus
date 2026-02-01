@@ -9,8 +9,8 @@ import json
 import random
 from typing import List, Dict, Any
 from pathlib import Path
-from src.utils.schema_normalizer import SchemaNormalizer
-from src.metrics_tracker import MetricsTracker, BenchmarkMetrics
+from src.nexus.utils.schema_normalizer import SchemaNormalizer
+from src.nexus.core.metrics_tracker import MetricsTracker, BenchmarkMetrics
 
 def generate_mock_samples(n: int) -> List[Dict[str, Any]]:
     samples = []

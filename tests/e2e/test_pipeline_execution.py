@@ -91,8 +91,8 @@ class TestPipelineComponentsIntegration:
     
     def test_detect_then_validate_flow(self, text_model_path):
         """Test detection -> validation flow."""
-        from src.detect_modalities import detect_modalities
-        from src.capability_registry import CapabilityRegistry
+        from src.nexus.multimodal.detect_modalities import detect_modalities
+        from src.nexus.core.capability_registry import CapabilityRegistry
         
         # Detect
         result = detect_modalities(text_model_path)

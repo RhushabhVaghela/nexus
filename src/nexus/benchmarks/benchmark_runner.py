@@ -31,8 +31,8 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 # Import unified tracker
-from src.metrics_tracker import MetricsTracker, BenchmarkMetrics, ALL_DATASETS
-from src.omni.loader import OmniModelLoader
+from src.nexus.core.metrics_tracker import MetricsTracker, BenchmarkMetrics, ALL_DATASETS
+from src.nexus.models.sli.io_optimizer import OmniLoader
 
 
 @dataclass
@@ -58,7 +58,7 @@ class BenchmarkRunner:
         self.model = None
         self.tokenizer = None
         self.tracker = MetricsTracker(output_dir=config.output_dir)
-        self.loader = OmniModelLoader(config.model_path)
+        self.loader = OmniLoader(config.model_path)
         
     def setup(self):
         """Load model and tokenizer using Universal Loader."""
@@ -199,7 +199,7 @@ class BenchmarkRunner:
         
         # Try to load a few samples from configured datasets
         try:
-            from src.data.universal_loader import load_dataset_universal
+            from src.nexus.data.universal_loader import load_dataset_universal
             
             # Iterate through ALL categories and ALL paths
             # We shuffle categories to get a good mix

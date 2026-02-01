@@ -1,11 +1,11 @@
 import pytest
 import torch
 from unittest.mock import MagicMock, patch
-from src.capability_audit import audit_capabilities
+from src.nexus.core.capability_audit import audit_capabilities
 
-@patch("src.capability_audit.AutoTokenizer.from_pretrained")
-@patch("src.capability_audit.OmniMultimodalLM")
-@patch("src.capability_audit.ReasoningWrapper")
+@patch("src.nexus.core.capability_audit.AutoTokenizer.from_pretrained")
+@patch("src.nexus.core.capability_audit.OmniMultimodalLM")
+@patch("src.nexus.core.capability_audit.ReasoningWrapper")
 def test_audit_capabilities_success(mock_reasoner_cls, mock_omni_cls, mock_tokenizer_fn):
     # Mock model and tokenizer
     mock_tokenizer = MagicMock()
@@ -36,7 +36,7 @@ def test_audit_capabilities_success(mock_reasoner_cls, mock_omni_cls, mock_token
     assert mock_reasoner.generate.called
     assert mock_model.wrapper.llm.generate.called
 
-@patch("src.capability_audit.AutoTokenizer.from_pretrained")
+@patch("src.nexus.core.capability_audit.AutoTokenizer.from_pretrained")
 def test_audit_capabilities_load_failure(mock_tokenizer_fn):
     mock_tokenizer_fn.side_effect = Exception("Load failed")
     # Should not raise exception, just print error
