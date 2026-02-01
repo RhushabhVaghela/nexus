@@ -54,7 +54,7 @@ def get_system_info() -> Dict[str, str]:
     except Exception: pass
     return info
 
-from src.metrics_tracker import MetricsTracker, ExecutionDetailMetrics, ValidationMetrics
+from src.nexus.core.metrics_tracker import MetricsTracker, ExecutionDetailMetrics, ValidationMetrics
 
 class TestMetricsCollector:
     def __init__(self):
