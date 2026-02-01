@@ -1,9 +1,43 @@
-# Standard Python/IDE ignores
-.pytest_cache/
-.venv/
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 .DS_Store
 Thumbs.db
 
@@ -12,32 +46,56 @@ logs/
 results/
 checkpoints/
 offload-cache/
-# llm-dataset-resources/
-# research-papers/
+activation_cache/
+cache/
+temp_sli_shards/
+
+# Large artifacts and data files
 *.log
-.coverage
-.benchmarks/
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.gguf
+*.onnx
+*.trt
 
-# Large artifacts and session logs
-session-ses_*.md
-unit_tests_detailed_report.txt
-*report.txt
-Nexus-Ultimate.md
-Finalizing Reasoning Infrastructure.md
-dataset and performance suggestions.md
-universal-architecture.md
-rejection_sampled.jsonl
-nexus_agent_mix.jsonl
-
-# new-plan-conversation-files/
+# Dataset files (can be large)
+*.jsonl
+*.parquet
+*.arrow
+*.csv
 
 # Lock files
 *.lock
-*lock*
+.pipeline.lock
+.monitor_pid
 
-# Node modules
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Documentation builds
+docs/_build/
+docs/api/_build/
+
+# Unsloth cache
+unsloth_compiled_cache/
+
+# Node modules (for dashboard/remotion)
 node_modules/
 dashboard/node_modules/
 remotion/node_modules/
-# Unsloth
-unsloth_compiled_cache/
+
+# Profiling data
+*.prof
+*.lprof
+
+# Local config overrides
+config/local*.yaml
+config/*.local.yaml
