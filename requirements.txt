@@ -47,3 +47,8 @@ redis>=5.0.0
 
 # Optional for enhanced monitoring
 pynvml>=11.5.0
+
+# TTS dependencies (for tts_engine.py)
+# Note: TTS is already included above
+# Additional optional TTS backends:
+# gtts>=2.5.0  # Uncomment for Google TTS fallback

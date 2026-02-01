@@ -53,15 +53,62 @@ class ToolExecutor:
 # --- Built-in Tools ---
 
 def calculator(expression: str) -> str:
-    """Safely evaluates a mathematical expression."""
+    """Safely evaluates a mathematical expression using AST parsing."""
+    import ast
+    import operator
+    
     try:
-        # WHITELIST: Only allow math-safe characters
-        allowed = set("0123456789+-*/(). ")
-        if not all(c in allowed for c in expression):
-            return "Error: Invalid characters in expression."
-        return str(eval(expression, {"__builtins__": None}, {}))
+        # Parse the expression into an AST
+        tree = ast.parse(expression, mode='eval')
+        
+        # Define allowed node types and operators
+        allowed_nodes = (
+            ast.Expression, ast.BinOp, ast.UnaryOp, ast.Num, ast.Constant,
+            ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow, ast.USub, ast.UAdd
+        )
+        
+        # Validate all nodes in the tree
+        for node in ast.walk(tree):
+            if not isinstance(node, allowed_nodes):
+                return "Error: Invalid expression. Only basic math operations are allowed."
+        
+        # Safe evaluation using a restricted dictionary
+        def safe_eval(node):
+            if isinstance(node, ast.Expression):
+                return safe_eval(node.body)
+            elif isinstance(node, ast.Constant):  # Python 3.8+
+                return node.value
+            elif isinstance(node, ast.Num):  # Python < 3.8
+                return node.n
+            elif isinstance(node, ast.BinOp):
+                left = safe_eval(node.left)
+                right = safe_eval(node.right)
+                if isinstance(node.op, ast.Add):
+                    return left + right
+                elif isinstance(node.op, ast.Sub):
+                    return left - right
+                elif isinstance(node.op, ast.Mult):
+                    return left * right
+                elif isinstance(node.op, ast.Div):
+                    return left / right
+                elif isinstance(node.op, ast.Pow):
+                    return left ** right
+            elif isinstance(node, ast.UnaryOp):
+                operand = safe_eval(node.operand)
+                if isinstance(node.op, ast.USub):
+                    return -operand
+                elif isinstance(node.op, ast.UAdd):
+                    return +operand
+            else:
+                raise ValueError(f"Unsupported node type: {type(node)}")
+        
+        result = safe_eval(tree)
+        return str(result)
+        
+    except ZeroDivisionError:
+        return "Error: Division by zero."
     except Exception as e:
-        return f"Error: {e}"
+        return f"Error: Invalid mathematical expression - {e}"
 
 def search_web(query: str) -> str:
     """

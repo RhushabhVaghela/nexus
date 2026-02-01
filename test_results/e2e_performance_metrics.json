@@ -1,0 +1,7 @@
+[
+  {
+    "test_name": "baseline_agents",
+    "duration_seconds": 0.05011153221130371,
+    "implementation": "agents"
+  }
+]

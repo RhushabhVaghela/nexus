@@ -76,7 +76,10 @@ def inspect_content(file_path: Path) -> Optional[str]:
                     try:
                         data = json.loads(line)
                         keys.update(data.keys())
-                    except: pass
+                    except json.JSONDecodeError:
+                        logger.debug(f"Failed to parse JSON line in {file_path}")
+                    except Exception as e:
+                        logger.debug(f"Error processing line in {file_path}: {e}")
             elif file_path.suffix.lower() == '.json':
                 try:
                     data = json.load(f)
@@ -84,7 +87,10 @@ def inspect_content(file_path: Path) -> Optional[str]:
                         keys.update(data[0].keys())
                     elif isinstance(data, dict):
                         keys.update(data.keys())
-                except: pass
+                except json.JSONDecodeError:
+                    logger.debug(f"Failed to parse JSON in {file_path}")
+                except Exception as e:
+                    logger.debug(f"Error processing {file_path}: {e}")
                 
         # Heuristic Matching
         if "tool_calls" in keys or "function" in keys: return "tools"

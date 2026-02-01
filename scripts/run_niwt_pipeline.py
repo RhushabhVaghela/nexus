@@ -7,11 +7,11 @@ from datetime import datetime
 # Path to python interpreter in current env
 PYTHON_EXE = sys.executable
 
-def run_command(cmd, stage_name):
+def run_command(cmd_list, stage_name):
     print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Starting {stage_name}...")
-    print(f"Command: {cmd}")
+    print(f"Command: {' '.join(cmd_list)}")
     try:
-        subprocess.check_call(cmd, shell=True)
+        subprocess.check_call(cmd_list, shell=False)
         print(f"[{datetime.now().strftime('%H:%M:%S')}] {stage_name} Completed Successfully.")
         return True
     except subprocess.CalledProcessError as e:
@@ -35,19 +35,21 @@ def main():
     spectral_json = profile_json.replace("_profile.json", "_spectral_config.json")
     
     # Stage 1: Batch Profiling
-    cmd1 = f"{PYTHON_EXE} {os.path.join(script_dir, 'niwt_batch_profiler.py')} --model_name '{args.model_name}' --batch_size {args.batch_size} --samples {args.samples}"
+    cmd1 = [PYTHON_EXE, os.path.join(script_dir, 'niwt_batch_profiler.py'), 
+            '--model_name', args.model_name, '--batch_size', str(args.batch_size), '--samples', str(args.samples)]
     if not run_command(cmd1, "Stage 1: Profiling"): return
 
     # Stage 2: Activation Mapping
-    cmd2 = f"{PYTHON_EXE} {os.path.join(script_dir, 'niwt_stage2_activation.py')} --model_name '{args.model_name}' --profile_result '{profile_json}'"
+    cmd2 = [PYTHON_EXE, os.path.join(script_dir, 'niwt_stage2_activation.py'),
+            '--model_name', args.model_name, '--profile_result', profile_json]
     if not run_command(cmd2, "Stage 2: Activation Mapping"): return
 
     # Stage 3: Spectral Analysis
-    cmd3 = f"{PYTHON_EXE} {os.path.join(script_dir, 'niwt_stage3_spectral.py')} --bitmask_file '{bitmask_json}'"
+    cmd3 = [PYTHON_EXE, os.path.join(script_dir, 'niwt_stage3_spectral.py'), '--bitmask_file', bitmask_json]
     if not run_command(cmd3, "Stage 3: Spectral Analysis"): return
 
     # Stage 4: Consolidation
-    cmd4 = f"{PYTHON_EXE} {os.path.join(script_dir, 'niwt_stage4_consolidation.py')} --spectral_config '{spectral_json}'"
+    cmd4 = [PYTHON_EXE, os.path.join(script_dir, 'niwt_stage4_consolidation.py'), '--spectral_config', spectral_json]
     if not run_command(cmd4, "Stage 4: Consolidation"): return
 
     print("\n" + "="*50)

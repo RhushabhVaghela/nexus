@@ -5,6 +5,7 @@ Provides Prometheus-compatible metrics collection with custom metrics
 for all components including GPU utilization tracking.
 """
 
+import asyncio
 import functools
 import logging
 import time
@@ -52,6 +53,7 @@ class MetricValue:
     value: float
     labels: Dict[str, str] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 class LocalMetric:
@@ -126,6 +128,28 @@ class LocalMetric:
         """Get all values for this metric."""
         with self._lock:
             return list(self._values.values())
+    
+    def labels(self, **kwargs) -> 'LocalMetric':
+        """Return a proxy that will apply labels to operations.
+        
+        For compatibility with prometheus_client API.
+        """
+        # Create a simple proxy that stores labels
+        class LabeledMetric:
+            def __init__(inner_self, parent, labels):
+                inner_self.parent = parent
+                inner_self.fixed_labels = labels
+            
+            def inc(inner_self, value: float = 1.0) -> None:
+                inner_self.parent.inc(value, labels=inner_self.fixed_labels)
+            
+            def set(inner_self, value: float) -> None:
+                inner_self.parent.set(value, labels=inner_self.fixed_labels)
+            
+            def observe(inner_self, value: float) -> None:
+                inner_self.parent.observe(value, labels=inner_self.fixed_labels)
+        
+        return LabeledMetric(self, kwargs)
 
 
 class MetricsCollector:
@@ -159,7 +183,7 @@ class MetricsCollector:
         name: str,
         description: str = "",
         labelnames: Optional[List[str]] = None
-    ) -> Union[Counter, LocalMetric]:
+    ) -> Any:
         """Create a counter metric."""
         full_name = self._make_name(name)
         
@@ -185,7 +209,7 @@ class MetricsCollector:
         name: str,
         description: str = "",
         labelnames: Optional[List[str]] = None
-    ) -> Union[Gauge, LocalMetric]:
+    ) -> Any:
         """Create a gauge metric."""
         full_name = self._make_name(name)
         
@@ -212,7 +236,7 @@ class MetricsCollector:
         description: str = "",
         labelnames: Optional[List[str]] = None,
         buckets: Optional[List[float]] = None
-    ) -> Union[Histogram, LocalMetric]:
+    ) -> Any:
         """Create a histogram metric."""
         full_name = self._make_name(name)
         
@@ -240,7 +264,7 @@ class MetricsCollector:
         self,
         name: str,
         description: str = ""
-    ) -> Union[Info, LocalMetric]:
+    ) -> Any:
         """Create an info metric."""
         full_name = self._make_name(name)
         

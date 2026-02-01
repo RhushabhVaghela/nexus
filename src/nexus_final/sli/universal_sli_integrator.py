@@ -128,7 +128,16 @@ class UniversalSLIIntegrator:
             self.moe_handler = MoEHandler(self.config)
         
         # Get model info
-        self.model_info = self.factory.get_model_info(self.config)
+        # Use the resolved family directly instead of asking factory to re-detect
+        # This handles cases where we fell back to a default family
+        self.model_info = {
+            "family_id": self.family.family_id,
+            "family_name": self.family.family_name,
+            "num_layers": self.family.get_num_layers(self.config),
+            "hidden_size": self.family.get_hidden_size(self.config),
+            "vocab_size": self.family.get_vocab_size(self.config),
+            "trust_remote_code": self.family.trust_remote_code,
+        }
         print(f"[SLI] Model info: {self.model_info}")
     
     def _is_moe_model(self) -> bool:

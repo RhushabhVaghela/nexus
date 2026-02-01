@@ -118,7 +118,10 @@ class BenchmarkRunner:
             for line in f:
                 try:
                     samples.append(json.loads(line))
-                except: pass
+                except json.JSONDecodeError:
+                    logger.debug(f"Skipping malformed JSON line in {bench_file}")
+                except Exception as e:
+                    logger.warning(f"Error parsing line in {bench_file}: {e}")
         
         # Limit samples for speed
         samples = samples[:100] 

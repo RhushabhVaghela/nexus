@@ -1044,6 +1044,57 @@ class OmniModelLoader:
         except ImportError:
             logger.error("diffusers library not installed. Install with: pip install diffusers")
             raise RuntimeError("diffusers library required for loading Stable Diffusion models")
+
+    def _load_vision_encoder(self, model_path: Path, trust_remote_code: bool, **kwargs):
+        """Load vision encoder model."""
+        from transformers import AutoModel
+        model = AutoModel.from_pretrained(str(model_path), trust_remote_code=trust_remote_code, **kwargs)
+        # Vision encoders usually use a processor, not a tokenizer.
+        # We return the processor as the second item if available.
+        return model, self._processor
+
+    def _load_asr_model(self, model_path: Path, trust_remote_code: bool, **kwargs):
+        """Load ASR model."""
+        from transformers import AutoModelForSpeechSeq2Seq
+        model = AutoModelForSpeechSeq2Seq.from_pretrained(str(model_path), trust_remote_code=trust_remote_code, **kwargs)
+        return model, self._processor
+
+    def load_for_training(self, model_path: str, freeze_talker: bool = True, 
+                          visual_repetition_factor: int = 1, audio_repetition_factor: int = 1, 
+                          **kwargs) -> Tuple[Any, Any]:
+        """
+        Load model specifically for training (e.g. freezing components).
+        
+        Args:
+            model_path: Path to the model
+            freeze_talker: Whether to freeze the talker component (Omni models)
+            visual_repetition_factor: Factor for visual tokens
+            audio_repetition_factor: Factor for audio tokens
+            **kwargs: Additional loading arguments
+            
+        Returns:
+            Tuple of (model, tokenizer)
+        """
+        # Load full model first
+        model, tokenizer = self.load_for_inference(
+            model_path=model_path, 
+            mode="full",
+            visual_repetition_factor=visual_repetition_factor,
+            audio_repetition_factor=audio_repetition_factor,
+            **kwargs
+        )
+        
+        # Freeze talker if requested (Omni specific)
+        if freeze_talker and hasattr(model, "talker"):
+            logger.info("Freezing talker component for training")
+            for param in model.talker.parameters():
+                param.requires_grad = False
+                
+        # Ensure model is in training mode
+        model.train()
+        
+        return model, tokenizer
+
         except Exception as e:
             logger.error(f"Failed to load Diffusers model: {e}")
             raise

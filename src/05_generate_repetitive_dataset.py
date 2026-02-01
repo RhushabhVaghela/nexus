@@ -239,7 +239,9 @@ class PromptRepetitionEngine:
     def gen_basic_arithmetic(self) -> Tuple[str, str, str]:
         a, b = rnum(1, 1000), rnum(1, 1000)
         op = random.choice(["+", "-", "*"])
-        result = eval(f"{a} {op} {b}")
+        # SAFETY FIX: Use dictionary mapping instead of eval
+        ops = {'+': lambda x, y: x + y, '-': lambda x, y: x - y, '*': lambda x, y: x * y}
+        result = ops[op](a, b)
         return f"Calculate {a} {op} {b}", f"Numbers: {a}, {b}\nOperation: {op}", str(result)
     
     def gen_percentage(self) -> Tuple[str, str, str]:

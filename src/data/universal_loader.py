@@ -143,7 +143,12 @@ class UniversalDataLoader:
                         content = f.read(1024).strip()
                         if content.startswith('['): return "json_array"
                         if content.startswith('{'): return "json_dict"
-                except: pass
+                except UnicodeDecodeError:
+                    logger.debug(f"Could not decode {self.path} as UTF-8")
+                except IOError as e:
+                    logger.debug(f"Could not read {self.path}: {e}")
+                except Exception as e:
+                    logger.warning(f"Unexpected error inspecting {self.path}: {e}")
                 return "json"
             if suffix == '.csv': return "csv"
             if suffix == '.txt': return "text"

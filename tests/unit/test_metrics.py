@@ -117,13 +117,6 @@ class TestLocalMetric:
         assert mv.metadata["sum"] == 6.0
     
     def test_get_value_missing(self):
-        """Test getting value for missing metric."""
-        collector = MockMetricsCollector()
-        collector._metrics = {}
-        
-        # Should return None for non-existent metric
-        value = collector.get_value("nonexistent")
-        assert value is None
         """Test getting value for missing key."""
         metric = LocalMetric("test", MetricType.GAUGE)
         

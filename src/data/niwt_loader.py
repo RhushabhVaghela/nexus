@@ -88,8 +88,11 @@ class NIWTDataLoader:
             # Initialize index map
             if not loader.index_map:
                 try:
-                    loader.load_sample(0) # Trigger map build
-                except: pass
+                    loader.load_sample(0)  # Trigger map build
+                except IndexError:
+                    logger.debug(f"Dataset {dataset_name} appears to be empty")
+                except Exception as e:
+                    logger.warning(f"Could not build index map for {dataset_name}: {e}")
             
             if loader.index_map:
                 total_samples = loader.index_map.total_count
