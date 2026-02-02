@@ -7,8 +7,59 @@ import os
 
 BASE_PATH = "/mnt/e/data"
 
+ARCHITECTURE_MAP = {
+    # Known architecture mappings for auto-detection
+    "trinity-large": "reasoning",
+    "trinity": "reasoning",
+    "longcat": "long_context",
+    "longcat-8b": "long_context",
+    "longcat-16b": "long_context",
+    "llama": "causal",
+    "mistral": "causal",
+    "mixtral": "moe",
+    "qwen2": "causal",
+    "qwen2.5": "causal",
+    "gemma": "causal",
+    "phi3": "causal",
+    "phi4": "causal",
+}
+
 TEACHER_REGISTRY = {
+    # --- UNKNOWN/GENERIC HANDLER ---
+    "unknown_architecture": {
+        "model": "auto",
+        "path": os.path.join(BASE_PATH, "models/unknown"),
+        "type": "unknown",
+        "desc": "Generic handler for unknown architectures with auto-detection",
+        "tags": ["unknown", "auto-detect"],
+        "handler": "auto_detect"
+    },
+    
     # --- REASONING & AGENTIC (Language) ---
+    "trinity_large": {
+        "model": "unsloth/Trinity-Large-v1",
+        "path": os.path.join(BASE_PATH, "models/Trinity-Large-v1"),
+        "type": "reasoning",
+        "desc": "Trinity-Large reasoning specialist",
+        "tags": ["reasoning", "large", "language"],
+        "architecture": "trinity-large"
+    },
+    "longcat_8b": {
+        "model": "unsloth/LongCat-8B",
+        "path": os.path.join(BASE_PATH, "models/LongCat-8B"),
+        "type": "long_context",
+        "desc": "LongCat 8B long context specialist",
+        "tags": ["long_context", "language"],
+        "architecture": "longcat-8b"
+    },
+    "longcat_16b": {
+        "model": "unsloth/LongCat-16B",
+        "path": os.path.join(BASE_PATH, "models/LongCat-16B"),
+        "type": "long_context",
+        "desc": "LongCat 16B long context specialist",
+        "tags": ["long_context", "language"],
+        "architecture": "longcat-16b"
+    },
     "reasoning_core": {
         "model": "openbmb/AgentCPM-Explore",
         "path": os.path.join(BASE_PATH, "models/AgentCPM-Explore"),
@@ -293,3 +344,136 @@ DATASET_REGISTRY = {
     "wizardlm-7b-uncensored": {"path": "WizardLM-7B-Uncensored", "local_path": "/mnt/e/data/datasets/uncensored/WizardLM-7B-Uncensored", "desc": "Dataset: WizardLM-7B-Uncensored", "tags": ["uncensored"]},
     "zxbsmk_nsfw-t2i": {"path": "zxbsmk/NSFW-T2I", "local_path": "/mnt/e/data/datasets/uncensored/zxbsmk_NSFW-T2I", "desc": "Dataset: zxbsmk/NSFW-T2I", "tags": ["uncensored"]},
 }
+
+
+# --- Auto-Detection Functions ---
+
+def detect_architecture(model_id: str, config_dict: dict = None) -> str:
+    """
+    Detect architecture type from model ID or config.
+    
+    Args:
+        model_id: Model identifier (e.g., 'meta-llama/Llama-2-7b')
+        config_dict: Optional model config dictionary
+    
+    Returns:
+        Detected architecture type
+    """
+    model_id_lower = model_id.lower()
+    
+    # Check exact matches in ARCHITECTURE_MAP
+    for arch, arch_type in ARCHITECTURE_MAP.items():
+        if arch in model_id_lower:
+            return arch_type
+    
+    # Check config if provided
+    if config_dict:
+        arch = config_dict.get("architectures", [""])[0].lower()
+        model_type = config_dict.get("model_type", "").lower()
+        
+        if "vision" in arch or "clip" in arch:
+            return "vision"
+        elif "audio" in arch or "whisper" in arch:
+            return "audio"
+        elif "diffusion" in arch or "unet" in arch:
+            return "generation"
+        elif model_type in ["llama", "mistral", "qwen2"]:
+            return "causal"
+    
+    # Fallback patterns
+    if any(x in model_id_lower for x in ["vision", "clip", "siglip", "vit"]):
+        return "vision"
+    elif any(x in model_id_lower for x in ["audio", "whisper", "wav2vec", "hubert"]):
+        return "audio"
+    elif any(x in model_id_lower for x in ["diffusion", "sd", "sdxl", "flux"]):
+        return "generation"
+    elif any(x in model_id_lower for x in ["embedding", "sentence-transformer"]):
+        return "encoder"
+    
+    return "unknown"
+
+
+def get_model_info(model_key: str) -> dict:
+    """
+    Get model information from registry.
+    
+    Args:
+        model_key: Key in TEACHER_REGISTRY
+    
+    Returns:
+        Model info dictionary or unknown_architecture info
+    """
+    if model_key in TEACHER_REGISTRY:
+        return TEACHER_REGISTRY[model_key]
+    
+    # Return unknown handler with detection
+    unknown_info = TEACHER_REGISTRY["unknown_architecture"].copy()
+    unknown_info["detected_key"] = model_key
+    unknown_info["detected_type"] = detect_architecture(model_key)
+    return unknown_info
+
+
+def register_unknown_model(
+    model_key: str,
+    model_id: str,
+    model_type: str = "auto",
+    **kwargs
+) -> dict:
+    """
+    Register a model with auto-detected type.
+    
+    Args:
+        model_key: Key for the model
+        model_id: HuggingFace model ID or path
+        model_type: Model type (auto-detected if 'auto')
+        **kwargs: Additional model metadata
+    
+    Returns:
+        Registered model info
+    """
+    if model_type == "auto":
+        model_type = detect_architecture(model_id)
+    
+    model_info = {
+        "model": model_id,
+        "path": os.path.join(BASE_PATH, f"models/{model_key}"),
+        "type": model_type,
+        "desc": kwargs.get("desc", f"Auto-registered: {model_key}"),
+        "tags": kwargs.get("tags", [model_type, "auto-registered"]),
+        "auto_detected": True,
+    }
+    
+    TEACHER_REGISTRY[model_key] = model_info
+    return model_info
+
+
+def list_models_by_type(model_type: str) -> list:
+    """
+    List all models of a specific type.
+    
+    Args:
+        model_type: Type of models to list
+    
+    Returns:
+        List of model keys
+    """
+    return [
+        key for key, info in TEACHER_REGISTRY.items()
+        if info.get("type") == model_type
+    ]
+
+
+def list_models_by_tag(tag: str) -> list:
+    """
+    List all models with a specific tag.
+    
+    Args:
+        tag: Tag to search for
+    
+    Returns:
+        List of model keys
+    """
+    return [
+        key for key, info in TEACHER_REGISTRY.items()
+        if tag in info.get("tags", [])
+    ]

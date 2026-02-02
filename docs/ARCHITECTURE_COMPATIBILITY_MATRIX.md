@@ -1,414 +1,200 @@
-# OmniModelLoader Architecture Compatibility Matrix
+# Nexus Architecture Compatibility Matrix
 
-Complete compatibility matrix for the Nexus Universal Model Loader.
+This document provides a comprehensive overview of supported model architectures and their compatibility with Nexus components.
 
----
+## Legend
 
-## Overview
+- ✅ Fully Supported
+- ⚠️ Partial Support
+- ❌ Not Supported
+- 🔄 In Development
 
-The [`OmniModelLoader`](src/omni/loader.py:76) supports **11 architecture families (~30-40 model variants)** across **5 model categories**. This matrix documents all supported architectures, their loading strategies, and compatibility status.
+## Language Models
 
-> **Note on Model Count**: While we previously advertised "135+ models," the actual architecture support is organized around **11 distinct architecture families** covering approximately **30-40 model variants**. The original count included every possible model name/variant which was misleading.
+| Architecture | Type | Registry Key | Training | Inference | GGUF | Notes |
+|--------------|------|--------------|----------|-----------|------|-------|
+| Llama 2/3 | Causal | `llama-*` | ✅ | ✅ | ✅ | Native support |
+| Mistral | Causal | `mistral-*` | ✅ | ✅ | ✅ | v0.1, v0.2, v0.3 |
+| Mixtral | MoE | `mixtral-*` | ✅ | ✅ | ✅ | 8x7B, 8x22B |
+| Qwen 2/2.5 | Causal | `qwen2-*` | ✅ | ✅ | ✅ | 0.5B to 72B |
+| Gemma 2/3 | Causal | `gemma-*` | ✅ | ✅ | ✅ | 2B, 4B, 9B, 27B |
+| Phi 3/4 | Causal | `phi3-*`, `phi4-*` | ✅ | ✅ | ✅ | Mini, Small, Medium |
+| Trinity-Large | Reasoning | `trinity_large` | ✅ | ✅ | ✅ | Added in v6.1 |
+| LongCat | Long Context | `longcat-*` | ✅ | ✅ | ✅ | 8B, 16B variants |
+| Command-R | Causal | `command-r-*` | ✅ | ✅ | ⚠️ | Limited testing |
+| DBRX | MoE | `dbrx-*` | ⚠️ | ✅ | ✅ | Inference only |
 
----
+## Vision Models
 
-## Teacher Registry Models (14 Models)
+| Architecture | Type | Registry Key | Training | Inference | Notes |
+|--------------|------|--------------|----------|-----------|-------|
+| CLIP | Encoder | `clip-*` | ✅ | ✅ | All variants |
+| SigLIP | Encoder | `siglip-*` | ✅ | ✅ | SigLIP 1/2 |
+| ViT | Encoder | `vit-*` | ✅ | ✅ | Vision Transformer |
+| Step-VL | Vision-Language | `vision_main` | ⚠️ | ✅ | 10B parameter |
+| OVD | Detection | `object_detection` | ⚠️ | ✅ | Open vocabulary |
 
-These models from the teacher registry are fully supported:
+## Diffusion Models (Image)
 
-| # | Model | Architecture | Category | Loading Strategy | Status | Notes |
-|---|-------|--------------|----------|-----------------|--------|-------|
-| 1 | **AgentCPM-Explore** | Qwen3ForCausalLM | transformers | AutoModelForCausalLM | ✅ Supported | Custom registration for qwen3 type |
-| 2 | **GLM-4.7-Flash** | Glm4MoeForCausalLM | transformers | AutoModelForCausalLM | ✅ Supported | Model type: glm4_moe_lite |
-| 3 | **Step3-VL-10B** | Step3VL10BForCausalLM | vision-language | AutoModelForVision2Seq | ✅ Supported | Custom registration for step_robotics |
-| 4 | **Gemma Scope** | SAE | sae | Tokenizer Fallback | ✅ Supported | Loads tokenizer from base model |
-| 5 | **Stable Diffusion** | DiffusersPipeline | diffusers | DiffusionPipeline | ✅ Supported | Full diffusers support |
-| 6 | **SigLIP** | SigLIPModel | vision_encoder | AutoModel | ✅ Supported | Vision encoder loading |
-| 7 | **VideoMAE** | VideoMAEModel | vision_encoder | AutoModel | ✅ Supported | Video encoder |
-| 8 | **Whisper/VibeVoice** | WhisperForConditionalGeneration | asr | AutoModelForSpeechSeq2Seq | ✅ Supported | ASR with processor |
-| 9 | **Llama Family** | LlamaForCausalLM | transformers | AutoModelForCausalLM | ✅ Supported | Llama, Llama 2, Llama 3 |
-| 10 | **Qwen2 Family** | Qwen2ForCausalLM | transformers | AutoModelForCausalLM | ✅ Supported | Qwen 1.5, 2, 2.5 |
-| 11 | **Mistral** | MistralForCausalLM | transformers | AutoModelForCausalLM | ✅ Supported | Mistral 7B, Mixtral |
-| 12 | **Gemma Family** | GemmaForCausalLM | transformers | AutoModelForCausalLM | ✅ Supported | Gemma, Gemma 2, Gemma 3 |
-| 13 | **Phi Family** | Phi3ForCausalLM | transformers | AutoModelForCausalLM | ✅ Supported | Phi, Phi 2, Phi 3, Phi 4 |
-| 14 | **DeepSeek** | DeepseekForCausalLM | transformers | AutoModelForCausalLM | ✅ Supported | DeepSeek models |
+| Architecture | Type | Pipeline | Text2Img | Img2Img | Inpaint | ControlNet |
+|--------------|------|----------|----------|---------|---------|------------|
+| SD 1.5/2.1 | Diffusion | `sd` | ✅ | ✅ | ✅ | ✅ |
+| SDXL | Diffusion | `sdxl` | ✅ | ✅ | ✅ | ✅ |
+| SDXL Turbo | Diffusion | `sdxl` | ✅ | ✅ | ❌ | ❌ |
+| SD 3/3.5 | Diffusion | `sd3` | ✅ | ✅ | ✅ | ⚠️ |
+| FLUX Dev | Flow | `flux` | ✅ | ✅ | ⚠️ | ❌ |
+| FLUX Schnell | Flow | `flux` | ✅ | ❌ | ❌ | ❌ |
+| FLUX Fill | Flow | `flux-fill` | ❌ | ❌ | ✅ | ❌ |
+| Z-Image | Diffusion | `z-image` | ✅ | ✅ | ⚠️ | ❌ |
+| Z-Image Turbo | Diffusion | `z-image-turbo` | ✅ | ❌ | ❌ | ❌ |
+| HunyuanDiT | Diffusion | `hunyuan` | ✅ | ✅ | ⚠️ | ❌ |
 
----
+## Video Models
 
-## Full Architecture Support Lists
+| Architecture | Type | Pipeline | T2V | I2V | Consistency | Notes |
+|--------------|------|----------|-----|-----|-------------|-------|
+| LTX-Video | Video Diffusion | `ltx-video` | ✅ | ✅ | ✅ | Lightricks |
+| SVD | Video Diffusion | `svd` | ❌ | ✅ | ✅ | Stability AI |
+| SVD-XT | Video Diffusion | `svd-xt` | ❌ | ✅ | ✅ | Extended frames |
+| CogVideoX | Video Diffusion | `cogvideo` | ✅ | ✅ | ✅ | 2B, 5B variants |
+| HunyuanVideo | Video Diffusion | `hunyuan-video` | ✅ | ⚠️ | ✅ | Tencent |
 
-### Causal Language Models (130+ architectures)
+## Audio Models
 
-```
-✅ AfmoeForCausalLM
-✅ ApertusForCausalLM
-✅ ArceeForCausalLM
-✅ ArcticForCausalLM
-✅ AudioFlamingo3ForConditionalGeneration
-✅ BaiChuanForCausalLM
-✅ BaichuanForCausalLM
-✅ BailingMoeForCausalLM
-✅ BailingMoeV2ForCausalLM
-✅ BambaForCausalLM
-✅ BertForMaskedLM
-✅ BertForSequenceClassification
-✅ BertModel
-✅ BitnetForCausalLM
-✅ BloomForCausalLM
-✅ BloomModel
-✅ CamembertModel
-✅ ChameleonForCausalLM
-✅ ChameleonForConditionalGeneration
-✅ ChatGLMForConditionalGeneration
-✅ ChatGLMModel
-✅ CodeShellForCausalLM
-✅ CogVLMForCausalLM
-✅ Cohere2ForCausalLM
-✅ CohereForCausalLM
-✅ DbrxForCausalLM
-✅ DeciLMForCausalLM
-✅ DeepseekForCausalLM
-✅ DistilBertForMaskedLM
-✅ DistilBertForSequenceClassification
-✅ DistilBertModel
-✅ Dots1ForCausalLM
-✅ DreamModel
-✅ Ernie4_5ForCausalLM
-✅ Ernie4_5_ForCausalLM
-✅ Ernie4_5_MoeForCausalLM
-✅ Exaone4ForCausalLM
-✅ ExaoneForCausalLM
-✅ ExaoneMoEForCausalLM
-✅ FalconForCausalLM
-✅ FalconH1ForCausalLM
-✅ FalconMambaForCausalLM
-✅ GPT2LMHeadModel
-✅ GPTBigCodeForCausalLM
-✅ GPTNeoXForCausalLM
-✅ GPTRefactForCausalLM
-✅ Gemma2ForCausalLM
-✅ Gemma3ForCausalLM
-✅ Gemma3ForConditionalGeneration
-✅ Gemma3TextModel
-✅ Gemma3nForCausalLM
-✅ Gemma3nForConditionalGeneration
-✅ GemmaForCausalLM
-✅ Glm4ForCausalLM
-✅ Glm4MoeForCausalLM
-✅ Glm4MoeLiteForCausalLM
-✅ Glm4vForConditionalGeneration
-✅ Glm4vMoeForConditionalGeneration
-✅ GlmForCausalLM
-✅ GlmasrModel
-✅ GptOssForCausalLM
-✅ GraniteForCausalLM
-✅ GraniteMoeForCausalLM
-✅ GraniteMoeHybridForCausalLM
-✅ GraniteMoeSharedForCausalLM
-✅ Grok1ForCausalLM
-✅ GrokForCausalLM
-✅ GroveMoeForCausalLM
-✅ HunYuanDenseV1ForCausalLM
-✅ HunYuanMoEV1ForCausalLM
-✅ Idefics3ForConditionalGeneration
-✅ InternLM2ForCausalLM
-✅ InternLM3ForCausalLM
-✅ InternVisionModel
-✅ JAISLMHeadModel
-✅ JambaForCausalLM
-✅ JanusForConditionalGeneration
-✅ JinaBertForMaskedLM
-✅ JinaBertModel
-✅ KORMoForCausalLM
-✅ KimiVLForConditionalGeneration
-✅ LFM2ForCausalLM
-✅ LLaDAMoEModel
-✅ LLaDAMoEModelLM
-✅ LLaDAModelLM
-✅ Lfm2AudioForConditionalGeneration
-✅ Lfm2ForCausalLM
-✅ Lfm2Model
-✅ Lfm2MoeForCausalLM
-✅ Lfm2VlForConditionalGeneration
-✅ LightOnOCRForConditionalGeneration
-✅ Llama4ForCausalLM
-✅ Llama4ForConditionalGeneration
-✅ LlamaBidirectionalModel
-✅ LlavaStableLMEpochForCausalLM
-✅ MPTForCausalLM
-✅ MT5ForConditionalGeneration
-✅ MaincoderForCausalLM
-✅ Mamba2ForCausalLM
-✅ MambaForCausalLM
-✅ MambaLMHeadModel
-✅ MiMoV2FlashForCausalLM
-✅ MiniCPM3ForCausalLM
-✅ MiniCPMForCausalLM
-✅ MiniMaxM2ForCausalLM
-✅ Mistral3ForConditionalGeneration
-✅ ModernBertForMaskedLM
-✅ ModernBertForSequenceClassification
-✅ ModernBertModel
-✅ NemotronForCausalLM
-✅ NemotronHForCausalLM
-✅ NeoBERT
-✅ NeoBERTForSequenceClassification
-✅ NeoBERTLMHead
-✅ NomicBertModel
-✅ OLMoForCausalLM
-✅ Olmo2ForCausalLM
-✅ Olmo3ForCausalLM
-✅ OlmoForCausalLM
-✅ OlmoeForCausalLM
-✅ OpenELMForCausalLM
-✅ OrionForCausalLM
-✅ PLMForCausalLM
-✅ PLaMo2ForCausalLM
-✅ PLaMo3ForCausalLM
-✅ PanguEmbeddedForCausalLM
-✅ Phi3ForCausalLM
-✅ PhiForCausalLM
-✅ PhiMoEForCausalLM
-✅ Plamo2ForCausalLM
-✅ Plamo3ForCausalLM
-✅ PlamoForCausalLM
-✅ QWenLMHeadModel
-✅ Qwen2AudioForConditionalGeneration
-✅ Qwen2ForCausalLM
-✅ Qwen2Model
-✅ Qwen2MoeForCausalLM
-✅ Qwen2OmniTalkerForConditionalGeneration
-✅ Qwen2VLForConditionalGeneration
-✅ Qwen2VLModel
-✅ Qwen2_5OmniForConditionalGeneration
-✅ Qwen2_5OmniModel
-✅ Qwen2_5_VLForConditionalGeneration
-✅ Qwen3ForCausalLM
-✅ Qwen3MoeForCausalLM
-✅ Qwen3NextForCausalLM
-✅ Qwen3OmniForConditionalGeneration
-✅ Qwen3TTSForConditionalGeneration
-✅ Qwen3VLForConditionalGeneration
-✅ Qwen3VLMoeForConditionalGeneration
-✅ RND1
-✅ RWForCausalLM
-✅ RWKV6Qwen2ForCausalLM
-✅ RWKV7ForCausalLM
-✅ RobertaForSequenceClassification
-✅ RobertaModel
-✅ Rwkv6ForCausalLM
-✅ Rwkv7ForCausalLM
-✅ RwkvHybridForCausalLM
-✅ SeedOssForCausalLM
-✅ SmallThinkerForCausalLM
-✅ SmolLM3ForCausalLM
-✅ SmolVLMForConditionalGeneration
-✅ SolarOpenForCausalLM
-✅ StableLMEpochForCausalLM
-✅ StableLmForCausalLM
-✅ Starcoder2ForCausalLM
-✅ T5EncoderModel
-✅ T5ForConditionalGeneration
-✅ T5WithLMHeadModel
-✅ UMT5ForConditionalGeneration
-✅ UMT5Model
-✅ UltravoxModel
-✅ VoxtralForConditionalGeneration
-✅ WavTokenizerDec
-✅ XLMRobertaForSequenceClassification
-✅ XLMRobertaModel
-✅ XverseForCausalLM
-✅ YoutuVLForConditionalGeneration
-✅ modeling_grove_moe.GroveMoeForCausalLM
+| Architecture | Type | Registry Key | Training | Inference | Notes |
+|--------------|------|--------------|----------|-----------|-------|
+| Whisper | ASR | `whisper-*` | ✅ | ✅ | All sizes |
+| Parakeet | ASR | `asr_fast` | ⚠️ | ✅ | Fast ASR |
+| VibeVoice | ASR | `asr_long` | ⚠️ | ✅ | Long-form |
+| PersonaPlex | Speech | `omni_speech` | ⚠️ | ✅ | Conversational |
+| Qwen TTS | TTS | `tts_*` | ⚠️ | ✅ | Voice cloning |
+| AudioCraft | Audio Gen | `audiocraft-*` | ⚠️ | ✅ | MusicGen, AudioGen |
+
+## Multimodal Models
+
+| Architecture | Type | Registry Key | Text | Vision | Audio | Notes |
+|--------------|------|--------------|------|--------|-------|-------|
+| Qwen-Omni | Multimodal | `omni_*` | ✅ | ✅ | ✅ | 7B, 30B |
+| CLIP | Vision-Lang | `vision_enc` | ✅ | ✅ | ❌ | Embeddings |
+| VideoMAE | Video | `video_enc` | ❌ | ✅ | ❌ | Temporal |
+
+## GGUF Support Matrix
+
+| Architecture | Q4_K_M | Q5_K_M | Q6_K | Q8_0 | F16 | Notes |
+|--------------|--------|--------|------|------|-----|-------|
+| Llama 2/3 | ✅ | ✅ | ✅ | ✅ | ✅ | All variants |
+| Mistral | ✅ | ✅ | ✅ | ✅ | ✅ | v0.1-0.3 |
+| Mixtral | ✅ | ✅ | ✅ | ✅ | ✅ | MoE supported |
+| Qwen 2/2.5 | ✅ | ✅ | ✅ | ✅ | ✅ | All sizes |
+| Gemma 2 | ✅ | ✅ | ✅ | ✅ | ✅ | Native support |
+| Phi 3/4 | ✅ | ✅ | ✅ | ✅ | ✅ | All sizes |
+| Trinity-Large | ✅ | ✅ | ✅ | ✅ | ✅ | Recommended: Q5 |
+| LongCat | ✅ | ✅ | ✅ | ✅ | ✅ | Recommended: Q4 |
+
+## Unknown Architecture Auto-Detection
+
+Nexus v6.1+ includes automatic architecture detection for unknown models:
+
+```python
+from nexus.core.towers.registry import detect_architecture
+
+# Auto-detect model type
+type = detect_architecture("some/unknown-model")
+# Returns: 'causal', 'vision', 'audio', 'generation', 'encoder', or 'unknown'
 ```
 
-### Vision Encoder Architectures (10+)
+### Detection Patterns
 
-| Architecture | Status | Example Models |
-|--------------|--------|----------------|
-| SigLIPModel | ✅ | SigLIP-Large, SigLIP-SO400M |
-| SigLIPVisionModel | ✅ | SigLIP Vision variants |
-| CLIPModel | ✅ | CLIP-Base, CLIP-Large |
-| CLIPVisionModel | ✅ | CLIP Vision encoders |
-| DINOv2Model | ✅ | DINOv2-Small, DINOv2-Base, DINOv2-Large |
-| VideoMAEModel | ✅ | VideoMAE-Base, VideoMAE-Large |
-| ViTModel | ✅ | Vision Transformer |
-| ViTMAEModel | ✅ | MAE pre-trained ViT |
-| ViTMSNModel | ✅ | MSN pre-trained ViT |
-| DeiTModel | ✅ | Data-efficient Image Transformer |
-| BeitModel | ✅ | BEiT models |
-| ConvNextModel | ✅ | ConvNeXt models |
-| ConvNextV2Model | ✅ | ConvNeXt V2 models |
+| Pattern | Detected Type |
+|---------|---------------|
+| `vision`, `clip`, `siglip`, `vit` | Vision |
+| `audio`, `whisper`, `wav2vec` | Audio |
+| `diffusion`, `sd`, `sdxl`, `flux` | Generation |
+| `embedding`, `sentence-transformer` | Encoder |
+| `llama`, `mistral`, `qwen`, `gemma` | Causal |
+| `trinity` | Reasoning |
+| `longcat` | Long Context |
 
-### Audio Encoder Architectures (6+)
+## Component Compatibility
 
-| Architecture | Status | Example Models |
-|--------------|--------|----------------|
-| Wav2Vec2Model | ✅ | wav2vec 2.0 |
-| Wav2Vec2ForCTC | ✅ | wav2vec 2.0 with CTC head |
-| HubertModel | ✅ | HuBERT models |
-| WavLMModel | ✅ | WavLM models |
-| UniSpeechSatModel | ✅ | UniSpeech-SAT |
-| Data2VecAudioModel | ✅ | data2vec-audio |
+### Knowledge Distillation
 
-### ASR Architectures (4+)
+| Source | Target | Adapter Support | Notes |
+|--------|--------|-----------------|-------|
+| Diffusion UNet | Student | ✅ | Via DiffusionAdapter |
+| Vision Encoder | Student | ✅ | Via VisionAdapter |
+| LLM Hidden | Student | ✅ | Via BaseAdapter |
 
-| Architecture | Status | Example Models |
-|--------------|--------|----------------|
-| WhisperForConditionalGeneration | ✅ | Whisper Tiny, Base, Small, Medium, Large |
-| WhisperModel | ✅ | Whisper encoder-decoder |
-| Speech2TextForConditionalGeneration | ✅ | Speech2Text models |
-| SpeechEncoderDecoderModel | ✅ | Generic encoder-decoder ASR |
+### Quantization Support
 
-### Encoder-Only Architectures (Limited SLI Support)
+| Format | Load | Save | Training | Inference |
+|--------|------|------|----------|-----------|
+| PyTorch (FP32) | ✅ | ✅ | ✅ | ✅ |
+| PyTorch (FP16/BF16) | ✅ | ✅ | ✅ | ✅ |
+| BitsAndBytes (8-bit) | ✅ | ❌ | ⚠️ | ✅ |
+| BitsAndBytes (4-bit/NF4) | ✅ | ❌ | ⚠️ | ✅ |
+| GGUF (all quant) | ✅ | ⚠️ | ❌ | ✅ |
 
-> **Important**: Encoder-only models (BERT, RoBERTa, DeBERTa, etc.) have **limited SLI support** as they are designed for embedding extraction and classification tasks, not generative text completion.
+### Device Support
 
-| Architecture | Status | Example Models | Limitations |
-|--------------|--------|----------------|-------------|
-| BertModel | ⚠️ Partial | BERT-Base, BERT-Large | No generative capabilities |
-| RobertaModel | ⚠️ Partial | RoBERTa-Base, RoBERTa-Large | Encoder-only architecture |
-| DebertaModel | ⚠️ Partial | DeBERTa-Base, DeBERTa-v3 | Classification/embeddings only |
-| DistilBertModel | ⚠️ Partial | DistilBERT-Base, DistilBERT-SQuAD | No causal LM support |
-| AlbertModel | ⚠️ Partial | ALBERT-Base, ALBERT-xxlarge | Parameter sharing affects SLI |
+| Device | Training | Inference | Diffusion | Video | GGUF |
+|--------|----------|-----------|-----------|-------|------|
+| CUDA | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ROCm | ⚠️ | ✅ | ✅ | ✅ | ✅ |
+| MPS (Apple) | ⚠️ | ✅ | ✅ | ✅ | ⚠️ |
+| CPU | ⚠️ | ✅ | ✅ | ⚠️ | ✅ |
+| Intel GPU | ❌ | ⚠️ | ❌ | ❌ | ⚠️ |
 
-**Note**: Encoder-only models can be loaded for embedding extraction but cannot be used for text generation or standard distillation workflows.
+## Version Compatibility
 
-### Custom Model Type Mappings
+| Nexus Version | Python | PyTorch | Transformers | Diffusers | Notes |
+|---------------|--------|---------|--------------|-----------|-------|
+| 6.1.0 | 3.9-3.12 | 2.1+ | 4.39+ | 0.26+ | Current |
+| 6.0.x | 3.9-3.11 | 2.0+ | 4.30+ | 0.20+ | Previous |
 
-These model types are automatically registered when encountered:
+## Deprecated Features
 
-| Model Type | Maps To | Config Class | Example Models |
-|------------|---------|--------------|----------------|
-| glm4_moe_lite | Glm4MoeForCausalLM | Glm4Config | GLM-4.7-Flash |
-| step_robotics | Step3VL10BForCausalLM | Step3VL10BConfig | Step3-VL-10B |
-| qwen3 | Qwen3ForCausalLM | Qwen3Config | AgentCPM-Explore |
-| qwen3_moe | Qwen3MoeForCausalLM | Qwen3MoeConfig | Qwen3 MoE variants |
-| agent_cpm | Qwen3ForCausalLM | Qwen3Config | AgentCPM models |
+| Feature | Deprecated | Removal | Replacement |
+|---------|------------|---------|-------------|
+| Old registry format | v6.0 | v7.0 | New dict format |
+| Static tower loading | v6.0 | v7.0 | TowerLoader |
+| Manual adapter init | v6.1 | v7.0 | BaseAdapter |
 
----
+## Planned Support (v6.2)
 
-## Category Detection Priority
+| Architecture | Type | Status |
+|--------------|------|--------|
+| Janus | Multimodal | 🔄 In Development |
+| InternVL | Vision-Language | 🔄 In Development |
+| Mamba | State Space | 🔄 Research |
+| RetNet | Alternative Arch | 🔄 Research |
 
-When detecting model categories, the loader uses the following priority:
+## Troubleshooting Compatibility
 
-1. **Diffusers** (Highest) - Checks for `model_index.json` or `unet`/`vae` directories
-2. **SAE** - Checks for SAE directories (`resid_post`, `mlp_out`, etc.) without tokenizer
-3. **Vision Encoder** - Checks architecture against VISION_ENCODER_ARCHITECTURES
-4. **ASR** - Checks architecture against ASR_ARCHITECTURES
-5. **Transformers** (Default) - Standard LLM loading
+### Model Won't Load
+1. Check architecture is in compatibility matrix
+2. Verify model files are complete
+3. Check Nexus version supports the architecture
+4. Review error logs for specific incompatibilities
 
-This priority ensures that models with multiple characteristics are handled correctly.
+### Performance Issues
+1. Use recommended quantization for your hardware
+2. Enable appropriate optimizations (VAE slicing, CPU offloading)
+3. Check device compatibility matrix
 
----
+### Training Failures
+1. Ensure adapter dimensions match
+2. Verify gradient checkpointing compatibility
+3. Check mixed precision support for your device
 
-## Loading Strategies
-
-The loader implements a cascading strategy system for maximum compatibility:
-
-| Priority | Strategy | Use Case |
-|----------|----------|----------|
-| 1 | AutoModelForCausalLM | Most text generation models |
-| 2 | AutoModelForVision2Seq | Vision-language models |
-| 3 | AutoModelForImageTextToText | Image-text models |
-| 4 | AutoModel | Generic fallback for encoders |
-| 5 | AutoModelForSpeechSeq2Seq | ASR models |
-| 6 | AutoModelForSeq2SeqLM | Sequence-to-sequence models |
-
-If a strategy fails, the loader automatically tries the next one until all are exhausted.
-
----
-
-## Test Coverage by Category
-
-| Category | Unit Tests | Integration Tests | Total |
-|----------|------------|-------------------|-------|
-| Architecture Detection | 25+ | 10+ | 35+ |
-| SAE Detection | 14 | 2 | 16 |
-| Tokenizer Loading | 8 | 5 | 13 |
-| Category Detection | 17 | 5 | 22 |
-| Model Info | 9 | 3 | 12 |
-| Custom Registration | 4 | 2 | 6 |
-| Error Handling | 6 | 6 | 12 |
-| **Total** | **90+** | **40+** | **130+** |
-
----
-
-## Performance Targets
-
-| Operation | Target | Acceptable | Notes |
-|-----------|--------|------------|-------|
-| Architecture Detection | < 1ms | 0.1-2ms | Config parsing only |
-| Category Detection | < 0.5ms | 0.05-1ms | File system checks |
-| SAE Detection | < 0.3ms | 0.05-0.5ms | Directory listing |
-| Support Check | < 1.5ms | 0.5-3ms | Combined operations |
-| Tokenizer Load | < 2ms | 1-5ms | With fallback |
-
----
-
-## Adding New Architectures
+## Contributing New Architectures
 
 To add support for a new architecture:
 
-1. **Add to SUPPORTED_ARCHITECTURES** (if standard Transformers architecture):
+1. Add registry entry in `src/nexus/core/towers/registry.py`
+2. Create loader in appropriate module
+3. Add tests in `tests/unit/`
+4. Update this compatibility matrix
+5. Submit PR with documentation
 
-   ```python
-   SUPPORTED_ARCHITECTURES = [
-       # ... existing ...
-       "NewArchitectureForCausalLM",
-   ]
-   ```
-
-2. **Add Model Type Mapping** (if custom model type):
-
-   ```python
-   MODEL_TYPE_MAPPINGS = {
-       # ... existing ...
-       "new_model_type": {
-           "architecture": "NewArchitectureForCausalLM",
-           "config_class": "NewConfig"
-       },
-   }
-   ```
-
-3. **Add Tests**:
-   - Unit test for detection
-   - Integration test for loading
-   - Update architecture count in docs
-
----
-
-## Version Information
-
-- **Document Version**: 1.1
-- **Last Updated**: 2026-02-01
-- **Loader Version**: Compatible with Nexus v6.1+
-- **Architecture Families**: 11 families (~30-40 model variants)
-- **Test Coverage**: 130+ tests (90+ unit, 40+ integration)
-- **Benchmarks**: 45+ performance benchmarks
-
-## Architecture Family Summary
-
-| Family ID | Models | Decoder | Encoder-Decoder | Encoder-Only |
-|-----------|--------|---------|-----------------|--------------|
-| llama | 35+ | ✅ | ❌ | ❌ |
-| gpt | 18 | ✅ | ❌ | ❌ |
-| qwen | 14 | ✅ | ✅ | ❌ |
-| moe | 15 | ✅ | ❌ | ❌ |
-| t5 | 12 | ✅ | ✅ | ❌ |
-| mamba | 12 | ✅ | ❌ | ❌ |
-| bert | 16 | ❌ | ❌ | ✅ |
-| bloom | 5 | ✅ | ❌ | ❌ |
-| opt | 6 | ✅ | ❌ | ❌ |
-| phi | 6 | ✅ | ❌ | ❌ |
-| gemma | 8 | ✅ | ❌ | ❌ |
-| chatglm | 8 | ✅ | ❌ | ❌ |
-
----
-
-## See Also
-
-- [Omni Loader Guide](OMNI_LOADER_GUIDE.md) - Complete developer guide
-- [NEXUS_V6_TECHNICAL_MANUAL](NEXUS_V6_TECHNICAL_MANUAL.md) - Technical manual
-- [Test Coverage Report](../tests/OMNI_LOADER_TEST_COVERAGE.md) - Detailed test documentation
-- [Benchmark Report](../benchmarks/LOADER_BENCHMARK_REPORT.md) - Performance benchmarks
+See `CONTRIBUTING.md` for detailed guidelines.
