@@ -80,7 +80,7 @@ Run the full pipeline:
 
 .. code-block:: bash
 
-   ./run_nexus_master.sh --models "coder" --datasets "code_search_net"
+   ./scripts/nexus.sh master --models "coder" --datasets "code_search_net"
 
 VSCode Configuration
 --------------------

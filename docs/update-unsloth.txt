@@ -11,7 +11,7 @@ Why this configuration?
 
 Example - 
 
-./run_nexus_master.sh \
+./scripts/nexus.sh master \
   --use-unsloth \
   --packing \
   --grpo \

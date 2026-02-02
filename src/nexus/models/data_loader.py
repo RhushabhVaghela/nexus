@@ -440,7 +440,7 @@ class UniversalDataLoader:
 
         # 7. Ultimate Fallback: Universal Heuristic Sanitizer
         try:
-            from nexus_core.data.sanitizer import UniversalSanitizer
+            from nexus.core.data.sanitizer import UniversalSanitizer
             sanitizer = UniversalSanitizer()
             clean_text = sanitizer.sanitize(sample)
             if clean_text and len(clean_text) > 5:

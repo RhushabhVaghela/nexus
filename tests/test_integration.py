@@ -4,10 +4,10 @@ import sys
 
 sys.path.append("/mnt/d/Research Experiments/nexus/src")
 
-from nexus_core.student.core import NexusStudentCore
-from nexus_core.adapters.reasoning_adapter import ReasoningAdapter
-from nexus_core.adapters.vision_adapter import VisionAdapter
-from nexus_core.adapters.audio_adapter import AudioAdapter
+from nexus.core.student.core import NexusStudentCore
+from nexus.core.adapters.reasoning_adapter import ReasoningAdapter
+from nexus.core.adapters.vision_adapter import VisionAdapter
+from nexus.core.adapters.audio_adapter import AudioAdapter
 
 class TestStudentIntegration(unittest.TestCase):
     def test_end_to_end_shapes(self):
@@ -19,7 +19,7 @@ class TestStudentIntegration(unittest.TestCase):
         
         # 1. Instantiate Core
         # 1. Instantiate Core
-        from nexus_core.student.core import NexusStudentConfig
+        from nexus.core.student.core import NexusStudentConfig
         config = NexusStudentConfig(hidden_size=d_model, vocab_size=vocab_size, num_adapters=2, num_hidden_layers=1)
         student = NexusStudentCore(config)
         

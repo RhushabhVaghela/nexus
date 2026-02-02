@@ -46,7 +46,7 @@ Nexus now features **Universal SLI**—process massive models (100B - 1T+ parame
 ### Quick Example
 
 ```python
-from src.nexus_final.sli import UniversalSLIIntegrator
+from nexus.core.sli import UniversalSLIIntegrator
 
 # Works with ANY supported architecture!
 
@@ -103,7 +103,7 @@ result = integrator.run_sli(dataset)
 ### Quick Example
 
 ```python
-from nexus_final.sli import create_advanced_integrator
+from nexus.core.sli import create_advanced_integrator
 
 # Choose your preset: fast, balanced, or quality
 integrator = create_advanced_integrator(mode="balanced", device="cuda")
@@ -193,7 +193,7 @@ Nexus now features a **Universal Model Loader** powered by a residency-matched r
 ### Example: Processing Different Architectures
 
 ```python
-from src.nexus_final.sli import UniversalSLIIntegrator
+from nexus.core.sli import UniversalSLIIntegrator
 
 # GPT-2 (GPT family)
 integrator = UniversalSLIIntegrator("gpt2")
@@ -224,16 +224,16 @@ result = integrator.run_sli(dataset)
 To execute a full 5-teacher multimodal run:
 
 ```bash
-./run_nexus_master.sh --models "coder, translation, vision_main, tts_custom, audio_tokenizer" \
-                      --datasets "google_smol, mvp-lab_llava-onevision-1, google_speech_commands" \
-                      --sample_size 5000 --use-unsloth
+./scripts/nexus.sh master --models "coder, translation, vision_main, tts_custom, audio_tokenizer" \
+                          --datasets "google_smol, mvp-lab_llava-onevision-1, google_speech_commands" \
+                          --sample_size 5000 --use-unsloth
 ```
 
 ## 🛡️ Robustness & Safety (New in v6.1)
 
 **Process Exclusivity (Singleton Execution)**
 
-- **Auto-Cleanup**: The master script (`run_nexus_master.sh`) automatically detects and kills any conflicting Nexus processes (e.g., zombie `train.py` or orphaned `nexus_pipeline.py`) before starting a new run.
+- **Auto-Cleanup**: The master script (`./scripts/nexus.sh master`) automatically detects and kills any conflicting Nexus processes (e.g., zombie `train.py` or orphaned `nexus_pipeline.py`) before starting a new run.
 - **Lock Protection**: The Python Core uses a `.pipeline.lock` file to prevent accidental concurrent execution. If you try to run two instances manually, the second one will refuse to start.
 
 ## Usage
@@ -300,7 +300,7 @@ See [examples/README.md](examples/README.md) for usage examples.
 
 The pipeline will automatically:
 
-1. **Read Registry**: Import from `src.nexus_core.towers.registry`.
+1. **Read Registry**: Import from `nexus.core.towers.registry`.
 2. **Profile Teachers (NIWT)**: Analyze activation patterns.
 3. **Extract Knowledge**:
     - **Smart Download**: Automatically fetches missing datasets from Hugging Face.
@@ -312,7 +312,7 @@ The pipeline will automatically:
 
 ## 🧠 The Ecosystem (Teacher Registry)
 
-Nexus is trained on the distilled knowledge of specialized models defined in `src.nexus_core.towers.registry`:
+Nexus is trained on the distilled knowledge of specialized models defined in `nexus.core.towers.registry`:
 
 | **Logic & Reasoning** | Massive Reasoner (e.g. DeepSeek-70B) | Deep Reasoning capabilities | **SLI (Sequential)** |
 | **Agentic** | Agent-Specialists | Long-horizon Planning | Standard |
@@ -379,16 +379,16 @@ Nexus now features a **Universal Model Loader** powered by a residency-matched r
 To execute a full 5-teacher multimodal run:
 
 ```bash
-./run_nexus_master.sh --models "coder, translation, vision_main, tts_custom, audio_tokenizer" \
-                      --datasets "google_smol, mvp-lab_llava-onevision-1, google_speech_commands" \
-                      --sample_size 5000 --use-unsloth
+./scripts/nexus.sh master --models "coder, translation, vision_main, tts_custom, audio_tokenizer" \
+                          --datasets "google_smol, mvp-lab_llava-onevision-1, google_speech_commands" \
+                          --sample_size 5000 --use-unsloth
 ```
 
 ## 🛡️ Robustness & Safety (New in v6.1)
 
 **Process Exclusivity (Singleton Execution)**
 
-- **Auto-Cleanup**: The master script (`run_nexus_master.sh`) automatically detects and kills any conflicting Nexus processes (e.g., zombie `train.py` or orphaned `nexus_pipeline.py`) before starting a new run.
+- **Auto-Cleanup**: The master script (`./scripts/nexus.sh master`) automatically detects and kills any conflicting Nexus processes (e.g., zombie `train.py` or orphaned `nexus_pipeline.py`) before starting a new run.
 - **Lock Protection**: The Python Core uses a `.pipeline.lock` file to prevent accidental concurrent execution. If you try to run two instances manually, the second one will refuse to start.
 
 ## Usage
@@ -454,7 +454,7 @@ See [examples/README.md](examples/README.md) for usage examples.
 
 The pipeline will automatically:
 
-1. **Read Registry**: Import from `src.nexus_core.towers.registry`.
+1. **Read Registry**: Import from `nexus.core.towers.registry`.
 2. **Profile Teachers (NIWT)**: Analyze activation patterns.
 3. **Extract Knowledge**:
     - **Smart Download**: Automatically fetches missing datasets from Hugging Face.
@@ -466,7 +466,7 @@ The pipeline will automatically:
 
 ## 🧠 The Ecosystem (Teacher Registry)
 
-Nexus is trained on the distilled knowledge of specialized models defined in `src.nexus_core.towers.registry`:
+Nexus is trained on the distilled knowledge of specialized models defined in `nexus.core.towers.registry`:
 
 | **Logic & Reasoning** | Massive Reasoner (e.g. DeepSeek-70B) | Deep Reasoning capabilities | **SLI (Sequential)** |
 | **Agentic** | Agent-Specialists | Long-horizon Planning | Standard |

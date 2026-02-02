@@ -2,9 +2,9 @@ import os
 import torch
 import shutil
 import json
-from nexus_core.student.core import NexusStudentCore
+from nexus.core.student.core import NexusStudentCore
 from .knowledge import KnowledgeTower
-from nexus_core.student.router import SparseIntentRouter
+from nexus.core.student.router import SparseIntentRouter
 
 class NexusExporter:
     """

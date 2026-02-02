@@ -263,7 +263,7 @@ class TestUnifiedMultimodalDownloader:
                     return os.path.exists(p_str)
                 
                 # PROJECT ROOT FILES (e.g. scripts) MUST BE ACCESSIBLE
-                if "run_universal_pipeline.sh" in p_str or "src/" in p_str:
+                if "./scripts/nexus.sh" in p_str or "src/" in p_str:
                     return os.path.exists(p_str)
 
                 if "kaggle_downloads" in p_str:

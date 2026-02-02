@@ -25,8 +25,8 @@ from torch.optim import AdamW
 from transformers import AutoTokenizer
 
 # Import Core Modules
-from nexus_core.student.core import NexusStudentCore, NexusStudentConfig
-from nexus_final.distill import NexusTrainer
+from nexus.core.student.core import NexusStudentCore, NexusStudentConfig
+from nexus.models.distill import NexusTrainer
 from utils.callbacks import KeyboardPauseCallback
 
 class NexusDistillationDataset(Dataset):
@@ -130,7 +130,7 @@ def main():
         torch.set_float32_matmul_precision('high')
         torch.backends.cudnn.benchmark = True
     
-    from nexus_final.utils.memory import check_memory_headroom, get_recommended_batch_size
+    from nexus.core.utils.memory import check_memory_headroom, get_recommended_batch_size
     ok, status = check_memory_headroom(vram_headroom_gb=1.0, ram_headroom_gb=2.0)
     print(f"[Memory] Initial Check: {status}")
 

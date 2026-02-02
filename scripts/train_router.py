@@ -5,11 +5,11 @@ import os
 import sys
 
 # Path Setup
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../src/nexus_core/student')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../src/nexus/core/student')))
 try:
     from router import SparseIntentRouter
 except ImportError:
-    from src.nexus_core.student.router import SparseIntentRouter
+    from nexus.core.student.router import SparseIntentRouter
 
 from torch.utils.data import Dataset, DataLoader
 

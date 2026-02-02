@@ -34,7 +34,8 @@ class TestRemotionIntegration:
     def test_pipeline_dry_run(self, fake_model_dir):
         """Verify that the pipeline can run a dry-run with remotion-explainer."""
         cmd = [
-            "./run_universal_pipeline.sh",
+            "./scripts/nexus.sh",
+            "universal",
             f"--base-model={fake_model_dir}",
             "--enable-remotion-explainer",
             "--dry-run"

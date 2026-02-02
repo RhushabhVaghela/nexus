@@ -35,7 +35,7 @@ output:
     max_to_keep: 3
     format: "safetensors"
     usage: |
-      Used by: run_universal_pipeline.sh
+      Used by: ./scripts/nexus.sh universal
       Safe to delete: After training completes and trained/ is populated
     
   # ------------------------------------------------------------

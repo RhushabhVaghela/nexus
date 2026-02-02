@@ -14,7 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-ORCHESTRATOR_PATH = Path(__file__).parent.parent.parent / "run_universal_pipeline.sh"
+ORCHESTRATOR_PATH = Path(__file__).parent.parent.parent / "scripts" / "nexus.sh"
 
 
 class TestOrchestratorScript:
@@ -32,7 +32,7 @@ class TestOrchestratorScript:
     def test_help_output(self):
         """Test --help flag works."""
         result = subprocess.run(
-            [str(ORCHESTRATOR_PATH), "--help"],
+            [str(ORCHESTRATOR_PATH), "universal", "--help"],
             capture_output=True,
             text=True,
         )
@@ -44,7 +44,7 @@ class TestOrchestratorScript:
     def test_help_lists_all_capabilities(self):
         """Test help lists all 12 capabilities."""
         result = subprocess.run(
-            [str(ORCHESTRATOR_PATH), "--help"],
+            [str(ORCHESTRATOR_PATH), "universal", "--help"],
             capture_output=True,
             text=True,
         )

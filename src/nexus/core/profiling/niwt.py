@@ -7,7 +7,7 @@ import gc
 from typing import List, Dict, Tuple, Optional, Any
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
-from nexus_core.utils.universal_inspector import UniversalInspector
+from nexus.core.utils.universal_inspector import UniversalInspector
 
 class ThermalProtection:
     """

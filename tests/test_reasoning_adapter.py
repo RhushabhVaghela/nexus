@@ -6,7 +6,7 @@ import os
 # Add src to path
 sys.path.append("/mnt/d/Research Experiments/nexus/src")
 
-from nexus_core.adapters.reasoning_adapter import ReasoningAdapter
+from nexus.core.adapters.reasoning_adapter import ReasoningAdapter
 
 class TestReasoningAdapter(unittest.TestCase):
     def test_profile_loading(self):

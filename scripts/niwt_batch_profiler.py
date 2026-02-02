@@ -8,7 +8,7 @@ import pandas as pd
 from tqdm import tqdm
 from torch.utils.data import DataLoader, Dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-from src.nexus_core.config import NexusConfig
+from nexus.core.config import NexusConfig
 
 # ==========================================
 # CONFIGURATION

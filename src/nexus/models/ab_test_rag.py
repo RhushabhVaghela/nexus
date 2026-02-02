@@ -22,7 +22,7 @@ Side B: Nexus Student (Native)
 import sys
 import torch
 import os
-from src.nexus_final.knowledge import KnowledgeTower
+from nexus.models.knowledge import KnowledgeTower
 
 def setup_dummy_knowledge_base(tower):
     """Populates the tower with some dummy facts."""

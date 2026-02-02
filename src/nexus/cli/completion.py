@@ -103,11 +103,10 @@ class CompletionGenerator:
         """Load available models from the registry."""
         models = []
         
-        # Try to load from nexus_final registry
+        # Try to load from nexus registry
         try:
-            from src.nexus_final.registry import ModelRegistry
-            registry = ModelRegistry()
-            models.extend(registry.list_models())
+            from nexus.core.towers.registry import TEACHER_REGISTRY
+            models.extend(TEACHER_REGISTRY.keys())
         except Exception:
             pass
         

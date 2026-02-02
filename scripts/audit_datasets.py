@@ -12,8 +12,8 @@ except ImportError:
 # Ensure src is in path
 sys.path.append(os.path.join(os.getcwd(), 'src'))
 
-from nexus_core.towers.registry import DATASET_REGISTRY
-from nexus_core.data.sanitizer import UniversalSanitizer
+from nexus.core.towers.registry import DATASET_REGISTRY
+from nexus.core.data.sanitizer import UniversalSanitizer
 
 def audit_dataset(name, info):
     """

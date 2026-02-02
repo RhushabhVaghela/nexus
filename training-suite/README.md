@@ -8,10 +8,10 @@ For capability-based training, use the new orchestrator instead:
 
 ```bash
 # From project root
-./run_universal_pipeline.sh --enable-cot --enable-tools
+./scripts/nexus.sh universal --enable-cot --enable-tools
 
 # See all options
-./run_universal_pipeline.sh --help
+./scripts/nexus.sh universal --help
 ```
 
 The orchestrator handles modality detection, validation, and sequential training.
@@ -119,4 +119,4 @@ sort -t, -k9 -n ../results/training_results.csv | head -5
 - Ultra scripts use 4-bit quantization (6x faster)
 - Optimized scripts use 8-bit quantization (3x faster)
 - Results automatically logged with metrics
-- For capability-based training, see `../run_universal_pipeline.sh`
+- For capability-based training, see `../scripts/nexus.sh universal`

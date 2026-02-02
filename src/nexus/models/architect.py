@@ -104,7 +104,7 @@ class NexusBridge(nn.Module):
     def forward(self, x):
         return self.act(self.norm(self.projector(x)))
 
-from src.nexus_final.alignment import CrossModalAlignment
+from nexus.models.alignment import CrossModalAlignment
 
 class NexusStudent(nn.Module):
     def __init__(self, base_model_id="{base_model_name}"):

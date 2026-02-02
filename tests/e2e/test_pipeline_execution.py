@@ -12,7 +12,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-ORCHESTRATOR_PATH = Path(__file__).parent.parent.parent / "run_universal_pipeline.sh"
+ORCHESTRATOR_PATH = Path(__file__).parent.parent.parent / "scripts" / "nexus.sh"
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 
@@ -28,6 +28,7 @@ class TestOrchestratorScenarios:
         result = subprocess.run(
             [
                 "bash", str(ORCHESTRATOR_PATH),
+                "universal",
                 f"--base-model={text_model_path}",
                 f"--output-dir={output_dir}",
                 "--enable-cot",
@@ -50,7 +51,7 @@ class TestOrchestratorScenarios:
     def test_scenario_help_runs(self):
         """Test that --help runs and shows usage."""
         result = subprocess.run(
-            ["bash", str(ORCHESTRATOR_PATH), "--help"],
+            ["bash", str(ORCHESTRATOR_PATH), "universal", "--help"],
             capture_output=True,
             text=True,
             cwd=str(PROJECT_ROOT),
@@ -68,6 +69,7 @@ class TestOrchestratorScenarios:
         result = subprocess.run(
             [
                 "bash", str(ORCHESTRATOR_PATH),
+                "universal",
                 f"--base-model={text_model_path}",
                 f"--output-dir={output_dir}",
                 "--enable-podcast",  # Requires audio, text model doesn't have it

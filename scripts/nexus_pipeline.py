@@ -20,15 +20,15 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.join(BASE_DIR, 'src')) # Ensure src is in path
 
 try:
-    from nexus_final.utils.memory import should_use_sli
+    from nexus.core.utils.memory import should_use_sli
 except ImportError:
     print("[Warning] Could not import memory utils. SLI check will default to False.")
     def should_use_sli(config): return False
 
 try:
-    from nexus_core.towers.registry import TEACHER_REGISTRY, DATASET_REGISTRY
+    from nexus.core.towers.registry import TEACHER_REGISTRY, DATASET_REGISTRY
 except ImportError:
-    print("[Warning] Could not import registry from src.nexus_core.towers.registry. Using empty defaults.")
+    print("[Warning] Could not import registry from nexus.core.towers.registry. Using empty defaults.")
     TEACHER_REGISTRY = {}
     DATASET_REGISTRY = {}
 
@@ -64,8 +64,8 @@ class NexusPipeline:
                     # Check if process is actually running
                     os.kill(old_pid, 0)
                     print(f"[Error] Pipeline overlap detected! PID {old_pid} is supposedly running.")
-                    print(f"        'run_nexus_master.sh' should have cleaned this up.")
-                    print(f"        Please kill the process manually or run the master script.")
+                    print(f"        './scripts/nexus.sh master' should have cleaned this up.")
+                    print(f"        Please kill the process manually or run './scripts/nexus.sh master'.")
                     sys.exit(1)
                 except (OSError, ValueError) as e:
                     # Process dead or file corrupt
@@ -887,7 +887,7 @@ class NexusPipeline:
 
         print("Nexus Automation Pipeline Initialized.")
         print(f"[Config] Base Path: {BASE_DIR}")
-        print(f"[Config] Registry: Loaded from src.nexus_core.towers.registry")
+        print(f"[Config] Registry: Loaded from nexus.core.towers.registry")
         print(f"[Config] Memory: {MEMORY_DIR}")
         print(f"Current State: {self.state['current_stage']}")
         
