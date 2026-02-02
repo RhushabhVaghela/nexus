@@ -1,8 +1,9 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, AutoModel
+import torch
 import sys
 import os
 from typing import Tuple, Optional, Any
-from nexus.core.utils.universal_inspector import UniversalInspector
+from pathlib import Path
 
 class TowerLoader:
     """
@@ -36,7 +37,7 @@ class TowerLoader:
         try:
             if model_type == "causal":
                 # Pre-load fix: Help model find its custom scripts (e.g. translate-gemma)
-                custom_path = UniversalInspector.find_custom_script(model_path, "generate.py")
+                custom_path = TowerLoader._find_custom_script(model_path, "generate.py")
                 if custom_path:
                     print(f"[TowerLoader] Found custom script folder: {custom_path}. Adding to sys.path.")
                     if custom_path not in sys.path:
@@ -87,3 +88,25 @@ class TowerLoader:
         except Exception as e:
             print(f"[Error] Failed to load {model_path}: {e}")
             raise e
+    
+    @staticmethod
+    def _find_custom_script(model_path: str, script_name: str) -> Optional[str]:
+        """
+        Find custom script in model directory.
+        
+        Args:
+            model_path: Path to model directory
+            script_name: Name of script to find
+        
+        Returns:
+            Path to directory containing script, or None
+        """
+        model_dir = Path(model_path)
+        if not model_dir.exists():
+            return None
+        
+        # Search for script in model directory and subdirectories
+        for path in model_dir.rglob(script_name):
+            return str(path.parent)
+        
+        return None

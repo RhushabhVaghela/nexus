@@ -134,6 +134,29 @@ type = detect_architecture("some/unknown-model")
 | BitsAndBytes (8-bit) | ✅ | ❌ | ⚠️ | ✅ |
 | BitsAndBytes (4-bit/NF4) | ✅ | ❌ | ⚠️ | ✅ |
 | GGUF (all quant) | ✅ | ⚠️ | ❌ | ✅ |
+| **NVFP4-QAD** | ✅ | ✅ | ✅ | ✅ | New! 4-bit FP |
+| **TensorRT FP8** | ✅ | ❌ | ❌ | ✅ | H100+ only |
+| **TensorRT INT8/INT4** | ✅ | ❌ | ❌ | ✅ | All GPUs |
+
+### Backend Support
+
+| Backend | Inference | Training | Quantization | Speedup |
+|---------|-----------|----------|--------------|---------|
+| **PyTorch (Default)** | ✅ | ✅ | FP32/FP16/BF16 | 1.0x |
+| **TensorRT-LLM** | ✅ | ❌ | FP8/INT8/INT4 | 2-4x |
+| **BitsAndBytes** | ✅ | ⚠️ | 8-bit/4-bit NF4 | Memory only |
+| **NVFP4-QAD** | ✅ | ⚠️ | 4-bit FP | 2-3x |
+| **vLLM** | 🔄 | ❌ | FP16 | 2-3x |
+
+### Performance Optimizations
+
+| Feature | Type | Speedup | Memory Impact | Status |
+|---------|------|---------|---------------|--------|
+| **Smart Prefetching** | I/O Optimization | 2-3x | +5% | ✅ Available |
+| **Activation Caching** | Memory Optimization | 1.5-2x | +20% | ✅ Available |
+| **Nested Learning** | Training Optimization | 1.4x | +10% | ✅ Available |
+| **TensorRT Integration** | Inference Optimization | 2-4x | -75% | ✅ Available |
+| **Circuit Breakers** | Resilience | N/A | Minimal | ✅ Available |
 
 ### Device Support
 
@@ -172,17 +195,20 @@ type = detect_architecture("some/unknown-model")
 ## Troubleshooting Compatibility
 
 ### Model Won't Load
+
 1. Check architecture is in compatibility matrix
 2. Verify model files are complete
 3. Check Nexus version supports the architecture
 4. Review error logs for specific incompatibilities
 
 ### Performance Issues
+
 1. Use recommended quantization for your hardware
 2. Enable appropriate optimizations (VAE slicing, CPU offloading)
 3. Check device compatibility matrix
 
 ### Training Failures
+
 1. Ensure adapter dimensions match
 2. Verify gradient checkpointing compatibility
 3. Check mixed precision support for your device

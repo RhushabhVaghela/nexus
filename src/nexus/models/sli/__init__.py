@@ -102,6 +102,28 @@ from .sliding_window_buffer import (
     WindowStats,
 )
 
+# New P1 Features
+from .prefetch_engine import (
+    PrefetchEngine,
+    PrefetchConfig,
+    PrefetchStats,
+    PatternPredictor,
+    PrefetchPattern,
+    PrefetchPriority,
+    create_prefetch_engine,
+)
+
+from .activation_cache import (
+    ActivationCache,
+    ActivationCacheConfig,
+    ActivationCacheStats,
+    ActivationCacheEntry,
+    CacheInvalidationStrategy,
+    CompressionType,
+    ActivationCacheManager,
+    get_activation_cache,
+)
+
 from .compressed_storage import (
     CompressedLayerStorage,
     LayerCompressor,
@@ -188,6 +210,25 @@ __all__ = [
     'WindowState',
     'WindowEntry',
     'WindowStats',
+
+    # Smart Layer Prefetching
+    'PrefetchEngine',
+    'PrefetchConfig',
+    'PrefetchStats',
+    'PatternPredictor',
+    'PrefetchPattern',
+    'PrefetchPriority',
+    'create_prefetch_engine',
+
+    # Better Activation Caching
+    'ActivationCache',
+    'ActivationCacheConfig',
+    'ActivationCacheStats',
+    'ActivationCacheEntry',
+    'CacheInvalidationStrategy',
+    'CompressionType',
+    'ActivationCacheManager',
+    'get_activation_cache',
 
     # Compressed Storage
     'CompressedLayerStorage',
