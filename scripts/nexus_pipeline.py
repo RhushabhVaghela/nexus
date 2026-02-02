@@ -371,7 +371,7 @@ class NexusPipeline:
             shard_prefix = f"{hf_id.replace('/', '_')}_{os.path.splitext(filename)[0]}"
             output_dir = os.path.join(MEMORY_DIR, teacher_name.replace('/', '_'))
             
-            cmd = f"{sys.executable} -m src.nexus_final.distill_knowledge --teacher '{teacher_path}' --output '{output_dir}' --dataset '{file_path}' --shard_prefix '{shard_prefix}'"
+            cmd = f"{sys.executable} -m src.nexus.models.distill_knowledge --teacher '{teacher_path}' --output '{output_dir}' --dataset '{file_path}' --shard_prefix '{shard_prefix}'"
             self.run_command(cmd)
             
             # 3. Delete File
@@ -619,7 +619,7 @@ class NexusPipeline:
                         print(f"  -> [SLI Fallback] Ingesting {ds_key} using Sequential Layer Ingestion...")
                         output_dir = os.path.join(MEMORY_DIR, name.replace('/', '_'))
                         hidden_size = self.state["config"].get("hidden_size", 2048)
-                        cmd = f"{sys.executable} -m src.nexus_final.sli_integrator --model '{path}' --output '{output_dir}' --dataset '{ds_res}' --limit {self.sample_size} --student_dim {hidden_size}"
+                        cmd = f"{sys.executable} -m src.nexus.models.sli.universal_sli_integrator --model '{path}' --output '{output_dir}' --dataset '{ds_res}' --limit {self.sample_size} --student_dim {hidden_size}"
                         self.run_command(cmd, allow_fail=False)
                     else:
                         # ds_res is local_path
@@ -628,7 +628,7 @@ class NexusPipeline:
                         
                         device_arg = "cuda"
                         hidden_size = self.state["config"].get("hidden_size", 2048)
-                        cmd = f"{sys.executable} -m src.nexus_final.distill_knowledge --teacher '{path}' --output '{output_dir}' --dataset '{ds_res}' --device {device_arg} --limit {self.sample_size} --student_dim {hidden_size} --embedding_model '{self.embedding_model}'"
+                        cmd = f"{sys.executable} -m src.nexus.models.distill_knowledge --teacher '{path}' --output '{output_dir}' --dataset '{ds_res}' --device {device_arg} --limit {self.sample_size} --student_dim {hidden_size} --embedding_model '{self.embedding_model}'"
                         
                         print(f"[Pipeline] Attempting execution on {device_arg.upper()}...")
                         ret = self.run_command(cmd, allow_fail=True)
@@ -636,7 +636,7 @@ class NexusPipeline:
                         if ret != 0:
                             print(f"\n[Pipeline] GPU Execution Failed (Code {ret}). Automatically Retrying on CPU...")
                             device_arg = "cpu"
-                            cmd_cpu = f"{sys.executable} -m src.nexus_final.distill_knowledge --teacher '{path}' --output '{output_dir}' --dataset '{ds_res}' --device {device_arg} --limit {self.sample_size} --student_dim {hidden_size} --embedding_model '{self.embedding_model}'"
+                            cmd_cpu = f"{sys.executable} -m src.nexus.models.distill_knowledge --teacher '{path}' --output '{output_dir}' --dataset '{ds_res}' --device {device_arg} --limit {self.sample_size} --student_dim {hidden_size} --embedding_model '{self.embedding_model}'"
                             self.run_command(cmd_cpu, allow_fail=False)
 
         self.state["completed_stages"].append("knowledge_extraction")
@@ -776,14 +776,14 @@ class NexusPipeline:
         if not os.path.exists(index_path):
             print("\n[Index] Building FAISS Index from Memory Shards...")
             emb_model = self.embedding_model 
-            build_cmd = f"{sys.executable} -m src.nexus_final.build_index --memory_dir '{MEMORY_DIR}' --output '{index_path}' --embedding_model '{emb_model}'"
+            build_cmd = f"{sys.executable} -m src.nexus.models.build_index --memory_dir '{MEMORY_DIR}' --output '{index_path}' --embedding_model '{emb_model}'"
             ret = self.run_command(build_cmd, allow_fail=True)
             if ret != 0:
                 print("[Warn] Index build failed. Export will use dummy index.")
         else:
             print(f"[Index] Found existing index: {index_path}")
         
-        cmd = f"{sys.executable} -m src.nexus_final.export --student '{ckpt_path}' --output '{RELEASE_DIR}' --hidden_size {hidden_size} --vocab_size {vocab_size} --index '{index_path}'"
+        cmd = f"{sys.executable} -m src.nexus.models.export --student '{ckpt_path}' --output '{RELEASE_DIR}' --hidden_size {hidden_size} --vocab_size {vocab_size} --index '{index_path}'"
         self.run_command(cmd)
         
         self.state["completed_stages"].append("export")

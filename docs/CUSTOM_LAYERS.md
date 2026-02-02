@@ -632,7 +632,7 @@ class ExpertLayer(nn.Module): ...
 class SharedExpertLayer(nn.Module): ...
 
 # registration.py
-from src.nexus_final.sli.architecture_registry import get_registry
+from src.nexus.models.sli.architecture_registry import get_registry
 from .layers.attention import FlashAttention, SparseAttention
 from .layers.normalization import RMSNorm
 

@@ -31,24 +31,24 @@ from unittest.mock import MagicMock, patch
 # Ensure src is in path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from nexus_final.sli.advanced_sli_integrator import (
+from nexus.models.sli.advanced_sli_integrator import (
     AdvancedSLIIntegrator,
     AdvancedSLIConfig,
     LayerInfo,
     create_advanced_integrator,
 )
-from nexus_final.sli.nvfp4_loader import (
+from nexus.models.sli.nvfp4_loader import (
     NVFP4Config,
     NVFP4Mode,
 )
-from nexus_final.sli.qad_loss import (
+from nexus.models.sli.qad_loss import (
     QADLossConfig,
 )
-from nexus_final.sli.nested_scheduler import (
+from nexus.models.sli.nested_scheduler import (
     NestedUpdateConfig,
     UpdateGroup,
 )
-from nexus_final.sli.hierarchical_cache import (
+from nexus.models.sli.hierarchical_cache import (
     HierarchicalCacheConfig,
     CacheTier,
 )

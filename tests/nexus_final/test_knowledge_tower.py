@@ -121,7 +121,7 @@ def test_real_file_persistence(tmp_path):
     assert os.path.exists(os.path.join(mem_root, "sessions", "real_sess.json"))
 
 def test_student_read_from_memory():
-    from src.nexus_core.student.core import NexusStudentCore, NexusStudentConfig
+    from src.nexus.core.student.core import NexusStudentCore, NexusStudentConfig
     
     config = NexusStudentConfig(num_hidden_layers=1, hidden_size=128)
     student = NexusStudentCore(config)

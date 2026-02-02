@@ -63,7 +63,7 @@ def sli_setup(tmp_path, monkeypatch):
         }
     
     # Update patch target to new file
-    monkeypatch.setattr("src.nexus_final.sli_integrator.load_file", mock_load_file)
+    monkeypatch.setattr("src.nexus.models.sli.universal_sli_integrator.load_file", mock_load_file)
 
     integrator = SequentialLayerIntegrator(
         model_id="mock/generic-model",
