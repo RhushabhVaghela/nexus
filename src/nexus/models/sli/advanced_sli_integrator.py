@@ -47,7 +47,23 @@ from .hierarchical_cache import (
     CacheTier,
 )
 from .layer_cache import LayerCache
-from .io_optimizer import IOOptimizer, IOPriority
+from .io_optimizer import IOOptimizer, IOPriority, EnhancedPrefetchBuffer
+from .sliding_window_buffer import (
+    SlidingWindowBuffer,
+    AdaptiveSlidingWindow,
+    SlidingWindowConfig,
+)
+from .compressed_storage import (
+    CompressedLayerStorage,
+    LayerCompressor,
+    CompressionConfig,
+    CompressionAlgorithm,
+)
+from .storage_tier_manager import (
+    StorageTierManager,
+    StorageTierConfig,
+    StorageTier,
+)
 from .exceptions import SLIError
 
 logger = logging.getLogger(__name__)
@@ -67,10 +83,18 @@ class AdvancedSLIConfig:
         qad_config: QAD distillation configuration
         nested_config: Nested update scheduler configuration
         cache_config: Hierarchical cache configuration
+        sliding_window_config: Sliding window buffer configuration
+        compression_config: Layer compression configuration
+        storage_tier_config: Storage tier manager configuration
         enable_quantization: Enable NVFP4 quantization
         enable_distillation: Enable QAD distillation
         enable_nested_updates: Enable nested update scheduling
         enable_hierarchical_cache: Enable hierarchical caching
+        enable_sliding_window: Enable sliding window buffer
+        enable_compression: Enable layer compression
+        enable_storage_tiering: Enable hot/cold storage tiering
+        enable_enhanced_prefetch: Enable enhanced prefetch buffer
+        sliding_window_size: int = 5
         device: Target device
         output_dir: Output directory for profiles
     """
@@ -78,10 +102,18 @@ class AdvancedSLIConfig:
     qad_config: Optional[QADLossConfig] = None
     nested_config: Optional[NestedUpdateConfig] = None
     cache_config: Optional[HierarchicalCacheConfig] = None
+    sliding_window_config: Optional[SlidingWindowConfig] = None
+    compression_config: Optional[CompressionConfig] = None
+    storage_tier_config: Optional[StorageTierConfig] = None
     enable_quantization: bool = True
     enable_distillation: bool = True
     enable_nested_updates: bool = True
     enable_hierarchical_cache: bool = True
+    enable_sliding_window: bool = True
+    enable_compression: bool = True
+    enable_storage_tiering: bool = True
+    enable_enhanced_prefetch: bool = True
+    sliding_window_size: int = 5
     device: str = "cuda"
     output_dir: str = "./advanced_sli_output"
     
@@ -95,6 +127,12 @@ class AdvancedSLIConfig:
             self.nested_config = NestedUpdateConfig()
         if self.cache_config is None:
             self.cache_config = HierarchicalCacheConfig()
+        if self.sliding_window_config is None:
+            self.sliding_window_config = SlidingWindowConfig()
+        if self.compression_config is None:
+            self.compression_config = CompressionConfig()
+        if self.storage_tier_config is None:
+            self.storage_tier_config = StorageTierConfig()
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert config to dictionary."""
@@ -103,10 +141,16 @@ class AdvancedSLIConfig:
             'qad_config': self.qad_config.to_dict() if self.qad_config else None,
             'nested_config': self.nested_config.to_dict() if self.nested_config else None,
             'cache_config': self.cache_config.to_dict() if self.cache_config else None,
+            'sliding_window_config': self.sliding_window_config.to_dict() if hasattr(self.sliding_window_config, 'to_dict') else None,
             'enable_quantization': self.enable_quantization,
             'enable_distillation': self.enable_distillation,
             'enable_nested_updates': self.enable_nested_updates,
             'enable_hierarchical_cache': self.enable_hierarchical_cache,
+            'enable_sliding_window': self.enable_sliding_window,
+            'enable_compression': self.enable_compression,
+            'enable_storage_tiering': self.enable_storage_tiering,
+            'enable_enhanced_prefetch': self.enable_enhanced_prefetch,
+            'sliding_window_size': self.sliding_window_size,
             'device': self.device,
             'output_dir': self.output_dir,
         }
@@ -127,6 +171,11 @@ class AdvancedSLIConfig:
         config.enable_distillation = data.get('enable_distillation', True)
         config.enable_nested_updates = data.get('enable_nested_updates', True)
         config.enable_hierarchical_cache = data.get('enable_hierarchical_cache', True)
+        config.enable_sliding_window = data.get('enable_sliding_window', True)
+        config.enable_compression = data.get('enable_compression', True)
+        config.enable_storage_tiering = data.get('enable_storage_tiering', True)
+        config.enable_enhanced_prefetch = data.get('enable_enhanced_prefetch', True)
+        config.sliding_window_size = data.get('sliding_window_size', 5)
         config.device = data.get('device', 'cuda')
         config.output_dir = data.get('output_dir', './advanced_sli_output')
         return config
@@ -190,6 +239,11 @@ class AdvancedSLIIntegrator:
         self.nested_scheduler: Optional[NestedUpdateScheduler] = None
         self.hierarchical_cache: Optional[HierarchicalLayerCache] = None
         
+        # New I/O optimization components
+        self.sliding_window: Optional[SlidingWindowBuffer] = None
+        self.compressed_storage: Optional[CompressedLayerStorage] = None
+        self.storage_tier_manager: Optional[StorageTierManager] = None
+        
         # Standard layer cache for compatibility
         self.layer_cache: Optional[LayerCache] = None
         self.io_optimizer: Optional[IOOptimizer] = None
@@ -207,6 +261,19 @@ class AdvancedSLIIntegrator:
         if self.config.enable_hierarchical_cache:
             self._init_hierarchical_cache()
         
+        # Initialize new I/O optimization components
+        if self.config.enable_sliding_window:
+            self._init_sliding_window()
+        
+        if self.config.enable_compression:
+            self._init_compressed_storage()
+        
+        if self.config.enable_storage_tiering:
+            self._init_storage_tier_manager()
+        
+        if self.config.enable_enhanced_prefetch:
+            self._init_enhanced_io_optimizer()
+        
         # Statistics
         self._stats = {
             'layers_loaded': 0,
@@ -222,6 +289,10 @@ class AdvancedSLIIntegrator:
         logger.info(f"  Distillation: {self.config.enable_distillation}")
         logger.info(f"  Nested Updates: {self.config.enable_nested_updates}")
         logger.info(f"  Hierarchical Cache: {self.config.enable_hierarchical_cache}")
+        logger.info(f"  Sliding Window: {self.config.enable_sliding_window}")
+        logger.info(f"  Compression: {self.config.enable_compression}")
+        logger.info(f"  Storage Tiering: {self.config.enable_storage_tiering}")
+        logger.info(f"  Enhanced Prefetch: {self.config.enable_enhanced_prefetch}")
     
     def _init_nvfp4_loader(self):
         """Initialize NVFP4 streaming loader."""
@@ -247,6 +318,43 @@ class AdvancedSLIIntegrator:
         """Initialize hierarchical cache."""
         self.hierarchical_cache = HierarchicalLayerCache(self.config.cache_config)
         logger.info("Hierarchical cache initialized")
+    
+    def _init_sliding_window(self):
+        """Initialize sliding window buffer."""
+        self.sliding_window = AdaptiveSlidingWindow(
+            window_size=self.config.sliding_window_size,
+            config=self.config.sliding_window_config,
+        )
+        logger.info(f"Sliding window initialized (size={self.config.sliding_window_size})")
+    
+    def _init_compressed_storage(self):
+        """Initialize compressed layer storage."""
+        storage_dir = str(self.output_dir / "compressed_layers")
+        self.compressed_storage = CompressedLayerStorage(
+            storage_dir=storage_dir,
+            config=self.config.compression_config,
+        )
+        logger.info("Compressed storage initialized")
+    
+    def _init_storage_tier_manager(self):
+        """Initialize storage tier manager."""
+        self.storage_tier_manager = StorageTierManager(
+            config=self.config.storage_tier_config,
+        )
+        logger.info("Storage tier manager initialized")
+    
+    def _init_enhanced_io_optimizer(self):
+        """Initialize I/O optimizer with enhanced prefetch."""
+        if self.hierarchical_cache is not None:
+            self.io_optimizer = IOOptimizer(
+                layer_cache=self.hierarchical_cache,
+                enable_prefetch=True,
+                use_enhanced_prefetch=True,
+                prefetch_lookahead=5,
+                max_concurrent_downloads=8,
+                io_thread_count=8,
+            )
+            logger.info("Enhanced I/O optimizer initialized")
     
     def load_layer(
         self,
@@ -466,6 +574,36 @@ class AdvancedSLIIntegrator:
         
         return None
     
+    def load_layer_with_sliding_window(
+        self,
+        model_id: str,
+        layer_idx: int,
+        total_layers: int,
+        auto_slide: bool = True
+    ) -> Optional[nn.Module]:
+        """Load a layer using sliding window buffer.
+        
+        Args:
+            model_id: Model identifier
+            layer_idx: Layer index
+            total_layers: Total number of layers
+            auto_slide: Whether to auto-advance window
+            
+        Returns:
+            Layer module or None
+        """
+        if self.sliding_window is None:
+            return None
+        
+        # Initialize window if needed
+        if self.sliding_window._current_model_id != model_id:
+            self.sliding_window.initialize_window(model_id, start_layer=layer_idx, total_layers=total_layers)
+        
+        # Get layer from window
+        layer = self.sliding_window.get_layer(model_id, layer_idx, auto_advance=auto_slide)
+        
+        return layer
+    
     def get_stats(self) -> Dict[str, Any]:
         """Get integration statistics."""
         stats = self._stats.copy()
@@ -481,6 +619,18 @@ class AdvancedSLIIntegrator:
         
         if self.hierarchical_cache is not None:
             stats['cache'] = self.hierarchical_cache.get_stats()
+        
+        if self.sliding_window is not None:
+            stats['sliding_window'] = self.sliding_window.get_stats()
+        
+        if self.compressed_storage is not None:
+            stats['compression'] = self.compressed_storage.get_compression_stats()
+        
+        if self.storage_tier_manager is not None:
+            stats['storage_tiers'] = self.storage_tier_manager.get_stats()
+        
+        if self.io_optimizer is not None:
+            stats['io_optimizer'] = self.io_optimizer.get_stats()
         
         return stats
     
