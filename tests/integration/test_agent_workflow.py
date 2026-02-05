@@ -22,7 +22,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 # Import multi-agent module using importlib
-_mao = import_module("src.20_multi_agent_orchestration")
+_mao = import_module("src.nexus.training.scripts.20_multi_agent_orchestration")
 AgentOrchestrator = _mao.AgentOrchestrator
 PlanningAgent = _mao.PlanningAgent
 BackendAgent = _mao.BackendAgent

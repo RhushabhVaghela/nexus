@@ -1,7 +1,7 @@
 import pytest
 import json
 from unittest.mock import patch, MagicMock
-from src.nexus.utils.prefetch_assets import extract_urls_from_json, download_asset
+from src.utils.prefetch_assets import extract_urls_from_json, download_asset
 
 def test_extract_urls():
     data = {

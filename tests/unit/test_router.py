@@ -3,13 +3,11 @@ import torch
 import sys
 import os
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '../../src/nexus_core/student'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../../src'))
 try:
-    from router import SparseIntentRouter
+    from src.core.student.sparse_router import SparseIntentRouter
 except ImportError:
-    # Fallback if pathing is tricky in test runner
-    sys.path.append(os.path.abspath("src/nexus_core/student"))
-    from router import SparseIntentRouter
+    from nexus.core.student.sparse_router import SparseIntentRouter
 
 class TestRouter(unittest.TestCase):
     def setUp(self):

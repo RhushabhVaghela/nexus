@@ -50,8 +50,8 @@ class TestLoaderTrainingIntegration:
     
     def test_loader_to_training_pipeline(self):
         """Test data flows correctly from loader to training."""
-        from src.nexus.data.universal_loader import load_dataset_universal, LoadResult
-        from src.nexus.training.stages.base import TrainingStage
+        from src.data.universal_loader import load_dataset_universal, LoadResult
+        from src.training.stages.base import TrainingStage
         
         # Create mock training stage
         stage = MagicMock(spec=TrainingStage)
@@ -142,7 +142,7 @@ class TestTrainingInferenceIntegration:
     
     def test_checkpoint_save_load(self, tmp_path):
         """Test checkpoint can be saved and loaded between training and inference."""
-        from src.nexus.models.architect import NexusStudent
+        from src.models.architect import NexusStudent
         
         with patch('src.nexus.models.architect.AutoModelForCausalLM') as mock_model_class, \
              patch('src.nexus.models.architect.AutoTokenizer'), \
@@ -249,7 +249,7 @@ class TestTTSStreamingIntegration:
     
     def test_tts_to_streaming_pipeline(self):
         """Test TTS output can be streamed."""
-        from src.nexus.streaming.tts import TTSEngine
+        from src.streaming.tts import TTSEngine
         
         # Mock TTS engine
         with patch.object(TTSEngine, '_load_model'):
@@ -300,7 +300,7 @@ class TestErrorPropagation:
     
     def test_loader_error_propagation(self):
         """Test errors in loader are properly handled."""
-        from src.nexus.data.universal_loader import load_dataset_universal
+        from src.data.universal_loader import load_dataset_universal
         
         # Simulate loader error
         with patch('src.nexus.data.universal_loader.UniversalDataLoader.load') as mock_load:

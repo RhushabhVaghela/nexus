@@ -9,7 +9,7 @@ from unittest.mock import patch, MagicMock
 # Add project root to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.nexus.data.streaming_trainer import StreamingDatasetLoader
+from src.data.streaming_trainer import StreamingDatasetLoader
 
 class TestLoaderDelegation(unittest.TestCase):
     """Test that StreamingDatasetLoader delegates giant/media files correctly."""

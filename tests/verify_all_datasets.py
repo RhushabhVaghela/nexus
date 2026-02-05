@@ -14,8 +14,8 @@ from typing import List, Dict
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.nexus.utils.metrics_tracker import ALL_DATASETS, MetricsTracker, TestDetailMetrics
-from src.nexus.data.streaming_trainer import StreamingDatasetLoader, StreamingConfig
+from src.utils.metrics_tracker import ALL_DATASETS, MetricsTracker, TestDetailMetrics
+from src.data.streaming_trainer import StreamingDatasetLoader, StreamingConfig
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 logger = logging.getLogger(__name__)

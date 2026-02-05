@@ -17,7 +17,7 @@ with patch('transformers.TrainerCallback'), \
      patch('transformers.AutoTokenizer'):
     import src.nexus.utils.metrics_tracker
     # We might need to import specific classes if they are not exposed at top level
-    from src.nexus.utils.metrics_tracker import MetricsTracker, TrainingMetrics
+    from src.utils.metrics_tracker import MetricsTracker, TrainingMetrics
 
 class TestSFTEnhancements(unittest.TestCase):
     def setUp(self):

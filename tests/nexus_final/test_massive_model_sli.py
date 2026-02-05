@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, patch
 
 # Ensure src is in path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
-from src.nexus.models.sli_integrator import LayerWeightLoader
-from src.nexus.models.utils.memory import should_use_sli
+from src.models.sli_integrator import LayerWeightLoader
+from src.models.utils.memory import should_use_sli
 
 def test_layer_weight_loader_reassembly():
     # Mock weight map: Layer 0 is split between shard_A and shard_B

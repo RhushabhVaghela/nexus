@@ -4,7 +4,7 @@ import torch
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
-from src.nexus.models.utils.memory import estimate_model_vram_gb, should_use_sli
+from src.models.utils.memory import estimate_model_vram_gb, should_use_sli
 
 class MockConfig:
     def __init__(self, hidden_size=None, num_hidden_layers=None, d_model=None, num_layers=None):

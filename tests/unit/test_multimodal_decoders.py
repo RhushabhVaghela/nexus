@@ -2,7 +2,7 @@ import pytest
 import torch
 from unittest.mock import MagicMock, patch
 from pathlib import Path
-from src.nexus.multimodal.decoders import ImageDecoder, AudioDecoder, VideoDecoder, OmniDecoder, ContentDecoder
+from src.multimodal.decoders import ImageDecoder, AudioDecoder, VideoDecoder, OmniDecoder, ContentDecoder
 
 @pytest.fixture
 def mock_image(tmp_path):

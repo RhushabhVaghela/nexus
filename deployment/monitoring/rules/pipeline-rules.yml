@@ -1,0 +1,140 @@
+# =============================================================================
+# Pipeline Prometheus Alert Rules for Nexus
+# =============================================================================
+
+groups:
+  # ==========================================================================
+  # Pipeline Job Alerts
+  # ==========================================================================
+  - name: nexus.pipeline.jobs
+    interval: 30s
+    rules:
+      - alert: PipelineJobHighFailureRate
+        expr: |
+          (
+            sum(rate(nexus_pipeline_jobs_total{status="failed"}[5m])) by (pipeline_type)
+            /
+            sum(rate(nexus_pipeline_jobs_total[5m])) by (pipeline_type)
+          ) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          service: pipeline
+          team: ml
+        annotations:
+          summary: "Pipeline job failure rate is too high"
+          description: "Pipeline type {{ $labels.pipeline_type }} has {{ $value | humanizePercentage }} failure rate"
+          runbook_url: "https://wiki.nexus-platform.io/runbooks/pipeline-failures"
+
+      - alert: PipelineJobQueueBuildup
+        expr: |
+          nexus_pipeline_queue_size / nexus_pipeline_queue_max_size > 0.8
+        for: 10m
+        labels:
+          severity: warning
+          service: pipeline
+          team: ml
+        annotations:
+          summary: "Pipeline queue is backing up"
+          description: "Pipeline queue is at {{ $value | humanizePercentage }} capacity"
+          runbook_url: "https://wiki.nexus-platform.io/runbooks/pipeline-queue"
+
+      - alert: PipelineJobStuck
+        expr: |
+          nexus_pipeline_job_duration_seconds > nexus_pipeline_job_timeout_seconds * 0.9
+        for: 15m
+        labels:
+          severity: warning
+          service: pipeline
+          team: ml
+        annotations:
+          summary: "Pipeline job may be stuck"
+          description: "Pipeline job {{ $labels.job_id }} has been running for more than 90% of its timeout"
+
+      - alert: PipelineHighLatency
+        expr: |
+          histogram_quantile(0.95, sum(rate(nexus_pipeline_duration_seconds_bucket[5m])) by (le, pipeline_type)) > 3600
+        for: 10m
+        labels:
+          severity: warning
+          service: pipeline
+          team: ml
+        annotations:
+          summary: "Pipeline execution is too slow"
+          description: "95th percentile pipeline duration is {{ $value }}s for type {{ $labels.pipeline_type }}"
+
+  # ==========================================================================
+  # Pipeline Resource Alerts
+  # ==========================================================================
+  - name: nexus.pipeline.resources
+    interval: 30s
+    rules:
+      - alert: PipelineHighMemoryUsage
+        expr: |
+          nexus_pipeline_memory_usage_bytes / nexus_pipeline_memory_limit_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          service: pipeline
+          team: ml
+        annotations:
+          summary: "Pipeline memory usage is high"
+          description: "Pipeline {{ $labels.pipeline_id }} is using {{ $value | humanizePercentage }} of memory limit"
+
+      - alert: PipelineGPUMemoryHigh
+        expr: |
+          nexus_pipeline_gpu_memory_bytes / nexus_pipeline_gpu_memory_limit_bytes > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          service: pipeline
+          team: ml
+        annotations:
+          summary: "Pipeline GPU memory nearly exhausted"
+          description: "Pipeline {{ $labels.pipeline_id }} is using {{ $value | humanizePercentage }} of GPU memory"
+
+      - alert: PipelineCPUThrottling
+        expr: |
+          rate(nexus_pipeline_cpu_throttled_seconds_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: pipeline
+          team: ml
+        annotations:
+          summary: "Pipeline experiencing CPU throttling"
+          description: "Pipeline {{ $labels.pipeline_id }} is being CPU throttled"
+
+  # ==========================================================================
+  # Pipeline Throughput Alerts
+  # ==========================================================================
+  - name: nexus.pipeline.throughput
+    interval: 60s
+    rules:
+      - alert: PipelineThroughputDrop
+        expr: |
+          sum by (pipeline_type) (rate(nexus_pipeline_jobs_completed[5m]))
+          <
+          0.5 * sum by (pipeline_type) (rate(nexus_pipeline_jobs_completed[1h] offset 1d))
+        for: 30m
+        labels:
+          severity: warning
+          service: pipeline
+          team: ml
+        annotations:
+          summary: "Pipeline throughput has dropped significantly"
+          description: "Pipeline type {{ $labels.pipeline_type }} throughput is less than 50% of the daily average"
+
+      - alert: PipelineThroughputSpike
+        expr: |
+          sum by (pipeline_type) (rate(nexus_pipeline_jobs_completed[5m]))
+          >
+          3 * sum by (pipeline_type) (rate(nexus_pipeline_jobs_completed[1h] offset 1d))
+        for: 15m
+        labels:
+          severity: info
+          service: pipeline
+          team: ml
+        annotations:
+          summary: "Pipeline throughput has spiked"
+          description: "Pipeline type {{ $labels.pipeline_type }} throughput is 3x the daily average"

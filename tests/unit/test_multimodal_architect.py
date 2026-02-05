@@ -26,7 +26,7 @@ class TestNeuralArchitect:
     @pytest.fixture
     def architect(self, tmp_path):
         """Fixture for NeuralArchitect instance."""
-        from src.nexus.models.architect import NeuralArchitect
+        from src.models.architect import NeuralArchitect
         return NeuralArchitect(output_dir=str(tmp_path / "architect_output"))
     
     @pytest.fixture
@@ -142,7 +142,7 @@ class TestNexusBridge:
     @pytest.fixture
     def bridge(self):
         """Fixture for NexusBridge instance."""
-        from src.nexus.models.architect import NexusBridge
+        from src.models.architect import NexusBridge
         return NexusBridge(in_features=1024, out_features=512)
     
     def test_initialization(self, bridge):
@@ -214,7 +214,7 @@ class TestNexusStudentMultimodal:
             mock_tokenizer.eos_token = "[EOS]"
             mock_tokenizer_class.from_pretrained.return_value = mock_tokenizer
             
-            from src.nexus.models.architect import NexusStudent
+            from src.models.architect import NexusStudent
             student = NexusStudent(base_model_id="test-model")
             return student
     
@@ -442,7 +442,7 @@ class TestMultimodalEmbeddingInjectionEdgeCases:
             
             mock_align.return_value.return_value = torch.randn(2, 5, 512)
             
-            from src.nexus.models.architect import NexusStudent
+            from src.models.architect import NexusStudent
             student = NexusStudent()
             student.base_model = MagicMock()
             student.base_model.config.hidden_size = 512

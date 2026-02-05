@@ -9,7 +9,7 @@ import sys
 import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-from src.nexus.benchmarks.ruler_benchmark import RULERBenchmark, RULERConfig, TaskResult, RULERResult
+from src.benchmarks.ruler_benchmark import RULERBenchmark, RULERConfig, TaskResult, RULERResult
 
 class TestRULERConfig:
     def test_config_defaults(self):
@@ -39,7 +39,7 @@ class TestRULERBenchmark:
         assert latency >= 0
 
     def test_format_prompt(self, mock_benchmark):
-        from src.nexus.benchmarks.ruler_tasks import TaskSample
+        from src.benchmarks.ruler_tasks import TaskSample
         sample = TaskSample(context="Ctx", question="Q?", expected_answer="A")
         prompt = mock_benchmark.format_prompt(sample)
         assert "Ctx" in prompt
@@ -113,12 +113,12 @@ class TestRULERBenchmark:
              patch("src.nexus.benchmarks.ruler_benchmark.RULERBenchmark.run") as m_run:
             
             m_run.return_value = RULERResult("/fake", [], 1024, {1024: 0.9}, {})
-            from src.nexus.benchmarks.ruler_benchmark import main
+            from src.benchmarks.ruler_benchmark import main
             main()
             assert out.exists()
 
     @patch("src.nexus.benchmarks.ruler_benchmark.RULERBenchmark.setup", side_effect=Exception("Fail"))
     def test_main_fail(self, mock_setup):
         with patch("sys.argv", ["ruler.py", "--model", "/fake"]):
-            from src.nexus.benchmarks.ruler_benchmark import main
+            from src.benchmarks.ruler_benchmark import main
             main() # Should handle exception and print usage

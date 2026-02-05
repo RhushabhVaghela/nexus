@@ -404,7 +404,7 @@ class TestDataMixer:
     def test_normalize_to_messages_alpaca_format(self):
         """Test Alpaca format conversion."""
         try:
-            from src.nexus.utils.data_mixer import normalize_to_messages
+            from src.utils.data_mixer import normalize_to_messages
             
             alpaca_sample = {
                 "instruction": "Write a hello world",
@@ -422,7 +422,7 @@ class TestDataMixer:
     def test_normalize_to_messages_preserves_modalities(self):
         """Test that modalities block is preserved during normalization."""
         try:
-            from src.nexus.utils.data_mixer import normalize_to_messages
+            from src.utils.data_mixer import normalize_to_messages
             
             mm_sample = {
                 "messages": [
@@ -446,7 +446,7 @@ class TestDataMixer:
     def test_mix_datasets_ratio(self):
         """Test that mixing respects target ratios."""
         try:
-            from src.nexus.utils.data_mixer import mix_datasets
+            from src.utils.data_mixer import mix_datasets
             
             real_samples = [{"id": f"real_{i}"} for i in range(100)]
             synthetic_samples = [{"id": f"synth_{i}"} for i in range(100)]
@@ -470,7 +470,7 @@ class TestBenchmarks:
     def test_fullstack_eval_has_evaluators(self):
         """Test FullstackEval has all required evaluators."""
         try:
-            from src.nexus.benchmarks.fullstack_eval import FullstackEval
+            from src.benchmarks.fullstack_eval import FullstackEval
             benchmark = FullstackEval()
             
             test_cases = benchmark.get_all_cases()
@@ -481,7 +481,7 @@ class TestBenchmarks:
     def test_lovable_benchmark_categories(self):
         """Test LovableBenchmark has expected categories."""
         try:
-            from src.nexus.benchmarks.lovable_benchmark import LovableBenchmark
+            from src.benchmarks.lovable_benchmark import LovableBenchmark
             benchmark = LovableBenchmark()
             
             # categories = benchmark.get_categories()

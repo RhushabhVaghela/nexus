@@ -1,7 +1,7 @@
 import pytest
 import torch
 from unittest.mock import MagicMock, patch
-from src.nexus.models.omni.inference import OmniInference, GenerationConfig
+from src.models.omni.inference import OmniInference, GenerationConfig
 
 class TestOmniInference:
     @patch("src.nexus.models.omni.loader.OmniModelLoader.load_for_inference")

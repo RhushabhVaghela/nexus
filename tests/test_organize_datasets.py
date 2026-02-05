@@ -3,7 +3,7 @@ import pytest
 import json
 import shutil
 from pathlib import Path
-from src.nexus.utils.organize_datasets import inspect_content, get_destination, organize_folder, MODEL_CATEGORIES
+from src.utils.organize_datasets import inspect_content, get_destination, organize_folder, MODEL_CATEGORIES
 
 # Fixture for creating temporary test files
 @pytest.fixture

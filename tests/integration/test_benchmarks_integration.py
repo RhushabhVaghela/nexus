@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.nexus.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig, main as runner_main
+from src.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig, main as runner_main
 
 @pytest.mark.benchmark
 def test_generation_benchmark(omni_model_path, real_text_model, real_text_tokenizer):

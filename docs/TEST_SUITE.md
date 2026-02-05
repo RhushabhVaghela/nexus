@@ -332,3 +332,373 @@ class TestNewFeature:
         output = real_text_model.generate(...)
         assert output is not None
 ```
+
+---
+
+## 4. Optimization Tests (`tests/test_*.py`)
+
+Comprehensive unit tests for the 8 optimization modules covering performance-critical components.
+
+### 4.1 Async Decompression Tests (`tests/test_async_decompression.py`)
+
+Tests for async I/O decompression with CUDA streams (nvCOMP-style).
+
+| Test Class | Tests | Description |
+|------------|-------|-------------|
+| `TestAsyncDecompressionConfig` | 2 | Configuration validation |
+| `TestCUDAStreamManager` | 12 | Stream management, round-robin, synchronization |
+| `TestLayerBufferPool` | 10 | Buffer pooling, memory management |
+| `TestAsyncDecompressor` | 20 | Async decompression, caching, stats |
+| `TestStreamingLayerLoader` | 4 | Layer loading with prefetching |
+
+**Total: 48 tests**
+
+**Key Test Categories:**
+- CUDA stream initialization and management
+- Parallel decompression workflows
+- Memory buffer pooling and reuse
+- Cache hit/miss handling
+- Error handling for missing dependencies
+- Performance statistics tracking
+
+**Usage Example:**
+```python
+from src.optimizations.async_decompression import (
+    AsyncDecompressor,
+    CUDAStreamManager,
+    LayerBufferPool
+)
+
+# Test CUDA stream management
+manager = CUDAStreamManager(num_streams=3)
+stream = manager.get_next_stream()
+
+# Test async decompression
+decompressor = AsyncDecompressor()
+tensor = decompressor.decompress_layer_async(
+    "layer1", compressed_data, shape, dtype
+)
+```
+
+---
+
+### 4.2 Compression Optimization Tests (`tests/test_compression_optimized.py`)
+
+Tests for ZSTD compression + quantization-aware compression.
+
+| Test Class | Tests | Description |
+|------------|-------|-------------|
+| `TestCompressionConfig` | 2 | Configuration validation |
+| `TestQuantizedTensor` | 6 | Quantization serialization/deserialization |
+| `TestQuantizationCompressor` | 10 | Tensor quantization, sparsity pruning |
+| `TestZSTDQuantizedCompressor` | 12 | Combined compression workflows |
+| `TestOptimizedCompressor` | 5 | Tensor-level compression |
+
+**Total: 35 tests**
+
+**Key Test Categories:**
+- ZSTD compression with/without quantization
+- Group-wise quantization (4-bit, 8-bit)
+- Compression ratio statistics
+- Fallback behavior when ZSTD unavailable
+- Model layer compression
+
+**Usage Example:**
+```python
+from src.optimizations.compression_optimized import (
+    QuantizationCompressor,
+    ZSTDQuantizedCompressor,
+    OptimizedCompressor
+)
+
+# Quantize tensor
+compressor = QuantizationCompressor()
+quantized = compressor.quantize(tensor, bits=8)
+
+# Compress with ZSTD + quantization
+zstd_compressor = ZSTDQuantizedCompressor()
+compressed = zstd_compressor.compress(tensor)
+```
+
+---
+
+### 4.3 Layer Fusion Tests (`tests/test_layer_fusion.py`)
+
+Tests for attention + FFN fusion (Blackwell-style).
+
+| Test Class | Tests | Description |
+|------------|-------|-------------|
+| `TestFusionConfig` | 2 | Configuration validation |
+| `TestFusedQKVProjection` | 6 | QKV projection fusion |
+| `TestFlashAttentionKernel` | 7 | FlashAttention implementation |
+| `TestFusedFFN` | 6 | FFN fusion |
+| `TestFusedAttentionFFN` | 7 | Complete fused block |
+| `TestLayerFusionOptimizer` | 8 | Model fusion workflows |
+
+**Total: 36 tests**
+
+**Key Test Categories:**
+- Fused QKV projections
+- FlashAttention with/without CUDA
+- Fused FFN (SwiGLU, GELU, ReLU)
+- Residual connections
+- Model-wide layer fusion
+
+**Usage Example:**
+```python
+from src.optimizations.layer_fusion import (
+    FusedAttentionFFN,
+    LayerFusionOptimizer,
+    FusionConfig
+)
+
+# Create fused block
+block = FusedAttentionFFN(
+    hidden_size=768,
+    num_heads=12,
+    intermediate_size=3072,
+    head_dim=64
+)
+
+# Fuse entire model
+optimizer = LayerFusionOptimizer(config)
+fused_model = optimizer.fuse_model(model)
+```
+
+---
+
+### 4.4 Early Exit Routing Tests (`tests/test_early_exit_routing.py`)
+
+Tests for dynamic routing with early exits (LayerSkip, DASH).
+
+| Test Class | Tests | Description |
+|------------|-------|-------------|
+| `TestDynamicRoutingConfig` | 2 | Configuration validation |
+| `TestTokenRouter` | 8 | Per-token routing decisions |
+| `TestDynamicLayerRouter` | 3 | Layer selection |
+| `TestEarlyExitRouter` | 10 | Complete routing workflows |
+| `TestAdaptiveExitLayer` | 4 | Layer wrapping |
+
+**Total: 27 tests**
+
+**Key Test Categories:**
+- Token complexity estimation
+- Exit layer prediction
+- Confidence-based early exits
+- Layer mask computation
+- Training vs inference modes
+
+**Usage Example:**
+```python
+from src.optimizations.early_exit_routing import (
+    EarlyExitRouter,
+    TokenRouter,
+    DynamicRoutingConfig
+)
+
+router = EarlyExitRouter(
+    model=model,
+    num_layers=80,
+    hidden_size=768
+)
+
+output, metrics = router.forward_with_routing(
+    hidden_states, layers, attention_mask
+)
+```
+
+---
+
+### 4.5 Layer Pipelining Tests (`tests/test_layer_pipelining.py`)
+
+Tests for layer pipelining with speculative execution (EasySpec, SpecPipe).
+
+| Test Class | Tests | Description |
+|------------|-------|-------------|
+| `TestPipelineConfig` | 2 | Configuration validation |
+| `TestStaleActivationPredictor` | 7 | Activation prediction |
+| `TestSpeculativeLayerExecutor` | 10 | Speculative execution |
+| `TestLayerPipeliningOptimizer` | 10 | Complete pipelining |
+
+**Total: 29 tests**
+
+**Key Test Categories:**
+- Stale activation prediction
+- Confidence-based speculation
+- Hit/miss rate tracking
+- Layer extraction from models
+- Performance estimation
+
+**Usage Example:**
+```python
+from src.optimizations.layer_pipelining import (
+    LayerPipeliningOptimizer,
+    StaleActivationPredictor,
+    PipelineConfig
+)
+
+optimizer = LayerPipeliningOptimizer(
+    model=model,
+    num_layers=80,
+    hidden_size=768
+)
+
+output, metrics = optimizer.forward(hidden_states)
+```
+
+---
+
+### 4.6 Adaptive Layer Skipping Tests (`tests/test_adaptive_layer_skipping.py`)
+
+Tests for adaptive layer skipping (SWIFT, LayerSkip, AdaSkip).
+
+| Test Class | Tests | Description |
+|------------|-------|-------------|
+| `TestLayerSkipConfig` | 2 | Configuration validation |
+| `TestLayerSkipRouter` | 6 | Skip decision logic |
+| `TestSWIFTSkipper` | 5 | SWIFT-style skipping |
+| `TestAdaptiveLayerSkipper` | 9 | Complete skipping workflows |
+| `TestLayerSkipIntegration` | 4 | Model integration |
+
+**Total: 26 tests**
+
+**Key Test Categories:**
+- Skip vs execute decisions
+- Layer importance estimation
+- Training vs inference modes
+- Skip pattern strategies (adaptive, uniform, early)
+- Speedup measurement
+
+**Usage Example:**
+```python
+from src.optimizations.adaptive_layer_skipping import (
+    AdaptiveLayerSkipper,
+    LayerSkipRouter,
+    LayerSkipConfig
+)
+
+skipper = AdaptiveLayerSkipper(
+    model=model,
+    num_layers=80,
+    hidden_size=768
+)
+
+output, metrics = skipper.forward_with_skipping(
+    hidden_states, layers, attention_mask
+)
+```
+
+---
+
+### 4.7 Semi-Autoregressive Decoding Tests (`tests/test_semi_autoregressive.py`)
+
+Tests for parallel token generation (SPACE, Medusa).
+
+| Test Class | Tests | Description |
+|------------|-------|-------------|
+| `TestSARConfig` | 2 | Configuration validation |
+| `TestParallelTokenHead` | 8 | Parallel token heads |
+| `TestSPACEDecoder` | 12 | Complete decoding workflows |
+| `TestSemiAutoregressiveDecoder` | 4 | Decoder integration |
+
+**Total: 26 tests**
+
+**Key Test Categories:**
+- Multi-token prediction
+- Top-k and top-p filtering
+- Temperature scaling
+- Token verification
+- Acceptance rate metrics
+
+**Usage Example:**
+```python
+from src.optimizations.semi_autoregressive import (
+    SemiAutoregressiveDecoder,
+    SPACEDecoder,
+    SARConfig
+)
+
+decoder = SemiAutoregressiveDecoder(base_model=model)
+output = decoder.generate(input_ids, max_new_tokens=100)
+```
+
+---
+
+## Optimization Test Summary
+
+| Module | Tests | Coverage Target | Key Focus |
+|--------|-------|----------------|-----------|
+| async_decompression.py | 48 | 80%+ | CUDA streams, parallel I/O |
+| compression_optimized.py | 35 | 80%+ | ZSTD + quantization |
+| layer_fusion.py | 36 | 80%+ | Kernel fusion |
+| early_exit_routing.py | 27 | 80%+ | Dynamic routing |
+| layer_pipelining.py | 29 | 80%+ | Speculative execution |
+| adaptive_layer_skipping.py | 26 | 80%+ | Layer skipping |
+| semi_autoregressive.py | 26 | 80%+ | Parallel decoding |
+| **Total** | **227** | **80%** | |
+
+---
+
+## Running Optimization Tests
+
+```bash
+# Run all optimization tests
+pytest tests/test_async_decompression.py tests/test_compression_optimized.py \
+       tests/test_layer_fusion.py tests/test_early_exit_routing.py \
+       tests/test_layer_pipelining.py tests/test_adaptive_layer_skipping.py \
+       tests/test_semi_autoregressive.py -v
+
+# Run specific module tests
+pytest tests/test_async_decompression.py -v
+
+# Run with coverage
+pytest tests/test_*.py --cov=src.optimizations --cov-report=html
+
+# Run only fast tests (exclude integration-like tests)
+pytest tests/test_*.py -v -m "unit"
+```
+
+---
+
+## Test Patterns
+
+All optimization tests follow consistent patterns:
+
+### Configuration Tests
+```python
+class TestModuleConfig:
+    def test_default_config_values(self):
+        """Test default configuration."""
+        config = ModuleConfig()
+        assert config.key_param == expected_default
+
+    def test_custom_config_values(self):
+        """Test custom configuration."""
+        config = ModuleConfig(key_param=custom_value)
+        assert config.key_param == custom_value
+```
+
+### Component Tests
+```python
+class TestModuleComponent:
+    def test_component_initialization(self):
+        """Test component creation."""
+        component = ModuleComponent(param=value)
+        assert component.param == value
+
+    def test_component_forward(self):
+        """Test component functionality."""
+        input_tensor = torch.randn(batch, seq, hidden)
+        output = component(input_tensor)
+        assert output.shape == input_tensor.shape
+```
+
+### Integration Tests
+```python
+class TestModuleIntegration:
+    def test_end_to_end_workflow(self):
+        """Test complete workflow."""
+        optimizer = ModuleOptimizer(model=model)
+        result = optimizer.process(input_data)
+        assert result.success is True
+```

@@ -67,13 +67,24 @@ class TestEndToEndPipeline:
             from nexus.models.sli import UniversalSLIIntegrator
             from nexus.models.distill import NexusDistiller
             from nexus.models.distill_knowledge import KnowledgeDistiller
-            assert True
+
+            # Verify imports succeeded by checking classes exist
+            assert UniversalSLIIntegrator is not None, (
+                "UniversalSLIIntegrator should be importable"
+            )
+            assert NexusDistiller is not None, "NexusDistiller should be importable"
+            assert KnowledgeDistiller is not None, (
+                "KnowledgeDistiller should be importable"
+            )
         except ImportError as e:
             pytest.fail(f"Failed to import pipeline components: {e}")
 
     def test_architecture_registry_bert_family(self):
         """Test that BERT family handler is properly registered."""
-        from nexus.models.sli.architecture_registry import get_registry, BERTFamilyHandler
+        from nexus.models.sli.architecture_registry import (
+            get_registry,
+            BERTFamilyHandler,
+        )
 
         registry = get_registry()
 
@@ -131,20 +142,16 @@ class TestEndToEndPipeline:
         try:
             # Download tokenizer
             tokenizer = AutoTokenizer.from_pretrained(
-                model_name,
-                cache_dir=cache_dir,
-                local_files_only=False
+                model_name, cache_dir=cache_dir, local_files_only=False
             )
             assert tokenizer is not None
 
             # Download model
             model = AutoModelForCausalLM.from_pretrained(
-                model_name,
-                cache_dir=cache_dir,
-                local_files_only=False
+                model_name, cache_dir=cache_dir, local_files_only=False
             )
             assert model is not None
-            assert hasattr(model, 'config')
+            assert hasattr(model, "config")
 
         except Exception as e:
             pytest.skip(f"Network or HuggingFace error: {e}")
@@ -155,13 +162,15 @@ class TestEndToEndPipeline:
         output_dir.mkdir(parents=True, exist_ok=True)
 
         # Mock the training components
-        with patch('transformers.Trainer') as MockTrainer:
+        with patch("transformers.Trainer") as MockTrainer:
             mock_trainer = MagicMock()
             mock_trainer.train.return_value = MagicMock(
-                training_loss=0.5,
-                metrics={"train_loss": 0.5, "eval_loss": 0.6}
+                training_loss=0.5, metrics={"train_loss": 0.5, "eval_loss": 0.6}
             )
-            mock_trainer.evaluate.return_value = {"eval_loss": 0.6, "eval_accuracy": 0.75}
+            mock_trainer.evaluate.return_value = {
+                "eval_loss": 0.6,
+                "eval_accuracy": 0.75,
+            }
             MockTrainer.return_value = mock_trainer
 
             # Simulate training
@@ -212,12 +221,16 @@ class TestEndToEndPipeline:
         raw_data = [
             {"text": "This is safe content.", "safety_score": 0.9},
             {"text": "This is also safe.", "safety_score": 0.95},
-            {"text": "Potentially harmful content.", "safety_score": 0.3},  # Should be filtered
+            {
+                "text": "Potentially harmful content.",
+                "safety_score": 0.3,
+            },  # Should be filtered
         ]
 
         # Filter censored content
         filtered_data = [
-            item for item in raw_data
+            item
+            for item in raw_data
             if item.get("safety_score", 0) >= safety_config["moderation_threshold"]
         ]
 
@@ -274,8 +287,8 @@ class TestEndToEndPipeline:
             soft_targets = torch.softmax(teacher_logits / temperature, dim=-1)
             soft_predictions = torch.log_softmax(student_logits / temperature, dim=-1)
             return nn.functional.kl_div(
-                soft_predictions, soft_targets, reduction='batchmean'
-            ) * (temperature ** 2)
+                soft_predictions, soft_targets, reduction="batchmean"
+            ) * (temperature**2)
 
         # Test with random tensors
         batch_size = 4
@@ -314,8 +327,18 @@ class TestEndToEndPipeline:
         # Verify registry has expected families
         families = registry.list_families()
         expected_families = [
-            "llama", "qwen", "gpt", "chatglm", "t5",
-            "bloom", "opt", "mamba", "moe", "phi", "gemma", "bert"
+            "llama",
+            "qwen",
+            "gpt",
+            "chatglm",
+            "t5",
+            "bloom",
+            "opt",
+            "mamba",
+            "moe",
+            "phi",
+            "gemma",
+            "bert",
         ]
 
         for family_id in expected_families:
@@ -397,9 +420,9 @@ class TestIntegrationWithRealComponents:
         try:
             config = AutoConfig.from_pretrained("gpt2")
             assert config is not None
-            assert hasattr(config, 'model_type')
+            assert hasattr(config, "model_type")
             assert config.model_type == "gpt2"
-            assert hasattr(config, 'vocab_size')
+            assert hasattr(config, "vocab_size")
 
         except Exception as e:
             pytest.skip(f"Could not load config: {e}")

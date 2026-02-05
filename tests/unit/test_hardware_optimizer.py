@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 import torch
 import sys
 
-from src.nexus.utils.hardware_optimizer import optimize_for_hardware
+from src.utils.hardware_optimizer import optimize_for_hardware
 
 class TestHardwareOptimizer:
     

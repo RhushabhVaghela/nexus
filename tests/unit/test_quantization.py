@@ -17,7 +17,7 @@ import torch.nn as nn
 from unittest.mock import patch, MagicMock
 
 # Import the module under test
-from src.nexus.models.sli.quantization import (
+from src.models.sli.quantization import (
     QuantizationMode,
     QuantizationConfig,
     LayerQuantizer,

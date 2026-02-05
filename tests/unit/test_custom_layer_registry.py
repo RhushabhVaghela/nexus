@@ -18,7 +18,7 @@ import torch
 import torch.nn as nn
 
 # Import the module under test
-from src.nexus.models.sli.architecture_registry import ArchitectureRegistry, get_registry
+from src.models.sli.architecture_registry import ArchitectureRegistry, get_registry
 
 
 class TestArchitectureRegistrySingleton:

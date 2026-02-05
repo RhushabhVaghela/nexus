@@ -12,7 +12,7 @@ Tests cover:
 import pytest
 from unittest.mock import patch, MagicMock
 
-from src.nexus.utils.repetition import (
+from src.utils.repetition import (
     TaskComplexity,
     TaskType,
     RepetitionConfig,

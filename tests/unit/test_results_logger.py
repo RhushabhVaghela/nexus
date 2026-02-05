@@ -1,7 +1,7 @@
 import pytest
 import csv
 from pathlib import Path
-from src.nexus.utils.results_logger import ResultsLogger
+from src.utils.results_logger import ResultsLogger
 
 def test_results_logger(tmp_path):
     csv_file = tmp_path / "results.csv"

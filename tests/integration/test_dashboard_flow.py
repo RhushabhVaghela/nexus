@@ -5,7 +5,7 @@ from pathlib import Path
 import os
 import json
 
-from src.nexus.api.explainer_api import app
+from src.api.explainer_api import app
 
 client = TestClient(app)
 

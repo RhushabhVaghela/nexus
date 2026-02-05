@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.nexus.multimodal.detect_modalities import detect_modalities, format_report, _analyze_config
+from src.multimodal.detect_modalities import detect_modalities, format_report, _analyze_config
 
 
 class TestDetectModalitiesWithRealModel:

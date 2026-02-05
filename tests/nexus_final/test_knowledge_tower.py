@@ -2,7 +2,7 @@ import pytest
 import torch
 import os
 from unittest.mock import MagicMock, patch
-from src.nexus.models.knowledge import KnowledgeTower, FileMemoryManager
+from src.models.knowledge import KnowledgeTower, FileMemoryManager
 
 def test_knowledge_tower_projection():
     # Mock Tokenizer and Model
@@ -109,7 +109,7 @@ def test_session_persistence(tmp_path):
 
 def test_real_file_persistence(tmp_path):
     # Integration test for FileMemoryManager real file IO
-    from src.nexus.models.knowledge import FileMemoryManager
+    from src.models.knowledge import FileMemoryManager
     mem_root = str(tmp_path / "memory")
     manager = FileMemoryManager(memory_root=mem_root)
     
@@ -121,7 +121,7 @@ def test_real_file_persistence(tmp_path):
     assert os.path.exists(os.path.join(mem_root, "sessions", "real_sess.json"))
 
 def test_student_read_from_memory():
-    from src.nexus.core.student.core import NexusStudentCore, NexusStudentConfig
+    from src.core.student.core import NexusStudentCore, NexusStudentConfig
     
     config = NexusStudentConfig(num_hidden_layers=1, hidden_size=128)
     student = NexusStudentCore(config)

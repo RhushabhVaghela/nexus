@@ -18,7 +18,7 @@ import time
 import asyncio
 from unittest.mock import patch, MagicMock, Mock
 
-from src.nexus.utils.metrics import (
+from src.utils.metrics import (
     MetricType,
     MetricValue,
     LocalMetric,

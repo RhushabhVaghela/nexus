@@ -3,7 +3,7 @@ import pytest
 import shutil
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-from src.nexus.data.universal_manager import UniversalDatasetManager
+from src.data.universal_manager import UniversalDatasetManager
 
 # Mock data structure for testing
 @pytest.fixture

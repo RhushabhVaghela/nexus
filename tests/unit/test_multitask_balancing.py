@@ -16,7 +16,7 @@ sys.modules["multimodal.model"] = mock.Mock()
 sys.modules["multimodal"] = mock.Mock()
 
 import importlib
-OmniDataset = importlib.import_module("src.24_multimodal_training").OmniDataset
+OmniDataset = importlib.import_module("src.nexus.training.scripts.24_multimodal_training").OmniDataset
 
 class TestMultitaskBalancing(unittest.TestCase):
     def setUp(self):

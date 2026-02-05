@@ -26,7 +26,7 @@ sys.modules["transformers"] = transformers_mock
 
 def test_voice_cloner_init():
     """Test voice cloner initialization."""
-    from src.nexus.voice_engine import cloner
+    from src.voice_engine import cloner
     
     # Test basic class existence
     assert hasattr(cloner, "VoiceCloner")
@@ -41,7 +41,7 @@ def test_voice_cloner_init():
 
 def test_voice_encoder_init():
     """Test voice encoder initialization."""
-    from src.nexus.voice_engine import cloner
+    from src.voice_engine import cloner
     
     encoder = cloner.VoiceEncoder()
     assert encoder.model_name == "microsoft/wavlm-base-plus-sv"
@@ -50,7 +50,7 @@ def test_voice_encoder_init():
 
 def test_voice_dna_creation():
     """Test voice DNA dataclass."""
-    from src.nexus.voice_engine import cloner
+    from src.voice_engine import cloner
     
     import numpy as np
     embedding = np.zeros(512)
@@ -73,7 +73,7 @@ def test_voice_dna_creation():
 @patch("src.nexus.voice_engine.cloner.torch")
 def test_clone_voice_with_torch(mock_torch):
     """Test voice cloning when torch is available."""
-    from src.nexus.voice_engine import cloner
+    from src.voice_engine import cloner
     
     # Mock torch.cuda
     mock_torch.cuda.is_available.return_value = False
@@ -102,7 +102,7 @@ def test_clone_voice_with_torch(mock_torch):
 
 def test_voice_cloner_compare():
     """Test voice comparison."""
-    from src.nexus.voice_engine import cloner
+    from src.voice_engine import cloner
     from unittest.mock import patch
     
     vc = cloner.VoiceCloner()
@@ -115,7 +115,7 @@ def test_voice_cloner_compare():
 
 def test_global_instances():
     """Test global module instances."""
-    from src.nexus.voice_engine.cloner import voice_cloner
+    from src.voice_engine.cloner import voice_cloner
     
     assert voice_cloner is not None
     assert isinstance(voice_cloner.clones_created, int)

@@ -6,7 +6,7 @@ import json
 import logging
 from unittest.mock import MagicMock, patch
 import src.nexus.models.omni.loader as loader_mod
-from src.nexus.models.omni.loader import OmniModelLoader, load_omni_model, OmniModelConfig
+from src.models.omni.loader import OmniModelLoader, load_omni_model, OmniModelConfig
 from transformers import PreTrainedModel, PretrainedConfig
 
 # Configure logging

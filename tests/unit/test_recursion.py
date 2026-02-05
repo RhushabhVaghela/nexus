@@ -9,8 +9,8 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.nexus.utils.metrics_tracker import discover_datasets
-from src.nexus.data.universal_loader import UniversalDataLoader
+from src.core.metrics_tracker import discover_datasets
+from src.data.universal_loader import UniversalDataLoader
 
 def test_recursive_discovery_and_loading(tmp_path):
     """

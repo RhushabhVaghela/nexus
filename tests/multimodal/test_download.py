@@ -12,7 +12,7 @@ class TestMultimodalDownload(unittest.TestCase):
     
     def setUp(self):
         # Import the module to test
-        from src.nexus.multimodal import download
+        from src.multimodal import download
         self.module = download
         
         # Store original objects

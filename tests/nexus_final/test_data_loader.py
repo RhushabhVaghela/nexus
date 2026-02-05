@@ -2,7 +2,7 @@ import os
 import json
 import pytest
 import shutil
-from src.nexus.models.data_loader import UniversalDataLoader
+from src.models.data_loader import UniversalDataLoader
 
 @pytest.fixture
 def mock_data_env(tmp_path):

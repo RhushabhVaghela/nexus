@@ -8,8 +8,8 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.capability_registry import CapabilityRegistry
-from src.nexus.utils.metrics_tracker import get_capability_datasets
+from src.core.capability_registry import CapabilityRegistry
+from src.core.metrics_tracker import get_capability_datasets
 
 class TestRemotionIntegration:
     """Integration tests for Remotion capability (MOCKED)."""

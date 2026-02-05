@@ -66,7 +66,10 @@ This project adheres to a code of conduct that all contributors are expected to 
 ```
 nexus/
 ├── src/                    # Source code
-│   ├── nexus_core/        # Core modules
+│   ├── nexus/             # Core modules
+│   │   ├── optimizations/ # Optimization implementations
+│   │   ├── core/          # Core modules
+│   │   └── ...
 │   ├── multimodal/        # Multimodal components
 │   ├── utils/             # Utility functions
 │   └── ...
@@ -78,6 +81,334 @@ nexus/
 ├── scripts/               # Utility scripts
 └── configs/               # Configuration files
 ```
+
+---
+
+## Optimization Development Guidelines
+
+Nexus includes **8 research-backed optimization solutions** for achieving 100+ tokens/second inference. This section guides contributors on adding new optimizations.
+
+### Architecture Overview
+
+Nexus optimizations target three main LLM inference bottlenecks:
+
+1. **Sequential Dependency** - Layer N must complete before Layer N+1
+2. **Decompression Overhead** - Loading compressed weights blocks computation
+3. **Forward Pass Time** - Each layer takes significant time to compute
+
+### Adding a New Optimization
+
+#### 1. Research Validation
+
+Before implementation, validate the research:
+
+- [ ] Paper is from reputable venue (NeurIPS, ICML, ICLR, etc.)
+- [ ] Claims are backed by reproducible benchmarks
+- [ ] Open-source implementation exists (optional but recommended)
+- [ ] Performance claims are realistic (validated on consumer hardware)
+
+#### 2. Implementation Structure
+
+Create a new file in `src/nexus/optimizations/`:
+
+```python
+# src/nexus/optimizations/your_optimization.py
+"""
+Your Optimization Name
+
+Research: Paper Title (Year)
+Problem: Brief description of the bottleneck
+Solution: How this optimization solves it
+
+Expected Performance:
+- Speedup: X×
+- Memory: +/- X%
+- Accuracy: X%
+"""
+
+from typing import Dict, Any, Optional
+import torch
+import torch.nn as nn
+
+from .base import BaseOptimizer, OptimizationConfig
+
+
+class YourOptimizerConfig(OptimizationConfig):
+    """Configuration for your optimization."""
+    
+    def __init__(
+        self,
+        param1: float = 0.5,
+        param2: int = 4,
+        enabled: bool = True
+    ):
+        super().__init__(enabled=enabled)
+        self.param1 = param1
+        self.param2 = param2
+
+
+class YourOptimizer(BaseOptimizer):
+    """
+    Your optimization implementation.
+    
+    Args:
+        config: Configuration object
+        model: Model to optimize (optional)
+    """
+    
+    def __init__(
+        self,
+        config: Optional[YourOptimizerConfig] = None,
+        model: Optional[nn.Module] = None
+    ):
+        super().__init__(config or YourOptimizerConfig())
+        self.model = model
+        
+    def optimize(
+        self,
+        model: nn.Module,
+        **kwargs
+    ) -> nn.Module:
+        """Apply optimization to model.
+        
+        Args:
+            model: Model to optimize
+            **kwargs: Additional arguments
+            
+        Returns:
+            Optimized model
+        """
+        # Implementation here
+        return model
+    
+    def forward(
+        self,
+        inputs: torch.Tensor,
+        **kwargs
+    ) -> torch.Tensor:
+        """Optimized forward pass.
+        
+        Args:
+            inputs: Input tensor
+            **kwargs: Additional arguments
+            
+        Returns:
+            Output tensor
+        """
+        # Implementation here
+        return outputs
+    
+    def get_metrics(self) -> Dict[str, float]:
+        """Return optimization metrics.
+        
+        Returns:
+            Dictionary of metrics
+        """
+        return {
+            "speedup": self.speedup,
+            "memory_overhead": self.memory_overhead,
+            "accuracy_retention": self.accuracy_retention
+        }
+```
+
+#### 3. Export in `__init__.py`
+
+Add to `src/nexus/optimizations/__init__.py`:
+
+```python
+from .your_optimization import YourOptimizer, YourOptimizerConfig
+
+__all__ = [
+    # ... existing exports ...
+    "YourOptimizer",
+    "YourOptimizerConfig",
+]
+```
+
+#### 4. Testing Requirements
+
+Create comprehensive tests in `tests/test_optimizations.py`:
+
+```python
+class TestYourOptimizer:
+    """Test suite for YourOptimizer."""
+    
+    def test_initialization(self):
+        """Test optimizer initializes correctly."""
+        from nexus.optimizations import YourOptimizer
+        
+        optimizer = YourOptimizer()
+        assert optimizer is not None
+        assert optimizer.config.enabled
+    
+    def test_optimization(self):
+        """Test optimization applies correctly."""
+        model = create_test_model()
+        optimizer = YourOptimizer()
+        
+        optimized = optimizer.optimize(model)
+        assert optimized is not None
+    
+    def test_forward_pass(self):
+        """Test forward pass produces correct output."""
+        optimizer = YourOptimizer()
+        inputs = torch.randn(1, 10, 512)
+        
+        outputs = optimizer.forward(inputs)
+        assert outputs.shape == inputs.shape
+    
+    def test_performance_improvement(self):
+        """Verify performance improvement."""
+        model = create_test_model()
+        optimizer = YourOptimizer()
+        
+        # Baseline
+        start = time.time()
+        baseline_output = model(inputs)
+        baseline_time = time.time() - start
+        
+        # Optimized
+        optimized = optimizer.optimize(model)
+        start = time.time()
+        optimized_output = optimized(inputs)
+        optimized_time = time.time() - start
+        
+        # Verify speedup
+        speedup = baseline_time / optimized_time
+        assert speedup > 1.1, f"Expected >1.1× speedup, got {speedup:.2f}×"
+    
+    def test_accuracy_retention(self):
+        """Verify accuracy is maintained."""
+        model = create_test_model()
+        optimizer = YourOptimizer()
+        inputs = torch.randn(1, 10, 512)
+        
+        baseline_output = model(inputs)
+        optimized_output = optimizer.forward(inputs)
+        
+        # Cosine similarity > 0.97
+        similarity = torch.nn.functional.cosine_similarity(
+            baseline_output.flatten(),
+            optimized_output.flatten(),
+            dim=0
+        )
+        assert similarity > 0.97, f"Accuracy below threshold: {similarity:.4f}"
+```
+
+#### 5. Configuration
+
+Add configuration to `configs/optimization_config.yaml`:
+
+```yaml
+your_optimization_config:
+  param1: 0.5
+  param2: 4
+  description: |
+    Brief description of what this does
+    and expected performance characteristics
+```
+
+#### 6. Documentation
+
+Update documentation:
+
+- [ ] Add entry to `docs/OPTIMIZATION_GUIDE.md`
+- [ ] Include research references
+- [ ] Provide usage examples
+- [ ] Document configuration options
+- [ ] Add troubleshooting section
+
+#### 7. Benchmarking
+
+Create benchmark in `scripts/benchmark_optimizations.py`:
+
+```python
+def benchmark_your_optimizer():
+    """Benchmark your optimizer."""
+    results = {}
+    
+    for model_name in ["gpt2", "meta-llama/Llama-3.1-8B"]:
+        baseline = benchmark_model(model_name)
+        optimized = benchmark_model(model_name, optimizer="your_optimizer")
+        
+        results[model_name] = {
+            "baseline_tokens_per_sec": baseline["tokens_per_sec"],
+            "optimized_tokens_per_sec": optimized["tokens_per_sec"],
+            "speedup": optimized["tokens_per_sec"] / baseline["tokens_per_sec"],
+            "accuracy": compute_accuracy(model_name, optimized["outputs"])
+        }
+    
+    return results
+```
+
+### Code Quality Standards for Optimizations
+
+#### Performance Requirements
+
+| Metric | Minimum | Target |
+|--------|---------|--------|
+| **Speedup** | 1.1× | 1.5×+ |
+| **Accuracy** | 95% | 97%+ |
+| **Overhead** | <20% | <10% |
+
+#### Code Standards
+
+- **Type Hints**: All functions must have complete type annotations
+- **Documentation**: Google-style docstrings for all public methods
+- **Error Handling**: Graceful fallbacks when optimization fails
+- **Logging**: Structured logging for debugging (`logger.debug()`)
+- **Configuration**: YAML-based configuration support
+
+#### Testing Standards
+
+- **Unit Tests**: Minimum 5 test cases per optimization
+- **Integration Tests**: Test with real models
+- **Performance Tests**: Verify speedup claims
+- **Accuracy Tests**: Verify <3% accuracy loss
+- **Coverage**: Minimum 80% code coverage
+
+### Review Checklist for Optimization PRs
+
+Before submitting an optimization PR:
+
+- [ ] Research paper reviewed and validated
+- [ ] Implementation follows Nexus patterns
+- [ ] All tests pass (`pytest tests/test_optimizations.py`)
+- [ ] Performance benchmarks included
+- [ ] Accuracy validation (<3% loss)
+- [ ] Documentation updated
+- [ ] Configuration added to YAML
+- [ ] No regression in existing tests
+- [ ] Code reviewed by 2+ maintainers
+
+### Architecture Guidelines
+
+#### Integration Patterns
+
+1. **Composability**: Optimizations should work together
+2. **Configurability**: All parameters exposed via YAML
+3. **Observability**: Metrics collection built-in
+4. **Fallback**: Graceful degradation on errors
+
+#### Anti-Patterns to Avoid
+
+❌ **Don't**:
+
+- Break composability with other optimizations
+- Hardcode parameters
+- Skip error handling
+- Ignore memory overhead
+- Neglect accuracy validation
+
+✅ **Do**:
+
+- Design for composability
+- Use configuration objects
+- Implement fallback modes
+- Monitor resource usage
+- Validate accuracy rigorously
+
+---
 
 ---
 

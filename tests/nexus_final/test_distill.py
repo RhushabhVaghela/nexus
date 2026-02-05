@@ -1,9 +1,9 @@
 import pytest
 import os
 import torch
-from src.nexus.models.distill import NexusTrainer
-from src.nexus.models.distill_knowledge import KnowledgeDistiller
-from src.nexus.models.loss_functions import ActivationAnchoringLoss
+from src.models.distill import NexusTrainer
+from src.models.distill_knowledge import KnowledgeDistiller
+from src.models.loss_functions import ActivationAnchoringLoss
 
 @pytest.fixture
 def trainer_setup(tmp_path):
@@ -105,7 +105,7 @@ def test_activation_anchoring_loss():
 def test_smart_model_loading_strategies(tmp_path):
     # We need to mock KnowledgeDistiller dependencies to test __init__ logic
     from unittest.mock import MagicMock, patch
-    from src.nexus.models.distill_knowledge import KnowledgeDistiller
+    from src.models.distill_knowledge import KnowledgeDistiller
     
     tower_mock = MagicMock()
 

@@ -1,6 +1,6 @@
 import pytest
 import json
-from src.nexus.multimodal.tools import Tool, ToolExecutor, calculator, search_web, get_default_executor
+from src.multimodal.tools import Tool, ToolExecutor, calculator, search_web, get_default_executor
 
 def test_tool_dataclass():
     tool = Tool(name="test", description="desc", func=lambda x: x, parameters={})

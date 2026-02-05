@@ -17,7 +17,7 @@ import time
 import asyncio
 from unittest.mock import Mock, MagicMock, patch
 
-from src.nexus.utils.circuit_breaker import (
+from src.utils.circuit_breaker import (
     CircuitState,
     CircuitBreakerConfig,
     CircuitBreakerOpen,

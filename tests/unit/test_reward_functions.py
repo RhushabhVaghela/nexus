@@ -10,7 +10,7 @@ import sys
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.nexus.reasoning.reward_functions import (
+from src.reasoning.reward_functions import (
     RewardConfig, RewardResult, RewardType,
     CorrectnessReward, FormatReward, LengthReward,
     ConsistencyReward, ProcessReward, CombinedReward,

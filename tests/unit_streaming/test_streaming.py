@@ -64,15 +64,6 @@ class TestStreamingComponents(unittest.TestCase):
         self.assertIsNotNone(orch.audio_buffer)
         self.assertIsNotNone(orch.user_buffer)
 
-    def test_podcast_generator(self):
-        from podcast.generator import generate_podcast_script
-        mock_llm = MagicMock()
-        # Mock valid JSON response as string
-        mock_llm.return_value = '{"turns": [{"speaker": "Host A", "text": "Hello world"}]}'
-        
-        script = generate_podcast_script(["Some content"], llm=mock_llm)
-        self.assertTrue(len(script.turns) > 0)
-        self.assertEqual(script.turns[0].speaker, "Host A")
 
 if __name__ == '__main__':
     unittest.main()

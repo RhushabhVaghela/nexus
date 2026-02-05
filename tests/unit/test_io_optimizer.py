@@ -23,7 +23,7 @@ import torch
 import torch.nn as nn
 
 # Import the module under test
-from src.nexus.models.sli.io_optimizer import (
+from src.models.sli.io_optimizer import (
     IOPriority,
     IORequest,
     IOStats,

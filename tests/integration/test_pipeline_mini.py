@@ -29,7 +29,7 @@ class TestPipelineMini(unittest.TestCase):
 
     def test_end_to_end_flow(self):
         # 1. Architect Synthesis
-        from src.nexus.models.architect import NeuralArchitect
+        from src.models.architect import NeuralArchitect
         
         architect = NeuralArchitect()
         

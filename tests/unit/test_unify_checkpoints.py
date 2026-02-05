@@ -3,7 +3,7 @@ import torch
 import os
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-from src.nexus.models.omni.unify_checkpoints import merge_checkpoints
+from src.models.omni.unify_checkpoints import merge_checkpoints
 
 class TestUnifyCheckpoints:
     @patch("transformers.AutoModelForCausalLM.from_pretrained")

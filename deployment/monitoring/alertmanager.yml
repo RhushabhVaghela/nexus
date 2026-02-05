@@ -1,0 +1,208 @@
+# =============================================================================
+# Alertmanager Configuration for Nexus
+# =============================================================================
+# This configuration defines how alerts are grouped, routed, and notified.
+
+global:
+  smtp_smarthost: 'localhost:587'
+  smtp_from: 'alerts@nexus-platform.io'
+  smtp_auth_username: 'alerts@nexus-platform.io'
+  smtp_auth_password: '${SMTP_PASSWORD}'
+  resolve_timeout: 5m
+
+# =============================================================================
+# Route Configuration (Alert Routing)
+# =============================================================================
+route:
+  receiver: 'default'
+  group_by: ['alertname', 'severity', 'environment']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  continue: true
+  routes:
+    # High-priority alerts go to PagerDuty immediately
+    - match:
+        severity: critical
+        environment: production
+      receiver: 'pagerduty'
+      continue: true
+
+    # Staging alerts go to Slack staging channel
+    - match:
+        environment: staging
+      receiver: 'slack-staging'
+      continue: false
+
+    # Database alerts go to database team
+    - match:
+        service: database
+      receiver: 'slack-database'
+      continue: false
+
+    # Cache alerts go to infrastructure team
+    - match:
+        service: cache
+      receiver: 'slack-infra'
+      continue: false
+
+    # Storage alerts go to storage team
+    - match:
+        service: storage
+      receiver: 'slack-storage'
+      continue: false
+
+# =============================================================================
+# Receivers Configuration
+# =============================================================================
+receivers:
+  # Default receiver (Slack main channel)
+  - name: 'default'
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#alerts'
+        title: '{{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}'
+        color: '{{ if eq .Status "firing" }}{{ if eq .Labels.severity "critical" }}danger{{ else }}warning{{ end }}{{ else }}good{{ end }}'
+        fallback: '{{ range .Alerts }}{{ .Annotations.summary }} - {{ .Annotations.description }}{{ end }}'
+        actions:
+          - type: button
+            text: 'Runbook'
+            url: '{{ .Annotations.runbook_url }}'
+            style: '{{ if eq .Labels.severity "critical" }}danger{{ else }}primary{{ end }}'
+          - type: button
+            text: 'Silence'
+            url: '{{ .GeneratorURL }}&silenced=true'
+          - type: button
+            text: 'Graph'
+            url: '{{ .GeneratorURL }}&graph=true'
+
+  # Slack staging channel
+  - name: 'slack-staging'
+    slack_configs:
+      - api_url: '${SLACK_STAGING_WEBHOOK_URL}'
+        channel: '#alerts-staging'
+        title: '[STAGING] {{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}'
+        color: '{{ if eq .Status "firing" }}warning{{ else }}good{{ end }}'
+        fallback: '[STAGING] {{ range .Alerts }}{{ .Annotations.summary }} - {{ .Annotations.description }}{{ end }}'
+
+  # Slack database team channel
+  - name: 'slack-database'
+    slack_configs:
+      - api_url: '${SLACK_DATABASE_WEBHOOK_URL}'
+        channel: '#alerts-database'
+        title: '[DATABASE] {{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}'
+        color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
+        fallback: '[DATABASE] {{ range .Alerts }}{{ .Annotations.summary }} - {{ .Annotations.description }}{{ end }}'
+
+  # Slack infrastructure team channel
+  - name: 'slack-infra'
+    slack_configs:
+      - api_url: '${SLACK_INFRA_WEBHOOK_URL}'
+        channel: '#alerts-infra'
+        title: '[INFRA] {{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}'
+        color: '{{ if eq .Status "firing" }}warning{{ else }}good{{ end }}'
+        fallback: '[INFRA] {{ range .Alerts }}{{ .Annotations.summary }} - {{ .Annotations.description }}{{ end }}'
+
+  # Slack storage team channel
+  - name: 'slack-storage'
+    slack_configs:
+      - api_url: '${SLACK_STORAGE_WEBHOOK_URL}'
+        channel: '#alerts-storage'
+        title: '[STORAGE] {{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}'
+        color: '{{ if eq .Status "firing" }}warning{{ else }}good{{ end }}'
+        fallback: '[STORAGE] {{ range .Alerts }}{{ .Annotations.summary }} - {{ .Annotations.description }}{{ end }}'
+
+  # PagerDuty for critical production alerts
+  - name: 'pagerduty'
+    pagerduty_configs:
+      - service_key: '${PAGERDUTY_KEY}'
+        severity: '{{ .Labels.severity }}'
+        component: 'nexus'
+        group: '{{ .Labels.team }}'
+        class: '{{ .Labels.service }}'
+        custom_details:
+          alert_name: '{{ .Labels.alertname }}'
+          instance: '{{ .Labels.instance }}'
+          pod: '{{ .Labels.pod }}'
+          namespace: '{{ .Labels.namespace }}'
+          description: '{{ .Annotations.description }}'
+          runbook: '{{ .Annotations.runbook_url }}'
+
+  # Email notifications
+  - name: 'email'
+    email_configs:
+      - to: 'alerts@nexus-platform.io'
+        send_resolved: true
+        require_tls: true
+        smarthost: 'smtp.gmail.com:587'
+        auth_username: 'alerts@nexus-platform.io'
+        auth_password: '${GMAIL_PASSWORD}'
+
+  # Webhook for custom integrations
+  - name: 'webhook'
+    webhook_configs:
+      - url: 'http://webhook-handler:5000/alerts'
+        send_resolved: true
+        max_alerts: 100
+
+# =============================================================================
+# Inhibition Rules (Suppress lower severity alerts)
+# =============================================================================
+inhibit_rules:
+  # Suppress warning alerts when critical alert is firing
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'instance', 'namespace']
+
+  # Suppress environment-specific alerts
+  - source_match:
+      environment: 'production'
+    target_match:
+      environment: 'staging'
+    equal: ['alertname', 'service']
+
+  # Suppress database alerts when database is down
+  - source_match:
+      alertname: 'PostgresDown'
+    target_match:
+      service: 'database'
+    equal: ['instance']
+
+  # Suppress cache alerts when Redis is down
+  - source_match:
+      alertname: 'RedisDown'
+    target_match:
+      service: 'cache'
+    equal: ['instance']
+
+# =============================================================================
+# Time Intervals (Quiet hours configuration)
+# =============================================================================
+time_intervals:
+  - name: 'quiet-hours'
+    time_intervals:
+      - times:
+          - start_time: '22:00'
+            end_time: '06:00'
+            weekdays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']
+          - start_time: '00:00'
+            end_time: '24:00'
+            weekdays: ['saturday', 'sunday']
+    labels:
+      quiet: 'true'
+
+  - name: 'maintenance-window'
+    time_intervals:
+      - times:
+          - start_time: '02:00'
+            end_time: '04:00'
+            weekdays: ['sunday']
+    labels:
+      maintenance: 'true'

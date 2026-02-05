@@ -5,9 +5,9 @@ import torch
 import torch.nn as nn
 from transformers import PretrainedConfig
 
-from src.nexus.models.sli.universal_sli_integrator import UniversalSLIIntegrator
-from src.nexus.models.sli.architecture_registry import ArchitectureRegistry, ArchitectureFamily
-from src.nexus.models.sli.exceptions import UnsupportedArchitectureError
+from src.models.sli.universal_sli_integrator import UniversalSLIIntegrator
+from src.models.sli.architecture_registry import ArchitectureRegistry, ArchitectureFamily
+from src.models.sli.exceptions import UnsupportedArchitectureError
 
 # Mock families
 class MockLlamaFamily(ArchitectureFamily):

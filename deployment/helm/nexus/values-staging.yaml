@@ -1,0 +1,412 @@
+# =============================================================================
+# Staging Environment Values for Nexus
+# =============================================================================
+# This file contains staging-specific configuration for the Nexus platform.
+# It inherits from values.yaml and overrides settings for staging environment.
+
+# =============================================================================
+# Global Configuration
+# =============================================================================
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+
+# =============================================================================
+# Nexus Application Configuration
+# =============================================================================
+replicaCount: 1
+
+image:
+  repository: nexus-platform/nexus
+  pullPolicy: IfNotPresent
+  tag: "staging"
+
+imagePullSecrets: []
+nameOverride: "nexus-staging"
+fullnameOverride: "nexus-staging"
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/nexus-staging-role
+  name: "nexus-staging-sa"
+
+# =============================================================================
+# Pod Configuration
+# =============================================================================
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8000"
+  prometheus.io/path: "/metrics"
+podLabels:
+  environment: staging
+  version: "staging-2024.1"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+# =============================================================================
+# Service Configuration
+# =============================================================================
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+
+# =============================================================================
+# Ingress Configuration
+# =============================================================================
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "200m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    cert-manager.io/cluster-issuer: "letsencrypt-staging"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      add_header X-Environment "staging" always;
+      add_header X-Version "staging-2024.1" always;
+  hosts:
+    - host: nexus-staging.nexus-platform.io
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: nexus-staging-tls
+      hosts:
+        - nexus-staging.nexus-platform.io
+
+# =============================================================================
+# Resource Configuration (Reduced for staging)
+# =============================================================================
+resources:
+  limits:
+    cpu: 1000m
+    memory: 4Gi
+    nvidia.com/gpu: 0
+  requests:
+    cpu: 250m
+    memory: 1Gi
+
+# =============================================================================
+# Autoscaling Configuration
+# =============================================================================
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 10
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+      selectPolicy: Max
+
+# =============================================================================
+# Persistence Configuration
+# =============================================================================
+persistence:
+  enabled: true
+  storageClass: "gp3"
+  accessMode: ReadWriteOnce
+  size: 20Gi
+  annotations:
+    helm.sh/resource-policy: keep
+
+# =============================================================================
+# Configuration Management (Debug settings for staging)
+# =============================================================================
+config:
+  logLevel: debug
+  logFormat: json
+
+  # API Configuration (Shorter timeouts for faster feedback)
+  api:
+    host: "0.0.0.0"
+    port: 8000
+    workers: 2
+    maxRequestsPerWorker: 500
+    timeout: 60
+
+  # Model Configuration (Smaller model for staging)
+  model:
+    cacheDir: "/data/models"
+    maxModelSize: "10Gi"
+    defaultModel: "unsloth/Llama-3.2-1B-Instruct"
+    quantization: "Q4_K_M"
+
+  # Processing Configuration
+  processing:
+    maxBatchSize: 8
+    maxQueueSize: 100
+    workerThreads: 2
+    enableGpu: false
+    gpuMemoryFraction: 0.5
+
+  # Storage Configuration (Use staging bucket)
+  storage:
+    type: "s3"
+    bucket: "nexus-staging-data"
+    region: "us-east-1"
+    endpoint: ""
+
+  # Feature Flags (All features enabled for testing)
+  features:
+    enableMultimodal: true
+    enableTraining: true
+    enableStreaming: true
+    enableCaching: true
+    enableMetrics: true
+
+# =============================================================================
+# Environment Variables (Staging-specific)
+# =============================================================================
+env:
+  - name: PYTHONUNBUFFERED
+    value: "1"
+  - name: PYTHONDONTWRITEBYTECODE
+    value: "1"
+  - name: CUDA_VISIBLE_DEVICES
+    value: ""
+  - name: TRANSFORMERS_CACHE
+    value: "/data/models"
+  - name: HF_HOME
+    value: "/data/models"
+  - name: STAGING
+    value: "true"
+  - name: LOG_LEVEL
+    value: "DEBUG"
+  - name: METRICS_ENABLED
+    value: "true"
+  - name: PROFILING_ENABLED
+    value: "true"
+  - name: DEBUG_MODE
+    value: "true"
+
+# =============================================================================
+# Secrets (Enabled but empty - use external secrets manager)
+# =============================================================================
+secrets:
+  enabled: true
+  data: {}
+  # Secrets are managed via AWS Secrets Manager in staging
+  # AWS_ACCESS_KEY_ID: ""
+  # AWS_SECRET_ACCESS_KEY: ""
+  # HUGGINGFACE_TOKEN: ""
+  # DATABASE_URL: ""
+
+# =============================================================================
+# Probes (Faster failure detection for staging)
+# =============================================================================
+livenessProbe:
+  httpGet:
+    path: /health/live
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health/ready
+    port: http
+  initialDelaySeconds: 15
+  periodSeconds: 5
+  timeoutSeconds: 2
+  failureThreshold: 3
+
+startupProbe:
+  httpGet:
+    path: /health/startup
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 10
+
+# =============================================================================
+# Node Selection
+# =============================================================================
+nodeSelector:
+  node-type: general-purpose
+  workload-type: staging
+
+tolerations:
+  - key: nvidia.com/gpu
+    operator: Exists
+    effect: NoSchedule
+  - key: "staging"
+    operator: "Equal"
+    value: "true"
+    effect: NoSchedule
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - nexus
+              - key: environment
+                operator: In
+                values:
+                  - staging
+          topologyKey: kubernetes.io/hostname
+
+# =============================================================================
+# Topology Spread Constraints
+# =============================================================================
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: nexus
+        environment: staging
+
+# =============================================================================
+# Monitoring (Enhanced for staging)
+# =============================================================================
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 15s
+    scrapeTimeout: 10s
+    path: /metrics
+    labels:
+      release: prometheus
+  prometheusRule:
+    enabled: true
+    labels:
+      release: prometheus
+    rules:
+      - alert: NexusStagingDown
+        expr: up{job="nexus-staging"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          environment: staging
+        annotations:
+          summary: "Nexus staging is down"
+          description: "Nexus staging instance has been down for more than 1 minute"
+      - alert: NexusStagingHighErrorRate
+        expr: |
+          (
+            sum(rate(nexus_requests_total{status=~"5..", environment="staging"}[5m])) by (instance)
+            /
+            sum(rate(nexus_requests_total{environment="staging"}[5m])) by (instance)
+          ) > 0.02
+        for: 3m
+        labels:
+          severity: warning
+          environment: staging
+        annotations:
+          summary: "Nexus staging high error rate"
+          description: "Error rate is {{ $value | humanizePercentage }} for staging"
+
+# =============================================================================
+# Database Dependencies (Smaller resources for staging)
+# =============================================================================
+postgresql:
+  enabled: true
+  auth:
+    username: nexus_staging
+    password: nexus_staging
+    database: nexus_staging
+  primary:
+    persistence:
+      enabled: true
+      size: 10Gi
+    resources:
+      limits:
+        memory: 1Gi
+        cpu: 500m
+      requests:
+        memory: 256Mi
+        cpu: 125m
+    metrics:
+      enabled: true
+
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    password: nexus_staging_redis
+  master:
+    persistence:
+      enabled: true
+      size: 5Gi
+    resources:
+      limits:
+        memory: 512Mi
+        cpu: 250m
+      requests:
+        memory: 128Mi
+        cpu: 50m
+  metrics:
+    enabled: true
+
+minio:
+  enabled: true
+  auth:
+    rootUser: nexus_staging
+    rootPassword: nexus_staging_minio123
+  persistence:
+    enabled: true
+    size: 50Gi
+  resources:
+    limits:
+      memory: 1Gi
+      cpu: 500m
+    requests:
+      memory: 256Mi
+      cpu: 125m
+  consoleService:
+    type: ClusterIP
+    port: 9001
+
+# =============================================================================
+# Prometheus Dependency
+# =============================================================================
+prometheus:
+  enabled: false

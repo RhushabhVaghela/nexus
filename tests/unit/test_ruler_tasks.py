@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.nexus.benchmarks.ruler_tasks import (
+from src.benchmarks.ruler_tasks import (
     TaskConfig, TaskSample, TaskCategory,
     SingleNIAH, MultiKeyNIAH, MultiValueNIAH, MultiQueryNIAH,
     VariableTracing, ChainFollowing,

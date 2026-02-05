@@ -61,7 +61,7 @@ NC='\033[0m'
 # ===================== LOGGING FUNCTIONS =====================
 log_info()    { echo -e "${BLUE}[INFO]${NC} $1"; }
 log_success() { echo -e "${GREEN}[✓]${NC} $1"; }
-log_warn()    { echo -e "${YELLOW}[⚠]${NC} $1"; }
+log_warn()    { echo -e "${YELLOW}[ ⚠ ]${NC} $1"; }
 log_error()   { echo -e "${RED}[✗]${NC} $1"; }
 log_step()    { 
     echo -e "\n${PURPLE}═══════════════════════════════════════════════════════════════${NC}"
@@ -1646,7 +1646,7 @@ cmd_reset() {
         echo "  • Reset pipeline state"
         echo ""
         read -p "Are you sure? (yes/no): " confirm
-        if [ "$confirm" != "yes" ]; then
+        if [ "$confirm" != "yes" ] || [ "$confirm" != "y" ]; then
             echo "Reset cancelled."
             exit 0
         fi

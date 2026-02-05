@@ -1,0 +1,212 @@
+# =============================================================================
+# Training Prometheus Alert Rules for Nexus
+# =============================================================================
+
+groups:
+  # ==========================================================================
+  # Training Job Alerts
+  # ==========================================================================
+  - name: nexus.training.jobs
+    interval: 30s
+    rules:
+      - alert: TrainingJobHighFailureRate
+        expr: |
+          (
+            sum(rate(nexus_training_jobs_failed[5m])) by (model)
+            /
+            sum(rate(nexus_training_jobs_total[5m])) by (model)
+          ) > 0.15
+        for: 10m
+        labels:
+          severity: critical
+          service: training
+          team: ml
+        annotations:
+          summary: "Training job failure rate is too high"
+          description: "Model {{ $labels.model }} has {{ $value | humanizePercentage }} failure rate"
+          runbook_url: "https://wiki.nexus-platform.io/runbooks/training-failures"
+
+      - alert: TrainingJobOOM
+        expr: |
+          nexus_training_jobs_oom_total > 0
+        for: 5m
+        labels:
+          severity: critical
+          service: training
+          team: ml
+        annotations:
+          summary: "Training job ran out of memory"
+          description: "Training job {{ $labels.job_id }} for model {{ $labels.model }} encountered OOM"
+          runbook_url: "https://wiki.nexus-platform.io/runbooks/training-oom"
+
+      - alert: TrainingJobTimeout
+        expr: |
+          nexus_training_jobs_timed_out_total > 0
+        for: 5m
+        labels:
+          severity: warning
+          service: training
+          team: ml
+        annotations:
+          summary: "Training job timed out"
+          description: "Training job {{ $labels.job_id }} for model {{ $labels.model }} exceeded its timeout"
+
+      - alert: TrainingJobStuck
+        expr: |
+          rate(nexus_training_loss[5m]) == 0
+          and
+          nexus_training_epoch > 0
+        for: 30m
+        labels:
+          severity: warning
+          service: training
+          team: ml
+        annotations:
+          summary: "Training job may be stuck"
+          description: "Training job {{ $labels.job_id }} for model {{ $labels.model }} shows no loss improvement for 30 minutes"
+
+  # ==========================================================================
+  # Training Performance Alerts
+  # ==========================================================================
+  - name: nexus.training.performance
+    interval: 60s
+    rules:
+      - alert: TrainingSlowEpoch
+        expr: |
+          histogram_quantile(0.95, sum by (le, model) (rate(nexus_training_epoch_duration_seconds_bucket[5m]))) > 3600
+        for: 10m
+        labels:
+          severity: warning
+          service: training
+          team: ml
+        annotations:
+          summary: "Training epoch is taking too long"
+          description: "Model {{ $labels.model }} epoch 95th percentile duration is {{ $value }}s"
+
+      - alert: TrainingSlowIteration
+        expr: |
+          histogram_quantile(0.95, sum by (le, model) (rate(nexus_training_iteration_duration_seconds_bucket[5m]))) > 10
+        for: 10m
+        labels:
+          severity: warning
+          service: training
+          team: ml
+        annotations:
+          summary: "Training iteration is too slow"
+          description: "Model {{ $labels.model }} iteration 95th percentile duration is {{ $value }}s"
+
+      - alert: TrainingGradientNormHigh
+        expr: |
+          nexus_training_gradient_norm > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: training
+          team: ml
+        annotations:
+          summary: "Training gradient norm is high"
+          description: "Training job {{ $labels.job_id }} has gradient norm of {{ $value }}, indicating potential instability"
+
+  # ==========================================================================
+  # Training Resource Alerts
+  # ==========================================================================
+  - name: nexus.training.resources
+    interval: 30s
+    rules:
+      - alert: TrainingGPUMemoryHigh
+        expr: |
+          nexus_training_gpu_memory_percent > 90
+        for: 5m
+        labels:
+          severity: warning
+          service: training
+          team: ml
+        annotations:
+          summary: "Training GPU memory usage is critical"
+          description: "Training job {{ $labels.job_id }} for model {{ $labels.model }} is using {{ $value | humanizePercentage }} of GPU memory"
+
+      - alert: TrainingGPUUtilizationLow
+        expr: |
+          nexus_training_gpu_utilization_percent < 20
+        for: 15m
+        labels:
+          severity: info
+          service: training
+          team: ml
+        annotations:
+          summary: "Training GPU utilization is low"
+          description: "Training job {{ $labels.job_id }} for model {{ $labels.model }} is only using {{ $value | humanizePercentage }} of GPU"
+
+      - alert: TrainingCPUHigh
+        expr: |
+          nexus_training_cpu_usage_percent > 90
+        for: 10m
+        labels:
+          severity: warning
+          service: training
+          team: ml
+        annotations:
+          summary: "Training CPU usage is high"
+          description: "Training job {{ $labels.job_id }} for model {{ $labels.model }} is using {{ $value | humanizePercentage }} of CPU"
+
+  # ==========================================================================
+  # Training Metrics Alerts
+  # ==========================================================================
+  - name: nexus.training.metrics
+    interval: 60s
+    rules:
+      - alert: TrainingLossNotConverging
+        expr: |
+          (
+            nexus_training_loss
+            /
+            nexus_training_loss_offset_1h
+          ) > 0.95
+        for: 2h
+        labels:
+          severity: warning
+          service: training
+          team: ml
+        annotations:
+          summary: "Training loss is not converging"
+          description: "Training job {{ $labels.job_id }} for model {{ $labels.model }} loss hasn't decreased by more than 5% in 2 hours"
+
+      - alert: TrainingAccuracyPlateau
+        expr: |
+          (
+            nexus_training_accuracy
+            /
+            nexus_training_accuracy_offset_1h
+          ) < 1.01
+        for: 2h
+        labels:
+          severity: warning
+          service: training
+          team: ml
+        annotations:
+          summary: "Training accuracy has plateaued"
+          description: "Training job {{ $labels.job_id }} for model {{ $labels.model }} accuracy hasn't improved by more than 1% in 2 hours"
+
+      - alert: TrainingValidationLossIncreasing
+        expr: |
+          nexus_training_validation_loss > nexus_training_validation_loss_offset_1h * 1.1
+        for: 1h
+        labels:
+          severity: warning
+          service: training
+          team: ml
+        annotations:
+          summary: "Training validation loss is increasing"
+          description: "Training job {{ $labels.job_id }} for model {{ $labels.model }} validation loss increased by more than 10%"
+
+      - alert: TrainingOverfitting
+        expr: |
+          nexus_training_loss < nexus_training_validation_loss * 0.8
+        for: 30m
+        labels:
+          severity: warning
+          service: training
+          team: ml
+        annotations:
+          summary: "Model may be overfitting"
+          description: "Training job {{ $labels.job_id }} for model {{ $labels.model }} training loss is significantly lower than validation loss"

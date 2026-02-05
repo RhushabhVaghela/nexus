@@ -1,7 +1,7 @@
 import pytest
 import os
 from unittest.mock import patch
-from src.nexus.utils.control_training import create_flag_file, remove_flag_file, main
+from src.utils.control_training import create_flag_file, remove_flag_file, main
 
 def test_flag_file_ops(tmp_path):
     flag_dir = str(tmp_path)

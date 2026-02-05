@@ -2,7 +2,7 @@ import os
 import torch
 import pytest
 import shutil
-from src.nexus.models.export import NexusExporter
+from src.models.export import NexusExporter
 
 @pytest.fixture
 def mock_nexus_components(tmp_path):

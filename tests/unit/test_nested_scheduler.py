@@ -15,7 +15,7 @@ import time
 from unittest.mock import MagicMock, patch
 
 # Import the module under test
-from src.nexus.models.sli.nested_scheduler import (
+from src.models.sli.nested_scheduler import (
     NestedUpdateScheduler,
     NestedUpdateConfig,
     UpdateGroup,
@@ -24,7 +24,7 @@ from src.nexus.models.sli.nested_scheduler import (
     get_nested_scheduler,
     create_attention_focused_scheduler,
 )
-from src.nexus.models.sli.exceptions import SLIError
+from src.models.sli.exceptions import SLIError
 
 
 # ============================================================================

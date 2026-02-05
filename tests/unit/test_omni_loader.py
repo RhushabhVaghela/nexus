@@ -26,7 +26,7 @@ except ImportError:
 # Ensure src is in path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from omni.loader import OmniModelLoader, load_omni_model, OmniModelConfig
+from src.models.omni.loader import OmniModelLoader, load_omni_model, OmniModelConfig
 
 
 class TestPersistentArgumentFix(unittest.TestCase):

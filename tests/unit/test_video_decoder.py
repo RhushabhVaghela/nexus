@@ -25,7 +25,7 @@ class TestVideoDecoder:
     @pytest.fixture
     def decoder(self):
         """Fixture for VideoDecoder instance."""
-        from src.nexus.models.decoders import VideoDecoder
+        from src.models.decoders import VideoDecoder
         return VideoDecoder(
             model_id="stabilityai/stable-video-diffusion-img2vid-xt",
             device="cpu",
@@ -68,7 +68,7 @@ class TestVideoDecoder:
     
     def test_initialization_with_defaults(self):
         """Test VideoDecoder with default parameters."""
-        from src.nexus.models.decoders import VideoDecoder
+        from src.models.decoders import VideoDecoder
         decoder = VideoDecoder()
         
         assert decoder.model_id == "stabilityai/stable-video-diffusion-img2vid-xt"
@@ -91,7 +91,7 @@ class TestVideoDecoder:
     @patch('src.nexus.models.decoders.StableVideoDiffusionPipeline')
     def test_load_with_cpu_offload(self, mock_pipeline_class, mock_pipeline):
         """Test loading with CPU offloading enabled."""
-        from src.nexus.models.decoders import VideoDecoder
+        from src.models.decoders import VideoDecoder
         decoder = VideoDecoder(
             device="cuda",
             enable_model_cpu_offload=True
@@ -107,7 +107,7 @@ class TestVideoDecoder:
         """Test loading with VAE slicing enabled."""
         mock_pipeline_class.from_pretrained.return_value = mock_pipeline
         
-        from src.nexus.models.decoders import VideoDecoder
+        from src.models.decoders import VideoDecoder
         decoder = VideoDecoder(enable_vae_slicing=True)
         
         decoder.load()
@@ -119,7 +119,7 @@ class TestVideoDecoder:
         """Test loading with VAE tiling enabled."""
         mock_pipeline_class.from_pretrained.return_value = mock_pipeline
         
-        from src.nexus.models.decoders import VideoDecoder
+        from src.models.decoders import VideoDecoder
         decoder = VideoDecoder(enable_vae_tiling=True)
         
         decoder.load()
@@ -394,7 +394,7 @@ class TestNexusDecoders:
         mock_vocoder = MagicMock()
         mock_vocoder_class.from_pretrained.return_value = mock_vocoder
         
-        from src.nexus.models.decoders import NexusDecoders
+        from src.models.decoders import NexusDecoders
         result = NexusDecoders.load_audio_vocoder(device="cpu")
         
         assert result == mock_vocoder
@@ -407,7 +407,7 @@ class TestNexusDecoders:
         mock_vae = MagicMock()
         mock_vae_class.from_pretrained.return_value = mock_vae
         
-        from src.nexus.models.decoders import NexusDecoders
+        from src.models.decoders import NexusDecoders
         result = NexusDecoders.load_image_decoder(device="cpu")
         
         assert result == mock_vae
@@ -421,7 +421,7 @@ class TestNexusDecoders:
         mock_decoder_class.return_value = mock_decoder
         mock_decoder.load.return_value = mock_decoder
         
-        from src.nexus.models.decoders import NexusDecoders
+        from src.models.decoders import NexusDecoders
         result = NexusDecoders.load_video_decoder(device="cuda")
         
         assert result == mock_decoder
@@ -438,7 +438,7 @@ class TestNexusDecoders:
         mock_decoder_class.return_value = mock_decoder
         mock_decoder.load.return_value = mock_decoder
         
-        from src.nexus.models.decoders import NexusDecoders
+        from src.models.decoders import NexusDecoders
         result = NexusDecoders.load_video_decoder(
             device="cuda",
             torch_dtype=torch.float16,
@@ -459,7 +459,7 @@ class TestVideoDecoderEdgeCases:
     @pytest.fixture
     def loaded_decoder(self):
         """Create a loaded decoder with mocked pipeline."""
-        from src.nexus.models.decoders import VideoDecoder
+        from src.models.decoders import VideoDecoder
         decoder = VideoDecoder(device="cpu")
         decoder.pipeline = MagicMock()
         

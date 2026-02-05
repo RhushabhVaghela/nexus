@@ -6,7 +6,7 @@ import pytest
 import os
 import shutil
 from pathlib import Path
-from src.nexus.utils.organize_datasets import organize
+from src.utils.organize_datasets import organize
 
 @pytest.fixture
 def complex_data_root(tmp_path):

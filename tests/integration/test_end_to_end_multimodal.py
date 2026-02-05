@@ -61,7 +61,7 @@ class TestMultimodalTrainingPipeline:
             
             mock_model_class.from_pretrained.return_value = mock_multimodal_model
             
-            from src.nexus.models.architect import NexusStudent
+            from src.models.architect import NexusStudent
             model = NexusStudent(base_model_id="test-model")
             return model
     
@@ -281,8 +281,8 @@ class TestMultimodalWithVideoDecoder:
     @patch('src.nexus.models.decoders.StableVideoDiffusionPipeline')
     def test_video_generation_to_understanding_pipeline(self, mock_pipeline_class):
         """Test pipeline from video generation to video understanding."""
-        from src.nexus.models.decoders import VideoDecoder
-        from src.nexus.models.architect import NexusStudent
+        from src.models.decoders import VideoDecoder
+        from src.models.architect import NexusStudent
         
         # Mock video decoder
         mock_pipeline = MagicMock()
@@ -372,7 +372,7 @@ class TestMultimodalExportImport:
              patch('src.nexus.models.architect.LoraConfig'), \
              patch('src.nexus.models.architect.CrossModalAlignment'):
             
-            from src.nexus.models.architect import NexusStudent
+            from src.models.architect import NexusStudent
             
             # Create model
             model = NexusStudent()

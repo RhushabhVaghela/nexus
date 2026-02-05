@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from src.nexus.utils.asset_manager import AssetManager
+from src.utils.asset_manager import AssetManager
 import shutil
 
 class TestAssetManager:

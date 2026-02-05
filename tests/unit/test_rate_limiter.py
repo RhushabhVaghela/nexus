@@ -18,7 +18,7 @@ import time
 import asyncio
 from unittest.mock import Mock, patch, MagicMock
 
-from src.nexus.utils.rate_limiter import (
+from src.utils.rate_limiter import (
     RateLimitResult,
     RateLimitConfig,
     RateLimitExceeded,
