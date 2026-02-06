@@ -2,20 +2,7 @@
 
 **Version:** 1.0  
 **Last Updated:** 2026-01-31  
-**Scope:** Complete guide to Universal SLI supporting 135+ model architectures
-
----
-
-## Table of Contents
-
-1. [Overview](#overview)
-2. [Architecture Support Matrix](#architecture-support-matrix)
-3. [Quick Start](#quick-start)
-4. [Architecture Families](#architecture-families)
-5. [MoE Support](#moe-support)
-6. [Performance Considerations](#performance-considerations)
-7. [Advanced Usage](#advanced-usage)
-8. [Troubleshooting](#troubleshooting)
+**Scope:** Complete guide to Universal SLI supporting 16 architecture families (~60-70 model variants)
 
 ---
 
@@ -27,35 +14,35 @@ Universal SLI (Sequential Layer Ingestion) is Nexus's revolutionary approach to 
 
 | Feature | Description |
 |---------|-------------|
-| **Universal Architecture Support** | 135+ model architectures across 12 families |
+| **Universal Architecture Support** | 16 architecture families across ~60-70 model variants |
 | **Automatic Detection** | Auto-detects architecture family from model config |
 | **MoE Support** | Native handling of Mixture of Experts models |
 | **Multi-Format Weights** | SafeTensors, PyTorch .bin, .pt, .pth |
-| **Memory Efficient** | Process 1T+ models on 16GB VRAM |
+| **Memory Efficient** | Process massive models on consumer GPUs |
 | **SSD Caching** | Persistent activation caching for resumable processing |
 
 ---
 
 ## Architecture Support Matrix
 
-### Supported Architecture Families (135+ Models)
+### Supported Architecture Families (~60-70 Models)
 
 | Family | Count | Model Types | Key Examples |
 |--------|-------|-------------|--------------|
-| **Llama-Based** | 35 | Llama, Mistral, Mixtral, Qwen2, DeepSeek | `meta-llama/Llama-3.2-1B`, `mistralai/Mistral-7B-v0.1` |
-| **GPT-Based** | 18 | GPT-2, GPT-J, GPT-NeoX, Falcon, Pythia | `gpt2`, `EleutherAI/gpt-j-6B` |
-| **Qwen-Based** | 14 | Qwen2, Qwen2.5, Qwen3, Qwen-VL, Qwen-Omni | `Qwen/Qwen2-7B`, `Qwen/Qwen3-30B-A3B` |
-| **MoE Architectures** | 15 | Mixtral, DeepSeek-MoE, Qwen2-MoE, Grok | `mistralai/Mixtral-8x7B-v0.1` |
-| **Encoder-Only** | 16 | BERT, RoBERTa, DeBERTa, ModernBERT | `bert-base-uncased`, `answerdotai/ModernBERT-base` |
-| **T5-Based** | 12 | T5, FLAN-T5, UL2, LongT5, ByT5 | `google/flan-t5-base`, `google/ul2` |
-| **Mamba/SSM** | 12 | Mamba, Mamba2, Jamba, Zamba, RWKV | `state-spaces/mamba-370m` |
-| **Gemma-Based** | 8 | Gemma, Gemma2, Gemma3 | `google/gemma-2b` |
-| **ChatGLM-Based** | 8 | ChatGLM, ChatGLM3, GLM-4, GLM-4-MoE | `THUDM/chatglm3-6b` |
-| **Phi-Based** | 6 | Phi, Phi2, Phi3, Phi4 | `microsoft/Phi-3-mini-4k-instruct` |
-| **BLOOM-Based** | 5 | BLOOM, BLOOMZ | `bigscience/bloom-560m` |
-| **OPT-Based** | 6 | OPT, OPT-IML | `facebook/opt-125m` |
+| **Llama-Based** | ~10 | Llama, Mistral, Mixtral, Qwen2, DeepSeek | `meta-llama/Llama-3.2-1B`, `mistralai/Mistral-7B-v0.1` |
+| **GPT-Based** | ~6 | GPT-2, GPT-J, GPT-NeoX, Falcon, Pythia | `gpt2`, `EleutherAI/gpt-j-6B` |
+| **Qwen-Based** | ~5 | Qwen2, Qwen2.5, Qwen3, Qwen-VL, Qwen-Omni | `Qwen/Qwen2-7B`, `Qwen/Qwen3-30B-A3B` |
+| **MoE Architectures** | ~4 | Mixtral, DeepSeek-MoE, Qwen2-MoE, Grok | `mistralai/Mixtral-8x7B-v0.1` |
+| **Encoder-Only** | ~8 | BERT, RoBERTa, DeBERTa, ModernBERT | `bert-base-uncased`, `answerdotai/ModernBERT-base` |
+| **T5-Based** | ~6 | T5, FLAN-T5, UL2, LongT5, ByT5 | `google/flan-t5-base`, `google/ul2` |
+| **Mamba/SSM** | ~5 | Mamba, Mamba2, Jamba, Zamba, RWKV | `state-spaces/mamba-370m` |
+| **Gemma-Based** | ~3 | Gemma, Gemma2, Gemma3 | `google/gemma-2b` |
+| **ChatGLM-Based** | ~3 | ChatGLM, ChatGLM3, GLM-4, GLM-4-MoE | `THUDM/chatglm3-6b` |
+| **Phi-Based** | ~4 | Phi, Phi2, Phi3, Phi4 | `microsoft/Phi-3-mini-4k-instruct` |
+| **BLOOM-Based** | ~2 | BLOOM, BLOOMZ | `bigscience/bloom-560m` |
+| **OPT-Based** | ~2 | OPT, OPT-IML | `facebook/opt-125m` |
 
-**Total: 135+ Model Architectures**
+**Total: ~60-70 Model Architectures with Full SLI Support**
 
 ### Weight Format Support
 
@@ -72,7 +59,7 @@ Universal SLI (Sequential Layer Ingestion) is Nexus's revolutionary approach to 
 ### Basic Usage
 
 ```python
-from src.nexus_final.sli import UniversalSLIIntegrator
+from src.nexus.models.sli import UniversalSLIIntegrator
 
 # Initialize for any supported architecture
 integrator = UniversalSLIIntegrator(
@@ -145,7 +132,7 @@ print(f"Is MoE: {summary['is_moe']}")
 **Usage Example:**
 
 ```python
-from src.nexus_final.sli import UniversalSLIIntegrator
+from src.nexus.models.sli import UniversalSLIIntegrator
 
 # Mistral model
 integrator = UniversalSLIIntegrator("mistralai/Mistral-7B-v0.1")
@@ -423,7 +410,7 @@ if summary['is_moe']:
 **MoE Configuration:**
 
 ```python
-from src.nexus_final.sli import MoEConfig
+from src.nexus.models.sli import MoEConfig
 
 # Custom MoE config
 moe_config = MoEConfig(
@@ -649,7 +636,7 @@ The Universal SLI automatically detects MoE models and handles:
 4. **Shared Experts**: Handles DeepSeek-style shared experts
 
 ```python
-from src.nexus_final.sli import MoEHandler, MoEConfig
+from src.nexus.models.sli import MoEHandler, MoEConfig
 
 # Manual MoE configuration
 moe_config = MoEConfig(
@@ -748,7 +735,7 @@ integrator.weight_loader.clear_shards(["model-00001-of-00010.safetensors"])
 ### Custom Architecture Registration
 
 ```python
-from src.nexus_final.sli import (
+from src.nexus.models.sli import (
     ArchitectureRegistry,
     ArchitectureFamily,
     get_registry
@@ -778,7 +765,7 @@ integrator = UniversalSLIIntegrator("my-org/custom-model")
 ### Working with the Layer Factory
 
 ```python
-from src.nexus_final.sli import UniversalLayerFactory, get_registry
+from src.nexus.models.sli import UniversalLayerFactory, get_registry
 
 factory = UniversalLayerFactory()
 
@@ -799,29 +786,18 @@ is_moe = factory.is_moe_model(config)
 ### Working with the Weight Loader
 
 ```python
-from src.nexus_final.sli import UniversalWeightLoader
+from src.nexus.models.sli import UniversalWeightLoader
 
 loader = UniversalWeightLoader(
     cache_dir="temp_shards",
     model_id="mistralai/Mistral-7B-v0.1"
 )
-
-# Get weight info
-info = loader.get_weight_info()
-print(f"Format: {info['format']}")
-print(f"Shards: {info['num_shards']}")
-
-# Load specific layer weights
-weights = loader.load_layer_weights(layer_idx=5, family=family)
-
-# Load embedding weights
-embeddings = loader.load_embedding_weights(family)
 ```
 
 ### Direct Architecture Registry Access
 
 ```python
-from src.nexus_final.sli import get_registry
+from src.nexus.models.sli import get_registry
 
 registry = get_registry()
 
@@ -844,7 +820,7 @@ print(f"Detected: {family.family_name}")
 ### Exception Handling
 
 ```python
-from src.nexus_final.sli import (
+from src.nexus.models.sli import (
     UniversalSLIIntegrator,
     UnsupportedArchitectureError,
     WeightLoadingError,

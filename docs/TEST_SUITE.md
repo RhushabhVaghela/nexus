@@ -1,6 +1,6 @@
 # Test Suite Documentation
 
-Complete reference for the Nexus Model test suite covering **~400 tests** across unit, integration, multimodal, reasoning, and E2E test categories.
+Complete reference for the Nexus Model test suite covering **~3,246 tests** across unit, integration, multimodal, reasoning, and E2E test categories.
 
 ---
 
@@ -8,13 +8,14 @@ Complete reference for the Nexus Model test suite covering **~400 tests** across
 
 | Category | Tests | Duration | Command |
 |----------|-------|----------|---------|
-| Unit | 180 | ~10s | `pytest tests/unit/ -v` |
-| Integration | 68 | ~45s | `pytest tests/integration/ -v` |
-| Multimodal | 20 | ~15s | `pytest tests/multimodal/ -v` |
-| Nexus Final | 10 | ~30s | `pytest tests/nexus_final/ -v` |
-| E2E | 21 | ~60s | `pytest tests/e2e/ -v` |
-| Streaming | 10 | ~5s | `pytest tests/unit_streaming/ -v` |
-| **Total** | **346** | **~120s** | `pytest tests/ --full-tests -v` |
+| Unit | ~180 | ~10s | `pytest tests/unit/ -v` |
+| Integration | ~68 | ~45s | `pytest tests/integration/ -v` |
+| Multimodal | ~20 | ~15s | `pytest tests/multimodal/ -v` |
+| Nexus Final | ~10 | ~30s | `pytest tests/nexus_final/ -v` |
+| Optimization | ~227 | ~60s | `pytest tests/test_*.py -v` |
+| E2E | ~21 | ~60s | `pytest tests/e2e/ -v` |
+| Streaming | ~10 | ~5s | `pytest tests/unit_streaming/ -v` |
+| **Total** | **~3,246** | **~180s** | `pytest tests/ --full-tests -v` |
 
 ---
 

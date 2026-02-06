@@ -1,88 +1,96 @@
 #!/usr/bin/env python3
 """
 25_realtime_streaming.py
-Orchestrates the Real-Time Omni-Streaming Pipeline.
-Combines:
-- StreamingMemory (Infinite Context)
-- VisionStreaming (Video)
-- TTSStreamer (Speech Output)
-"""
-import time
-# torch will be imported in main or check_env
-import sys
-from pathlib import Path
+DEPRECATED: This script is deprecated as of 2025.
 
+The real-time streaming pipeline has been moved to individual components:
+- src/streaming/memory.py: StreamingMemory for infinite context
+- src/streaming/vision.py: VisionStreamBuffer for video processing
+- src/streaming/tts.py: TTSStreamer for speech synthesis
+- src/streaming/joint.py: JointStreamingOrchestrator for combined streaming
+
+For actual usage, use the JointStreamingOrchestrator directly:
+    from src.streaming.joint import JointStreamingOrchestrator
+
+Example usage:
+    orchestrator = JointStreamingOrchestrator()
+    orchestrator.initialize_session("session_id")
+    async for chunk in orchestrator.process_stream(user_input):
+        print(chunk)
+
+This deprecated script is kept for compatibility but outputs a warning.
+"""
+
+import warnings
+import sys
 import os
+import time
+from pathlib import Path
 
 # Add src to path
 sys.path.append(str(Path(__file__).parent))
 
-# local streaming and multimodal imports will be moved to main
 
 def check_env():
     """Verify environment dependencies."""
-    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+    env = os.environ.get("CONDA_DEFAULT_ENV")
+    if env != "nexus":
         print("[ERROR] Must be run in 'nexus' conda environment.")
         return False
     return True
 
-# Globals to be initialized in main()
-logger = None
 
 def main():
+    """Deprecated main function - shows warning and demonstrates new usage."""
     if not check_env():
-         return
-         
-    from streaming.memory import StreamingMemory
-    from streaming.tts import TTSStreamer
-    from streaming.vision import VisionStreamBuffer
-    from multimodal.model import OmniMultimodalLM
+        return
 
-    print("🚀 Starting Real-Time Omni-Streaming Session...")
-    print("---------------------------------------------")
-    
-    # 1. Initialize Components
-    memory = StreamingMemory(sink_size=4, window_size=2048)
-    tts = TTSStreamer(model_name="Chatterbox-Turbo")
-    vision = VisionStreamBuffer(max_frames=16)
-    
-    print(f"🧠 Memory: StreamingVLM (Sinks={memory.sink_size}, Window={memory.window_size})")
-    print(f"🗣️  TTS: {tts.model_name} (<200ms latency)")
-    print(f"👁️  Vision: Sliding Window ({vision.max_frames} frames)")
-    
-    # 2. Mock Session Loop
-    print("\n[Session Started] Listening & Watching... (Press Ctrl+C to stop)")
-    
+    # Issue deprecation warning
+    warnings.warn(
+        "This script (25_realtime_streaming.py) is deprecated as of 2025. "
+        "Use src/streaming/joint.py with JointStreamingOrchestrator instead. "
+        "See docstring for details.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
+    print("⚠️  DEPRECATION WARNING")
+    print("=" * 60)
+    print("This script is deprecated. Use the new streaming modules:")
+    print()
+    print("  from src.streaming.joint import JointStreamingOrchestrator")
+    print()
+    print("  orchestrator = JointStreamingOrchestrator()")
+    print("  orchestrator.initialize_session('session_id')")
+    print("  async for chunk in orchestrator.process_stream(input):")
+    print("      print(chunk)")
+    print()
+    print("Available streaming components:")
+    print("  - src/streaming/memory.py: StreamingMemory (Attention Sinks)")
+    print("  - src/streaming/vision.py: VisionStreamBuffer (Video frames)")
+    print("  - src/streaming/tts.py: TTSStreamer (Speech synthesis)")
+    print("  - src/streaming/joint.py: JointStreamingOrchestrator (All-in-one)")
+    print("=" * 60)
+
+    # Demonstrate basic component initialization (non-functional demo)
     try:
-        # Simulate an hour-long loop
-        for step in range(10): # Just 10 steps for demo
-            
-            # A. Input Handling (Mock)
-            # frame = capture_camera()
-            # vision.add_frame(frame)
-            
-            # audio = capture_mic()
-            # audio_features = whisper.encode(audio)
-            
-            # B. LLM Inference
-            # output_tokens = []
-            print(f"   Step {step}: User input received. Processing...")
-            
-            # Mock LLM generation
-            response_text_stream = (token for token in ["Hello", " ", "human", ".", " ", "I", " ", "see", " ", "you", "!", "\n"])
-            
-            # C. TTS Synthesis (Async)
-            # tts.synthesize_stream(response_text_stream)
-            
-            # D. Memory Update
-            # memory.update_cache(model.past_key_values)
-            
-            time.sleep(0.5) 
-            
-    except KeyboardInterrupt:
-        print("\nStopping...")
-        
-    print("✅ Session Ended.")
+        from src.streaming.memory import StreamingMemory
+        from src.streaming.vision import VisionStreamBuffer
+        from src.streaming.tts import TTSStreamer
+
+        print("\n📦 Available Components (import successful):")
+        print(f"  🧠 StreamingMemory: {StreamingMemory.__doc__.strip().split('.')[0]}")
+        print(
+            f"  👁️ VisionStreamBuffer: {VisionStreamBuffer.__doc__.strip().split('.')[0]}"
+        )
+        print(f"  🗣️ TTSStreamer: {TTSStreamer.__doc__.strip().split('.')[0]}")
+        print("\n✅ Import verification passed. Components are available.")
+        print("🔗 See src/streaming/joint.py for full orchestration pipeline.")
+
+    except ImportError as e:
+        print(f"\n❌ Import error: {e}")
+        print("💡 Some streaming components may require additional dependencies.")
+
 
 if __name__ == "__main__":
     main()

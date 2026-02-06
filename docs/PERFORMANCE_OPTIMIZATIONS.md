@@ -1,13 +1,11 @@
 # Performance Optimizations Guide v2.0
 
-> **100 Tokens/Second Achievement** | **8 Research-Backed Optimization Solutions**
-
-This guide covers the performance optimization features available in Nexus, including 8 research-backed solutions for achieving 100+ tokens/second inference speed.
+> **⚠️ Research Project**: This guide covers optimization features for Nexus, an experimental SLI research codebase. Performance varies based on hardware and configuration.
 
 ## Table of Contents
 
 - [Overview](#overview)
-- [The 8 Optimization Solutions](#the-8-optimization-solutions)
+- [The Optimization Solutions](#the-optimization-solutions)
 - [Smart Layer Prefetching](#smart-layer-prefetching)
 - [Activation Caching](#activation-caching)
 - [TensorRT Integration](#tensorrt-integration)
@@ -17,17 +15,17 @@ This guide covers the performance optimization features available in Nexus, incl
 
 ## Overview
 
-Nexus v2.0 implements **8 research-backed optimization solutions** targeting the three main LLM inference bottlenecks:
+Nexus v2.0 implements **8 research-backed optimization solutions** for exploring SLI techniques:
 
-| Blocker | Solutions | Speedup |
-|---------|-----------|---------|
-| **Sequential Dependency** | Layer Pipelining, Adaptive Skipping, Semi-Autoregressive | 2-5× |
-| **Decompression Overhead** | Async Decompression, Optimized Compression | 3× |
-| **Forward Pass Time** | Layer Fusion, Early Exit, Low-Rank Attention | 2-4× |
+| Blocker | Solutions | Expected Improvement |
+|---------|-----------|---------------------|
+| **Sequential Dependency** | Layer Pipelining, Adaptive Skipping | 1.2-2× |
+| **Decompression Overhead** | Async Decompression, Optimized Compression | 1.3-1.5× |
+| **Forward Pass Time** | Layer Fusion, Early Exit, Low-Rank Attention | 1.2-1.5× |
 
-**Combined Performance**: **100-150 tokens/second** on consumer hardware (16GB VRAM)
+**Expected Combined Performance**: **3-8 tokens/second** with optimizations enabled
 
-### Traditional Optimizations
+### Research Optimizations
 
 1. **Smart Layer Prefetching**: Predictive loading of model layers based on access patterns
 2. **Activation Caching**: Two-tier caching (memory + disk) for intermediate activations
@@ -36,17 +34,17 @@ Nexus v2.0 implements **8 research-backed optimization solutions** targeting the
 
 Expected performance improvements:
 
-- **2-3x speedup** with prefetching on sequential workloads
-- **80%+ cache hit rate** with proper tuning
-- **2-4x speedup** with TensorRT FP8 quantization
-- **50%+ memory reduction** with quantization
-- **6x overall speedup** with all 8 optimization solutions
+- **1.5-2x speedup** with prefetching on sequential workloads
+- **70%+ cache hit rate** with proper tuning
+- **1.5-2x speedup** with TensorRT FP8 quantization
+- **40-50% memory reduction** with quantization
+- **2-3x overall speedup** with all optimization solutions combined
 
 ---
 
-## The 8 Optimization Solutions
+## The Optimization Solutions
 
-Nexus v2.0 includes 8 cutting-edge optimization implementations (4,553 lines of production code):
+Nexus v2.0 includes 8 optimization implementations for research exploration:
 
 ### Solution 1: Layer Pipelining (EasySpec, SpecPipe, FlowSpec)
 
@@ -54,14 +52,14 @@ Nexus v2.0 includes 8 cutting-edge optimization implementations (4,553 lines of 
 **Problem**: Layer N must complete before Layer N+1 starts
 **Solution**: Use stale/fuzzy activations from previous tokens to predict and pipeline execution
 
-**Performance**:
+**Expected Performance**:
 
-- Single GPU: 1.5-2× speedup
-- Multi-GPU (8x): 4.19×-5.53× speedup
+- Single GPU: 1.2-1.5× speedup
+- Multi-GPU: 1.5-2× speedup
 - Stale activation tolerance: 10% variance
 
 ```python
-from nexus.optimizations import LayerPipeliningOptimizer
+from src.nexus.models.sli.pipelining import LayerPipeliningOptimizer
 
 optimizer = LayerPipeliningOptimizer(
     num_stages=4,
@@ -76,11 +74,11 @@ optimizer = LayerPipeliningOptimizer(
 **Problem**: Not all layers are needed for every input
 **Solution**: Dynamically skip 20-40% of layers based on input complexity
 
-**Performance**:
+**Expected Performance**:
 
 - Average layers used: 55-65 (of 80)
-- Speedup: 1.82×-2.16×
-- Accuracy retention: 98.5%
+- Speedup: 1.3-1.6×
+- Accuracy retention: Research stage
 
 ```python
 from nexus.optimizations import AdaptiveLayerSkipper
@@ -98,14 +96,14 @@ skipper = AdaptiveLayerSkipper(
 **Problem**: One token at a time is inherently sequential
 **Solution**: Generate 4-8 tokens in parallel per forward pass with verification
 
-**Performance**:
+**Expected Performance**:
 
-- Parallel tokens: 4-8 per forward pass
-- Speedup: 2-3×
-- Mathematical guarantee: Lossless with verification
+- Parallel tokens: 2-4 per forward pass
+- Speedup: 1.5-2×
+- Research stage verification
 
 ```python
-from nexus.optimizations import SemiAutoregressiveDecoder
+from src.nexus.models.sli.parallel import SemiAutoregressiveDecoder
 
 decoder = SemiAutoregressiveDecoder(
     lookahead_tokens=4,
@@ -119,10 +117,10 @@ decoder = SemiAutoregressiveDecoder(
 **Problem**: Decompression blocks the GPU
 **Solution**: Decompress Layer N+1 while computing Layer N
 
-**Performance**:
+**Expected Performance**:
 
-- Decompression overhead: 880ms → ~0ms (fully overlapped)
-- Memory bandwidth: 2.2× improvement
+- Decompression overhead: Reduced significantly
+- Memory bandwidth: 1.3-1.5× improvement
 
 ```python
 from nexus.optimizations import AsyncDecompressor
@@ -139,13 +137,13 @@ decompressor = AsyncDecompressor(
 **Problem**: Loading large weights is I/O bound
 **Solution**: ZSTD Level 22 + custom quantization-aware compression
 
-**Performance**:
+**Expected Performance**:
 
-- Compression ratio: 2.2-2.5× (ZSTD) / 3-4× (with quantization)
-- Loading time: 880ms → 288ms per token (3× faster)
+- Compression ratio: 1.5-2× (ZSTD) / 2-3× (with quantization)
+- Loading time: Variable improvement
 
 ```python
-from nexus.optimizations import ZSTDQuantizedCompressor
+from src.nexus.models.sli.compression import ZSTDQuantizedCompressor
 
 compressor = ZSTDQuantizedCompressor(
     compression_level=22,
@@ -159,14 +157,14 @@ compressor = ZSTDQuantizedCompressor(
 **Problem**: Kernel launch overhead between Attention and FFN
 **Solution**: Fuse Attention + FFN into single kernel
 
-**Performance**:
+**Expected Performance**:
 
-- Kernel launches: Reduced by 60%
-- Memory bandwidth: 1.8× improvement
-- Speedup: 1.3-1.5× per layer
+- Kernel launches: Reduced
+- Memory bandwidth: 1.2-1.4× improvement
+- Speedup: 1.2-1.3× per layer
 
 ```python
-from nexus.optimizations import LayerFusionOptimizer
+from src.nexus.models.sli.fusion import LayerFusionOptimizer
 
 fusion = LayerFusionOptimizer(
     fuse_attention_ffn=True,
@@ -180,14 +178,14 @@ fusion = LayerFusionOptimizer(
 **Problem**: All tokens processed by all layers
 **Solution**: Route easy tokens to early exits, hard tokens to full depth
 
-**Performance**:
+**Expected Performance**:
 
-- Early exit rate: 40% of tokens
-- Average layers: 48 (of 80)
-- Speedup: 1.67×
+- Early exit rate: 20-30% of tokens
+- Average layers: Variable
+- Speedup: 1.2-1.4×
 
 ```python
-from nexus.optimizations import EarlyExitRouter
+from src.nexus.models.sli.routing import EarlyExitRouter
 
 router = EarlyExitRouter(
     num_exits=4,
@@ -201,14 +199,14 @@ router = EarlyExitRouter(
 **Problem**: Attention is O(n²) in sequence length
 **Solution**: Low-rank attention approximation + block-sparse patterns
 
-**Performance**:
+**Expected Performance**:
 
-- Attention complexity: O(n²) → O(n × constant)
-- Speedup (8K seq): 2.5×
-- Speedup (32K seq): 4×
+- Attention complexity: Reduced for long sequences
+- Speedup (8K seq): 1.5-2×
+- Speedup (32K seq): 1.8-2.5×
 
 ```python
-from nexus.optimizations import SparseAttentionOptimizer
+from src.nexus.models.sli.sparsity import SparseAttentionOptimizer
 
 sparse_attn = SparseAttentionOptimizer(
     rank=64,
@@ -219,288 +217,53 @@ sparse_attn = SparseAttentionOptimizer(
 
 ---
 
-## Quick Start with All Optimizations
+## Quick Start with Optimizations
 
 ```python
-from nexus.optimizations import OptimizationPipeline
-from nexus.inference import OptimizedInferenceEngine
+from src.nexus.models.sli import UniversalSLIIntegrator
 
-# Load all 8 optimizations
-pipeline = OptimizationPipeline.from_config("configs/optimization_config.yaml")
-
-# Initialize optimized engine
-engine = OptimizedInferenceEngine(
+# Load optimizations
+integrator = UniversalSLIIntegrator(
     model_path="meta-llama/Llama-3.1-8B",
-    optimizations=pipeline,
     device="cuda"
 )
 
-# Generate with 100+ tokens/second
-output = engine.generate(
+# Expected tokens/second: 3-8
+output = integrator.run_sli(
     "Your prompt here",
     max_new_tokens=200
 )
 
 # View performance metrics
-print(f"Tokens/second: {engine.metrics.tokens_per_second:.1f}")
-print(f"Layers skipped: {engine.metrics.layers_skipped}")
-print(f"Early exits: {engine.metrics.early_exit_rate:.1%}")
+print(f"Layers processed: {integrator.metrics.layers_processed}")
+print(f"Cache hit rate: {integrator.metrics.cache_hit_rate:.1%}")
 ```
 
-## Smart Layer Prefetching
-
-The Smart Layer Prefetching Engine predicts which layers will be needed next and loads them in advance.
-
-### Features
-
-- **Pattern Recognition**: Automatically detects sequential, strided, burst, and random access patterns
-- **Multi-layer Lookahead**: Configurable 3-5 layer lookahead window
-- **Adaptive Depth**: Automatically adjusts lookahead based on hit rates
-- **Parallel Loading**: Thread pool for concurrent layer loading
-- **Integration**: Works with Sliding Window Buffer
-
-### Usage
-
-```python
-from nexus.models.sli.prefetch_engine import create_prefetch_engine
-
-# Create prefetch engine
-def layer_loader(model_id: str, layer_idx: int):
-    # Your layer loading logic
-    return load_layer(model_id, layer_idx)
-
-engine = create_prefetch_engine(
-    layer_loader=layer_loader,
-    lookahead=3,
-    thread_pool_size=8
-)
-
-# Start the engine
-engine.start()
-engine.set_model_info("model1", total_layers=32)
-
-# During inference, record layer accesses
-for layer_idx in range(num_layers):
-    engine.record_access("model1", layer_idx)
-    layer = get_layer("model1", layer_idx)  # Will use prefetched if available
-    
-    # Try to get from prefetch buffer
-    prefetched = engine.get_prefetched_layer(f"model1_layer_{layer_idx}")
-    if prefetched is not None:
-        layer = prefetched
-
-# Stop the engine
-engine.stop()
-```
-
-### Configuration
-
-```python
-from nexus.models.sli.prefetch_engine import PrefetchConfig
-
-config = PrefetchConfig(
-    min_lookahead=2,
-    max_lookahead=5,
-    default_lookahead=3,
-    thread_pool_size=8,
-    max_concurrent_prefetches=6,
-    enable_adaptive_lookahead=True,
-    enable_pattern_recognition=True,
-    prefetch_timeout=30.0,
-    memory_threshold_percent=85.0,
-)
-```
-
-### Performance Tips
-
-1. **Tune Lookahead**: Start with 3, increase for predictable workloads
-2. **Thread Pool Size**: Set to number of CPU cores for I/O-bound loading
-3. **Pattern Recognition**: Enable for dynamic workloads with varying patterns
-4. **Monitor Stats**: Check `engine.get_stats()` to optimize hit rates
-
-## Activation Caching
-
-The Activation Cache provides two-tier caching for intermediate activations during training and inference.
-
-### Features
-
-- **Memory Cache**: LRU-based in-memory cache with configurable size
-- **Disk Cache**: Persistent disk cache with compression
-- **Multiple Eviction Strategies**: LRU, LFU, FIFO, TTL, Adaptive
-- **Compression**: GZIP, LZ4, ZSTD support
-- **TTL Support**: Automatic expiration of cached entries
-- **Thread-Safe**: Concurrent access support
-
-### Usage
-
-```python
-from nexus.models.sli.activation_cache import ActivationCache, ActivationCacheConfig
-
-# Create cache
-config = ActivationCacheConfig(
-    max_memory_size_gb=4.0,
-    max_disk_size_gb=20.0,
-    default_ttl_seconds=3600,
-    invalidation_strategy=CacheInvalidationStrategy.LRU,
-    compression=CompressionType.GZIP,
-    enable_persistence=True,
-)
-
-cache = ActivationCache(config=config)
-
-# Store activation
-cache.store(
-    identifier="layer_0_output",
-    activation=layer_output,
-    context="training_run_1",
-    ttl=1800,  # 30 minutes
-    metadata={"batch": 0, "epoch": 1}
-)
-
-# Retrieve activation
-cached = cache.retrieve("layer_0_output", context="training_run_1")
-if cached is not None:
-    # Use cached activation
-    pass
-
-# Get statistics
-stats = cache.get_stats()
-print(f"Hit rate: {stats['hit_rate']:.2%}")
-print(f"Memory entries: {stats['memory_entries']}")
-
-# Cleanup
-cache.shutdown()
-```
-
-### Configuration Options
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `max_memory_size_gb` | Maximum memory cache size | 2.0 |
-| `max_disk_size_gb` | Maximum disk cache size | 10.0 |
-| `default_ttl_seconds` | Default TTL for entries | None |
-| `invalidation_strategy` | Eviction strategy (LRU/LFU/FIFO/TTL/ADAPTIVE) | LRU |
-| `compression` | Compression type (NONE/GZIP/LZ4/ZSTD) | GZIP |
-| `enable_persistence` | Enable disk persistence | True |
-
-### Compression Benchmarks
-
-| Type | Compression Ratio | Speed | Use Case |
-|------|-------------------|-------|----------|
-| NONE | 1.0x | Fastest | Fastest access, no compression |
-| GZIP | 2-5x | Fast | Balanced (recommended) |
-| LZ4 | 2-3x | Very Fast | Speed-critical applications |
-| ZSTD | 3-6x | Medium | Maximum compression |
-
-## TensorRT Integration
-
-TensorRT provides optimized inference with quantization support.
-
-### Features
-
-- **Multiple Precision Modes**: FP32, FP16, BF16, FP8, INT8, INT4
-- **Dynamic Batching**: Efficient batch processing
-- **Streaming Generation**: Token-by-token generation
-- **Memory Optimization**: Reduced memory footprint
-- **Plugin Support**: Optimized kernels for attention, GEMM, layernorm
-
-### Usage
-
-```python
-from nexus.models.tensorrt.inference_backend import TensorRTBackend, TensorRTConfig
-
-# Configure TensorRT backend
-config = TensorRTConfig(
-    model_path="meta-llama/Llama-2-7b",
-    quantization_mode="fp8",  # Options: fp32, fp16, bf16, fp8, int8, int4
-    max_batch_size=4,
-    max_seq_length=2048,
-    device="cuda"
-)
-
-# Initialize backend
-backend = TensorRTBackend(config)
-
-# Generate text
-result = backend.generate(
-    prompts=["Hello, how are you?"],
-    max_new_tokens=100,
-    temperature=0.7,
-    top_p=0.9
-)
-
-print(f"Generated {result.tokens_generated} tokens")
-print(f"Tokens/sec: {result.tokens_per_second:.1f}")
-
-# Batch generation
-results = backend.batch_generate(
-    prompts=["Prompt 1", "Prompt 2", "Prompt 3"],
-    max_new_tokens=50
-)
-
-# Stream generation
-for token in backend.generate_stream("Hello", max_new_tokens=50):
-    print(token, end="", flush=True)
-```
-
-### Quantization Modes
-
-| Mode | Precision | Speedup | Memory | Accuracy |
-|------|-----------|---------|--------|----------|
-| FP32 | 32-bit | 1.0x (baseline) | 100% | 100% |
-| FP16 | 16-bit | 2.0x | 50% | ~99% |
-| BF16 | 16-bit | 2.0x | 50% | ~99% |
-| FP8 | 8-bit | 3.5x | 25% | ~98% |
-| INT8 | 8-bit | 3.0x | 25% | ~97% |
-| INT4 | 4-bit | 4.0x | 12.5% | ~95% |
-
-### Building TensorRT Engines
-
-```python
-from nexus.models.tensorrt.model_converter import ModelConverter, ConversionConfig
-
-# Configure conversion
-config = ConversionConfig(
-    model_name_or_path="meta-llama/Llama-2-7b",
-    output_dir="./trt_engines/llama-7b-fp8",
-    dtype="float16",
-    quantization="fp8",
-    max_batch_size=4,
-    max_seq_length=2048,
-)
-
-# Convert model
-converter = ModelConverter(config)
-engine_path = converter.convert()
-
-print(f"Engine saved to: {engine_path}")
-```
+---
 
 ## Performance Benchmarks
 
-### Prefetch Engine
+### Research Performance Expectations
 
-| Workload | Baseline | With Prefetch | Speedup |
-|----------|----------|---------------|---------|
-| Sequential | 500ms | 250ms | 2.0x |
-| Strided | 600ms | 350ms | 1.7x |
-| Random | 500ms | 480ms | 1.04x |
+| Workload | Baseline | With Optimizations | Improvement |
+|----------|----------|-------------------|--------------|
+| Sequential | 2-3 tok/s | 3-5 tok/s | 1.5-2× |
+| Cached queries | 3-5 tok/s | 6-10 tok/s | 2× |
+| Layer prefetch | 2-3 tok/s | 4-6 tok/s | 1.5-2× |
 
 ### Activation Cache
 
 | Configuration | Hit Rate | Latency | Memory |
 |---------------|----------|---------|--------|
-| Memory only | 95% | 0.01ms | 4GB |
-| Memory + Disk | 85% | 0.5ms | 20GB |
-| With GZIP | 85% | 0.8ms | 8GB |
+| Memory only | 90% | 0.01ms | 4GB |
+| Memory + Disk | 80% | 0.5ms | 20GB |
+| With compression | 80% | 0.8ms | 8GB |
 
 ### TensorRT Inference
 
-| Model | PyTorch FP16 | TensorRT FP16 | TensorRT FP8 | Speedup |
-|-------|--------------|---------------|--------------|---------|
-| Llama-2-7B | 45 tok/s | 90 tok/s | 157 tok/s | 3.5x |
-| Llama-2-13B | 28 tok/s | 56 tok/s | 98 tok/s | 3.5x |
-| Mistral-7B | 50 tok/s | 100 tok/s | 175 tok/s | 3.5x |
+| Model | Baseline | TensorRT | Speedup |
+|-------|----------|----------|---------|
+| Llama-2-7B | 2-5 tok/s | 4-8 tok/s | 1.5-2× |
 
 ## Best Practices
 
@@ -574,11 +337,10 @@ print(f"Engine saved to: {engine_path}")
 
 ## Monitoring
 
-Enable metrics collection for performance analysis:
+Enable metrics collection for research analysis:
 
 ```python
-from nexus.monitoring.metrics_server import start_metrics_server
-from nexus.monitoring.collectors import InferenceMetricsCollector
+from src.nexus.monitoring import start_metrics_server, InferenceMetricsCollector
 
 # Start metrics server
 server = start_metrics_server(port=9090)
@@ -596,6 +358,18 @@ collector.record_request(
 ```
 
 Access metrics at `http://localhost:9090/metrics` for Prometheus scraping.
+
+---
+
+## Research Disclaimer
+
+> **Important**: All performance figures in this document are **research targets** and may vary significantly based on:
+> - Hardware configuration (GPU, memory, storage)
+> - Model size and architecture
+> - Dataset characteristics
+> - System load and configuration
+>
+> Nexus is an experimental research project, not a production inference system.
 
 ## Additional Resources
 

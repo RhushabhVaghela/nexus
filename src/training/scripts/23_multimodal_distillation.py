@@ -18,11 +18,39 @@ PROJECT_ROOT = Path(__file__).parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.nexus.utils.logging_config import setup_logger, log_header, log_completion
 try:
-    from src.nexus.multimodal import MultimodalDataProcessor
+    from src.nexus.utils.logging_config import setup_logger, log_header, log_completion
+except ImportError:
+    # Fallback if logging config not available
+    import logging
+
+    def setup_logger(name, log_file):
+        logger = logging.getLogger(name)
+        handler = logging.FileHandler(log_file)
+        handler.setFormatter(
+            logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        )
+        logger.addHandler(handler)
+        logger.setLevel(logging.INFO)
+        return logger
+
+    def log_header(logger, title, params):
+        logger.info(f"=== {title} ===")
+        for k, v in params.items():
+            logger.info(f"  {k}: {v}")
+
+    def log_completion(logger, task, total, train, val, test, time_taken):
+        logger.info(f"=== {task} Complete ===")
+        logger.info(
+            f"  Total: {total}, Train: {train}, Val: {val}, Test: {test}, Time: {time_taken:.2f}s"
+        )
+
+
+try:
+    from src.multimodal.distillation import MultimodalDataProcessor
 except ImportError:
     MultimodalDataProcessor = None
+
 
 def check_env():
     """Verify environment dependencies."""
@@ -31,6 +59,7 @@ def check_env():
         return False
     return True
 
+
 # Globals to be initialized in main()
 logger = None
 
@@ -38,40 +67,48 @@ CONFIG = {
     "default_input_base": "/mnt/e/data/multimodal",
 }
 
+
 def main():
     if not check_env():
-         sys.exit(1)
-         
+        sys.exit(1)
+
     global logger
     logger = setup_logger(__name__, "logs/multimodal_distillation.log")
 
     parser = argparse.ArgumentParser()
-    # Modality arg is optional now as processor handles all found in dir, 
+    # Modality arg is optional now as processor handles all found in dir,
     # but we keep args for compatibility or specific targeting if we want to expand processor later.
-    parser.add_argument("--modality", choices=["vision", "audio", "video"], help="Optional: specific modality (processor handles all found)")
+    parser.add_argument(
+        "--modality",
+        choices=["vision", "audio", "video"],
+        help="Optional: specific modality (processor handles all found)",
+    )
     parser.add_argument("--teacher", default="mock-teacher", help="Ignored (Historic)")
     parser.add_argument("--input-dir", default=None)
-    parser.add_argument("--output-dir", default=None, help="Ignored (Processor uses internal structure)")
-    
+    parser.add_argument(
+        "--output-dir", default=None, help="Ignored (Processor uses internal structure)"
+    )
+
     args = parser.parse_args()
-    
+
     if args.input_dir:
         input_dir = Path(args.input_dir)
     else:
         input_dir = Path(CONFIG["default_input_base"])
-        
-    log_header(logger, "MULTIMODAL DATA PROCESSING", {
-        "Input": str(input_dir),
-        "Action": "Format & Split (Train/Val/Test)"
-    })
-    
+
+    log_header(
+        logger,
+        "MULTIMODAL DATA PROCESSING",
+        {"Input": str(input_dir), "Action": "Format & Split (Train/Val/Test)"},
+    )
+
     if not input_dir.exists():
         logger.error(f"Input directory not found: {input_dir}")
         logger.info("Please run 'run_multimodal_pipeline.sh download' first.")
         sys.exit(1)
-        
+
     processor = MultimodalDataProcessor(str(input_dir))
-    
+
     # Process specific or all
     if args.modality == "vision":
         if (input_dir / "vision").exists():
@@ -82,8 +119,9 @@ def main():
     else:
         # Run all found
         processor.run()
-    
+
     log_completion(logger, "Multimodal Processing", 0, 0, 0, 0, 0.0)
+
 
 if __name__ == "__main__":
     main()

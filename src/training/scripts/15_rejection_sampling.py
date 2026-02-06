@@ -19,30 +19,39 @@ import random
 import logging
 from pathlib import Path
 from typing import List
+
 try:
     from unsloth import FastLanguageModel
 except ImportError:
     FastLanguageModel = None
 
 UNSLOTH_AVAILABLE = False
+
+
 def check_env():
     """Verify environment dependencies."""
     global UNSLOTH_AVAILABLE
     try:
-        pass
+        # Verify unsloth is available by attempting import
+        from unsloth import FastLanguageModel
+
         UNSLOTH_AVAILABLE = True
+        print("[INFO] Unsloth dependency verified")
     except ImportError:
         print("[ERROR] Missing dependency: unsloth")
+        UNSLOTH_AVAILABLE = False
         return False
-        
+
     if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
         print("[ERROR] Must be run in 'nexus' conda environment.")
         return False
     return True
 
+
 # Globals to be initialized in main()
 CONFIG = None
 logger = None
+
 
 def parse_json_response(response: str) -> List[Dict[str, Any]]:
     """Attempt to parse model's JSON response"""
@@ -53,10 +62,12 @@ def parse_json_response(response: str) -> List[Dict[str, Any]]:
     except:
         return []
 
+
 def correctness_reward(response_steps: List[Dict], expected: str, domain: str) -> float:
     """Grade correctness: 0-1.0 based on parsed steps"""
-    if not response_steps: return 0.0 # Failed to parse
-    
+    if not response_steps:
+        return 0.0  # Failed to parse
+
     # Extract final answer or last action info
     final_content = ""
     for step in reversed(response_steps):
@@ -65,7 +76,7 @@ def correctness_reward(response_steps: List[Dict], expected: str, domain: str) -
             break
         if "action" in step:
             final_content += step.get("action", "") + " "
-            
+
     if not final_content:
         # Fallback: check raw text of last step
         final_content = str(response_steps[-1])
@@ -79,50 +90,59 @@ def correctness_reward(response_steps: List[Dict], expected: str, domain: str) -
             return 1.0
         return 0.0
     else:  # fullstack
-        if len(final_content) > 20: # Heuristic for meaningful output
+        if len(final_content) > 20:  # Heuristic for meaningful output
             return 1.0
         return 0.3
+
 
 def code_quality_reward(response_steps: List[Dict]) -> float:
     """Grade code quality from actions"""
     score = 0.5
-    if not response_steps: return 0.0
-    
+    if not response_steps:
+        return 0.0
+
     code_content = ""
     for step in response_steps:
-        if "input" in step: # 'input' often contains code in write_file
+        if "input" in step:  # 'input' often contains code in write_file
             code_content += str(step.get("input", ""))
-            
-    if "->" in code_content or ": " in code_content: score += 0.2
-    if "try" in code_content: score += 0.2
-    
+
+    if "->" in code_content or ": " in code_content:
+        score += 0.2
+    if "try" in code_content:
+        score += 0.2
+
     return min(1.0, score)
+
 
 def integration_reward(response_steps: List[Dict]) -> float:
     """Check for tool usage"""
     score = 0.0
-    if not response_steps: return 0.0
-    
+    if not response_steps:
+        return 0.0
+
     tools_used = set()
     for step in response_steps:
         if "action" in step:
-            tools_used.add(step.get("action", "").split(":")[0]) # rough tool name
-            
-    if len(tools_used) > 1: score += 0.5
-    if len(tools_used) > 2: score += 0.5
-    
+            tools_used.add(step.get("action", "").split(":")[0])  # rough tool name
+
+    if len(tools_used) > 1:
+        score += 0.5
+    if len(tools_used) > 2:
+        score += 0.5
+
     return min(1.0, score)
+
 
 def grade_response(response: str, expected: str, domain: str) -> float:
     """Combined grading score"""
     steps = parse_json_response(response)
-    if not steps: 
-        return 0.0 # Immediate fail if not valid JSON
-        
+    if not steps:
+        return 0.0  # Immediate fail if not valid JSON
+
     correctness = correctness_reward(steps, expected, domain)
     quality = code_quality_reward(steps)
     integration = integration_reward(steps)
-    
+
     # Domain-specific weights
     if domain == "code":
         return 0.4 * correctness + 0.4 * quality + 0.2 * integration
@@ -131,20 +151,23 @@ def grade_response(response: str, expected: str, domain: str) -> float:
     else:  # reasoning
         return 0.6 * correctness + 0.3 * quality + 0.1 * integration
 
+
 def sample_responses(model, tokenizer, question: str, num_samples: int) -> List[str]:
     """Generate multiple responses for question using Chat Template"""
     responses = []
-    
+
     # System prompt is critical for JSON output
     sys_prompt = "You are an advanced AI. Solve the task step-by-step. Output ONLY a valid JSON list of steps."
-    
+
     messages = [
         {"role": "system", "content": sys_prompt},
-        {"role": "user", "content": question}
+        {"role": "user", "content": question},
     ]
-    
-    text_input = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    
+
+    text_input = tokenizer.apply_chat_template(
+        messages, tokenize=False, add_generation_prompt=True
+    )
+
     for _ in range(num_samples):
         try:
             inputs = tokenizer(text_input, return_tensors="pt").to("cuda")
@@ -157,18 +180,21 @@ def sample_responses(model, tokenizer, question: str, num_samples: int) -> List[
                     do_sample=True,
                 )
             # Decode ONLY the new tokens
-            response = tokenizer.decode(outputs[0][len(inputs.input_ids[0]):], skip_special_tokens=True)
+            response = tokenizer.decode(
+                outputs[0][len(inputs.input_ids[0]) :], skip_special_tokens=True
+            )
             responses.append(response)
         except Exception as e:
             logger.warning(f"Generation failed: {e}")
             continue
-    
+
     return responses
+
 
 def main():
     if not check_env():
         return
-        
+
     global CONFIG, logger
     CONFIG = {
         "checkpoint": "checkpoints/stage1_sft/final",
@@ -178,31 +204,31 @@ def main():
         "max_new_tokens": 512,
         "temperature": 0.8,
     }
-    
+
     # Setup logger
-    os.makedirs('logs', exist_ok=True)
+    os.makedirs("logs", exist_ok=True)
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         handlers=[
-            logging.FileHandler('logs/rejection_sampling.log'),
-            logging.StreamHandler()
-        ]
+            logging.FileHandler("logs/rejection_sampling.log"),
+            logging.StreamHandler(),
+        ],
     )
     logger = logging.getLogger(__name__)
 
     from datasets import load_dataset
     import tqdm
 
-    logger.info("="*70)
+    logger.info("=" * 70)
     logger.info("🎲 STAGE 2: REJECTION SAMPLING")
-    logger.info("="*70)
+    logger.info("=" * 70)
     logger.info(f"Questions to sample: {CONFIG['num_questions']}")
     logger.info(f"Samples per question: {CONFIG['samples_per_question']}")
     logger.info(f"Keep top K: {CONFIG['keep_top_k']}")
     logger.info(f"Expected duration: 2-3 days")
-    logger.info("="*70)
-    
+    logger.info("=" * 70)
+
     # Load model
     logger.info("\n📦 Loading SFT model...")
     try:
@@ -217,7 +243,7 @@ def main():
     except Exception as e:
         logger.error(f"❌ Failed to load model from {CONFIG['checkpoint']}: {e}")
         return
-    
+
     # Load benchmark questions
     logger.info("\n📚 Loading benchmark questions...")
     try:
@@ -225,67 +251,78 @@ def main():
         # (Since we want to improve OUR domain performance, not just GSM8K)
         # But for 'main' benchmark compliance we kept GSM8K in original.
         # Here we will switch to loading a mix: GSM8K + subset of our generated data.
-        
+
         # 1. GSM8K (Math)
         questions = []
         try:
             gsm8k = load_dataset("openai/gsm8k", "main", split="train")
-            questions.extend([
-                {
-                    "id": f"gsm8k_{i}",
-                    "user_query": item["question"], # Standardize to user_query
-                    "answer": item["answer"].split("####")[-1].strip(),
-                    "domain": "math"
-                }
-                for i, item in enumerate(gsm8k)
-            ][:500]) # Take 500
+            questions.extend(
+                [
+                    {
+                        "id": f"gsm8k_{i}",
+                        "user_query": item["question"],  # Standardize to user_query
+                        "answer": item["answer"].split("####")[-1].strip(),
+                        "domain": "math",
+                    }
+                    for i, item in enumerate(gsm8k)
+                ][:500]
+            )  # Take 500
         except Exception:
             pass
 
         # 2. Our Generated Data (Fullstack/Replica)
         # We load a subset of the validated training data
         import glob
+
         # UPDATE: Support clean datasets/ folder structure
-        replica_files = glob.glob("E:/datasets/train/**/*_validated.jsonl", recursive=True)
+        replica_files = glob.glob(
+            "E:/datasets/train/**/*_validated.jsonl", recursive=True
+        )
         if not replica_files:
-             replica_files = glob.glob("data_train_*_validated.jsonl") # Fallback
-             
+            replica_files = glob.glob("data_train_*_validated.jsonl")  # Fallback
+
         count_loaded = 0
         TARGET_COUNT = 500
-        
+
         for f_path in replica_files:
-            if count_loaded >= TARGET_COUNT: break
-            
+            if count_loaded >= TARGET_COUNT:
+                break
+
             with open(f_path) as f:
                 for line in f:
-                    if count_loaded >= TARGET_COUNT: break
+                    if count_loaded >= TARGET_COUNT:
+                        break
                     try:
                         d = json.loads(line)
-                        questions.append({
-                            "id": f"gen_{d.get('id')}",
-                            "user_query": d.get("user_query"),
-                            "answer": "", 
-                            "domain": d.get("domain")
-                        })
+                        questions.append(
+                            {
+                                "id": f"gen_{d.get('id')}",
+                                "user_query": d.get("user_query"),
+                                "answer": "",
+                                "domain": d.get("domain"),
+                            }
+                        )
                         count_loaded += 1
                     except:
                         pass
-        
+
         logger.info(f"✓ Loaded {len(questions)} questions (Mix of GSM8K + Replica)")
     except Exception as e:
         logger.warning(f"Could not load questions: {e}")
         questions = []
-    
+
     # Rejection sampling with pause support
     logger.info(f"\n🎲 Sampling {len(questions)} questions...")
-    logger.info("💡 Tip: Run 'python3 utils/control_training.py --flag-dir flags' to pause")
-    
+    logger.info(
+        "💡 Tip: Run 'python3 utils/control_training.py --flag-dir flags' to pause"
+    )
+
     # Pause/Resume Support
     FLAG_DIR = "flags"
     os.makedirs(FLAG_DIR, exist_ok=True)
     pause_file = os.path.join(FLAG_DIR, "pause.flag")
     progress_file = "rejection_sampling_progress.json"
-    
+
     # Load previous progress if exists
     start_idx = 0
     high_quality_samples = []
@@ -298,35 +335,41 @@ def main():
                 logger.info(f"🔄 Resuming from question {start_idx}")
         except:
             pass
-    
+
     grade_dist = defaultdict(int)
-    
-    for q_idx, q_data in enumerate(tqdm.tqdm(questions[start_idx:], desc="Sampling", initial=start_idx)):
+
+    for q_idx, q_data in enumerate(
+        tqdm.tqdm(questions[start_idx:], desc="Sampling", initial=start_idx)
+    ):
         # Check for pause every 10 questions
         if q_idx % 10 == 0 and os.path.exists(pause_file):
-            logger.info(f"\n💾 Pause detected at question {start_idx + q_idx}. Saving progress...")
+            logger.info(
+                f"\n💾 Pause detected at question {start_idx + q_idx}. Saving progress..."
+            )
             with open(progress_file, "w") as f:
-                json.dump({"last_index": start_idx + q_idx, "samples": high_quality_samples}, f)
+                json.dump(
+                    {"last_index": start_idx + q_idx, "samples": high_quality_samples},
+                    f,
+                )
             logger.info("✓ Progress saved. Exiting...")
             return
-        
+
         q_idx = start_idx + q_idx  # Adjust index
         question = q_data["user_query"]
         expected = q_data["answer"]
         domain = q_data["domain"]
-        
+
         # Generate responses
-        responses = sample_responses(model, tokenizer, question, CONFIG["samples_per_question"])
-        
+        responses = sample_responses(
+            model, tokenizer, question, CONFIG["samples_per_question"]
+        )
+
         # Grade each
-        grades = [
-            (grade_response(r, expected, domain), r)
-            for r in responses
-        ]
+        grades = [(grade_response(r, expected, domain), r) for r in responses]
         grades.sort(key=lambda x: x[0], reverse=True)
-        
+
         # Keep top K
-        for rank, (score, response) in enumerate(grades[:CONFIG["keep_top_k"]]):
+        for rank, (score, response) in enumerate(grades[: CONFIG["keep_top_k"]]):
             sample = {
                 "id": f"rs_{q_idx}_{rank}",
                 "question": question,
@@ -337,21 +380,24 @@ def main():
             }
             high_quality_samples.append(sample)
             grade_dist[int(score * 10)] += 1
-    
+
     # Save
     output_file = "rejection_sampled.jsonl"
     with open(output_file, "w") as f:
         for sample in high_quality_samples:
             f.write(json.dumps(sample) + "\n")
-    
-    logger.info("="*70)
+
+    logger.info("=" * 70)
     logger.info(f"✅ Rejection Sampling Complete!")
     logger.info(f"   Total samples: {len(high_quality_samples)}")
     if len(high_quality_samples) > 0:
-        logger.info(f"   Average score: {np.mean([s['score'] for s in high_quality_samples]):.2f}")
-    logger.info("="*70)
+        logger.info(
+            f"   Average score: {np.mean([s['score'] for s in high_quality_samples]):.2f}"
+        )
+    logger.info("=" * 70)
     logger.info(f"Next: Run GRPO Training")
     logger.info(f"  python 06_grpo_training.py")
+
 
 if __name__ == "__main__":
     main()

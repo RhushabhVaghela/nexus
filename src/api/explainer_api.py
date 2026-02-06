@@ -49,17 +49,54 @@ logger = logging.getLogger(__name__)
 # SECURITY CONFIGURATION
 # ============================================================================
 
-# CORS Configuration
-ALLOWED_ORIGINS = os.environ.get(
-    "ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8080"
-).split(",")
+
+# CORS Configuration - FIXED: Validate origins, never allow wildcard
+def get_allowed_origins() -> list:
+    """Get and validate allowed CORS origins."""
+    env_origins = os.environ.get("ALLOWED_ORIGINS", "").strip()
+    if not env_origins:
+        # Default to localhost only for security
+        return ["http://localhost:3000", "http://localhost:8080"]
+
+    origins = [o.strip() for o in env_origins.split(",") if o.strip()]
+
+    # Security: Never allow wildcard in production
+    if "*" in origins:
+        logger.warning("SECURITY: Wildcard CORS origin (*) detected and removed!")
+        origins = [o for o in origins if o != "*"]
+
+    return origins if origins else ["http://localhost:3000", "http://localhost:8080"]
+
+
+ALLOWED_ORIGINS = get_allowed_origins()
 
 # Rate Limiting Configuration
 RATE_LIMIT_REQUESTS_PER_SECOND = float(os.environ.get("RATE_LIMIT_RPS", "10"))
 RATE_LIMIT_BURST_SIZE = int(os.environ.get("RATE_LIMIT_BURST", "20"))
 
-# Authentication Configuration
-JWT_SECRET = os.environ.get("JWT_SECRET", None)  # Auto-generated if None
+
+# Authentication Configuration - FIXED: Require JWT_SECRET in production
+def get_jwt_secret() -> str:
+    """Get JWT secret, requiring it in production."""
+    secret = os.environ.get("JWT_SECRET")
+    if not secret:
+        # For development only - raise error in production
+        if os.environ.get("NEXUS_ENV") == "production":
+            raise RuntimeError(
+                "SECURITY: JWT_SECRET must be set in production! "
+                "Set NEXUS_ENV=development for auto-generated secrets (not recommended for production)."
+            )
+        # Generate temporary secret for development
+        import secrets
+
+        secret = secrets.token_hex(32)
+        logger.warning(
+            "SECURITY: Using auto-generated JWT secret. Set JWT_SECRET for production!"
+        )
+    return secret
+
+
+JWT_SECRET = get_jwt_secret()
 JWT_EXPIRY_HOURS = int(os.environ.get("JWT_EXPIRY_HOURS", "24"))
 
 # Security Headers Configuration

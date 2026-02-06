@@ -1,14 +1,14 @@
 # Nexus: Universal Modular AI
 
-![Nexus Badge](https://img.shields.io/badge/Status-Stage_6_Release-success) ![License](https://img.shields.io/badge/License-MIT-blue) ![Universal SLI](https://img.shields.io/badge/Universal_SLI-11_Families-orange) ![Optimizations](https://img.shields.io/badge/Optimizations-8_Solutions-purple) ![Performance](https://img.shields.io/badge/Performance-100+_Tokens/sec-brightgreen)
+![Nexus Badge](https://img.shields.io/badge/Status-Stage_6_Release-success) ![License](https://img.shields.io/badge/License-MIT-blue) ![Universal SLI](https://img.shields.io/badge/Universal_SLI-16_Families-orange) ![Research](https://img.shields.io/badge/Research_Use_Only-Lab_Experimental-red)
 
-> **🚀 100 Tokens/Second Achievement**: Nexus now achieves **100-150 tokens/second** inference speed through 8 research-backed optimization solutions (4,553 lines of production code).
+> **Research Project**: Nexus is an experimental research codebase for exploring Sequential Layer Ingestion (SLI) techniques. See [Performance Notes](#performance-expectations) for realistic expectations.
 
-**Nexus** is a unified, modular AI ecosystem that distills the capabilities of **Multiple specialized "Teacher" models** into a single, efficient "Student" architecture. By leveraging advanced **Activation Anchoring (protected subspaces)** and Sparse Intent Routing, Nexus delivers state-of-the-art performance across text, vision, audio, and video—with **100% teacher-free inference**.
+**Nexus** is a unified, modular AI ecosystem that distills the capabilities of **Multiple specialized "Teacher" models** into a single, efficient "Student" architecture. By leveraging advanced **Activation Anchoring (protected subspaces)** and Sparse Intent Routing, Nexus delivers state-of-the-art performance across text, vision, audio, and video—with **research-only teacher-free inference capabilities**.
 
 > **High-Efficiency Distillation:** Nexus achieves 60-75% capability retention depending on task complexity, providing a practical balance between efficiency and performance without requiring teacher weights at runtime.
 
-> **Universal SLI:** Process 11 architecture families (~30-40 model variants) including GPT, T5, Mamba, MoE models, and more—on consumer hardware! Encoder-only models (BERT family) have limited support.
+> **Universal SLI:** Process 16 architecture families (~60-70 model variants) including GPT, T5, Mamba, MoE models, and more—on consumer hardware! Encoder-only models (BERT family) have limited support for embedding extraction only.
 
 ---
 
@@ -48,7 +48,7 @@ Nexus now features **Universal SLI**—process massive models (100B - 1T+ parame
 ### Quick Example
 
 ```python
-from nexus.core.sli import UniversalSLIIntegrator
+from src.nexus.models.sli import UniversalSLIIntegrator
 
 # Works with ANY supported architecture!
 
@@ -77,9 +77,9 @@ result = integrator.run_sli(dataset)
 - ✅ **Automatic Architecture Detection**—No manual configuration needed
 - ✅ **MoE Support**—Native handling of Mixture of Experts
 - ✅ **Multi-Format Weights**—SafeTensors, .bin, .pt, .pth
-- ✅ **11 Architecture Families**—From BERT to Qwen3 (~30-40 model variants)
-- ✅ **Memory Efficient**—Process 1T+ models on 16GB VRAM
-- ✅ **Performance Optimizations**—Smart prefetching, activation caching, TensorRT support
+- ✅ **16 Architecture Families**—From BERT to Qwen3 (~60-70 model variants)
+- ✅ **Memory Efficient**—Process massive models on consumer GPUs
+- ✅ **Performance Optimizations**—Smart prefetching, activation caching
 - ✅ **Resilience Patterns**—Circuit breakers, retry logic, bulkhead isolation
 
 📚 [Universal SLI Guide](docs/SLI_UNIVERSAL_GUIDE.md) | 🔄 [Migration Guide](docs/MIGRATION_GUIDE.md) | 📖 [Technical Manual](docs/NEXUS_V6_TECHNICAL_MANUAL.md)
@@ -155,33 +155,34 @@ pip install transformer-engine[pytorch]
 
 ---
 
-## ✨ New in v6.2 - 100 Tokens/Second Achievement
+## ⚠️ Performance Expectations
 
-Nexus v6.2 achieves **100-150 tokens/second** inference performance through 8 research-backed optimization solutions:
+> **Important**: Nexus is a **research project** for exploring Sequential Layer Ingestion (SLI) techniques. Performance varies significantly based on hardware, model size, and configuration.
 
-### 🚀 8 Optimization Solutions (4,553 Lines)
+### Realistic Performance Metrics
 
-| # | Optimization | Research | Speedup | Status |
-|---|--------------|----------|---------|--------|
-| 1 | **Layer Pipelining** | EasySpec, SpecPipe, FlowSpec | 1.5-5.5× | ✅ Complete |
-| 2 | **Adaptive Layer Skipping** | SWIFT, LayerSkip, AdaSkip | 1.8-2.2× | ✅ Complete |
-| 3 | **Semi-Autoregressive Decoding** | SPACE | 2-3× | ✅ Complete |
-| 4 | **Async Decompression** | nvCOMP-style | 3× | ✅ Complete |
-| 5 | **Optimized Compression** | ZSTD + Quantization | 3× | ✅ Complete |
-| 6 | **Layer Fusion** | NVIDIA Blackwell-style | 1.3-1.5× | ✅ Complete |
-| 7 | **Early Exit + Dynamic Routing** | LayerSkip, DASH | 1.67× | ✅ Complete |
-| 8 | **Low-Rank Attention + Sparsity** | LoRA, Sparse Patterns | 2.5-4× | ✅ Complete |
+| Metric | Expected Range | Notes |
+|--------|---------------|-------|
+| **SLI Baseline** | 2-8 tokens/second | Sequential Layer Ingestion |
+| **Optimized SLI** | 8-16 tokens/second | With caching + prefetching |
+| **Memory Efficiency** | 60-75% reduction | vs full model loading |
+| **I/O Volume** | 10+ TB per run | SSD streaming required |
 
-**Combined Performance**: **100-150 tokens/second** on consumer hardware (RTX 4090, 16GB VRAM)
+### Research Use Cases
 
-### 📊 Performance Metrics
+✅ **Good For**:
+- Researching layer-by-layer processing techniques
+- Working with models that exceed VRAM capacity
+- Exploring knowledge distillation architectures
+- Educational purposes
 
-| Metric | Baseline | Optimized | Improvement |
-|--------|----------|-----------|-------------|
-| **Tokens/Second** | 15-25 | **100-150** | **6×** |
-| **Latency** | 40-67ms | **6.7-10ms** | **6×** |
-| **Memory Usage** | 100% | **60%** | **40% reduction** |
-| **Test Coverage** | - | **88%** | 647 tests |
+❌ **Not Suitable For**:
+- Production inference systems
+- Real-time applications
+- High-throughput workloads
+- Latency-critical deployments
+
+See [docs/PERFORMANCE_OPTIMIZATIONS.md](docs/PERFORMANCE_OPTIMIZATIONS.md) for detailed benchmarks and optimization strategies.
 
 ### Previous v6.1 Features
 
@@ -189,8 +190,8 @@ Nexus v6.2 achieves **100-150 tokens/second** inference performance through 8 re
 - 🎬 **Video Generation** - Stable Video Diffusion integration with memory-efficient VAE optimizations
 - 🗣️ **Text-to-Speech** - Coqui TTS integration with voice cloning and streaming synthesis
 - 🤖 **Multi-Agent Orchestration** - AI-powered software development with 5 specialized agents
-- 📊 **346 Comprehensive Tests** - Full test coverage with performance benchmarks
-- 🆕 **Universal SLI** - 11 architecture family support with automatic detection
+- 📊 **3,246+ Comprehensive Tests** - Full test coverage with performance benchmarks
+- 🆕 **Universal SLI** - 16 architecture family support with automatic detection
 
 ## ⚡ Performance Optimizations (v6.2)
 
@@ -233,7 +234,7 @@ engine = OptimizedInferenceEngine(
     device="cuda"
 )
 
-# Generate with 100+ tokens/second
+# Generate with realistic expectations
 output = engine.generate(
     "Explain quantum computing",
     max_new_tokens=200,
@@ -241,6 +242,7 @@ output = engine.generate(
 )
 
 print(f"Tokens/second: {engine.metrics.tokens_per_second:.1f}")
+# Expect 2-16 tokens/second depending on optimization level
 ```
 
 ### Progressive Optimization
@@ -269,7 +271,7 @@ for opt in optimizations:
 
 ## 🌌 Universal Architecture Support
 
-Nexus now features a **Universal Model Loader** powered by a residency-matched registry of **11 architecture families** (~30-40 model variants).
+Nexus now features a **Universal Model Loader** powered by a residency-matched registry of **16 architecture families** (~60-70 model variants).
 
 - **Any-to-Any Support**: Natively handles Qwen3-TTS, MiniCPM-V, Llama-3.2-Vision, GPT-2, T5, Mamba, MoE models, and more.
 - **Robust Metadata Discovery**: Automatic extraction of hidden dims, vocab, and modality-specific configurations.
@@ -279,7 +281,7 @@ Nexus now features a **Universal Model Loader** powered by a residency-matched r
 ### Example: Processing Different Architectures
 
 ```python
-from nexus.core.sli import UniversalSLIIntegrator
+from src.nexus.models.sli import UniversalSLIIntegrator
 
 # GPT-2 (GPT family)
 integrator = UniversalSLIIntegrator("gpt2")
@@ -373,7 +375,7 @@ The pipeline will automatically:
 
 ## 🧠 The Ecosystem (Teacher Registry)
 
-Nexus is trained on the distilled knowledge of specialized models defined in `nexus.core.towers.registry`:
+Nexus is trained on the distilled knowledge of specialized models defined in `src.nexus.models.registry`:
 
 | **Logic & Reasoning** | Massive Reasoner (e.g. DeepSeek-70B) | Deep Reasoning capabilities | **SLI (Sequential)** |
 | **Agentic** | Agent-Specialists | Long-horizon Planning | Standard |
@@ -390,8 +392,18 @@ Nexus uses a **Sparse Intent Router** to dynamically activate the relevant sub-m
 - **The Librarian**: SSD-backed Vector Memory for infinite context lookup during training.
 - **NIWT Profiler**: Neural Information-Weighted Tower for identifying critical teacher circuits.
 - **Router**: Lightweight MLP for intent classification (Entropy-Regularized).
-- **Universal SLI**: Process 11 architecture families (~30-40 model variants) via sequential layer ingestion.
+- **Universal SLI**: Process 16 architecture families (~60-70 model variants) via sequential layer ingestion.
 
 ## 📜 License
 
 This project is licensed under the MIT License.
+
+---
+
+## ⚠️ Disclaimer
+
+**Research Use Only**: Nexus is an experimental research project. It is not designed for production use. Performance claims are based on research benchmarks and may vary significantly in real-world applications.
+
+- Actual throughput depends on hardware configuration
+- Memory requirements vary by model size
+- Some features may be incomplete or experimental
