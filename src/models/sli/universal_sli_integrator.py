@@ -324,7 +324,9 @@ class UniversalSLIIntegrator:
 
         print("[SLI] Cache cleared")
 
-    def forward_logits(self, input_ids: torch.Tensor) -> torch.Tensor:
+    def forward_logits(
+        self, input_ids: torch.Tensor, verbose: bool = False
+    ) -> torch.Tensor:
         """
         Forward pass through the entire model to get logits.
 
@@ -333,14 +335,11 @@ class UniversalSLIIntegrator:
 
         Args:
             input_ids: Input token IDs of shape [batch, seq_len]
+            verbose: Whether to print progress messages
 
         Returns:
             Logits tensor of shape [batch, seq_len, vocab_size]
         """
-        import gc
-
-        batch_size = input_ids.shape[0]
-        seq_len = input_ids.shape[1]
         vocab_size = self.model_info["vocab_size"]
         hidden_size = self.model_info["hidden_size"]
         num_layers = self.model_info["num_layers"]
@@ -360,17 +359,17 @@ class UniversalSLIIntegrator:
         gc.collect()
 
         # Step 2: Process through all layers sequentially (SLI pattern)
+        # Follows the same pattern as run_sli(): create_layer → load_layer_weights → load_state_dict
         for layer_idx in range(num_layers):
-            # Load layer weights
-            layer_state = self.weight_loader.load_layer_weights(
-                self.model_id, layer_idx, self.device
-            )
+            # Create layer structure
+            layer = self.factory.create_layer(self.config, layer_idx)
 
-            # Build layer from weights
-            layer = self.layer_factory.build_layer_from_state(
-                layer_state, self.family, layer_idx
+            # Load weights using correct signature: (layer_idx, family)
+            layer_weights = self.weight_loader.load_layer_weights(
+                layer_idx, self.family
             )
-            layer.to(self.device)
+            layer.load_state_dict(layer_weights, strict=False)
+            layer.to(self.device).half().eval()
 
             # Forward pass through layer
             with torch.no_grad():
@@ -384,17 +383,16 @@ class UniversalSLIIntegrator:
                 hidden_states = hidden_states[0]
 
             # Clear layer from memory
-            layer.cpu()
             del layer
-            del layer_state
+            del layer_weights
             torch.cuda.empty_cache()
             gc.collect()
 
-            if self.verbose:
+            if verbose:
                 print(f"[SLI] Processed layer {layer_idx + 1}/{num_layers}")
 
         # Step 3: Apply final layer norm if present
-        final_ln_weight = self.weight_loader.load_final_layer_norm(self.model_id)
+        final_ln_weight = self.weight_loader.load_final_layer_norm(self.family)
         if final_ln_weight is not None:
             final_ln = nn.LayerNorm(hidden_size)
             final_ln.weight.data.copy_(final_ln_weight[0])
@@ -410,7 +408,7 @@ class UniversalSLIIntegrator:
             torch.cuda.empty_cache()
 
         # Step 4: Project to vocab (lm_head)
-        lm_head_weights = self.weight_loader.load_lm_head_weights(self.model_id)
+        lm_head_weights = self.weight_loader.load_lm_head_weights(self.family)
         lm_head = nn.Linear(hidden_size, vocab_size, bias=False)
         lm_head.weight.data.copy_(lm_head_weights)
         lm_head.to(self.device)
@@ -423,7 +421,7 @@ class UniversalSLIIntegrator:
         torch.cuda.empty_cache()
         gc.collect()
 
-        if self.verbose:
+        if verbose:
             print(f"[SLI] Forward pass complete. Output shape: {logits.shape}")
 
         return logits
