@@ -26,6 +26,14 @@ import logging
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
+try:
+    import torch
+
+    TORCH_AVAILABLE = True
+except ImportError:
+    torch = None
+    TORCH_AVAILABLE = False
+
 # Initialize logger first to avoid NoneType errors
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -100,21 +108,6 @@ def correctness_reward(
     Returns:
         List of reward scores (0.0-1.0) for each completion
     """
-    rewards = []
-    for completion, answer in zip(completions, answers):
-        completion_lower = completion.lower().strip()
-        answer_lower = str(answer).lower().strip()
-
-        if completion_lower == answer_lower or answer_lower in completion_lower:
-            rewards.append(1.0)
-        elif len(str(answer)) > 0 and any(
-            word in completion_lower for word in str(answer).split()
-        ):
-            rewards.append(0.7)
-        else:
-            rewards.append(0.0)
-
-    return rewards
     rewards = []
     for completion, answer in zip(completions, answers):
         completion_lower = completion.lower().strip()

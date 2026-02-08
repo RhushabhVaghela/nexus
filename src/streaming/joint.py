@@ -51,8 +51,8 @@ class UserEvent:
     text: str  # user chat text or ASR from mic
 
 
-class VisionStreamBuffer:
-    """Example interface; replace with your actual implementation."""
+class _JointVisionBuffer:
+    """Local vision buffer for joint streaming (avoids conflict with vision.py's VisionStreamBuffer)."""
 
     def __init__(self, max_seconds: float = 30.0):
         self.max_seconds = max_seconds
@@ -112,8 +112,16 @@ class UserEventBuffer:
 LLMFn = Callable[[List[Dict[str, str]]], str]
 
 
-def call_llm(messages: List[Dict[str, str]]) -> str:
-    raise RuntimeError("Replace call_llm in streaming/joint.py with your real client.")
+def _default_llm_fn(messages: List[Dict[str, str]]) -> str:
+    """Default no-op LLM function. Returns empty string with a warning."""
+    import warnings
+
+    warnings.warn(
+        "No LLM function provided to JointStreamingOrchestrator. "
+        "Provide an llm_fn argument to enable LLM responses.",
+        stacklevel=2,
+    )
+    return ""
 
 
 class JointStreamingOrchestrator:
@@ -131,10 +139,10 @@ class JointStreamingOrchestrator:
 
     def __init__(
         self,
-        vision_buffer: VisionStreamBuffer,
+        vision_buffer: _JointVisionBuffer,
         audio_buffer: AudioStreamBuffer,
         user_buffer: UserEventBuffer,
-        llm_fn: LLMFn = call_llm,
+        llm_fn: LLMFn = _default_llm_fn,
         interval_sec: float = 5.0,
         tts_engine: Optional[Any] = None,
     ) -> None:
@@ -144,7 +152,7 @@ class JointStreamingOrchestrator:
         self.llm_fn = llm_fn
         self.interval_sec = interval_sec
         self.tts_engine = tts_engine
-        
+
         # Voice Persona State
         self.active_voice = "NATM1"  # Default PersonaPlex voice
         self.active_vibe = "neutral"  # Default VibeVoice vibe
@@ -203,7 +211,9 @@ class JointStreamingOrchestrator:
             lines.append("\nRecent ambient audio context:")
             for c in audio_chunks[-5:]:
                 if c.transcript:
-                    lines.append(f"- [Audio @ {c.timestamp:.0f}] transcript: {c.transcript}")
+                    lines.append(
+                        f"- [Audio @ {c.timestamp:.0f}] transcript: {c.transcript}"
+                    )
                 elif c.summary:
                     lines.append(f"- [Audio @ {c.timestamp:.0f}] summary: {c.summary}")
                 else:
@@ -243,11 +253,12 @@ class JointStreamingOrchestrator:
                 # 1. Brain Processing
                 # In the real implementation, we would also capture the 'hidden_states' here
                 reply = self.llm_fn(messages)
-                
+
                 # 2. Intelligence Sharing: Parse 'Mental State' from tags
                 detected_vibe = self.active_vibe
                 if "[" in reply and "]" in reply:
                     import re
+
                     match = re.search(r"\[([a-zA-Z]+)\]", reply)
                     if match:
                         detected_vibe = match.group(1).lower()
@@ -255,7 +266,7 @@ class JointStreamingOrchestrator:
 
                 if self.on_llm_response:
                     self.on_llm_response(reply)
-                    
+
                 # 3. Synchronized Voice Synthesis
                 if self.tts_engine and reply:
                     # We pass the persona DNA and the detected mental 'vibe' as a single packet
@@ -263,7 +274,7 @@ class JointStreamingOrchestrator:
                         text=reply,
                         voice=self.active_voice,
                         vibe=detected_vibe,
-                        sync_mode="high_fidelity" # Signals to use 100% model capabilities
+                        sync_mode="high_fidelity",  # Signals to use 100% model capabilities
                     )
             except Exception as e:
                 print(f"[JointStreaming] LLM error: {e}", file=sys.stderr)
@@ -272,7 +283,9 @@ class JointStreamingOrchestrator:
 
     def add_vision_frame(self, description: str, path: Optional[str] = None):
         ts = time.time()
-        self.vision_buffer.add_frame(VisionFrame(timestamp=ts, description=description, path=path))
+        self.vision_buffer.add_frame(
+            VisionFrame(timestamp=ts, description=description, path=path)
+        )
 
     def add_audio_chunk(
         self,
@@ -280,7 +293,9 @@ class JointStreamingOrchestrator:
         summary: Optional[str] = None,
     ):
         ts = time.time()
-        self.audio_buffer.add_chunk(AudioChunk(timestamp=ts, transcript=transcript, summary=summary))
+        self.audio_buffer.add_chunk(
+            AudioChunk(timestamp=ts, transcript=transcript, summary=summary)
+        )
 
     def add_user_event(self, text: str):
         ts = time.time()
@@ -291,48 +306,56 @@ class JointStreamingOrchestrator:
 # LIVE OMNI-MODEL ADAPTER
 # ═══════════════════════════════════════════════════════════════
 
+
 def get_live_model(model_path: str):
     # Re-use the factory logic from podcast generator or import directly
     # Ideally should be a shared utility, but duplicating for standalone script stability
     from multimodal.model import OmniMultimodalLM
     from transformers import AutoTokenizer
-    
+
     print(f"⚡ Loading Live OmniModel: {model_path}...")
     tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
     model = OmniMultimodalLM(model_path)
     return model, tokenizer
 
+
 def run_live_inference(messages: List[Dict[str, str]], model, tokenizer) -> str:
     import torch
-    
-    text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+
+    text = tokenizer.apply_chat_template(
+        messages, tokenize=False, add_generation_prompt=True
+    )
     inputs = tokenizer(text, return_tensors="pt").to(model.wrapper.llm.device)
-    
+
     with torch.no_grad():
         outputs = model.generate(
-            **inputs, 
-            max_new_tokens=256, # Short responses for streaming
+            **inputs,
+            max_new_tokens=256,  # Short responses for streaming
             temperature=0.7,
-            do_sample=True
+            do_sample=True,
         )
-        
-    generated_ids = outputs[0][inputs.input_ids.shape[1]:]
+
+    generated_ids = outputs[0][inputs.input_ids.shape[1] :]
     return tokenizer.decode(generated_ids, skip_special_tokens=True)
+
 
 # ═══════════════════════════════════════════════════════════════
 # CLI ENTRYPOINT
 # ═══════════════════════════════════════════════════════════════
+
 
 def main():
     import sys
     import argparse
 
     parser = argparse.ArgumentParser(description="Tri-Streaming Orchestrator")
-    parser.add_argument("--model", type=str, default="/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4")
+    parser.add_argument(
+        "--model", type=str, default="/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
+    )
     parser.add_argument("--interval", type=float, default=5.0)
     args = parser.parse_args()
 
-    vision_buf = VisionStreamBuffer(max_seconds=30.0)
+    vision_buf = _JointVisionBuffer(max_seconds=30.0)
     audio_buf = AudioStreamBuffer(max_seconds=30.0)
     user_buf = UserEventBuffer(max_events=50)
 
@@ -357,8 +380,9 @@ def main():
     orchestrator.on_llm_response = lambda r: print(f"\n🤖 [Omni]: {r}\n")
 
     orchestrator.start()
-    print("🚀 Joint Streaming Active. Type to interact (simulates User Event). Ctrl+C to stop.")
-
+    print(
+        "🚀 Joint Streaming Active. Type to interact (simulates User Event). Ctrl+C to stop."
+    )
 
     orchestrator.on_llm_response = lambda r: print(f"\n[LLM] {r}\n")
 

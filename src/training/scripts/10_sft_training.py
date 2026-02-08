@@ -211,32 +211,36 @@ class CSVMetricsCallback(TrainerCallback):
 # GPU DETECTION & VRAM-BASED ADJUSTMENTS
 # ═══════════════════════════════════════════════════════════════
 
-if torch.cuda.is_available():
-    vram_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
-    logger.info(
-        f"✅ GPU detected: {torch.cuda.get_device_name(0)} ({vram_gb:.1f}GB VRAM)"
-    )
 
-    # Auto-adjust context based on available VRAM
-    if vram_gb >= 80:  # H100/A100 80GB
-        CONFIG["max_seq_length"] = min(CONFIG["max_seq_length"], 131072)
-        CONFIG["batch_size"] = 4
-        logger.info("🚀 High VRAM mode: 128K context, batch=4")
-    elif vram_gb >= 24:  # A10G/RTX 4090
-        CONFIG["max_seq_length"] = min(CONFIG["max_seq_length"], 65536)
-        CONFIG["batch_size"] = 2
-        logger.info("🚀 Medium VRAM mode: 64K context, batch=2")
-    elif vram_gb >= 16:  # RTX 5080/4080
-        CONFIG["max_seq_length"] = min(CONFIG["max_seq_length"], 32768)
-        CONFIG["batch_size"] = 1
-        logger.info("🚀 Standard mode: 32K context, batch=1")
-    else:  # < 16GB
-        CONFIG["max_seq_length"] = min(CONFIG["max_seq_length"], 8192)
-        CONFIG["batch_size"] = 1
-        logger.info("⚠️ Low VRAM mode: 8K context, batch=1")
-else:
-    logger.error("❌ No CUDA GPU detected. Training requires GPU.")
-    sys.exit(1)
+def _adjust_config_for_gpu():
+    """Detect GPU and auto-adjust CONFIG based on available VRAM."""
+    if torch.cuda.is_available():
+        vram_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
+        logger.info(
+            f"GPU detected: {torch.cuda.get_device_name(0)} ({vram_gb:.1f}GB VRAM)"
+        )
+
+        # Auto-adjust context based on available VRAM
+        if vram_gb >= 80:  # H100/A100 80GB
+            CONFIG["max_seq_length"] = min(CONFIG["max_seq_length"], 131072)
+            CONFIG["batch_size"] = 4
+            logger.info("High VRAM mode: 128K context, batch=4")
+        elif vram_gb >= 24:  # A10G/RTX 4090
+            CONFIG["max_seq_length"] = min(CONFIG["max_seq_length"], 65536)
+            CONFIG["batch_size"] = 2
+            logger.info("Medium VRAM mode: 64K context, batch=2")
+        elif vram_gb >= 16:  # RTX 5080/4080
+            CONFIG["max_seq_length"] = min(CONFIG["max_seq_length"], 32768)
+            CONFIG["batch_size"] = 1
+            logger.info("Standard mode: 32K context, batch=1")
+        else:  # < 16GB
+            CONFIG["max_seq_length"] = min(CONFIG["max_seq_length"], 8192)
+            CONFIG["batch_size"] = 1
+            logger.info("Low VRAM mode: 8K context, batch=1")
+    else:
+        logger.error("No CUDA GPU detected. Training requires GPU.")
+        raise RuntimeError("No CUDA GPU detected. Training requires GPU.")
+
 
 # ═══════════════════════════════════════════════════════════════
 # IMPORTS (After config to handle missing libs gracefully)

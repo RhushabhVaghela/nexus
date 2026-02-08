@@ -28,7 +28,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from src.training_methods import TrainingMethod, get_training_config
+from src.training.training_methods import TrainingMethod, get_training_config
 
 
 def check_env():

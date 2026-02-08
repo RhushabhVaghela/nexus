@@ -17,32 +17,35 @@ from src.nexus.utils.repetition import PromptRepetitionEngine
 
 class ToolDefinition:
     """Represents a tool/function definition."""
-    
+
     def __init__(self, name: str, description: str, parameters: Dict):
         self.name = name
         self.description = description
         self.parameters = parameters
-    
+
     def to_json(self) -> str:
-        return json.dumps({
-            "name": self.name,
-            "description": self.description,
-            "parameters": self.parameters,
-        }, indent=2)
+        return json.dumps(
+            {
+                "name": self.name,
+                "description": self.description,
+                "parameters": self.parameters,
+            },
+            indent=2,
+        )
 
 
 class ToolsStage(BaseStage):
     """Tool calling capability training with complete implementation."""
-    
+
     CAPABILITY_NAME = "tool-calling"
-    
+
     DATASET_PATTERNS = [
         "argilla/Synth-APIGen-v0.1",
         "Salesforce/xlam-function-calling-60k",
         "*tool*",
         "*function*call*",
     ]
-    
+
     # Tool calling format tokens
     TOOL_TOKENS = {
         "tools_start": "<tools>",
@@ -52,58 +55,58 @@ class ToolsStage(BaseStage):
         "result_start": "<tool_result>",
         "result_end": "</tool_result>",
     }
-    
+
     def prepare(self) -> bool:
         from transformers import AutoModelForCausalLM, AutoTokenizer
-        
+
         self.logger.info(f"Loading model from {self.config.base_model_path}")
-        
+
         if self.config.dry_run:
             self.logger.info("[DRY-RUN] Would load tool calling datasets")
             return True
-        
+
         try:
             self.tokenizer = AutoTokenizer.from_pretrained(
                 self.config.base_model_path,
                 trust_remote_code=True,
             )
-            
+
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.config.base_model_path,
                 torch_dtype=torch.float16,
                 device_map="auto",
                 trust_remote_code=True,
             )
-            
+
             if self.tokenizer.pad_token is None:
                 self.tokenizer.pad_token = self.tokenizer.eos_token
-            
+
             # Add tool tokens
             special_tokens = {
                 "additional_special_tokens": list(self.TOOL_TOKENS.values())
             }
             self.tokenizer.add_special_tokens(special_tokens)
             self.model.resize_token_embeddings(len(self.tokenizer))
-            
+
             self.logger.info("Loading tool calling datasets dynamic...")
             self.train_dataset = self.load_dynamic_datasets()
-            
+
             if self.train_dataset:
                 self.logger.info(f"Loaded: {len(self.train_dataset)} samples")
             else:
                 self.logger.warning("No datasets loaded")
-            
+
             self.optimizer = torch.optim.AdamW(
                 self.model.parameters(),
                 lr=self.config.learning_rate,
             )
-            
+
             return True
-            
+
         except Exception as e:
             self.logger.error(f"Failed to prepare: {e}")
             return False
-    
+
     def _format_tool_call(self, sample: Dict) -> str:
         """Format sample in tool calling format."""
         # Handle different dataset formats
@@ -111,22 +114,22 @@ class ToolsStage(BaseStage):
             tools = sample.get("tools", [])
             query = sample.get("query", "")
             response = sample.get("response", "")
-            
+
             # Apply Prompt Repetition to the user query
             if self.config.repetition_factor > 1:
                 query = PromptRepetitionEngine.apply_repetition(
                     query,
                     factor=self.config.repetition_factor,
-                    style=self.config.repetition_style
+                    style=self.config.repetition_style,
                 )
-            
+
             tools_str = "<tools>\n"
             if isinstance(tools, list):
                 for tool in tools:
                     if isinstance(tool, dict):
                         tools_str += json.dumps(tool) + "\n"
             tools_str += "</tools>\n\n"
-            
+
             text = f"{tools_str}User: {query}\n\n<tool_call>\n{response}\n</tool_call>"
             return text
         elif "text" in sample:
@@ -134,44 +137,48 @@ class ToolsStage(BaseStage):
         elif "messages" in sample:
             return str(sample["messages"])
         return ""
-    
+
     def train(self) -> Dict[str, Any]:
         if self.config.dry_run:
             self.logger.info("[DRY-RUN] Simulating tool calling training...")
             for epoch in range(self.config.epochs):
-                self.logger.info(f"[DRY-RUN] Epoch {epoch+1}/{self.config.epochs}")
+                self.logger.info(f"[DRY-RUN] Epoch {epoch + 1}/{self.config.epochs}")
                 for step in range(10):
                     self.current_step += 1
             return {"success": True, "dry_run": True, "steps": self.current_step}
-        
+
         if self.train_dataset is None:
             self.logger.warning("No training data, skipping")
             return {"success": True, "steps": 0, "skipped": True}
-        
+
         self.logger.info("Starting tool calling training...")
         self.logger.info(f"Using tokens: {list(self.TOOL_TOKENS.values())}")
         if self.config.repetition_factor > 1:
-            self.logger.info(f"Using Prompt Repetition: {self.config.repetition_factor}x ({self.config.repetition_style})")
-        
-        from src.training_controller import training_step_hook
-        
+            self.logger.info(
+                f"Using Prompt Repetition: {self.config.repetition_factor}x ({self.config.repetition_style})"
+            )
+
+        from src.training.training_controller import training_step_hook
+
         total_loss = 0.0
-        
+
         for epoch in range(self.config.epochs):
             self.logger.info(f"Epoch {epoch + 1}/{self.config.epochs}")
-            
+
             for sample in self.train_dataset:
                 self.current_step += 1
-                
+
                 training_step_hook(
-                    self.model, self.optimizer, self.current_step,
-                    str(self.checkpoint_dir)
+                    self.model,
+                    self.optimizer,
+                    self.current_step,
+                    str(self.checkpoint_dir),
                 )
-                
+
                 text = self._format_tool_call(sample)
                 if not text:
                     continue
-                
+
                 inputs = self.tokenizer(
                     text,
                     return_tensors="pt",
@@ -181,19 +188,19 @@ class ToolsStage(BaseStage):
                 )
                 inputs = {k: v.to(self.model.device) for k, v in inputs.items()}
                 inputs["labels"] = inputs["input_ids"].clone()
-                
+
                 outputs = self.model(**inputs)
                 loss = outputs.loss
                 total_loss += loss.item()
-                
+
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
-                
+
                 if self.current_step % 100 == 0:
                     avg = total_loss / self.current_step
                     self.logger.info(f"Step {self.current_step}, Avg Loss: {avg:.4f}")
-        
+
         return {
             "success": True,
             "steps": self.current_step,
@@ -203,6 +210,7 @@ class ToolsStage(BaseStage):
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser(description="Tool Calling Training")
     parser.add_argument("--base-model", required=True)
     parser.add_argument("--output-dir", required=True)
@@ -211,11 +219,15 @@ def main():
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--epochs", type=int, default=3)
     # Repetition args
-    parser.add_argument("--repetition-factor", type=int, default=1, help="Prompt repetition factor")
-    parser.add_argument("--repetition-style", type=str, default="baseline", help="Repetition style")
-    
+    parser.add_argument(
+        "--repetition-factor", type=int, default=1, help="Prompt repetition factor"
+    )
+    parser.add_argument(
+        "--repetition-style", type=str, default="baseline", help="Repetition style"
+    )
+
     args = parser.parse_args()
-    
+
     config = StageConfig(
         capability_name="tool-calling",
         base_model_path=args.base_model,
@@ -229,6 +241,7 @@ def main():
     )
     stage = ToolsStage(config)
     return 0 if stage.run().get("success") else 1
+
 
 if __name__ == "__main__":
     exit(main())

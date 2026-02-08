@@ -8,8 +8,33 @@ Strategy:
 4. Mixed Precision: FP16 training
 """
 
-import torch
-from transformers import BitsAndBytesConfig
+try:
+    import torch
+
+    TORCH_AVAILABLE = True
+except ImportError:
+    torch = None
+    TORCH_AVAILABLE = False
+
+try:
+    from transformers import BitsAndBytesConfig
+
+    BITSANDBYTES_AVAILABLE = True
+except ImportError:
+    BitsAndBytesConfig = None
+    BITSANDBYTES_AVAILABLE = False
+
+
+def _get_quantization_config():
+    """Create BitsAndBytesConfig lazily to avoid import-time crashes."""
+    if not BITSANDBYTES_AVAILABLE:
+        return None
+    return BitsAndBytesConfig(
+        load_in_8bit=True,
+        llm_int8_threshold=6.0,
+        llm_int8_has_fp16_weight=False,
+    )
+
 
 # Memory-optimized model loading config
 MEMORY_CONFIG = {
@@ -18,31 +43,24 @@ MEMORY_CONFIG = {
         # Stage 1: Training DFM connectors + decoders, LLM frozen
         "stage1": {
             "llm": "cpu",  # Frozen LLM on CPU (13GB)
-            "vision_encoder": "cpu",  # Frozen on CPU (4.3GB) 
+            "vision_encoder": "cpu",  # Frozen on CPU (4.3GB)
             "audio_encoder": "cpu",  # Frozen on CPU (1.6GB)
             "vision_connector": "cuda:0",  # Training on GPU (398M)
             "audio_connector": "cuda:0",  # Training on GPU (398M)
             "video_decoder": "cuda:0",  # Training on GPU (7.2GB)
             "speech_decoder": "cpu",  # Move to CPU if needed (2.4GB)
-            "projections": "cuda:0"  # Small, keep on GPU
+            "projections": "cuda:0",  # Small, keep on GPU
         },
-        
         # Stage 2: Full model training
         "stage2": {
             "llm": "auto",  # Let accelerate decide
             "encoders": "cpu",
             "connectors": "cuda:0",
-            "decoders": "auto"
-        }
+            "decoders": "auto",
+        },
     },
-    
-    # Quantization config for frozen models (reduce memory)
-    "quantization": BitsAndBytesConfig(
-        load_in_8bit=True,  # 8-bit quantization
-        llm_int8_threshold=6.0,
-        llm_int8_has_fp16_weight=False,
-    ),
-    
+    # Quantization config is generated lazily via _get_quantization_config()
+    "quantization": None,
     # Training optimizations
     "training": {
         "gradient_checkpointing": True,  # Trade compute for memory
@@ -50,17 +68,24 @@ MEMORY_CONFIG = {
         "batch_size": 1,  # Start with 1, increase if possible
         "gradient_accumulation_steps": 8,  # Simulate larger batches
         "max_grad_norm": 1.0,
-        "cpu_offload_optimizer": True  # Offload optimizer states to CPU
+        "cpu_offload_optimizer": True,  # Offload optimizer states to CPU
     },
-    
     # Memory limits
     "vram": "16GB",
     "ram": "32GB",
     "estimated_usage": {
         "vram": "~14GB",  # Connectors + decoders + activations
-        "ram": "~20GB"  # Frozen models + optimizer states
-    }
+        "ram": "~20GB",  # Frozen models + optimizer states
+    },
 }
+
+
+def get_memory_config() -> dict:
+    """Get memory config with lazily-initialized quantization."""
+    config = dict(MEMORY_CONFIG)
+    if config["quantization"] is None:
+        config["quantization"] = _get_quantization_config()
+    return config
 
 
 def get_device_map_stage1():
@@ -70,15 +95,12 @@ def get_device_map_stage1():
         "llm": "cpu",
         "vision_encoder.encoder": "cpu",
         "audio_encoder.encoder": "cpu",
-        
         # Training components on GPU
         "vision_connector": 0,
         "audio_connector": 0,
         "video_decoder": 0,
-        
         # Offload speech decoder if GPU full
         "speech_decoder": "cpu",
-        
         # Projections (small) on GPU
         "vision_proj": 0,
         "audio_proj": 0,
