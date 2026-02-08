@@ -50,7 +50,7 @@ def check_env():
 
 # Globals to be initialized in main()
 CONFIG = None
-logger = None
+logger = logging.getLogger(__name__)
 
 
 def parse_json_response(response: str) -> List[Dict[str, Any]]:
@@ -396,7 +396,7 @@ def main():
         )
     logger.info("=" * 70)
     logger.info(f"Next: Run GRPO Training")
-    logger.info(f"  python 06_grpo_training.py")
+    logger.info(f"  python 12_grpo_training.py")
 
 
 if __name__ == "__main__":

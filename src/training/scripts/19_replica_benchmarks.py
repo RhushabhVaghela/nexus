@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-18_replica_benchmarks.py
+19_replica_benchmarks.py
 "ReplicaEval" - Comprehensive benchmark for the Advanced Generator Suite.
 
 Evaluates:
@@ -17,7 +17,7 @@ from typing import Dict
 from pathlib import Path
 
 # Globals to be initialized in main()
-logger = None
+logger = logging.getLogger(__name__)
 torch = None
 tqdm = None
 

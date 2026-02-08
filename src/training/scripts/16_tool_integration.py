@@ -39,9 +39,6 @@ def check_env():
     return True
 
 
-# Globals to be initialized in main()
-logger = None
-
 # Enhanced Tool Trajectories
 TOOL_TRAJECTORIES = [
     {

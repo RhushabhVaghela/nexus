@@ -13,10 +13,11 @@ The goal:
 
 This is designed to sit on top of:
 - src/streaming/vision.py   (VisionStreamBuffer)
-- src/streaming/audio.py    (AudioStreamBuffer / ASR)
+- AudioStreamBuffer          (defined locally in this module)
 - src/streaming/tts.py      (optional TTS for responses)
 """
 
+import re
 import time
 import sys
 import threading
@@ -257,8 +258,6 @@ class JointStreamingOrchestrator:
                 # 2. Intelligence Sharing: Parse 'Mental State' from tags
                 detected_vibe = self.active_vibe
                 if "[" in reply and "]" in reply:
-                    import re
-
                     match = re.search(r"\[([a-zA-Z]+)\]", reply)
                     if match:
                         detected_vibe = match.group(1).lower()
@@ -310,7 +309,7 @@ class JointStreamingOrchestrator:
 def get_live_model(model_path: str):
     # Re-use the factory logic from podcast generator or import directly
     # Ideally should be a shared utility, but duplicating for standalone script stability
-    from multimodal.model import OmniMultimodalLM
+    from src.multimodal.model import OmniMultimodalLM
     from transformers import AutoTokenizer
 
     print(f"⚡ Loading Live OmniModel: {model_path}...")
@@ -375,13 +374,6 @@ def main():
         user_buffer=user_buf,
         llm_fn=live_llm_adapter,
         interval_sec=args.interval,
-    )
-
-    orchestrator.on_llm_response = lambda r: print(f"\n🤖 [Omni]: {r}\n")
-
-    orchestrator.start()
-    print(
-        "🚀 Joint Streaming Active. Type to interact (simulates User Event). Ctrl+C to stop."
     )
 
     orchestrator.on_llm_response = lambda r: print(f"\n[LLM] {r}\n")

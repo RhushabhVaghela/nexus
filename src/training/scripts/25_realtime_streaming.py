@@ -27,9 +27,6 @@ import os
 import time
 from pathlib import Path
 
-# Add src to path
-sys.path.append(str(Path(__file__).parent))
-
 
 def check_env():
     """Verify environment dependencies."""

@@ -89,8 +89,7 @@ def check_env():
 
 
 try:
-    sys.path.insert(0, str(Path(__file__).parent))
-    from utils.logging_config import setup_logger, log_header, log_completion
+    from src.utils.logging_config import setup_logger, log_header, log_completion
 
     logger = setup_logger(__name__, "logs/distributed_training.log")
 except (ImportError, ModuleNotFoundError):
@@ -979,7 +978,7 @@ srun torchrun \\
     --rdzv_id=$SLURM_JOB_ID \\
     --rdzv_backend=c10d \\
     --rdzv_endpoint=$MASTER_ADDR:$MASTER_PORT \\
-    src/26_distributed_training.py \\
+    src/training/scripts/26_distributed_training.py \\
     --model {config.model_name} \\
     --backend {config.backend} \\
     --zero-stage {config.zero_stage} \\

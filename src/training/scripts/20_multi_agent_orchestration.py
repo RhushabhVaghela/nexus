@@ -8,7 +8,7 @@ an LLM to perform its specialized task. Agents communicate and coordinate
 to build complete software applications from requirements.
 
 Usage:
-    python src/20_multi_agent_orchestration.py --model-path /path/to/model --requirement "Build a todo app"
+    python src/training/scripts/20_multi_agent_orchestration.py --model-path /path/to/model --requirement "Build a todo app"
 """
 
 import os

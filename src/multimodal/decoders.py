@@ -142,6 +142,10 @@ class AudioDecoder(ContentDecoder):
 
             # Convert to mono if needed
             if waveform.shape[0] > 1:
+                if torch is None:
+                    raise RuntimeError(
+                        "torch is required for audio mono conversion but is not available"
+                    )
                 waveform = torch.mean(waveform, dim=0, keepdim=True)
 
             if self.processor:

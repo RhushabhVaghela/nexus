@@ -254,7 +254,7 @@ class OmniTrainingStage(BaseStage):
         final_loss = losses[-1] if losses else 0.0
 
         # Log metrics to CSV
-        from src.nexus.core.metrics_tracker import MetricsTracker, TrainingMetrics
+        from src.core.metrics_tracker import MetricsTracker, TrainingMetrics
 
         tracker = MetricsTracker()
 

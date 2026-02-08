@@ -13,37 +13,7 @@ import sys
 import argparse
 from pathlib import Path
 
-# Add project root to sys.path to allow absolute imports from 'src'
-PROJECT_ROOT = Path(__file__).parent.parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-try:
-    from src.nexus.utils.logging_config import setup_logger, log_header, log_completion
-except ImportError:
-    # Fallback if logging config not available
-    import logging
-
-    def setup_logger(name, log_file):
-        logger = logging.getLogger(name)
-        handler = logging.FileHandler(log_file)
-        handler.setFormatter(
-            logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-        )
-        logger.addHandler(handler)
-        logger.setLevel(logging.INFO)
-        return logger
-
-    def log_header(logger, title, params):
-        logger.info(f"=== {title} ===")
-        for k, v in params.items():
-            logger.info(f"  {k}: {v}")
-
-    def log_completion(logger, task, total, train, val, test, time_taken):
-        logger.info(f"=== {task} Complete ===")
-        logger.info(
-            f"  Total: {total}, Train: {train}, Val: {val}, Test: {test}, Time: {time_taken:.2f}s"
-        )
+from src.utils.logging_config import setup_logger, log_header, log_completion
 
 
 try:

@@ -47,14 +47,15 @@ def test_dataset_loading():
     counts = {}
 
     print("\n🔄 Iterating...")
+    total_yielded = 0
     for i, sample in enumerate(ds):
-        # We can't easily get the dataset name from the yielded sample unless we modify yield
-        # But we can approximate by checking the content source if we had it.
-        # However, we can trust the internal logic if the total count makes sense.
-        # Wait, the verification needs to be sure it's per-dataset.
-
-        # Let's just count total samples yielded.
-        pass
+        total_yielded += 1
+        # Verify sample has expected structure (dict with content)
+        if not isinstance(sample, dict):
+            print(f"  ⚠️ Sample {i} is not a dict: {type(sample)}")
+        elif not sample:
+            print(f"  ⚠️ Sample {i} is empty")
+    print(f"  Total samples yielded: {total_yielded}")
 
     # Access internal state (white-box test)
     print("\n📊 Final Counts per Dataset (Internal State):")

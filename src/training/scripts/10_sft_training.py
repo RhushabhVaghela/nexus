@@ -169,7 +169,7 @@ if args.quick:
 
 # Custom Callback for Metrics Tracking
 from transformers import TrainerCallback
-from src.nexus.core.metrics_tracker import MetricsTracker, TrainingMetrics
+from src.core.metrics_tracker import MetricsTracker, TrainingMetrics
 import time
 
 

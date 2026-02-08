@@ -15,13 +15,27 @@ from pathlib import Path
 from typing import Dict, List, Optional, Union, Tuple
 from dataclasses import dataclass
 
-from datasets import load_dataset, Dataset, DatasetDict, concatenate_datasets
+try:
+    from datasets import load_dataset, Dataset, DatasetDict, concatenate_datasets
+
+    DATASETS_AVAILABLE = True
+except ImportError:
+    DATASETS_AVAILABLE = False
+    Dataset = None
+    DatasetDict = None
+    load_dataset = None
+    concatenate_datasets = None
 
 logger = logging.getLogger(__name__)
 
 
 class UniversalDatasetManager:
     def __init__(self, mode: str = "default", data_root: str = "/mnt/e/data"):
+        if not DATASETS_AVAILABLE:
+            raise ImportError(
+                "UniversalDatasetManager requires the 'datasets' package. "
+                "Install it with: pip install datasets"
+            )
         self.mode = mode.lower()
         self.data_root = Path(data_root)
         self.datasets_dir = self.data_root / "datasets"

@@ -18,23 +18,27 @@ from datasets import load_dataset
 import tqdm
 
 UNSLOTH_AVAILABLE = False
+
+
 def check_env():
     """Verify environment dependencies."""
     global UNSLOTH_AVAILABLE
     try:
         from unsloth import FastLanguageModel
+
         UNSLOTH_AVAILABLE = True
     except ImportError:
         print("[ERROR] Missing dependency: unsloth")
         return False
-        
+
     if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
         print("[ERROR] Must be run in 'nexus' conda environment.")
         return False
     return True
 
+
 # Globals to be initialized in main()
-logger = None
+logger = logging.getLogger(__name__)
 
 BENCHMARKS = {
     "mmlu": {
@@ -57,14 +61,19 @@ BENCHMARKS = {
     },
 }
 
-def evaluate_benchmark(model, tokenizer, benchmark_name: str, dataset, max_samples: int = 100):
+
+def evaluate_benchmark(
+    model, tokenizer, benchmark_name: str, dataset, max_samples: int = 100
+):
     """Evaluate on single benchmark"""
     correct = 0
     results = []
-    
+
     logger.info(f"  Evaluating {benchmark_name}...")
-    
-    for idx, sample in enumerate(tqdm.tqdm(dataset.take(max_samples), desc=benchmark_name)):
+
+    for idx, sample in enumerate(
+        tqdm.tqdm(dataset.take(max_samples), desc=benchmark_name)
+    ):
         if benchmark_name == "mmlu":
             question = sample["question"]
             answer = sample["answerKey"]
@@ -78,50 +87,50 @@ def evaluate_benchmark(model, tokenizer, benchmark_name: str, dataset, max_sampl
             answer = sample["canonical_solution"]
         else:
             continue
-        
+
         # Generate
         try:
             inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
             with torch.no_grad():
                 outputs = model.generate(**inputs, max_new_tokens=256)
             response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-            
+
             # Check correctness
             is_correct = str(answer).lower() in response.lower()
             if is_correct:
                 correct += 1
-            
-            results.append({
-                "id": idx,
-                "prompt": prompt[:100],
-                "answer": str(answer)[:50],
-                "response": response[:100],
-                "correct": is_correct
-            })
+
+            results.append(
+                {
+                    "id": idx,
+                    "prompt": prompt[:100],
+                    "answer": str(answer)[:50],
+                    "response": response[:100],
+                    "correct": is_correct,
+                }
+            )
         except Exception as e:
             logger.warning(f"    Error on sample {idx}: {e}")
-    
+
     accuracy = correct / min(len(dataset), max_samples)
     return {
         "accuracy": accuracy,
         "correct": correct,
         "total": min(len(dataset), max_samples),
-        "results": results
+        "results": results,
     }
+
 
 def main():
     if not check_env():
         return
-        
+
     global logger
-    os.makedirs('logs', exist_ok=True)
+    os.makedirs("logs", exist_ok=True)
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler('logs/evaluation.log'),
-            logging.StreamHandler()
-        ]
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        handlers=[logging.FileHandler("logs/evaluation.log"), logging.StreamHandler()],
     )
     logger = logging.getLogger(__name__)
 
@@ -129,16 +138,16 @@ def main():
     from datasets import load_dataset
     import tqdm
 
-    logger.info("="*70)
+    logger.info("=" * 70)
     logger.info("📊 STAGE 5: COMPREHENSIVE EVALUATION")
-    logger.info("="*70)
-    
+    logger.info("=" * 70)
+
     # Choose model
     model_path = "checkpoints/stage3_grpo/final"
     if not Path(model_path).exists():
         logger.error(f"❌ Model not found: {model_path}")
         return
-    
+
     # Load model
     logger.info("\n📦 Loading model for evaluation...")
     try:
@@ -153,63 +162,66 @@ def main():
     except Exception as e:
         logger.error(f"❌ Failed to load model: {e}")
         return
-    
+
     # Evaluate
     output_dir = Path("evaluation_results")
     output_dir.mkdir(exist_ok=True)
-    
+
     results = {}
     logger.info("\n🔍 Running benchmarks...")
-    
+
     for bench_name, bench_config in BENCHMARKS.items():
         logger.info(f"\n📚 {bench_name.upper()}")
-        
+
         try:
             if bench_config["config"]:
                 dataset = load_dataset(
                     bench_config["dataset"],
                     bench_config["config"],
                     split=bench_config["split"],
-                    trust_remote_code=True
+                    trust_remote_code=True,
                 )
             else:
                 dataset = load_dataset(
                     bench_config["dataset"],
                     split=bench_config["split"],
-                    trust_remote_code=True
+                    trust_remote_code=True,
                 )
-            
+
             eval_result = evaluate_benchmark(
-                model, tokenizer,
-                bench_name, dataset,
-                max_samples=bench_config["samples"]
+                model,
+                tokenizer,
+                bench_name,
+                dataset,
+                max_samples=bench_config["samples"],
             )
-            
+
             results[bench_name] = eval_result
-            logger.info(f"  Accuracy: {eval_result['accuracy']*100:.1f}%")
+            logger.info(f"  Accuracy: {eval_result['accuracy'] * 100:.1f}%")
         except Exception as e:
             logger.error(f"  Failed: {e}")
-    
+
     # Save results
     logger.info("\n💾 Saving results...")
-    
+
     # Summary
     summary = {bench: results[bench]["accuracy"] for bench in results}
     with open(output_dir / "summary.json", "w") as f:
         json.dump(summary, f, indent=2)
-    
+
     # Detailed
     with open(output_dir / "detailed_results.json", "w") as f:
         json.dump(results, f, indent=2)
-    
+
     logger.info(f"✓ Results saved to: {output_dir}")
-    
-    logger.info("\n" + "="*70)
+
+    logger.info("\n" + "=" * 70)
     logger.info("✅ EVALUATION COMPLETE!")
-    logger.info("="*70)
+    logger.info("=" * 70)
     logger.info("Results:")
     for bench, result in results.items():
-        logger.info(f"  {bench}: {result['accuracy']*100:.1f}%")
+        logger.info(f"  {bench}: {result['accuracy'] * 100:.1f}%")
+
 
 if __name__ == "__main__":
     main()

@@ -31,6 +31,12 @@ try:
     PROMETHEUS_AVAILABLE = True
 except ImportError:
     PROMETHEUS_AVAILABLE = False
+    # Fallback stubs so type annotations don't raise NameError
+    Counter = None
+    Histogram = None
+    Gauge = None
+    Info = None
+    CollectorRegistry = None
 
 # Try to import psutil for system metrics
 try:

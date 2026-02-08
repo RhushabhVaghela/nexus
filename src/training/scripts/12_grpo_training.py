@@ -294,7 +294,7 @@ def main():
     # Check input
     if not Path("rejection_sampled.jsonl").exists():
         logger.error("❌ rejection_sampled.jsonl not found")
-        logger.error("   Run: python 05_rejection_sampling.py")
+        logger.error("   Run: python 15_rejection_sampling.py")
         return
 
     # Load model
@@ -452,7 +452,7 @@ def main():
     logger.info("=" * 70)
     logger.info(f"Your production model: checkpoints/stage3_grpo/final/")
     logger.info(f"Next: Optional Stage 4 (Tool Integration)")
-    logger.info(f"  python 07_tool_integration.py")
+    logger.info(f"  python 16_tool_integration.py")
 
 
 if __name__ == "__main__":
