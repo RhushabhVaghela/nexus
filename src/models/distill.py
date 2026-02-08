@@ -6,12 +6,23 @@ import shutil
 import json
 import signal
 import gc
+from contextlib import nullcontext
 from torch.utils.data import DataLoader
 from .loss_functions import ActivationAnchoringLoss
 from .auditor import MemorizationAuditor
 from nexus.core.student.core import NexusStudentCore
 from typing import Dict, Any
 from tqdm import tqdm
+
+# --- Memory Guard Integration (WSL-aware) ---
+try:
+    from src.utils.memory_guard import guard, MemoryPressure
+
+    _GUARD_AVAILABLE = True
+except ImportError:
+    _GUARD_AVAILABLE = False
+    guard = None
+    MemoryPressure = None
 
 
 class NexusTrainer:
@@ -97,24 +108,34 @@ class NexusTrainer:
 
     def save_checkpoint(self, tag="latest"):
         path = os.path.join(self.checkpoint_dir, f"checkpoint_{tag}.pt")
-        torch.save(
-            {
-                "step": self.global_step,
-                "student_state": self.student.state_dict(),
-                "adapter_states": {k: v.state_dict() for k, v in self.adapters.items()},
-                "optimizer": self.optimizer.state_dict(),
-                "prev_loss": self.prev_loss,
-                "best_val_loss": self.best_val_loss,
-            },
-            path,
+        ctx = (
+            guard.safe_allocate(
+                estimated_ram_gb=1.0, estimated_vram_gb=0, operation="save_checkpoint"
+            )
+            if (_GUARD_AVAILABLE and guard is not None)
+            else nullcontext()
         )
-        print(f"[Checkpoint] Saved to {path}")
+        with ctx:
+            torch.save(
+                {
+                    "step": self.global_step,
+                    "student_state": self.student.state_dict(),
+                    "adapter_states": {
+                        k: v.state_dict() for k, v in self.adapters.items()
+                    },
+                    "optimizer": self.optimizer.state_dict(),
+                    "prev_loss": self.prev_loss,
+                    "best_val_loss": self.best_val_loss,
+                },
+                path,
+            )
+            print(f"[Checkpoint] Saved to {path}")
 
-        # Always maintain a "checkpoint_latest.pt" for the exporter
-        if tag != "latest":
-            latest_path = os.path.join(self.checkpoint_dir, "checkpoint_latest.pt")
-            shutil.copy(path, latest_path)
-            print(f"[Checkpoint] Updated link: {latest_path}")
+            # Always maintain a "checkpoint_latest.pt" for the exporter
+            if tag != "latest":
+                latest_path = os.path.join(self.checkpoint_dir, "checkpoint_latest.pt")
+                shutil.copy(path, latest_path)
+                print(f"[Checkpoint] Updated link: {latest_path}")
 
         return path
 
@@ -122,14 +143,24 @@ class NexusTrainer:
         path = os.path.join(self.checkpoint_dir, f"checkpoint_{tag}.pt")
         if os.path.exists(path):
             print(f"[Recovery] Rolling back to {tag}...")
-            ckpt = torch.load(path, map_location=self.device)
-            self.student.load_state_dict(ckpt["student_state"])
-            for k, v in self.adapters.items():
-                v.load_state_dict(ckpt["adapter_states"][k])
-            self.optimizer.load_state_dict(ckpt["optimizer"])
-            self.global_step = ckpt["step"]
-            self.prev_loss = ckpt["prev_loss"]
-            self.best_val_loss = ckpt.get("best_val_loss", float("inf"))
+            ctx = (
+                guard.safe_allocate(
+                    estimated_ram_gb=2.0,
+                    estimated_vram_gb=2.0,
+                    operation="load_checkpoint",
+                )
+                if (_GUARD_AVAILABLE and guard is not None)
+                else nullcontext()
+            )
+            with ctx:
+                ckpt = torch.load(path, map_location=self.device)
+                self.student.load_state_dict(ckpt["student_state"])
+                for k, v in self.adapters.items():
+                    v.load_state_dict(ckpt["adapter_states"][k])
+                self.optimizer.load_state_dict(ckpt["optimizer"])
+                self.global_step = ckpt["step"]
+                self.prev_loss = ckpt["prev_loss"]
+                self.best_val_loss = ckpt.get("best_val_loss", float("inf"))
             return True
         return False
 
@@ -143,6 +174,38 @@ class NexusTrainer:
         self.student.train()
         for adapter in self.adapters.values():
             adapter.train()
+
+        # --- Pre-flight Memory Check ---
+        if _GUARD_AVAILABLE:
+            try:
+                ok, snap = guard.preflight_check(
+                    estimated_ram_gb=8.0, estimated_vram_gb=10.0
+                )
+                if not ok:
+                    print(
+                        f"[Trainer] Pre-flight FAILED: RAM free={snap.ram_available_gb:.1f}GB, "
+                        f"VRAM free={snap.total_vram_free_gb:.1f}GB, "
+                        f"pressure={snap.pressure.value}"
+                    )
+                    print("[Trainer] Attempting emergency cleanup before training...")
+                    guard.emergency_cleanup(aggressive=True)
+                    # Re-check after cleanup
+                    ok2, snap2 = guard.preflight_check(
+                        estimated_ram_gb=8.0, estimated_vram_gb=10.0
+                    )
+                    if not ok2:
+                        print(
+                            "[Trainer] WARNING: Still insufficient memory after cleanup. "
+                            "Training may OOM. Proceeding with caution."
+                        )
+                else:
+                    print(
+                        f"[Trainer] Pre-flight OK: pressure={snap.pressure.value}, "
+                        f"RAM free={snap.ram_available_gb:.1f}GB, "
+                        f"VRAM free={snap.total_vram_free_gb:.1f}GB"
+                    )
+            except Exception as e:
+                print(f"[Trainer] Pre-flight check error (non-fatal): {e}")
 
         # Initial Safe State
         self.save_checkpoint("recovery_safe")
@@ -199,9 +262,49 @@ class NexusTrainer:
                         if "out of memory" in str(e):
                             print("[Hardware] OOM Detected! Attempting recovery...")
                             torch.cuda.empty_cache()
-                            # In a real loop we might skip batch or reduce BS here,
-                            # but for now we just clear cache and hope next batch fits
-                            continue
+
+                            if _GUARD_AVAILABLE:
+                                try:
+                                    pressure = guard.get_pressure()
+                                    pressure_order = list(MemoryPressure)
+                                    pressure_idx = pressure_order.index(pressure)
+                                    deadly_idx = pressure_order.index(
+                                        MemoryPressure.DEADLY
+                                    )
+                                    critical_idx = pressure_order.index(
+                                        MemoryPressure.CRITICAL
+                                    )
+
+                                    if pressure_idx >= deadly_idx:
+                                        # DEADLY: save checkpoint and abort training
+                                        print(
+                                            f"[Hardware] DEADLY pressure ({pressure.value}) after OOM. "
+                                            f"Saving checkpoint and aborting training."
+                                        )
+                                        self.save_checkpoint("oom_deadly")
+                                        return  # Abort training entirely
+                                    elif pressure_idx >= critical_idx:
+                                        # CRITICAL: aggressive cleanup, then retry batch
+                                        print(
+                                            f"[Hardware] CRITICAL pressure ({pressure.value}) after OOM. "
+                                            f"Running aggressive cleanup before retry..."
+                                        )
+                                        guard.emergency_cleanup(aggressive=True)
+                                        gc.collect()
+                                        continue  # Retry next batch
+                                    else:
+                                        # HIGH or below: standard cleanup already done
+                                        print(
+                                            f"[Hardware] Pressure {pressure.value} after OOM. "
+                                            f"Cache cleared, continuing..."
+                                        )
+                                        continue
+                                except Exception as guard_err:
+                                    print(f"[Hardware] Guard check failed: {guard_err}")
+                                    continue  # Fall through to simple continue
+                            else:
+                                # No guard available — original behavior
+                                continue
                         else:
                             raise e
 
@@ -254,101 +357,134 @@ class NexusTrainer:
 
         # 1. Adapter Projection (NIWT Bridge)
         # We project all teacher features into the student's latent space
-        student_compatible_feats = {}
-        for name, adapter in self.adapters.items():
-            if name in teacher_feats:
-                student_compatible_feats[name] = adapter(teacher_feats[name])
-
-        # 2. Student Forward Pass
-        # We pass the projected hidden states to the student's modular backbone
-        outputs = self.student(
-            input_ids=input_ids,
-            adapter_hidden_states=student_compatible_feats,
-            labels=labels,
-            output_router_logits=True,
+        ctx = (
+            guard.safe_allocate(
+                estimated_ram_gb=0,
+                estimated_vram_gb=2.0,
+                operation="training_step_forward_backward",
+            )
+            if (_GUARD_AVAILABLE and guard is not None)
+            else nullcontext()
         )
+        with ctx:
+            student_compatible_feats = {}
+            for name, adapter in self.adapters.items():
+                if name in teacher_feats:
+                    student_compatible_feats[name] = adapter(teacher_feats[name])
 
-        # 3. Multi-Adapter Distillation Loss
-        total_distill_loss = 0
-        num_adapters = len(student_compatible_feats)
-
-        if num_adapters > 0:
-            for name, projected_state in student_compatible_feats.items():
-                # We anchor the student's output representation against EACH active adapter's projection
-                # This ensures the backbone can handle diverse modalities simultaneously.
-                loss_i = self.loss_fn(
-                    student_logits=outputs["logits"],
-                    teacher_logits=teacher_logits,
-                    student_states=outputs["hidden_states"],
-                    teacher_states=projected_state,
-                    anchoring_layer_indices=self.config.get("critical_layers", []),
-                )
-                total_distill_loss += loss_i / num_adapters
-        else:
-            # Fallback to standard CE if no adapters are active (rare in distillation)
-            total_distill_loss = outputs["loss"]
-
-        # 4. Router Diversity Loss (Prevents Mode Collapse)
-        loss_entropy = 0
-        if "entropy_loss" in outputs and outputs["entropy_loss"] is not None:
-            loss_entropy = outputs["entropy_loss"]
-        elif "router_logits" in outputs and outputs["router_logits"] is not None:
-            # Manual fallback if entropy loss wasn't pre-computed
-            probs = torch.softmax(outputs["router_logits"], dim=-1)
-            loss_entropy = -torch.sum(probs * torch.log(probs + 1e-9), dim=-1).mean()
-
-        beta_entropy = self.config.get("beta_entropy", 0.01)
-
-        # Combined objective
-        total_loss = total_distill_loss + (beta_entropy * loss_entropy)
-
-        # 5. Safety: Loss Spike Detection & Recovery
-        if (
-            total_loss.item() > self.prev_loss * self.loss_spike_threshold
-            and self.global_step > 50
-        ):
-            print(
-                f"[Alert] Loss Spike: {total_loss.item():.4f} (Prev: {self.prev_loss:.4f}). Rolling back..."
-            )
-            self.load_checkpoint("best")  # Rollback to the best known state
-            return {"loss": "ROLLBACK", "gnorm": "0.00"}
-
-        # Scale Loss for Accumulation
-        scaled_loss = total_loss / self.grad_accum_steps
-        scaled_loss.backward()
-
-        # 6. Gradient Monitoring & Update (Only at boundary)
-        grad_norm = 0.0
-        if is_accum_boundary:
-            # Clipping
-            grad_norm = torch.nn.utils.clip_grad_norm_(
-                self.student.parameters(), self.max_grad_norm
+            # 2. Student Forward Pass
+            # We pass the projected hidden states to the student's modular backbone
+            outputs = self.student(
+                input_ids=input_ids,
+                adapter_hidden_states=student_compatible_feats,
+                labels=labels,
+                output_router_logits=True,
             )
 
-            # Check for vanishing gradients (masking)
-            if grad_norm < 1e-6:
+            # 3. Multi-Adapter Distillation Loss
+            total_distill_loss = 0
+            num_adapters = len(student_compatible_feats)
+
+            if num_adapters > 0:
+                for name, projected_state in student_compatible_feats.items():
+                    # We anchor the student's output representation against EACH active adapter's projection
+                    # This ensures the backbone can handle diverse modalities simultaneously.
+                    loss_i = self.loss_fn(
+                        student_logits=outputs["logits"],
+                        teacher_logits=teacher_logits,
+                        student_states=outputs["hidden_states"],
+                        teacher_states=projected_state,
+                        anchoring_layer_indices=self.config.get("critical_layers", []),
+                    )
+                    total_distill_loss += loss_i / num_adapters
+            else:
+                # Fallback to standard CE if no adapters are active (rare in distillation)
+                total_distill_loss = outputs["loss"]
+
+            # 4. Router Diversity Loss (Prevents Mode Collapse)
+            loss_entropy = 0
+            if "entropy_loss" in outputs and outputs["entropy_loss"] is not None:
+                loss_entropy = outputs["entropy_loss"]
+            elif "router_logits" in outputs and outputs["router_logits"] is not None:
+                # Manual fallback if entropy loss wasn't pre-computed
+                probs = torch.softmax(outputs["router_logits"], dim=-1)
+                loss_entropy = -torch.sum(
+                    probs * torch.log(probs + 1e-9), dim=-1
+                ).mean()
+
+            beta_entropy = self.config.get("beta_entropy", 0.01)
+
+            # Combined objective
+            total_loss = total_distill_loss + (beta_entropy * loss_entropy)
+
+            # 5. Safety: Loss Spike Detection & Recovery
+            if (
+                total_loss.item() > self.prev_loss * self.loss_spike_threshold
+                and self.global_step > 50
+            ):
                 print(
-                    f"[Warning] Vanishing Gradients detected: {grad_norm:.6f}. Increasing CE weight."
+                    f"[Alert] Loss Spike: {total_loss.item():.4f} (Prev: {self.prev_loss:.4f}). Rolling back..."
                 )
-                self.loss_fn.alpha_ce *= 1.1
+                self.load_checkpoint("best")  # Rollback to the best known state
+                return {"loss": "ROLLBACK", "gnorm": "0.00"}
 
-            self.optimizer.step()
-            self.optimizer.zero_grad()
-            self.global_step += 1
+            # Scale Loss for Accumulation
+            scaled_loss = total_loss / self.grad_accum_steps
+            scaled_loss.backward()
 
-            # Update prev_loss for spike detection using the FULL (unscaled) loss
-            self.prev_loss = total_loss.item()
+            # 6. Gradient Monitoring & Update (Only at boundary)
+            grad_norm = 0.0
+            if is_accum_boundary:
+                # Clipping
+                grad_norm = torch.nn.utils.clip_grad_norm_(
+                    self.student.parameters(), self.max_grad_norm
+                )
 
-        # We track full steps (global_step)
+                # Check for vanishing gradients (masking)
+                if grad_norm < 1e-6:
+                    print(
+                        f"[Warning] Vanishing Gradients detected: {grad_norm:.6f}. Increasing CE weight."
+                    )
+                    self.loss_fn.alpha_ce *= 1.1
 
-        if self.global_step % 50 == 0 and is_accum_boundary:
-            self.save_checkpoint("latest")
+                self.optimizer.step()
+                self.optimizer.zero_grad()
+                self.global_step += 1
 
-        # 7. Periodic RAM & VRAM Cleanup (OOM-Safe for Laptop)
-        if self.global_step % 100 == 0 and is_accum_boundary:
-            gc.collect()
-            if self.device == "cuda":
-                torch.cuda.empty_cache()
+                # Update prev_loss for spike detection using the FULL (unscaled) loss
+                self.prev_loss = total_loss.item()
+
+            # We track full steps (global_step)
+
+            if self.global_step % 50 == 0 and is_accum_boundary:
+                self.save_checkpoint("latest")
+
+            # 7. Pressure-Aware Memory Cleanup (WSL-safe)
+            if is_accum_boundary and _GUARD_AVAILABLE:
+                try:
+                    pressure = guard.get_pressure()
+                    pressure_order = list(MemoryPressure)
+                    pressure_idx = pressure_order.index(pressure)
+                    high_idx = pressure_order.index(MemoryPressure.HIGH)
+                    critical_idx = pressure_order.index(MemoryPressure.CRITICAL)
+
+                    if pressure_idx >= critical_idx:
+                        # CRITICAL+: aggressive cleanup every step
+                        gc.collect()
+                        if self.device == "cuda":
+                            torch.cuda.empty_cache()
+                        guard.emergency_cleanup(aggressive=False)
+                    elif pressure_idx >= high_idx:
+                        # HIGH: lightweight cleanup every step
+                        if self.device == "cuda":
+                            torch.cuda.empty_cache()
+                except Exception:
+                    pass  # Guard failure should never break training
+            elif self.global_step % 100 == 0 and is_accum_boundary:
+                # Fallback: original periodic cleanup when guard unavailable
+                gc.collect()
+                if self.device == "cuda":
+                    torch.cuda.empty_cache()
 
         return {"loss": f"{total_loss.item():.4f}", "gnorm": f"{grad_norm:.2f}"}
 
@@ -357,14 +493,22 @@ class NexusTrainer:
         total_val_loss = 0
         steps = 0
 
-        with torch.no_grad():
-            for batch in self.val_loader:
-                # Simplified eval forward
-                input_ids = batch["input_ids"].to(self.device)
-                labels = batch["labels"].to(self.device)
-                outputs = self.student(input_ids=input_ids, labels=labels)
-                total_val_loss += outputs["loss"].item()
-                steps += 1
+        ctx = (
+            guard.safe_allocate(
+                estimated_ram_gb=0, estimated_vram_gb=1.0, operation="evaluate"
+            )
+            if (_GUARD_AVAILABLE and guard is not None)
+            else nullcontext()
+        )
+        with ctx:
+            with torch.no_grad():
+                for batch in self.val_loader:
+                    # Simplified eval forward
+                    input_ids = batch["input_ids"].to(self.device)
+                    labels = batch["labels"].to(self.device)
+                    outputs = self.student(input_ids=input_ids, labels=labels)
+                    total_val_loss += outputs["loss"].item()
+                    steps += 1
 
         self.student.train()
         return total_val_loss / max(steps, 1)
@@ -392,6 +536,21 @@ class NexusTrainer:
                 "[Audit] Warning: MemorizationAuditor not initialized, skipping audit"
             )
             return None
+
+        # Skip audit if memory pressure is HIGH or above — audit is expensive
+        if _GUARD_AVAILABLE:
+            try:
+                pressure = guard.get_pressure()
+                pressure_order = list(MemoryPressure)
+                if pressure_order.index(pressure) >= pressure_order.index(
+                    MemoryPressure.HIGH
+                ):
+                    print(
+                        f"[Audit] Skipping memorization audit — memory pressure is {pressure.value}"
+                    )
+                    return {"status": "skipped_pressure", "pressure": pressure.value}
+            except Exception:
+                pass  # Guard failure should not block audit
 
         print(
             f"\n[Audit] Running Discoverable Memorization check at step {self.global_step}..."
@@ -488,6 +647,12 @@ class NexusTrainer:
             if "out of memory" in str(e):
                 print(f"[Audit] OOM during memorization audit, skipping: {e}")
                 torch.cuda.empty_cache()
+                if _GUARD_AVAILABLE:
+                    try:
+                        guard.emergency_cleanup(aggressive=True)
+                        print("[Audit] Emergency cleanup completed after audit OOM")
+                    except Exception:
+                        pass
                 return {"status": "oom_error", "error": str(e)}
             else:
                 print(f"[Audit] Error during memorization audit: {e}")

@@ -65,10 +65,29 @@ groups:
 
   # ==========================================================================
   # Pipeline Resource Alerts
+  # --------------------------------------------------------------------------
+  # Thresholds aligned with src/utils/memory_guard.py:
+  #   WSL: RAM elevated=65%, high=75%, critical=82%, deadly=85%
+  #        VRAM elevated=70%, high=80%, critical=88%, deadly=94%
+  #   Native: RAM elevated=70%, high=80%, critical=90%, deadly=95%
+  #           VRAM elevated=75%, high=85%, critical=92%, deadly=98%
+  #   Swap: >50% = HIGH, >70% = CRITICAL (WSL2 OOM correlates with swap)
   # ==========================================================================
   - name: nexus.pipeline.resources
     interval: 30s
     rules:
+      - alert: PipelineMemoryElevated
+        expr: |
+          nexus_pipeline_memory_usage_bytes / nexus_pipeline_memory_limit_bytes > 0.68
+        for: 5m
+        labels:
+          severity: warning
+          service: pipeline
+          team: ml
+        annotations:
+          summary: "Pipeline memory usage elevated (WSL guard threshold)"
+          description: "Pipeline {{ $labels.pipeline_id }} is using {{ $value | humanizePercentage }} of memory limit (guard elevated=65-70%)"
+
       - alert: PipelineHighMemoryUsage
         expr: |
           nexus_pipeline_memory_usage_bytes / nexus_pipeline_memory_limit_bytes > 0.85
@@ -83,15 +102,27 @@ groups:
 
       - alert: PipelineGPUMemoryHigh
         expr: |
-          nexus_pipeline_gpu_memory_bytes / nexus_pipeline_gpu_memory_limit_bytes > 0.9
+          nexus_pipeline_gpu_memory_bytes / nexus_pipeline_gpu_memory_limit_bytes > 0.88
         for: 5m
         labels:
           severity: critical
           service: pipeline
           team: ml
         annotations:
-          summary: "Pipeline GPU memory nearly exhausted"
+          summary: "Pipeline GPU memory nearly exhausted (aligned with WSL VRAM critical=88%)"
           description: "Pipeline {{ $labels.pipeline_id }} is using {{ $value | humanizePercentage }} of GPU memory"
+
+      - alert: PipelineSwapPressure
+        expr: |
+          nexus_system_swap_usage_percent > 50
+        for: 5m
+        labels:
+          severity: warning
+          service: pipeline
+          team: ml
+        annotations:
+          summary: "Swap usage high — WSL2 OOM risk"
+          description: "Swap usage is at {{ $value }}%. WSL2 OOM killer correlates with swap pressure (>50% = HIGH, >70% = CRITICAL in memory_guard.py)"
 
       - alert: PipelineCPUThrottling
         expr: |

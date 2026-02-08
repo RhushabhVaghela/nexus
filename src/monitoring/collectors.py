@@ -431,6 +431,16 @@ class SystemMetricsCollector(MetricsCollector):
                 "gpu_power_draw_watts", "GPU power draw in watts", ["gpu"]
             )
 
+        # Memory guard metrics (WSL-aware pressure + swap)
+        self._create_gauge(
+            "memory_pressure_level",
+            "Memory pressure level (0=safe, 1=elevated, 2=high, 3=critical, 4=deadly)",
+        )
+        self._create_gauge(
+            "swap_usage_percent",
+            "Swap usage percentage",
+        )
+
     def collect(self) -> Dict[str, Any]:
         """Collect current system metrics."""
         metrics = {}
@@ -480,6 +490,20 @@ class SystemMetricsCollector(MetricsCollector):
                     logger.warning(f"Failed to get GPU power usage: {e}")
 
                 metrics["gpu"].append(gpu_info)
+
+        # Memory guard: swap + pressure
+        try:
+            from src.utils.memory_guard import guard, MemoryPressure
+
+            if guard is not None:
+                snap = guard.snapshot()
+                pressure_order = list(MemoryPressure)
+                metrics["memory_pressure"] = pressure_order.index(snap.pressure)
+                metrics["swap_used_gb"] = snap.swap_used_gb
+                metrics["swap_total_gb"] = snap.swap_total_gb
+                metrics["swap_percent"] = snap.swap_percent
+        except Exception:
+            pass
 
         return metrics
 
@@ -548,6 +572,22 @@ class SystemMetricsCollector(MetricsCollector):
                         )
                     except Exception as e:
                         logger.warning(f"Failed to get GPU power usage: {e}")
+
+        # Memory guard: update pressure + swap gauges
+        try:
+            from src.utils.memory_guard import guard, MemoryPressure
+
+            if guard is not None:
+                snap = guard.snapshot()
+                pressure_order = list(MemoryPressure)
+                if "memory_pressure_level" in self._metrics:
+                    self._metrics["memory_pressure_level"].set(
+                        pressure_order.index(snap.pressure)
+                    )
+                if "swap_usage_percent" in self._metrics:
+                    self._metrics["swap_usage_percent"].set(snap.swap_percent)
+        except Exception:
+            pass
 
     def __del__(self):
         """Cleanup."""

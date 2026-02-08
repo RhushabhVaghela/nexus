@@ -20,6 +20,16 @@ import threading
 
 logger = logging.getLogger(__name__)
 
+# Import centralized memory guard for WSL-aware thresholds
+try:
+    from src.utils.memory_guard import guard as _memory_guard, MemoryPressure
+
+    _GUARD_AVAILABLE = True
+except ImportError:
+    _memory_guard = None
+    MemoryPressure = None  # type: ignore[assignment, misc]
+    _GUARD_AVAILABLE = False
+
 
 class HealthStatus(Enum):
     """Health check status."""
@@ -177,21 +187,34 @@ class HealthCheck(ABC):
 
 
 class SystemHealthCheck(HealthCheck):
-    """Check system resources."""
+    """Check system resources.
+
+    Thresholds are WSL-aware when memory_guard is available:
+        WSL2: max_memory_percent defaults to ~78% (WSL OOM kills earlier)
+        Native: max_memory_percent defaults to 90%
+    """
 
     def __init__(
         self,
         max_cpu_percent: float = 90.0,
-        max_memory_percent: float = 90.0,
+        max_memory_percent: Optional[float] = None,
         min_disk_gb: float = 1.0,
     ):
         super().__init__("system", timeout=5.0, critical=True)
         self.max_cpu_percent = max_cpu_percent
-        self.max_memory_percent = max_memory_percent
         self.min_disk_gb = min_disk_gb
 
+        # Pull WSL-aware memory threshold from guard, fallback to 90%
+        if max_memory_percent is not None:
+            self.max_memory_percent = max_memory_percent
+        elif _GUARD_AVAILABLE and _memory_guard is not None:
+            thresholds = _memory_guard.get_thresholds()
+            self.max_memory_percent = thresholds.get("ram_high_percent", 90.0)
+        else:
+            self.max_memory_percent = 90.0
+
     def check(self) -> HealthCheckResult:
-        """Check system health."""
+        """Check system health with WSL-aware memory monitoring."""
         try:
             import psutil
 
@@ -203,13 +226,27 @@ class SystemHealthCheck(HealthCheck):
                 else HealthStatus.DEGRADED
             )
 
-            # Memory
+            # Memory — use guard pressure level when available
             memory = psutil.virtual_memory()
-            memory_status = (
-                HealthStatus.HEALTHY
-                if memory.percent < self.max_memory_percent
-                else HealthStatus.DEGRADED
-            )
+            if _GUARD_AVAILABLE and _memory_guard is not None:
+                pressure = _memory_guard.get_pressure()
+                if pressure in (MemoryPressure.CRITICAL, MemoryPressure.DEADLY):
+                    memory_status = HealthStatus.UNHEALTHY
+                elif pressure in (MemoryPressure.HIGH, MemoryPressure.ELEVATED):
+                    memory_status = HealthStatus.DEGRADED
+                else:
+                    memory_status = HealthStatus.HEALTHY
+                pressure_name = pressure.name
+            else:
+                memory_status = (
+                    HealthStatus.HEALTHY
+                    if memory.percent < self.max_memory_percent
+                    else HealthStatus.DEGRADED
+                )
+                pressure_name = "unknown"
+
+            # Swap (critical for WSL2 OOM prediction)
+            swap = psutil.swap_memory()
 
             # Disk
             disk = psutil.disk_usage("/")
@@ -221,9 +258,15 @@ class SystemHealthCheck(HealthCheck):
             )
 
             # Overall status
-            if disk_status == HealthStatus.UNHEALTHY:
+            if (
+                disk_status == HealthStatus.UNHEALTHY
+                or memory_status == HealthStatus.UNHEALTHY
+            ):
                 status = HealthStatus.UNHEALTHY
-                message = f"Critical disk space: {disk_gb:.1f}GB free"
+                if disk_status == HealthStatus.UNHEALTHY:
+                    message = f"Critical disk space: {disk_gb:.1f}GB free"
+                else:
+                    message = f"Critical memory pressure: RAM {memory.percent:.1f}%, Swap {swap.percent:.1f}%"
             elif (
                 cpu_status == HealthStatus.DEGRADED
                 or memory_status == HealthStatus.DEGRADED
@@ -243,8 +286,14 @@ class SystemHealthCheck(HealthCheck):
                 metadata={
                     "cpu_percent": cpu_percent,
                     "memory_percent": memory.percent,
+                    "memory_pressure": pressure_name,
+                    "swap_percent": swap.percent,
+                    "swap_used_gb": swap.used / (1024**3),
                     "disk_free_gb": disk_gb,
                     "disk_total_gb": disk.total / (1024**3),
+                    "is_wsl": _memory_guard.is_wsl
+                    if _GUARD_AVAILABLE and _memory_guard
+                    else False,
                 },
             )
 
@@ -259,15 +308,30 @@ class SystemHealthCheck(HealthCheck):
 
 
 class GPUHealthCheck(HealthCheck):
-    """Check GPU health and availability."""
+    """Check GPU health and availability.
 
-    def __init__(self, max_memory_percent: float = 95.0, max_temperature: float = 85.0):
+    Uses mem_get_info() for accurate VRAM readings (not memory_stats which
+    only tracks PyTorch allocations). Thresholds are WSL-aware when
+    memory_guard is available.
+    """
+
+    def __init__(
+        self, max_memory_percent: Optional[float] = None, max_temperature: float = 85.0
+    ):
         super().__init__("gpu", timeout=5.0, critical=False)
-        self.max_memory_percent = max_memory_percent
         self.max_temperature = max_temperature
 
+        # Pull WSL-aware VRAM threshold from guard, fallback to 95%
+        if max_memory_percent is not None:
+            self.max_memory_percent = max_memory_percent
+        elif _GUARD_AVAILABLE and _memory_guard is not None:
+            thresholds = _memory_guard.get_thresholds()
+            self.max_memory_percent = thresholds.get("vram_high_percent", 95.0)
+        else:
+            self.max_memory_percent = 95.0
+
     def check(self) -> HealthCheckResult:
-        """Check GPU health."""
+        """Check GPU health using mem_get_info() for accurate VRAM readings."""
         try:
             import torch
 
@@ -286,16 +350,18 @@ class GPUHealthCheck(HealthCheck):
             for i in range(torch.cuda.device_count()):
                 device_name = torch.cuda.get_device_name(i)
 
-                # Memory
-                memory_stats = torch.cuda.memory_stats(i)
-                allocated = memory_stats.get("allocated_bytes.all.current", 0)
-                reserved = memory_stats.get("reserved_bytes.all.current", 0)
-                memory_percent = (allocated / reserved * 100) if reserved > 0 else 0
+                # Memory — use mem_get_info for accurate readings
+                free, total = torch.cuda.mem_get_info(i)
+                used = total - free
+                memory_percent = (used / total * 100) if total > 0 else 0
 
                 device_info = {
                     "id": i,
                     "name": device_name,
-                    "memory_percent": memory_percent,
+                    "memory_percent": round(memory_percent, 1),
+                    "vram_used_gb": round(used / (1024**3), 2),
+                    "vram_total_gb": round(total / (1024**3), 2),
+                    "vram_free_gb": round(free / (1024**3), 2),
                 }
 
                 # Check if using pynvml for temperature
@@ -321,6 +387,14 @@ class GPUHealthCheck(HealthCheck):
 
                 devices.append(device_info)
 
+            # Add guard pressure info if available
+            pressure_name = "unknown"
+            if _GUARD_AVAILABLE and _memory_guard is not None:
+                pressure = _memory_guard.get_pressure()
+                pressure_name = pressure.name
+                if pressure in (MemoryPressure.CRITICAL, MemoryPressure.DEADLY):
+                    all_healthy = False
+
             status = HealthStatus.HEALTHY if all_healthy else HealthStatus.DEGRADED
 
             return HealthCheckResult(
@@ -329,7 +403,10 @@ class GPUHealthCheck(HealthCheck):
                 message=f"GPU check passed for {len(devices)} device(s)",
                 response_time=0,
                 timestamp=time.time(),
-                metadata={"devices": devices},
+                metadata={
+                    "devices": devices,
+                    "memory_pressure": pressure_name,
+                },
             )
 
         except ImportError:
