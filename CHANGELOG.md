@@ -426,7 +426,7 @@ cache = LayerCache(
 )
 ```
 
-**Custom Layers (New in 1.1.0):**
+**Custom Layers (New in 6.0.1):**
 
 ```python
 # Register custom layers
@@ -440,14 +440,14 @@ registry.register_custom_layer("my_layer", MyLayerClass)
 
 ## Future Roadmap
 
-### Planned for 1.2.0
+### Planned for v6.2.0
 
 - [ ] Multi-GPU layer parallelism
 - [ ] Dynamic batch size adaptation
 - [ ] Automatic quantization selection
 - [ ] More encoder architectures (Longformer, BigBird)
 
-### Planned for 2.0.0
+### Planned for v7.0.0
 
 - [ ] Distributed SLI across multiple nodes
 - [ ] Model parallelism integration
