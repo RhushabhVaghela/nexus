@@ -1,0 +1,11 @@
+{
+  "inference_latency": 0.0172841495488683,
+  "training_step_latency": 0.005685335800808389,
+  "backward_pass_latency": 0.05047673169974587,
+  "tensor_creation": 0.006303904599917587,
+  "cpu_to_gpu_transfer": 0.0004078575999301393,
+  "memory_allocation": 0.05553749619939481,
+  "memory_deallocation": 0.13941584700078238,
+  "model_save": 0.0035448223978164608,
+  "model_load": 0.000913243398827035
+}

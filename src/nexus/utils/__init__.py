@@ -126,6 +126,80 @@ _LAZY_IMPORTS: dict[str, tuple[str, str]] = {
     "RateLimiterRegistry": (".rate_limiter", "RateLimiterRegistry"),
     "rate_limit": (".rate_limiter", "rate_limit"),
     "get_rate_limiter_registry": (".rate_limiter", "get_rate_limiter_registry"),
+    # ── Previously orphaned library modules ────────────────────────────────
+    # Cache Manager (.cache_manager)
+    "EvictionPolicy": (".cache_manager", "EvictionPolicy"),
+    "CacheEntry": (".cache_manager", "CacheEntry"),
+    "CacheStats": (".cache_manager", "CacheStats"),
+    "BaseCache": (".cache_manager", "BaseCache"),
+    "LRUCache": (".cache_manager", "LRUCache"),
+    "LFUCache": (".cache_manager", "LFUCache"),
+    "TTLCache": (".cache_manager", "TTLCache"),
+    "CacheManager": (".cache_manager", "CacheManager"),
+    # Callbacks (.callbacks)
+    "KeyboardPauseCallback": (".callbacks", "KeyboardPauseCallback"),
+    # Hardware Monitor (.hardware)
+    "HardwareMonitor": (".hardware", "HardwareMonitor"),
+    # Memory Guard (.memory_guard) — HEAVY: imports psutil
+    "MemoryPressure": (".memory_guard", "MemoryPressure"),
+    "MemoryThresholds": (".memory_guard", "MemoryThresholds"),
+    "MemorySnapshot": (".memory_guard", "MemorySnapshot"),
+    "take_snapshot": (".memory_guard", "take_snapshot"),
+    "detect_wsl": (".memory_guard", "detect_wsl"),
+    "detect_wsl_memory_limit": (".memory_guard", "detect_wsl_memory_limit"),
+    "detect_swap_usage": (".memory_guard", "detect_swap_usage"),
+    "get_system_profile": (".memory_guard", "get_system_profile"),
+    # Model Utilities (.model_utils)
+    "check_modality": (".model_utils", "check_modality"),
+    # Progress Tracking (.progress)
+    "ProgressStats": (".progress", "ProgressStats"),
+    "ProgressManager": (".progress", "ProgressManager"),
+    "TrainingProgress": (".progress", "TrainingProgress"),
+    "DataLoadingProgress": (".progress", "DataLoadingProgress"),
+    "DownloadProgress": (".progress", "DownloadProgress"),
+    "PipelineProgress": (".progress", "PipelineProgress"),
+    "ConcurrentProgress": (".progress", "ConcurrentProgress"),
+    # Quality Metrics (.quality_metrics)
+    "QualityMetrics": (".quality_metrics", "QualityMetrics"),
+    "QualityScoringPipeline": (".quality_metrics", "QualityScoringPipeline"),
+    "VerifiedGenerator": (".quality_metrics", "VerifiedGenerator"),
+    # Results Logger (.results_logger)
+    "ResultsLogger": (".results_logger", "ResultsLogger"),
+    # Tracing (.tracing)
+    "SpanContext": (".tracing", "SpanContext"),
+    "Span": (".tracing", "Span"),
+    "LocalTracer": (".tracing", "LocalTracer"),
+    "TracerManager": (".tracing", "TracerManager"),
+    "get_tracer_manager": (".tracing", "get_tracer_manager"),
+    "configure_tracing": (".tracing", "configure_tracing"),
+    "trace_span": (".tracing", "trace_span"),
+    "trace_method": (".tracing", "trace_method"),
+    # Diversity Enforcement (.diversity_enforcement)
+    "EntropyTracker": (".diversity_enforcement", "EntropyTracker"),
+    "DiversityEnforcedGenerator": (
+        ".diversity_enforcement",
+        "DiversityEnforcedGenerator",
+    ),
+    "create_zipfian_weights": (".diversity_enforcement", "create_zipfian_weights"),
+    "select_blueprint_zipfian": (".diversity_enforcement", "select_blueprint_zipfian"),
+    # Hardware Optimizer (.hardware_optimizer)
+    "optimize_for_hardware": (".hardware_optimizer", "optimize_for_hardware"),
+    # Asset Manager (.asset_manager)
+    "AssetManager": (".asset_manager", "AssetManager"),
+    # Corruption Tracker (.corruption_tracker)
+    "CorruptionTracker": (".corruption_tracker", "CorruptionTracker"),
+    # Repetition Engine (.repetition)
+    "TaskComplexity": (".repetition", "TaskComplexity"),
+    "TaskType": (".repetition", "TaskType"),
+    "RepetitionConfig": (".repetition", "RepetitionConfig"),
+    "TaskComplexityAnalyzer": (".repetition", "TaskComplexityAnalyzer"),
+    "AdaptiveRepetitionRouter": (".repetition", "AdaptiveRepetitionRouter"),
+    "PromptRepetitionEngine": (".repetition", "PromptRepetitionEngine"),
+    "apply_repetition": (".repetition", "apply_repetition"),
+    "apply_adaptive": (".repetition", "apply_adaptive"),
+    "get_repetition_factor": (".repetition", "get_repetition_factor"),
+    # Schema Normalizer (.schema_normalizer)
+    "SchemaNormalizer": (".schema_normalizer", "SchemaNormalizer"),
 }
 
 
@@ -236,4 +310,74 @@ __all__ = [
     "RateLimiterRegistry",
     "rate_limit",
     "get_rate_limiter_registry",
+    # Cache Manager
+    "EvictionPolicy",
+    "CacheEntry",
+    "CacheStats",
+    "BaseCache",
+    "LRUCache",
+    "LFUCache",
+    "TTLCache",
+    "CacheManager",
+    # Callbacks
+    "KeyboardPauseCallback",
+    # Hardware Monitor
+    "HardwareMonitor",
+    # Memory Guard
+    "MemoryPressure",
+    "MemoryThresholds",
+    "MemorySnapshot",
+    "take_snapshot",
+    "detect_wsl",
+    "detect_wsl_memory_limit",
+    "detect_swap_usage",
+    "get_system_profile",
+    # Model Utilities
+    "check_modality",
+    # Progress Tracking
+    "ProgressStats",
+    "ProgressManager",
+    "TrainingProgress",
+    "DataLoadingProgress",
+    "DownloadProgress",
+    "PipelineProgress",
+    "ConcurrentProgress",
+    # Quality Metrics
+    "QualityMetrics",
+    "QualityScoringPipeline",
+    "VerifiedGenerator",
+    # Results Logger
+    "ResultsLogger",
+    # Tracing
+    "SpanContext",
+    "Span",
+    "LocalTracer",
+    "TracerManager",
+    "get_tracer_manager",
+    "configure_tracing",
+    "trace_span",
+    "trace_method",
+    # Diversity Enforcement
+    "EntropyTracker",
+    "DiversityEnforcedGenerator",
+    "create_zipfian_weights",
+    "select_blueprint_zipfian",
+    # Hardware Optimizer
+    "optimize_for_hardware",
+    # Asset Manager
+    "AssetManager",
+    # Corruption Tracker
+    "CorruptionTracker",
+    # Repetition Engine
+    "TaskComplexity",
+    "TaskType",
+    "RepetitionConfig",
+    "TaskComplexityAnalyzer",
+    "AdaptiveRepetitionRouter",
+    "PromptRepetitionEngine",
+    "apply_repetition",
+    "apply_adaptive",
+    "get_repetition_factor",
+    # Schema Normalizer
+    "SchemaNormalizer",
 ]

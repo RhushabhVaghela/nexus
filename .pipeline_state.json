@@ -1,0 +1,9 @@
+{
+  "current_stage": "init",
+  "completed_stages": [],
+  "config": {
+    "router_epochs": 5,
+    "router_lr": 0.0001,
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
+  }
+}
