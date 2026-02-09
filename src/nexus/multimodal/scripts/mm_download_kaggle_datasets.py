@@ -54,6 +54,7 @@ except ImportError:
     PANDAS_AVAILABLE = False
 
 from utils.logging_config import setup_logger, log_header, log_completion
+from nexus.config.paths import DATA_ROOT
 
 logger = setup_logger(__name__, "logs/mm_download_kaggle.log")
 
@@ -745,7 +746,7 @@ def main():
     parser.add_argument(
         "--output-dir",
         type=str,
-        default="/mnt/e/data/kaggle_multimodal",
+        default=f"{DATA_ROOT}/kaggle_multimodal",
         help="Output directory",
     )
     parser.add_argument(

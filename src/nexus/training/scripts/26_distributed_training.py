@@ -116,7 +116,7 @@ class DistributedConfig:
     """Distributed training configuration."""
 
     # Model
-    model_name: str = "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
+    model_name: str = DEFAULT_LLM_MODEL
     max_seq_length: int = 4096
 
     # Distributed backend
@@ -157,8 +157,8 @@ class DistributedConfig:
     )
 
     # Data
-    train_data_path: str = "/mnt/e/data/training/train.jsonl"
-    eval_data_path: str = "/mnt/e/data/training/eval.jsonl"
+    train_data_path: str = f"{TRAINING_DIR}/train.jsonl"
+    eval_data_path: str = f"{TRAINING_DIR}/eval.jsonl"
 
     # Output
     output_dir: str = "./checkpoints/distributed"
@@ -1019,12 +1019,13 @@ def main():
     from transformers import BitsAndBytesConfig
     from peft import prepare_model_for_kbit_training, LoraConfig, get_peft_model
     from datasets import load_dataset as hf_load_dataset
+from nexus.config.paths import DEFAULT_LLM_MODEL, TRAINING_DIR
 
     parser = argparse.ArgumentParser(description="Distributed training for Nexus Model")
 
     # Model
     parser.add_argument(
-        "--model", type=str, default="/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
+        "--model", type=str, default=DEFAULT_LLM_MODEL
     )
     parser.add_argument("--max-seq-length", type=int, default=4096)
 
@@ -1149,7 +1150,7 @@ def main():
         use_lora=args.use_lora,
         lora_r=args.lora_r,
         lora_alpha=args.lora_alpha,
-        train_data_path=args.train_data or "/mnt/e/data/training/train.jsonl",
+        train_data_path=args.train_data or f"{TRAINING_DIR}/train.jsonl",
         eval_data_path=args.eval_data,
         output_dir=args.output_dir,
         resume_from_checkpoint=args.resume,

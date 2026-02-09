@@ -177,7 +177,7 @@ class ExplainerRequest(BaseModel):
         example="Explain how quantum computing works with visual animations",
     )
     model_path: str = Field(
-        default="/mnt/e/data/output/trained/remotion-explainer",
+        default=REMOTION_EXPLAINER_DIR,
         description="Path to the trained model",
     )
     narrate: bool = Field(default=False, description="Whether to include narration")
@@ -186,7 +186,7 @@ class ExplainerRequest(BaseModel):
         json_schema_extra = {
             "example": {
                 "prompt": "Explain how quantum computing works",
-                "model_path": "/mnt/e/data/output/trained/remotion-explainer",
+                "model_path": REMOTION_EXPLAINER_DIR,
                 "narrate": False,
             }
         }
@@ -568,7 +568,7 @@ async def startup_event():
     logger.info({"event": "startup", "message": "Initializing Nexus Explainer API"})
 
     # Initialize engine with a default model path if it exists
-    default_model = "/mnt/e/data/output/trained/remotion-explainer"
+    default_model = REMOTION_EXPLAINER_DIR
     if os.path.exists(default_model):
         try:
             _engine = RemotionExplainerEngine(model_path=default_model)
@@ -900,6 +900,7 @@ async def generate_api_key(request: Request, payload: APIKeyRequest) -> Dict[str
 
 if __name__ == "__main__":
     import uvicorn
+from nexus.config.paths import REMOTION_EXPLAINER_DIR
 
     # Run with uvicorn
     uvicorn.run(

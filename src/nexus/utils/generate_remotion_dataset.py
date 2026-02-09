@@ -3,9 +3,10 @@ import random
 import os
 import argparse
 from pathlib import Path
+from nexus.config.paths import REMOTION_DATASET_DIR
 
 # Define output directory
-OUTPUT_DIR = Path("/mnt/e/data/datasets/remotion")
+OUTPUT_DIR = Path(REMOTION_DATASET_DIR)
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 KB_DIR = Path(__file__).parent.parent / "data" / "knowledge_base"
 

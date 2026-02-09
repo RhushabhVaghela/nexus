@@ -49,7 +49,7 @@ PREFERENCE_WEIGHTS = {}
 CONFIG = {
     "target_samples": 200_000_000,  # HARD LIMIT
     "samples_per_file": 1_000_000,
-    "output_dir": f"/mnt/e/data/preference-pairs-{TRAINING_MODE}",
+    "output_dir": f"{PREFERENCE_PAIRS_DIR}-{TRAINING_MODE}",
     "train_ratio": 0.95,
     "val_ratio": 0.025,
     "test_ratio": 0.025,
@@ -1223,11 +1223,12 @@ Force push when there are conflicts.'''
 # ═══════════════════════════════════════════════════════════════
 
 import argparse
+from nexus.config.paths import PREFERENCE_PAIRS_DIR
 
 CONFIG = {
     "target_samples": 200_000_000,  # HARD LIMIT
     "samples_per_file": 1_000_000,
-    "output_dir": "/mnt/e/data/preference-pairs-censored", # Default
+    "output_dir": f"{PREFERENCE_PAIRS_DIR}-censored", # Default
     "train_ratio": 0.95,
     "val_ratio": 0.025,
     "test_ratio": 0.025,
@@ -1250,7 +1251,7 @@ def main():
 
     TRAINING_MODE = args.mode
     CONFIG["mode"] = TRAINING_MODE
-    CONFIG["output_dir"] = f"/mnt/e/data/preference-pairs-{TRAINING_MODE}"
+    CONFIG["output_dir"] = f"{PREFERENCE_PAIRS_DIR}-{TRAINING_MODE}"
     
     # PREFERENCE_WEIGHTS is already set at module level based on global TRAINING_MODE which was set by legacy get_training_mode
     # Ideally we should re-initialize PREFERENCE_WEIGHTS here if mode changes, but for now we trust the args match intent or update it

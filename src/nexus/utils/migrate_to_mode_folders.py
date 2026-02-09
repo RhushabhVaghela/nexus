@@ -14,7 +14,7 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
 
-def simplify(data_root: str = "/mnt/e/data"):
+def simplify(data_root: str = DATA_ROOT):
     root = Path(data_root)
     
     for d_type in ["datasets", "benchmarks"]:
@@ -46,7 +46,8 @@ def simplify(data_root: str = "/mnt/e/data"):
 
 if __name__ == "__main__":
     import argparse
+from nexus.config.paths import DATA_ROOT
     parser = argparse.ArgumentParser()
-    parser.add_argument("--root", default="/mnt/e/data")
+    parser.add_argument("--root", default=DATA_ROOT)
     args = parser.parse_args()
     simplify(args.root)

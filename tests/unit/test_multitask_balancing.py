@@ -5,48 +5,62 @@ import sys
 import tempfile
 import shutil
 import json
-import importlib.util
+import importlib
+import unittest.mock as mock
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-import unittest.mock as mock
+# ---------------------------------------------------------------------------
+# Import OmniDataset from 24_multimodal_training.py.
+#
+# That script imports from `transformers` (TrainingArguments, Trainer, etc.)
+# which ultimately triggers torchao → crash on torch 2.4.  We temporarily
+# mock `transformers` (and the `multimodal` package) so the module can load,
+# then we *thoroughly* clean every mock entry out of sys.modules so later
+# tests that need the real `transformers` (or `bitsandbytes` which inspects
+# `transformers`) are not poisoned.
+# ---------------------------------------------------------------------------
 
-# Mock slow imports before they happen
-sys.modules["multimodal.model"] = mock.Mock()
+# Snapshot keys that already exist so we know what to restore vs delete.
+_snapshot_transformers = {
+    k: sys.modules[k] for k in list(sys.modules) if k.startswith("transformers")
+}
+_snapshot_multimodal = {
+    k: sys.modules[k]
+    for k in list(sys.modules)
+    if k == "multimodal" or k.startswith("multimodal.")
+}
+
+# Install mocks
+sys.modules["transformers"] = mock.MagicMock()
+sys.modules["transformers.integrations"] = mock.MagicMock()
 sys.modules["multimodal"] = mock.Mock()
+sys.modules["multimodal.model"] = mock.Mock()
 
-# Import the module directly via file path to avoid triggering the full
-# transformers import chain (which fails due to torchao/torch version mismatch).
-# We mock transformers temporarily, load the module, then restore.
-_saved_transformers = sys.modules.get("transformers")
-_saved_transformers_integrations = sys.modules.get("transformers.integrations")
-_needs_restore = "transformers" not in sys.modules
-
-if _needs_restore:
-    sys.modules["transformers"] = mock.MagicMock()
-    sys.modules["transformers.integrations"] = mock.MagicMock()
-
-import importlib
-
+# Load the target module
 OmniDataset = importlib.import_module(
     "nexus.training.scripts.24_multimodal_training"
 ).OmniDataset
 
-# Restore transformers modules to avoid polluting other tests
-if _needs_restore:
-    if _saved_transformers is not None:
-        sys.modules["transformers"] = _saved_transformers
-    else:
-        del sys.modules["transformers"]
-    if _saved_transformers_integrations is not None:
-        sys.modules["transformers.integrations"] = _saved_transformers_integrations
-    elif "transformers.integrations" in sys.modules:
-        del sys.modules["transformers.integrations"]
+# ---------------------------------------------------------------------------
+# Thorough cleanup: remove every transformers.* and multimodal.* mock that
+# was injected (including sub-attrs auto-created by MagicMock).
+# ---------------------------------------------------------------------------
+for key in list(sys.modules):
+    if key.startswith("transformers"):
+        if key in _snapshot_transformers:
+            # Restore original (real) module that existed before us.
+            sys.modules[key] = _snapshot_transformers[key]
+        else:
+            del sys.modules[key]
+    elif key == "multimodal" or key.startswith("multimodal."):
+        if key in _snapshot_multimodal:
+            sys.modules[key] = _snapshot_multimodal[key]
+        else:
+            del sys.modules[key]
 
-OmniDataset = importlib.import_module(
-    "nexus.training.scripts.24_multimodal_training"
-).OmniDataset
+del _snapshot_transformers, _snapshot_multimodal
 
 
 class TestMultitaskBalancing(unittest.TestCase):

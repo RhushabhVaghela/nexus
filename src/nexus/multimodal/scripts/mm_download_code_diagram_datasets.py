@@ -33,6 +33,7 @@ except ImportError:
 
 sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger, log_header, log_completion
+from nexus.config.paths import MULTIMODAL_FULLSTACK_DIR
 
 logger = setup_logger(__name__, "logs/mm_download_code_diagram.log")
 
@@ -436,7 +437,7 @@ def main():
                         choices=list(CODE_DIAGRAM_DATASETS.keys()) + ["all"],
                         help="Datasets to download")
     parser.add_argument("--output-dir", type=str,
-                        default="/mnt/e/data/multimodal-fullstack-dataset/code_diagram",
+                        default=f"{MULTIMODAL_FULLSTACK_DIR}/code_diagram",
                         help="Output directory")
     parser.add_argument("--limit", type=int, default=None,
                         help="Limit samples per dataset")

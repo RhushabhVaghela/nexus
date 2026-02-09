@@ -11,12 +11,13 @@ from multimodal.model import OmniMultimodalLM
 from multimodal.reasoning import ReasoningWrapper, ReasoningLevel
 from multimodal.tools import get_default_executor
 from transformers import AutoTokenizer
+from nexus.config.paths import DEFAULT_LLM_MODEL
 
 def audit_capabilities():
     print("🕵️ CAPABILITY AUDIT: Checking Agentic IQ...")
     print("-------------------------------------------")
     
-    model_path = "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
+    model_path = DEFAULT_LLM_MODEL
     
     # 1. Load Model
     print(f"📦 Loading Model from {model_path}...")

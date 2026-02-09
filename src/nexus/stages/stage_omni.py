@@ -255,6 +255,7 @@ class OmniTrainingStage(BaseStage):
 
         # Log metrics to CSV
         from nexus.core.metrics_tracker import MetricsTracker, TrainingMetrics
+from nexus.config.paths import TRAINED_OUTPUT_DIR
 
         tracker = MetricsTracker()
 
@@ -288,7 +289,7 @@ def main():
     parser.add_argument("--base-model", required=True, help="Path to Omni model")
     parser.add_argument("--data-dir", required=True, help="Path to training data")
     parser.add_argument(
-        "--output-dir", default="/mnt/e/data/output/trained", help="Output directory"
+        "--output-dir", default=TRAINED_OUTPUT_DIR, help="Output directory"
     )
     parser.add_argument(
         "--sample-size", type=int, default=1000, help="Max training samples"

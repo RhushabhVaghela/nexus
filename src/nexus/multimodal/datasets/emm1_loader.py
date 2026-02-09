@@ -22,7 +22,7 @@ class EMM1Dataset(torch.utils.data.IterableDataset):
     
     def __init__(
         self,
-        data_dir: str = "/mnt/e/data/datasets/multimodal/E-MM1-100M/data",
+        data_dir: str = f"{DATASETS_DIR}/multimodal/E-MM1-100M/data",
         shard_indices: Optional[List[int]] = None,
         modalities: List[str] = ["image", "audio", "video", "text"],
         sample_limit: int = 0
@@ -49,6 +49,7 @@ class EMM1Dataset(torch.utils.data.IterableDataset):
     
     def __iter__(self):
         import pyarrow.parquet as pq
+from nexus.config.paths import DATASETS_DIR
         
         worker_info = torch.utils.data.get_worker_info()
         

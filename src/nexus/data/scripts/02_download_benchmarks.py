@@ -158,11 +158,12 @@ def main():
         sys.exit(1)
         
     import argparse
+from nexus.config.paths import DATA_ROOT
     parser = argparse.ArgumentParser(description="Download benchmarks")
     parser.add_argument("--limit", type=int, default=100, help="Max samples")
     args = parser.parse_args()
         
-    output_dir = Path("/mnt/e/data/benchmarks")
+    output_dir = Path(f"{DATA_ROOT}/benchmarks")
     normalizer = BenchmarkNormalizer(output_dir)
     
     logger.info(f"🚀 Starting Normalized Benchmark Download (Streaming) (Limit: {args.limit})...")

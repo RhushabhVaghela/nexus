@@ -50,10 +50,10 @@ def check_env():
 
 
 CONFIG = {
-    "base_model": "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4",
-    "vision_model": "/mnt/e/data/encoders/vision-encoders/siglip2-so400m-patch16-512",
-    "audio_model": "/mnt/e/data/encoders/audio-encoders/whisper-large-v3-turbo",
-    "output_dir": "/mnt/e/data/models/omnimodal_any2any",
+    "base_model": DEFAULT_LLM_MODEL,
+    "vision_model": DEFAULT_VISION_ENCODER,
+    "audio_model": DEFAULT_AUDIO_ENCODER,
+    "output_dir": f"{MODELS_DIR}/omnimodal_any2any",
     "use_emm1": False,
     "emm1_shards": [],
 }
@@ -311,6 +311,7 @@ class DynamicDataCollator:
 def main():
     global parser, logger
     import argparse
+from nexus.config.paths import DEFAULT_AUDIO_ENCODER, DEFAULT_LLM_MODEL, DEFAULT_VISION_ENCODER, MODELS_DIR
 
     parser = argparse.ArgumentParser()
 

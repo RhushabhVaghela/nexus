@@ -346,10 +346,11 @@ def run_live_inference(messages: List[Dict[str, str]], model, tokenizer) -> str:
 def main():
     import sys
     import argparse
+from nexus.config.paths import DEFAULT_LLM_MODEL
 
     parser = argparse.ArgumentParser(description="Tri-Streaming Orchestrator")
     parser.add_argument(
-        "--model", type=str, default="/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
+        "--model", type=str, default=DEFAULT_LLM_MODEL
     )
     parser.add_argument("--interval", type=float, default=5.0)
     args = parser.parse_args()

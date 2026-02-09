@@ -136,6 +136,7 @@ def run_anti_refusal_training():
         from datasets import load_dataset
         from trl import DPOTrainer, DPOConfig
     except ImportError as e:
+from nexus.config.paths import ANTI_REFUSAL_DIR
         logger.error(f"Missing dependencies: {e}")
         return False
 
@@ -215,7 +216,7 @@ def main():
     global CONFIG, logger
     CONFIG = {
         "model_checkpoint": "checkpoints/stage3_grpo_uncensored",
-        "anti_refusal_dataset": "/mnt/e/data/anti-refusal",
+        "anti_refusal_dataset": ANTI_REFUSAL_DIR,
         "output_dir": "checkpoints/stage4_anti_refusal",
         "max_steps": 500,
         "learning_rate": 5e-6,

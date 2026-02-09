@@ -27,8 +27,8 @@ from utils.logging_config import setup_logger, log_header, log_completion
 logger = setup_logger(__name__, "logs/mm_generate_video.log")
 
 CONFIG = {
-    "input_video_dir": "/mnt/e/data/mm_raw/videos",
-    "output_dir": "/mnt/e/data/multimodal-fullstack-dataset/video_understanding",
+    "input_video_dir": MM_RAW_VIDEOS_DIR,
+    "output_dir": f"{MULTIMODAL_FULLSTACK_DIR}/video_understanding",
     "samples_per_file": 10_000,
     "seed": 42,
     "frame_sample_fps": 1,  # Sample 1 frame per second for analysis
@@ -242,6 +242,7 @@ def get_video_metadata(video_path: Path) -> Dict:
     """Extract basic video metadata (duration, resolution if available)."""
     try:
         import cv2
+from nexus.config.paths import MM_RAW_VIDEOS_DIR, MULTIMODAL_FULLSTACK_DIR
         cap = cv2.VideoCapture(str(video_path))
         fps = cap.get(cv2.CAP_PROP_FPS)
         frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)

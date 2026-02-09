@@ -181,7 +181,7 @@ def main():
         
     global CONFIG, logger
     CONFIG = {
-        "premium_base_dir": "/mnt/e/data/premium",
+        "premium_base_dir": PREMIUM_DIR,
     }
     logger = setup_logger(__name__, "logs/validate_premium.log")
     
@@ -223,6 +223,7 @@ def main():
         # Validate samples (if in arrow format, need to load)
         try:
             from datasets import load_from_disk
+from nexus.config.paths import PREMIUM_DIR
             dataset = load_from_disk(str(dataset_dir))
             
             logger.info(f"  Loaded {len(dataset):,} samples")

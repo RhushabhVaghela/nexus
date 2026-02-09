@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 from pathlib import Path
+from nexus.config.paths import DEFAULT_LLM_MODEL, DEFAULT_STUDENT_MODEL
 
 def replace_in_files(root_dir, replacements):
     for path in Path(root_dir).rglob('*'):
@@ -26,8 +27,8 @@ def replace_in_files(root_dir, replacements):
 
 if __name__ == "__main__":
     replacements = {
-        "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4": "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4",
-        "/mnt/e/data/models/Qwen2.5-0.5B": "/mnt/e/data/models/Qwen2.5-0.5B",
+        DEFAULT_LLM_MODEL: DEFAULT_LLM_MODEL,
+        DEFAULT_STUDENT_MODEL: DEFAULT_STUDENT_MODEL,
         # Specifically handle the Instruct naming if needed
         "Qwen2.5-Omni-7B-GPTQ-Int4": "Qwen2.5-Omni-7B-GPTQ-Int4"
     }

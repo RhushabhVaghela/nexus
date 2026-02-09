@@ -11,7 +11,7 @@ Validates:
 
 Usage:
   python 18_validate_all_datasets.py
-  python 18_validate_all_datasets.py --input /mnt/e/data/specific-dataset
+  python 18_validate_all_datasets.py --input {DATA_ROOT}/specific-dataset
 """
 
 import os
@@ -27,6 +27,7 @@ from concurrent.futures import ProcessPoolExecutor
 
 sys.path.insert(0, str(Path(__file__).parent))
 from nexus.utils.logging_config import setup_logger, log_header, log_completion
+from nexus.config.paths import DATA_ROOT
 
 
 def check_env():
@@ -313,7 +314,7 @@ def main():
 
     global CONFIG, logger
     CONFIG = {
-        "data_base_dir": "/mnt/e/data",
+        "data_base_dir": DATA_ROOT,
         "output_suffix": "_validated",
         "min_content_length": 50,
         "max_content_length": 100000,

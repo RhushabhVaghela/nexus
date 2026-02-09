@@ -24,6 +24,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 import torch
+from nexus.config.paths import CHECKPOINT_DIR
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -33,7 +34,7 @@ COOLDOWN_INTERVAL_STEPS = 500  # Cooldown every N steps
 COOLDOWN_DURATION_SECONDS = 60  # 1 minute cooldown
 DEFAULT_GPU_TEMP_THRESHOLD = 83  # Celsius - pause if exceeded
 DEFAULT_CPU_TEMP_THRESHOLD = 88  # Celsius - pause if exceeded
-CHECKPOINT_DIR = "/mnt/e/data/models/checkpoints"
+CHECKPOINT_DIR = CHECKPOINT_DIR
 
 # ============ CONFIGURABLE STATE ============
 _gpu_temp_threshold = DEFAULT_GPU_TEMP_THRESHOLD

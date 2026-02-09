@@ -83,6 +83,7 @@ def _try_cleanup():
         gc.collect()
         try:
             import torch
+from nexus.config.paths import DATASETS_DIR
 
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
@@ -232,7 +233,7 @@ def main():
     if GUARD_AVAILABLE:
         guard.print_status()
 
-    data_path = "/mnt/e/data/datasets"
+    data_path = DATASETS_DIR
     output_dir = "./checkpoints/nexus_fine_tuning"
     sample_size = "5"
 

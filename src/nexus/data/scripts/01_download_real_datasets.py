@@ -22,7 +22,7 @@ import shutil
 # CONFIGURATION
 # ═══════════════════════════════════════════════════════════════
 
-BASE_DIR = Path("/mnt/e/data")
+BASE_DIR = Path(DATA_ROOT)
 CONFIG_PATH = Path(__file__).parent.parent.parent / "config" / "datasets.yaml"
 NUM_WORKERS = multiprocessing.cpu_count()
 
@@ -342,6 +342,7 @@ def load_config() -> Dict:
 def main():
     """Main entry point - sequential processing with progress."""
     import argparse
+from nexus.config.paths import DATA_ROOT
 
     parser = argparse.ArgumentParser()
     parser.add_argument(

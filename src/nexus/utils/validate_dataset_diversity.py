@@ -4,6 +4,7 @@ from pathlib import Path
 from collections import Counter
 from rich.console import Console
 from rich.table import Table
+from nexus.config.paths import REMOTION_DATASET_DIR
 
 def validate_diversity(file_path: str):
     path = Path(file_path)
@@ -56,6 +57,6 @@ def validate_diversity(file_path: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--file", default="/mnt/e/data/datasets/remotion/remotion_explainer_dataset.jsonl")
+    parser.add_argument("--file", default=f"{REMOTION_DATASET_DIR}/remotion_explainer_dataset.jsonl")
     args = parser.parse_args()
     validate_diversity(args.file)

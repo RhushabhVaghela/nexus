@@ -8,13 +8,14 @@ except ImportError:
 from pathlib import Path
 from typing import List, Optional
 import logging
+from nexus.config.paths import DATA_ROOT
 
 logger = logging.getLogger(__name__)
 
 class AssetManager:
     """Manages local and web assets for Remotion videos."""
     
-    def __init__(self, data_root: str = "/mnt/e/data", remotion_public: str = "remotion/public"):
+    def __init__(self, data_root: str = DATA_ROOT, remotion_public: str = "remotion/public"):
         self.data_root = Path(data_root)
         self.remotion_public = Path(remotion_public)
         self.remotion_public.mkdir(parents=True, exist_ok=True)

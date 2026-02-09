@@ -34,7 +34,7 @@ def test_loading():
     print("\n--- Loading Vision Encoder (SigLip) ---")
     try:
         vision_encoder = VisionEncoder(
-            model_name="/mnt/e/data/models/siglip2-so400m-patch16-512",  # Using local path if possible or hub
+            model_name=DEFAULT_VISION_ENCODER,  # Using local path if possible or hub
             load_in_8bit=True,
         )
     except Exception as e:
@@ -49,7 +49,7 @@ def test_loading():
     print("\n--- Loading Audio Encoder (Whisper) ---")
     try:
         audio_encoder = AudioEncoder(
-            model_name="/mnt/e/data/models/whisper-large-v3-turbo", load_in_8bit=True
+            model_name=DEFAULT_AUDIO_ENCODER, load_in_8bit=True
         )
     except Exception as e:
         print(f"Local load failed: {e}. Trying Hub...")
@@ -66,7 +66,7 @@ def test_loading():
 
         bnb_config = BitsAndBytesConfig(load_in_8bit=True)
         llm = AutoModelForCausalLM.from_pretrained(
-            "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4",
+            DEFAULT_LLM_MODEL,
             quantization_config=bnb_config,
             device_map="auto",
             low_cpu_mem_usage=True,
@@ -94,6 +94,7 @@ def test_loading():
         del loader
         del iter_loader
         import gc
+from nexus.config.paths import DEFAULT_AUDIO_ENCODER, DEFAULT_LLM_MODEL, DEFAULT_VISION_ENCODER
 
         gc.collect()
 

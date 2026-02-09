@@ -201,7 +201,7 @@ class UniversalDataLoader:
 
     def __init__(
         self,
-        data_root: str = "/mnt/e/data/datasets",
+        data_root: str = DATASETS_DIR,
         filter_memorization_risk: bool = False,
         entropy_threshold: float = 0.4,
         risk_threshold: float = 0.5,
@@ -242,13 +242,13 @@ class UniversalDataLoader:
         if not os.path.exists(self.data_root):
             return []
 
-        # Level 1: e.g. /mnt/e/data/datasets/reasoning
+        # Level 1: e.g. {DATASETS_DIR}/reasoning
         for category in os.listdir(self.data_root):
             cat_path = os.path.join(self.data_root, category)
             if not os.path.isdir(cat_path):
                 continue
 
-            # Level 2: e.g. /mnt/e/data/datasets/reasoning/AI4Math_IneqMath
+            # Level 2: e.g. {DATASETS_DIR}/reasoning/AI4Math_IneqMath
             for d in os.listdir(cat_path):
                 full_d = os.path.join(cat_path, d)
                 if not os.path.isdir(full_d):
@@ -519,6 +519,7 @@ class UniversalDataLoader:
         # 7. Ultimate Fallback: Universal Heuristic Sanitizer
         try:
             from nexus.core.data.sanitizer import UniversalSanitizer
+from nexus.config.paths import DATASETS_DIR
 
             sanitizer = UniversalSanitizer()
             clean_text = sanitizer.sanitize(sample)
@@ -550,7 +551,7 @@ def main():
     parser.add_argument(
         "--data-root",
         type=str,
-        default="/mnt/e/data/datasets",
+        default=DATASETS_DIR,
         help="Root directory for datasets",
     )
     parser.add_argument(

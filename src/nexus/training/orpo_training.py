@@ -58,10 +58,10 @@ except ImportError:
     pass
 
 CONFIG = {
-    "checkpoint": "/mnt/e/data/models/Qwen2.5-0.5B",
-    "preference_data": "/mnt/e/data/processed/preference",
+    "checkpoint": DEFAULT_STUDENT_MODEL,
+    "preference_data": f"{PROCESSED_DIR}/preference",
     "max_seq_length": 2048,
-    "output_dir": "/mnt/e/data/output/orpo",
+    "output_dir": ORPO_OUTPUT_DIR,
 }
 
 orpo_config = get_training_config(TrainingMethod.ORPO)
@@ -84,6 +84,7 @@ def load_preference_dataset():
                 )
                 try:
                     from nexus.data.streaming_trainer import (
+from nexus.config.paths import DEFAULT_STUDENT_MODEL, ORPO_OUTPUT_DIR, PROCESSED_DIR
                         StreamingDatasetLoader,
                         StreamingConfig,
                     )

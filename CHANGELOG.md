@@ -371,7 +371,7 @@ Three new comprehensive guides:
 
 ## Migration Guide
 
-### Upgrading from 1.0.0 to 1.1.0
+### Upgrading from 6.0.0 to 6.0.1
 
 #### New Dependencies (Optional)
 
@@ -389,7 +389,7 @@ None. All changes are backward compatible.
 
 #### New Recommended Patterns
 
-**Quantization (New in 1.1.0):**
+**Quantization (New in 6.0.1):**
 
 ```python
 # Old way (still works)
@@ -404,7 +404,7 @@ processor = UniversalSLIProcessor(
 )
 ```
 
-**Layer Caching (Enhanced in 1.1.0):**
+**Layer Caching (Enhanced in 6.0.1):**
 
 ```python
 # Old way (basic caching)

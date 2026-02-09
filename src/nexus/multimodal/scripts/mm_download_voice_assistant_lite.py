@@ -30,6 +30,7 @@ try:
     from datasets import load_dataset, Audio
     import soundfile as sf
 except ImportError:
+from nexus.config.paths import DATA_ROOT
     print("❌ Error: Missing required libraries.")
     print("Please install them with: pip install datasets soundfile numpy")
     sys.exit(1)
@@ -47,7 +48,7 @@ logger = logging.getLogger(__name__)
 # Configuration
 DATASET_NAME = "gpt-omni/VoiceAssistant-400K"
 DEFAULT_LIMIT = 50000
-OUTPUT_DIR = Path("/mnt/e/data/VoiceAssistant_Lite_v2")
+OUTPUT_DIR = Path(f"{DATA_ROOT}/VoiceAssistant_Lite_v2")
 
 def process_sample(sample: Dict[str, Any], count: int, audio_output_dir: Path) -> Dict[str, Any]:
     """

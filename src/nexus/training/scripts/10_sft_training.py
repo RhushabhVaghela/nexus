@@ -77,7 +77,7 @@ yaml_config = load_config()
 CONFIG = {
     # Model - from YAML or default
     "model_name": yaml_config.get("base_model", {}).get(
-        "name", "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
+        "name", DEFAULT_LLM_MODEL
     ),
     "torch_dtype": yaml_config.get("base_model", {}).get("torch_dtype", "auto"),
     "trust_remote_code": yaml_config.get("base_model", {}).get(
@@ -110,11 +110,11 @@ CONFIG = {
     "eval_steps": yaml_config.get("training", {}).get("eval_steps", 500),
     # Data
     "mixed_data_dir": yaml_config.get("data", {}).get(
-        "mixed_data_dir", "/mnt/e/data/mixed-training"
+        "mixed_data_dir", MIXED_TRAINING_DIR
     ),
-    "synthetic_data_dir": "/mnt/e/data/finetuned-fullstack-dataset",
+    "synthetic_data_dir": FINETUNED_FULLSTACK_DIR,
     # Output
-    "output_dir": yaml_config.get("output", {}).get("dir", "/mnt/e/models/nexus-prime"),
+    "output_dir": yaml_config.get("output", {}).get("dir", NEXUS_PRIME_DIR),
     # WandB
     "wandb_enabled": yaml_config.get("wandb", {}).get("enabled", False),
     "wandb_project": yaml_config.get("wandb", {}).get("project", "nexus-prime"),
@@ -433,12 +433,21 @@ def load_datasets(
         logger.info("📂 Loading datasets in STREAMING mode (memory-efficient)")
         try:
             from nexus.data.streaming_trainer import (
+from nexus.config.paths import (
+    DATASETS_DIR,
+    DEFAULT_LLM_MODEL,
+    FINETUNED_FULLSTACK_DIR,
+    MIXED_TRAINING_DIR,
+    NEXUS_PRIME_DIR,
+    PREMIUM_DIR,
+    PROCESSED_DIR,
+)
                 StreamingDatasetLoader,
                 StreamingConfig,
             )
 
             if not streaming_paths:
-                streaming_paths = ["/mnt/e/data/datasets"]
+                streaming_paths = [DATASETS_DIR]
 
             config = StreamingConfig(
                 buffer_size=10000,
@@ -459,7 +468,7 @@ def load_datasets(
 
     # STANDARD MODE: Load full dataset into memory
     # Base path for Real Processed Data (from 04_process_real_datasets.py)
-    real_data_base = Path("/mnt/e/data/processed")
+    real_data_base = Path(PROCESSED_DIR)
     train_dir = real_data_base / "train"
     val_dir = real_data_base / "val"
 
@@ -477,9 +486,9 @@ def load_datasets(
 
     if "train" not in datasets:
         # 1. Try Premium Mode-Specific Data First (from 03_load_premium_datasets.py)
-        # Assuming path /mnt/e/data/premium/{mode}_*
+        # Assuming path {PREMIUM_DIR}/{mode}_*
         mode = CONFIG.get("mode", "censored")
-        premium_base = Path("/mnt/e/data/premium")
+        premium_base = Path(PREMIUM_DIR)
         if premium_base.exists():
             matches = list(premium_base.glob(f"{mode}_*"))
             if matches:

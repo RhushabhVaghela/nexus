@@ -37,6 +37,7 @@ def check_env():
         from datasets import load_dataset
         DATASETS_AVAILABLE = True
     except ImportError:
+from nexus.config.paths import DATASETS_DIR
         print("[ERROR] Missing dependency: datasets")
         return False
         
@@ -355,7 +356,7 @@ def main():
         
     global CONFIG, logger
     CONFIG = {
-        "output_base_dir": "/mnt/e/data/datasets",
+        "output_base_dir": DATASETS_DIR,
     }
     logger = setup_logger(__name__, "logs/load_premium_datasets.log")
     

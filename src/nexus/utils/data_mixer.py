@@ -28,6 +28,18 @@ import argparse
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from utils.logging_config import setup_logger, log_header
+from nexus.config.paths import (
+    ARCHITECTURE_REASONING_DIR,
+    DEVOPS_ENGINEERING_DIR,
+    FINETUNED_FULLSTACK_DIR,
+    MIXED_TRAINING_DIR,
+    MULTIMODAL_FULLSTACK_DIR,
+    MULTIMODAL_PODCAST_DIR,
+    QA_ENGINEERING_DIR,
+    REAL_DATASETS_DIR,
+    REPETITIVE_PROMPT_DIR,
+    UIUX_DESIGN_DIR,
+)
 
 # ═══════════════════════════════════════════════════════════════
 # CONFIGURATION
@@ -38,24 +50,24 @@ CONFIG = {
     "synthetic_ratio": 0.70,  # 70% synthetic data (provides diversity)
 
     "real_data_dirs": [
-        "/mnt/e/data/real-datasets/code",
-        "/mnt/e/data/real-datasets/reasoning",
-        "/mnt/e/data/real-datasets/domain",
+        f"{REAL_DATASETS_DIR}/code",
+        f"{REAL_DATASETS_DIR}/reasoning",
+        f"{REAL_DATASETS_DIR}/domain",
     ],
 
     "synthetic_data_dirs": [
-        "/mnt/e/data/finetuned-fullstack-dataset",
-        "/mnt/e/data/repetitive-prompt-dataset",
-        "/mnt/e/data/architecture-reasoning-dataset",
-        "/mnt/e/data/qa-engineering-dataset",
-        "/mnt/e/data/uiux-design-dataset",
-        "/mnt/e/data/devops-engineering-dataset",
+        FINETUNED_FULLSTACK_DIR,
+        REPETITIVE_PROMPT_DIR,
+        ARCHITECTURE_REASONING_DIR,
+        QA_ENGINEERING_DIR,
+        UIUX_DESIGN_DIR,
+        DEVOPS_ENGINEERING_DIR,
         # Optional multimodal synthetic datasets:
-        "/mnt/e/data/multimodal-fullstack-dataset",   # image/text, audio/text, video/text
-        "/mnt/e/data/multimodal-podcast-dataset",     # podcast-style dialogue + audio refs
+        MULTIMODAL_FULLSTACK_DIR,   # image/text, audio/text, video/text
+        MULTIMODAL_PODCAST_DIR,     # podcast-style dialogue + audio refs
     ],
 
-    "output_dir": "/mnt/e/data/mixed-training",
+    "output_dir": MIXED_TRAINING_DIR,
     "samples_per_file": 100_000,
     "seed": 42,
 }

@@ -65,11 +65,11 @@ except ImportError:
     pass
 
 CONFIG = {
-    "model_checkpoint": "/mnt/e/data/models/Qwen2.5-0.5B",
+    "model_checkpoint": DEFAULT_STUDENT_MODEL,
     "reward_model": None,  # Use rule-based reward if None
-    "prompts_data": "/mnt/e/data/processed/train",
+    "prompts_data": f"{PROCESSED_DIR}/train",
     "max_seq_length": 512,
-    "output_dir": "/mnt/e/data/output/ppo",
+    "output_dir": PPO_OUTPUT_DIR,
 }
 
 ppo_config = get_training_config(TrainingMethod.PPO)
@@ -108,6 +108,7 @@ def load_prompts():
             logger.info("🌊 Using StreamingDatasetLoader for prompts")
             try:
                 from nexus.data.streaming_trainer import (
+from nexus.config.paths import DEFAULT_STUDENT_MODEL, PPO_OUTPUT_DIR, PROCESSED_DIR
                     StreamingDatasetLoader,
                     StreamingConfig,
                 )

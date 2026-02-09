@@ -61,10 +61,10 @@ except ImportError:
 
 # Configuration
 CONFIG = {
-    "checkpoint": "/mnt/e/data/models/Qwen2.5-0.5B",  # Base or SFT checkpoint
-    "preference_data": "/mnt/e/data/processed/preference",  # From 06_generate_preference_dataset.py
+    "checkpoint": DEFAULT_STUDENT_MODEL,  # Base or SFT checkpoint
+    "preference_data": f"{PROCESSED_DIR}/preference",  # From 06_generate_preference_dataset.py
     "max_seq_length": 2048,
-    "output_dir": "/mnt/e/data/output/dpo",
+    "output_dir": DPO_OUTPUT_DIR,
 }
 
 # Get DPO-specific config from training_methods
@@ -185,6 +185,7 @@ def main():
 
     if isinstance(train_dataset, list):
         from datasets import Dataset
+from nexus.config.paths import DEFAULT_STUDENT_MODEL, DPO_OUTPUT_DIR, PROCESSED_DIR
 
         train_dataset = Dataset.from_list(train_dataset)
 

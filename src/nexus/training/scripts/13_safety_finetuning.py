@@ -69,6 +69,7 @@ def run_safety_finetuning():
         from datasets import load_dataset
         from trl import SFTTrainer
     except ImportError as e:
+from nexus.config.paths import SAFETY_ALIGNMENT_DIR
         logger.error(f"Missing dependencies: {e}")
         logger.error("Install with: pip install transformers peft trl")
         return False
@@ -187,7 +188,7 @@ def main():
     global CONFIG, logger
     CONFIG = {
         "model_checkpoint": "checkpoints/stage3_grpo_censored",
-        "safety_dataset": "/mnt/e/data/safety-alignment",
+        "safety_dataset": SAFETY_ALIGNMENT_DIR,
         "output_dir": "checkpoints/stage4_safety",
         "max_steps": 1000,
         "learning_rate": 1e-5,

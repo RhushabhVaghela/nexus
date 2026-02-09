@@ -58,7 +58,7 @@ from utils.logging_config import setup_logger, log_header
 # ═══════════════════════════════════════════════════════════════
 
 DEFAULT_CONFIG = {
-    "base_dir": "/mnt/e/data/multimodal",
+    "base_dir": MULTIMODAL_DIR,
     "vision": {
         "WebSight": {
             "source": "HuggingFaceM4/WebSight",
@@ -502,6 +502,7 @@ def _extract_keyframes(sample: Dict, frames_dir: Path, sample_id: str, num_frame
     try:
         import cv2
         import tempfile
+from nexus.config.paths import MULTIMODAL_DIR
         
         video_data = sample.get("mp4") or sample.get("video")
         if video_data is None:
@@ -693,7 +694,7 @@ def main():
     parser.add_argument(
         "--output-dir",
         type=str,
-        default="/mnt/e/data/multimodal",
+        default=MULTIMODAL_DIR,
         help="Base output directory",
     )
     parser.add_argument(

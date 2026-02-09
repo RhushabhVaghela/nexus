@@ -26,6 +26,7 @@ try:
     from nexus.data.universal_loader import DatasetManager
     from nexus.benchmarks.ruler_tasks import get_test_prompts
 except ImportError:
+from nexus.config.paths import DATASETS_DIR
     DATASET_REGISTRY = {}
     DatasetManager = None
     get_test_prompts = lambda: {}
@@ -42,7 +43,7 @@ def check_env():
 # Globals to be initialized in main()
 logger = logging.getLogger(__name__)
 
-CONFIG = {"output_dir": "/mnt/e/data/datasets", "test_dir": "tests/multimodal_assets"}
+CONFIG = {"output_dir": DATASETS_DIR, "test_dir": "tests/multimodal_assets"}
 
 
 def run_download(limit: int):

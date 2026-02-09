@@ -2,6 +2,7 @@ import csv
 import os
 from typing import Dict, List, Optional
 from dataclasses import dataclass
+from nexus.config.paths import MODELS_DIR
 
 @dataclass
 class ModelInfo:
@@ -38,7 +39,7 @@ class NexusConfig:
                 if not name:
                     continue
                 
-                # Infer local path: /mnt/e/data/models/<Name>
+                # Infer local path: {MODELS_DIR}/<Name>
                 # Handle slashes in names like "zai-org/GLM-4.7-Flash" -> "GLM-4.7-Flash" or keep full structure?
                 # Usually local mirror might just be the name or the last part.
                 # For now, assuming direct mapping or user manual alignment.

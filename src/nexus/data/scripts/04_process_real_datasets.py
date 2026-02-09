@@ -3,7 +3,7 @@
 03_process_real_datasets.py
 Unified Real Data Processor
 
-Processes all downloaded real datasets from /mnt/e/data/ and normalizes
+Processes all downloaded real datasets from {DATA_ROOT}/ and normalizes
 them to the OpenAI messages format for training.
 
 This REPLACES all synthetic generators (old 03-18) with pure real data processing.
@@ -27,6 +27,7 @@ import random
 
 sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger, log_header, log_completion
+from nexus.config.paths import DATA_ROOT, PROCESSED_DIR
 
 def check_env():
     """Verify environment dependencies."""
@@ -383,8 +384,8 @@ def main():
         
     global CONFIG, logger
     CONFIG = {
-        "data_base_dir": "/mnt/e/data",
-        "output_base_dir": "/mnt/e/data/processed",
+        "data_base_dir": DATA_ROOT,
+        "output_base_dir": PROCESSED_DIR,
         "samples_per_file": 100_000,
         "min_content_length": 50,
         "max_content_length": 100_000,

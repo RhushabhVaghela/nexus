@@ -106,7 +106,7 @@ DATASET_REGISTRY = {
         "websight": {
             "kaggle_id": "mehmetalicantoglu/figma-ui-design-images",
             "hf_id": "HuggingFaceM4/WebSight",
-            "local_path": "/mnt/e/data/datasets/mrm8488_WebSight_70k",
+            "local_path": f"{DATASETS_DIR}/mrm8488_WebSight_70k",
             "hf_split": "train",
             "hf_streaming": True,
             "description": "WebSight / UI Designs",
@@ -136,7 +136,7 @@ DATASET_REGISTRY = {
         "common_voice": {
             "kaggle_id": "mozillaorg/common-voice",
             "hf_id": "mozilla-foundation/common_voice_17_0",
-            "local_path": "/mnt/e/data/datasets/Mozilla_Common-Voice",
+            "local_path": COMMON_VOICE_DIR,
             "hf_config": "en",
             "hf_split": "train",
             "hf_streaming": True,
@@ -149,7 +149,7 @@ DATASET_REGISTRY = {
         "msr_vtt": {
             "kaggle_id": "evgeniy987/msr-vtt",
             "hf_id": "AlexZigma/msr-vtt",
-            "local_path": "/mnt/e/data/datasets/VLM2Vec_MSR-VTT",
+            "local_path": f"{DATASETS_DIR}/VLM2Vec_MSR-VTT",
             "hf_split": "train",
             "hf_streaming": True,
             "description": "MSR-VTT Video Captioning",
@@ -159,7 +159,7 @@ DATASET_REGISTRY = {
         "vatex": {
             "kaggle_id": None,
             "hf_id": "lmms-lab/VATEX",
-            "local_path": "/mnt/e/data/datasets/qingy2024_VaTeX",
+            "local_path": f"{DATASETS_DIR}/qingy2024_VaTeX",
             "hf_split": "validation",
             "hf_streaming": True,
             "description": "VATEX Video Captioning",
@@ -176,7 +176,7 @@ DATASET_REGISTRY = {
         "mmlu": {
             "kaggle_id": "lizhecheng/mmlu-dataset",
             "hf_id": "cais/mmlu",  # Fixed from MMMU/MMMU
-            "local_path": "/mnt/e/data/datasets/cais_mmlu",
+            "local_path": f"{DATASETS_DIR}/cais_mmlu",
             "hf_config": "all",
             "hf_split": "test",
             "description": "MMLU (Text)",
@@ -210,7 +210,7 @@ DATASET_REGISTRY = {
         "mathvista": {
             "kaggle_id": None,
             "hf_id": "AI4Math/MathVista",
-            "local_path": "/mnt/e/data/datasets/AI4Math_MathVista",
+            "local_path": f"{DATASETS_DIR}/AI4Math_MathVista",
             "hf_split": "testmini",
             "description": "MathVista",
         },
@@ -251,6 +251,7 @@ class DatasetManager:
         # Check availability at runtime to allow easier testing
         try:
             from kaggle.api.kaggle_api_extended import KaggleApi
+from nexus.config.paths import COMMON_VOICE_DIR, DATASETS_DIR, UNIFIED_MULTIMODAL_DIR
 
             kaggle_available = True
         except ImportError:
@@ -637,7 +638,7 @@ def main():
         "--dataset", default=None, help="Specific dataset name to download"
     )
     parser.add_argument("--sample", type=int, default=5)
-    parser.add_argument("--output-dir", default="/mnt/e/data/unified_multimodal")
+    parser.add_argument("--output-dir", default=UNIFIED_MULTIMODAL_DIR)
     args = parser.parse_args()
 
     manager = DatasetManager(Path(args.output_dir))

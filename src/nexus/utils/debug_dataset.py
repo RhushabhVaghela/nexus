@@ -5,6 +5,7 @@ import json
 import itertools
 from pathlib import Path
 import logging
+from nexus.config.paths import DATASETS_DIR
 
 # Setup Logging
 logging.basicConfig(level=logging.INFO)
@@ -226,7 +227,7 @@ class OmniDataset(torch.utils.data.IterableDataset):
 if __name__ == "__main__":
     print("🚀 Starting Debug Stream...")
     ds = OmniDataset(
-        data_path="/mnt/e/data/datasets", split="train", samples_per_dataset=5
+        data_path=DATASETS_DIR, split="train", samples_per_dataset=5
     )
 
     count = 0

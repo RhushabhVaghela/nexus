@@ -6,8 +6,8 @@ Utility to organize unstructured datasets into categorized subdirectories.
 Supports separating Benchmarks from Training Data.
 
 Usage:
-    python src/utils/organize_datasets.py --base-path /mnt/e/data --move
-    python src/utils/organize_datasets.py --base-path /mnt/e/data --dry-run
+    python src/utils/organize_datasets.py --base-path {DATA_ROOT} --move
+    python src/utils/organize_datasets.py --base-path {DATA_ROOT} --dry-run
 """
 
 import os
@@ -17,6 +17,7 @@ import json
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 import logging
+from nexus.config.paths import DATA_ROOT
 
 # Setup logging
 logging.basicConfig(

@@ -21,6 +21,7 @@ try:
     DATASETS_AVAILABLE = True
 except ImportError:
     DATASETS_AVAILABLE = False
+from nexus.config.paths import DATA_ROOT
     Dataset = None
     DatasetDict = None
     load_dataset = None
@@ -30,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 class UniversalDatasetManager:
-    def __init__(self, mode: str = "default", data_root: str = "/mnt/e/data"):
+    def __init__(self, mode: str = "default", data_root: str = DATA_ROOT):
         if not DATASETS_AVAILABLE:
             raise ImportError(
                 "UniversalDatasetManager requires the 'datasets' package. "

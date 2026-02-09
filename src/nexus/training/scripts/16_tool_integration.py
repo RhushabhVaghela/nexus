@@ -142,7 +142,7 @@ def main():
         logger.warning(
             f"⚠️  Stage 2 Checkpoint not found at {base_model_path}. Using base Qwen2.5-Omni-7B-GPTQ-Int4."
         )
-        base_model_path = "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
+        base_model_path = DEFAULT_LLM_MODEL
 
     # Load Tokenizer
     logger.info("\n📦 Loading Tokenizer...")
@@ -158,9 +158,9 @@ def main():
 
         # 2. Init Model
         model = OmniMultimodalLM(
-            llm_name="/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4",
-            vision_name="/mnt/e/data/encoders/vision-encoders/siglip2-so400m-patch16-512",
-            audio_name="/mnt/e/data/encoders/audio-encoders/whisper-large-v3-turbo",
+            llm_name=DEFAULT_LLM_MODEL,
+            vision_name=DEFAULT_VISION_ENCODER,
+            audio_name=DEFAULT_AUDIO_ENCODER,
             inject_vision=True,
             inject_audio=True,
         )
@@ -252,6 +252,7 @@ def main():
     except Exception as e:
         logger.error(f"❌ Training failed: {e}")
         import traceback
+from nexus.config.paths import DEFAULT_AUDIO_ENCODER, DEFAULT_LLM_MODEL, DEFAULT_VISION_ENCODER
 
         traceback.print_exc()
 

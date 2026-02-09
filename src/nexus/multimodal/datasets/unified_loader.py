@@ -71,6 +71,7 @@ class UnifiedMultiDatasetLoader:
         elif dataset_type == "jsonl":
             # Manual processed datasets (from process_manual_datasets.py)
             from torch.utils.data import Dataset
+from nexus.config.paths import DATA_ROOT, DOWNLOADED_DIR, UNIFIED_MULTIMODAL_DIR
 
             class JSONLDataset(Dataset):
                 def __init__(self, jsonl_path):
@@ -96,64 +97,64 @@ class UnifiedMultiDatasetLoader:
 
     @staticmethod
     def get_default_sources() -> Dict[str, Dict]:
-        """Get all available datasets in /mnt/e/data."""
+        ""f"Get all available datasets in {DATA_ROOT}."""
         return {
             # Primary: E-MM1-100M (100M+ samples, all modalities)
             "emm1": {
                 "type": "emm1",
-                "path": "/mnt/e/data/downloaded/E-MM1-100M",
+                "path": f"{DOWNLOADED_DIR}/E-MM1-100M",
                 "shards": list(range(1, 17)),  # All 16 shards
                 "priority": 1,
             },
             # Manually processed datasets (from process_manual_datasets.py)
             "mathvista": {
                 "type": "jsonl",
-                "path": "/mnt/e/data/unified_multimodal/benchmarks/mathvista",
+                "path": f"{UNIFIED_MULTIMODAL_DIR}/benchmarks/mathvista",
                 "priority": 2,
             },
             "mathverse": {
                 "type": "jsonl",
-                "path": "/mnt/e/data/unified_multimodal/benchmarks/mathverse",
+                "path": f"{UNIFIED_MULTIMODAL_DIR}/benchmarks/mathverse",
                 "priority": 2,
             },
             "ineqmath": {
                 "type": "jsonl",
-                "path": "/mnt/e/data/unified_multimodal/benchmarks/ineqmath",
+                "path": f"{UNIFIED_MULTIMODAL_DIR}/benchmarks/ineqmath",
                 "priority": 2,
             },
             "mmlu": {
                 "type": "jsonl",
-                "path": "/mnt/e/data/unified_multimodal/benchmarks/mmlu",
+                "path": f"{UNIFIED_MULTIMODAL_DIR}/benchmarks/mmlu",
                 "priority": 2,
             },
             "common_voice": {
                 "type": "jsonl",
-                "path": "/mnt/e/data/unified_multimodal/audio/common_voice",
+                "path": f"{UNIFIED_MULTIMODAL_DIR}/audio/common_voice",
                 "priority": 2,
             },
             "msr_vtt": {
                 "type": "jsonl",
-                "path": "/mnt/e/data/unified_multimodal/video/msr_vtt",
+                "path": f"{UNIFIED_MULTIMODAL_DIR}/video/msr_vtt",
                 "priority": 2,
             },
             "vatex": {
                 "type": "jsonl",
-                "path": "/mnt/e/data/unified_multimodal/video/vatex",
+                "path": f"{UNIFIED_MULTIMODAL_DIR}/video/vatex",
                 "priority": 2,
             },
             "stackoverflow_quality": {
                 "type": "jsonl",
-                "path": "/mnt/e/data/unified_multimodal/premium_text/stackoverflow_quality",
+                "path": f"{UNIFIED_MULTIMODAL_DIR}/premium_text/stackoverflow_quality",
                 "priority": 2,
             },
             "stackoverflow_questions": {
                 "type": "jsonl",
-                "path": "/mnt/e/data/unified_multimodal/premium_text/stackoverflow_questions",
+                "path": f"{UNIFIED_MULTIMODAL_DIR}/premium_text/stackoverflow_questions",
                 "priority": 2,
             },
             "llava_onevision": {
                 "type": "jsonl",
-                "path": "/mnt/e/data/unified_multimodal/vision/llava_onevision",
+                "path": f"{UNIFIED_MULTIMODAL_DIR}/vision/llava_onevision",
                 "priority": 2,
             },
         }

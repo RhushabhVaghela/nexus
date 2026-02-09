@@ -104,6 +104,7 @@ class RULERBenchmark:
     def setup(self):
         """Load model and tokenizer."""
         from transformers import AutoModelForCausalLM, AutoTokenizer
+from nexus.config.paths import DEFAULT_STUDENT_MODEL
         
         logger.info(f"Loading model from {self.config.model_path}")
         
@@ -391,7 +392,7 @@ def main():
     except Exception as e:
         print(f"Failed to load model: {e}")
         print("\nUsage:")
-        print("  python -m src.benchmarks.ruler_benchmark --model /mnt/e/data/models/Qwen2.5-0.5B")
+        print(f"  python -m src.benchmarks.ruler_benchmark --model {DEFAULT_STUDENT_MODEL}")
         return
     
     result = benchmark.run()

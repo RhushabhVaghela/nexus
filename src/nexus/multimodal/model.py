@@ -108,7 +108,7 @@ class FeedForward(nn.Module):
 
 class VisionEncoder(nn.Module):
     """SigLIP 2 Vision Encoder (Feb 2025)"""
-    def __init__(self, model_name="/mnt/e/data/encoders/vision-encoders/siglip2-so400m-patch16-512", output_dim=1152, load_in_8bit=False, device_map=None):
+    def __init__(self, model_name=DEFAULT_VISION_ENCODER, output_dim=1152, load_in_8bit=False, device_map=None):
         super().__init__()
         print(f"Loading Vision Encoder: {model_name}")
         if load_in_8bit:
@@ -138,7 +138,7 @@ class VisionEncoder(nn.Module):
 
 class AudioEncoder(nn.Module):
     """Whisper Large V3 Turbo Audio Encoder"""
-    def __init__(self, model_name="/mnt/e/data/encoders/audio-encoders/whisper-large-v3-turbo", output_dim=1280, load_in_8bit=False, device_map=None):
+    def __init__(self, model_name=DEFAULT_AUDIO_ENCODER, output_dim=1280, load_in_8bit=False, device_map=None):
         super().__init__()
         print(f"Loading Audio Encoder: {model_name}")
         if load_in_8bit:
@@ -175,7 +175,7 @@ logging.getLogger("auto_gptq").setLevel(logging.ERROR)
 
 class VideoDecoder(nn.Module):
     """PaDT OVD 3B Video Decoder"""
-    def __init__(self, model_name="/mnt/e/data/models/PaDT_OVD_3B"):
+    def __init__(self, model_name=f"{MODELS_DIR}/PaDT_OVD_3B"):
         super().__init__()
         print(f"Loading Video Decoder: {model_name}")
         self.decoder = AutoModel.from_pretrained(model_name, trust_remote_code=True)
@@ -190,7 +190,7 @@ class VideoDecoder(nn.Module):
 
 class SpeechDecoder(nn.Module):
     """Parakeet TDT Speech Decoder"""
-    def __init__(self, model_name="/mnt/e/data/encoders/audio-encoders/parakeet-tdt-0.6b-v3"):
+    def __init__(self, model_name=f"{ENCODERS_DIR}/audio-encoders/parakeet-tdt-0.6b-v3"):
         super().__init__()
         print(f"Loading Speech Decoder: {model_name}")
         # Parakeet-TDT usually requires NeMo, but if loading via HF is possible we try
@@ -228,8 +228,8 @@ class ModularMultimodalWrapper(nn.Module):
         base_model,
         inject_vision: bool = False,
         inject_audio: bool = False,
-        vision_name: str = "/mnt/e/data/encoders/vision-encoders/siglip2-so400m-patch16-512",
-        audio_name: str = "/mnt/e/data/encoders/audio-encoders/whisper-large-v3-turbo",
+        vision_name: str = DEFAULT_VISION_ENCODER,
+        audio_name: str = DEFAULT_AUDIO_ENCODER,
         llm_dim: int = 4096,
         num_latents: int = 64,
         use_dfm: bool = True,
@@ -424,8 +424,8 @@ class OmniMultimodalLM(nn.Module):
         self.native_input_keys = {"vision": "images", "audio": "audios"} # Defaults for Qwen
         
         # Default to local encoder paths (user's refactored folder structure)
-        vision_name = kwargs.pop("vision_name", "/mnt/e/data/encoders/vision-encoders/siglip2-so400m-patch16-512")
-        audio_name = kwargs.pop("audio_name", "/mnt/e/data/encoders/audio-encoders/whisper-large-v3-turbo")
+        vision_name = kwargs.pop("vision_name", DEFAULT_VISION_ENCODER)
+        audio_name = kwargs.pop("audio_name", DEFAULT_AUDIO_ENCODER)
         
         # Extract wrapper-specific flags to prevent pollution of Base Model init
         wrapper_enable_decoders = kwargs.pop("enable_decoders", True)
@@ -620,6 +620,7 @@ class OmniMultimodalLM(nn.Module):
             kwargs.pop(key, None)
         
         import gc
+from nexus.config.paths import DEFAULT_AUDIO_ENCODER, DEFAULT_VISION_ENCODER, ENCODERS_DIR, MODELS_DIR
         gc.collect()
         torch.cuda.empty_cache()
             

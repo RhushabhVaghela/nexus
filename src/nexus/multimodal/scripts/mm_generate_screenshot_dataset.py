@@ -25,12 +25,13 @@ from typing import Dict, List
 
 sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger, log_header, log_completion  # type: ignore
+from nexus.config.paths import MM_RAW_DIR, MULTIMODAL_FULLSTACK_DIR
 
 logger = setup_logger(__name__, "logs/mm_generate_screenshot.log")
 
 CONFIG = {
-    "input_image_dir": "/mnt/e/data/mm_raw/screenshots",
-    "output_dir": "/mnt/e/data/multimodal-fullstack-dataset/screenshot_error_log",
+    "input_image_dir": f"{MM_RAW_DIR}/screenshots",
+    "output_dir": f"{MULTIMODAL_FULLSTACK_DIR}/screenshot_error_log",
     "samples_per_file": 50_000,
     "seed": 42,
 }

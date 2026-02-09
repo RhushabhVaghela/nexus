@@ -92,7 +92,7 @@ class ReasoningDataset(Dataset):
             return self._load_file(explicit_path)
             
         # Use Universal Manager
-        manager = UniversalDatasetManager(mode=config.mode) # Defaults to /mnt/e/data
+        manager = UniversalDatasetManager(mode=config.mode) # Defaults to {DATA_ROOT}
         
         # If dataset_path was a folder name, treat as dataset name
         names = config.dataset_names.copy()
@@ -277,6 +277,7 @@ def main():
 
     if args.check_modality:
         from nexus.utils.model_utils import check_modality
+from nexus.config.paths import DATA_ROOT
         if not check_modality(args.model, "text"):
             sys.exit(1)
         sys.exit(0)

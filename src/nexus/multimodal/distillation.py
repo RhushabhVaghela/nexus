@@ -402,6 +402,7 @@ class DistillationEngine:
 
 if __name__ == "__main__":
     import argparse
+from nexus.config.paths import DEFAULT_OMNI_MODEL, DEFAULT_STUDENT_MODEL
 
     parser = argparse.ArgumentParser(
         description="Multimodal Data Processor & Distillation"
@@ -410,12 +411,12 @@ if __name__ == "__main__":
     parser.add_argument("--distill", action="store_true", help="Run distillation")
     parser.add_argument(
         "--distill-teacher",
-        default="/mnt/e/data/models/Qwen2.5-Omni",
+        default=DEFAULT_OMNI_MODEL,
         help="Teacher model path",
     )
     parser.add_argument(
         "--distill-student",
-        default="/mnt/e/data/models/Qwen2.5-0.5B",
+        default=DEFAULT_STUDENT_MODEL,
         help="Student model path",
     )
 

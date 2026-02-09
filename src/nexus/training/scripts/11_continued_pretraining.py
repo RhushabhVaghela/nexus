@@ -70,7 +70,7 @@ yaml_config = load_config()
 CONFIG = {
     # Model
     "model_name": yaml_config.get("base_model", {}).get(
-        "name", "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
+        "name", DEFAULT_LLM_MODEL
     ),
     # Continued Pretraining Specific
     "target_tokens": 50_000_000_000,  # 50B tokens target
@@ -86,7 +86,7 @@ CONFIG = {
     "lora_rank": 256,  # Larger rank captures more knowledge
     "lora_alpha": 512,
     # Checkpointing
-    "output_dir": "/mnt/e/models/nexus-prime-cpt",
+    "output_dir": NEXUS_PRIME_CPT_DIR,
     "save_steps": 5000,
     "logging_steps": 100,
     # Streaming (to avoid downloading 6TB)
@@ -272,6 +272,7 @@ try:
     UNSLOTH_AVAILABLE = True
 except ImportError:
     UNSLOTH_AVAILABLE = False
+from nexus.config.paths import DEFAULT_LLM_MODEL, NEXUS_PRIME_CPT_DIR
 
 
 def main():

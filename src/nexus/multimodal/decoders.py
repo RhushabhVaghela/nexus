@@ -44,7 +44,7 @@ class ImageDecoder(ContentDecoder):
 
     def __init__(
         self,
-        model_id: str = "/mnt/e/data/encoders/vision-encoders/siglip2-so400m-patch16-512",
+        model_id: str = DEFAULT_VISION_ENCODER,
     ):
         self.processor = None
         self.model_id = model_id
@@ -102,7 +102,7 @@ class AudioDecoder(ContentDecoder):
 
     def __init__(
         self,
-        model_id: str = "/mnt/e/data/encoders/audio-encoders/whisper-large-v3-turbo",
+        model_id: str = DEFAULT_AUDIO_ENCODER,
     ):
         self.processor = None
         self.model_id = model_id
@@ -175,7 +175,7 @@ class VideoDecoder(ContentDecoder):
 
     def __init__(
         self,
-        model_id: str = "/mnt/e/data/encoders/vision-encoders/siglip2-so400m-patch16-512",
+        model_id: str = DEFAULT_VISION_ENCODER,
     ):
         self.processor = None
         self.model_id = model_id
@@ -229,6 +229,7 @@ class TextDecoder(ContentDecoder):
         self.model_id = model_id
         try:
             from transformers import AutoTokenizer
+from nexus.config.paths import DEFAULT_AUDIO_ENCODER, DEFAULT_VISION_ENCODER
 
             self.tokenizer = AutoTokenizer.from_pretrained(model_id)
             logger.info(f"Loaded text decoder tokenizer: {model_id}")

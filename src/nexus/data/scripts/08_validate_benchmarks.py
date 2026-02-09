@@ -21,6 +21,7 @@ from typing import Dict, List
 
 sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger, log_header, log_completion
+from nexus.config.paths import DATA_ROOT
 
 def check_env():
     """Verify environment dependencies."""
@@ -209,8 +210,8 @@ def main():
         
     global CONFIG, logger
     CONFIG = {
-        "benchmarks_dir": "/mnt/e/data/benchmarks",
-        "output_dir": "/mnt/e/data/benchmarks/validated",
+        "benchmarks_dir": f"{DATA_ROOT}/benchmarks",
+        "output_dir": f"{DATA_ROOT}/benchmarks/validated",
     }
     logger = setup_logger(__name__, "logs/validate_benchmarks.log")
     

@@ -24,12 +24,13 @@ from typing import Dict, List, Optional
 
 sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger, log_header, log_completion
+from nexus.config.paths import MM_RAW_DIR, MULTIMODAL_FULLSTACK_DIR
 
 logger = setup_logger(__name__, "logs/mm_generate_audio_meeting.log")
 
 CONFIG = {
-    "input_audio_dir": "/mnt/e/data/mm_raw/audio_meetings",
-    "output_dir": "/mnt/e/data/multimodal-fullstack-dataset/audio_meeting",
+    "input_audio_dir": f"{MM_RAW_DIR}/audio_meetings",
+    "output_dir": f"{MULTIMODAL_FULLSTACK_DIR}/audio_meeting",
     "samples_per_file": 50_000,
     "seed": 42,
 }

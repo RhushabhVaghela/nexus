@@ -19,6 +19,7 @@ from nexus.utils.logging_config import setup_logger, log_header, log_completion
 try:
     from nexus.multimodal.distillation import MultimodalDataProcessor
 except ImportError:
+from nexus.config.paths import MULTIMODAL_DIR
     MultimodalDataProcessor = None
 
 
@@ -34,7 +35,7 @@ def check_env():
 logger = None
 
 CONFIG = {
-    "default_input_base": "/mnt/e/data/multimodal",
+    "default_input_base": MULTIMODAL_DIR,
 }
 
 

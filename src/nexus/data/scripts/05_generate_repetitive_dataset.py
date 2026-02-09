@@ -26,6 +26,7 @@ from typing import Dict, Tuple, Set
 
 sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger, log_progress, log_header, log_completion
+from nexus.config.paths import REPETITIVE_PROMPT_DIR
 
 def check_env():
     """Verify environment dependencies."""
@@ -1603,7 +1604,7 @@ class PromptRepetitionEngine:
 CONFIG = {
     "target_samples": 200_000_000,  # HARD LIMIT
     "samples_per_file": 1_000_000,
-    "output_dir": "/mnt/e/data/repetitive-prompt-dataset",
+    "output_dir": REPETITIVE_PROMPT_DIR,
     "train_ratio": 0.95,
     "val_ratio": 0.025,
     "test_ratio": 0.025,

@@ -27,6 +27,7 @@ def test_dataset_loading():
     # We need to import OmniDataset from src/24_multimodal_training.py
     # Since it's a script, we can use run_path or import if we add to path
     import importlib.util
+from nexus.config.paths import DATASETS_DIR
 
     spec = importlib.util.spec_from_file_location(
         "multimodal_training", "src/training/scripts/24_multimodal_training.py"
@@ -36,7 +37,7 @@ def test_dataset_loading():
     spec.loader.exec_module(mod)
     OmniDataset = mod.OmniDataset
 
-    data_path = "/mnt/e/data/datasets"
+    data_path = DATASETS_DIR
     limit = 5
 
     print(f"📂 Data Path: {data_path}")

@@ -171,6 +171,7 @@ def gen_table_lookup():
 
 def main():
     import argparse
+from nexus.config.paths import REPETITIVE_QUERY_DIR
     
     parser = argparse.ArgumentParser()
     parser.add_argument("--start", type=int, default=51150000, help="Starting sample index")
@@ -185,7 +186,7 @@ def main():
     START_INDEX = args.start
     
     # Setup Directories - Use new E: drive path
-    base_dir = Path("/mnt/e/repetitive-query-dataset")
+    base_dir = Path(REPETITIVE_QUERY_DIR)
     for split in ["train", "val", "test"]:
         os.makedirs(base_dir / split, exist_ok=True)
         

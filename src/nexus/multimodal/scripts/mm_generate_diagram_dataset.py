@@ -25,12 +25,13 @@ from typing import Dict, List
 
 sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger, log_header, log_completion
+from nexus.config.paths import MM_RAW_DIR, MULTIMODAL_FULLSTACK_DIR
 
 logger = setup_logger(__name__, "logs/mm_generate_diagram.log")
 
 CONFIG = {
-    "input_image_dir": "/mnt/e/data/mm_raw/diagrams",
-    "output_dir": "/mnt/e/data/multimodal-fullstack-dataset/architecture_diagram",
+    "input_image_dir": f"{MM_RAW_DIR}/diagrams",
+    "output_dir": f"{MULTIMODAL_FULLSTACK_DIR}/architecture_diagram",
     "samples_per_file": 50_000,
     "seed": 42,
 }

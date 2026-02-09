@@ -412,10 +412,11 @@ class BenchmarkRunner:
 
 def main():
     import argparse
+from nexus.config.paths import DEFAULT_STUDENT_MODEL
 
     parser = argparse.ArgumentParser(description="Run comprehensive benchmarks")
     parser.add_argument(
-        "--model", default="/mnt/e/data/models/Qwen2.5-0.5B", help="Model path"
+        "--model", default=DEFAULT_STUDENT_MODEL, help="Model path"
     )
     parser.add_argument("--output-dir", default="results", help="Output directory")
     parser.add_argument("--runs", type=int, default=3, help="Number of benchmark runs")

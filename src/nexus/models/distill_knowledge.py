@@ -287,7 +287,7 @@ if __name__ == "__main__":
         "--dataset",
         type=str,
         default="general/google_smol",
-        help="Dataset path relative to /mnt/e/data/datasets",
+        help=f"Dataset path relative to {DATASETS_DIR}",
     )
     parser.add_argument("--limit", type=int, default=100, help="Max samples to extract")
     parser.add_argument(
@@ -324,6 +324,7 @@ if __name__ == "__main__":
 
     # Use UniversalDataLoader
     from .data_loader import UniversalDataLoader
+from nexus.config.paths import DATASETS_DIR
 
     loader = UniversalDataLoader()
 

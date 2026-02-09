@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from nexus.data.universal_loader import UniversalDataLoader
 from nexus.multimodal.decoders import OmniDecoder
 from nexus.utils.corruption_tracker import tracker as corruption_tracker
+from nexus.config.paths import DATA_ROOT
 
 
 class AssetVerifier:
@@ -139,7 +140,7 @@ class AssetVerifier:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data_dir", default="/mnt/e/data")
+    parser.add_argument("--data_dir", default=DATA_ROOT)
     parser.add_argument("--parallel", type=int, default=4)
     parser.add_argument("--filter", default=None)
     args = parser.parse_args()

@@ -227,6 +227,7 @@ NORMALIZERS = {
 def sample_to_messages(vs: VideoSample) -> Dict:
     """Convert VideoSample to OpenAI messages format."""
     import random
+from nexus.config.paths import MULTIMODAL_FULLSTACK_DIR
     
     task_templates = VIDEO_TASKS.get(vs.task_type, VIDEO_TASKS["captioning"])
     user_template = random.choice(task_templates["user_templates"])
@@ -327,7 +328,7 @@ def main():
                         choices=list(VIDEO_DATASETS.keys()) + ["all"],
                         help="Datasets to download")
     parser.add_argument("--output-dir", type=str,
-                        default="/mnt/e/data/multimodal-fullstack-dataset/video",
+                        default=f"{MULTIMODAL_FULLSTACK_DIR}/video",
                         help="Output directory")
     parser.add_argument("--limit", type=int, default=None,
                         help="Limit samples per dataset")

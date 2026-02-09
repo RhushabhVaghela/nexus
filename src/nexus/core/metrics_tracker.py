@@ -217,6 +217,7 @@ class MetricsTracker:
         """Get current GPU metrics."""
         try:
             import torch
+from nexus.config.paths import DATASETS_DIR, REMOTION_DATASET_DIR
             if torch.cuda.is_available():
                 return {
                     "gpu_memory_used_gb": torch.cuda.memory_allocated() / (1024**3),
@@ -286,7 +287,7 @@ def run_with_progress(iterable, desc: str = "Processing", callback=None):
 
 # ============== ALL AVAILABLE DATASETS ==============
 
-def discover_datasets(base_path: str = "/mnt/e/data/datasets") -> Dict[str, List[str]]:
+def discover_datasets(base_path: str = DATASETS_DIR) -> Dict[str, List[str]]:
     """
     Dynamically discover datasets by scanning a base directory.
     Subdirectories are treated as dataset folders.
@@ -369,48 +370,48 @@ def _categorize(path: str, datasets: Dict[str, List[str]], keyword_map: Dict[str
 # Default static list for fallback or explicit legacy support
 _STATIC_DATASETS = {
     "cot": [
-        "/mnt/e/data/datasets/kaist-ai_CoT-Collection/data/CoT_collection_en.json",
-        "/mnt/e/data/datasets/O1-OPEN_OpenO1-SFT-Pro",
-        "/mnt/e/data/datasets/O1-OPEN_OpenO1-SFT-Ultra",
+        f"{DATASETS_DIR}/kaist-ai_CoT-Collection/data/CoT_collection_en.json",
+        f"{DATASETS_DIR}/O1-OPEN_OpenO1-SFT-Pro",
+        f"{DATASETS_DIR}/O1-OPEN_OpenO1-SFT-Ultra",
     ],
     "reasoning": [
-        "/mnt/e/data/datasets/openai_gsm8k",
-        "/mnt/e/data/datasets/O1-OPEN_OpenO1-SFT-Pro",
+        f"{DATASETS_DIR}/openai_gsm8k",
+        f"{DATASETS_DIR}/O1-OPEN_OpenO1-SFT-Pro",
     ],
     "thinking": [
-        "/mnt/e/data/datasets/O1-OPEN_OpenO1-SFT-Pro",
-        "/mnt/e/data/datasets/O1-OPEN_OpenO1-SFT-Ultra",
+        f"{DATASETS_DIR}/O1-OPEN_OpenO1-SFT-Pro",
+        f"{DATASETS_DIR}/O1-OPEN_OpenO1-SFT-Ultra",
     ],
     "tools": [
-        "/mnt/e/data/datasets/Salesforce_xlam-function-calling-60k/xlam_function_calling_60k.json",
-        "/mnt/e/data/datasets/NousResearch_hermes-function-calling-v1",
-        "/mnt/e/data/datasets/argilla_apigen-function-calling",
-        "/mnt/e/data/datasets/hiyouga_glaive-function-calling-v2-sharegpt",
-        "/mnt/e/data/datasets/gorilla-llm_gorilla-openfunctions-v2",
+        f"{DATASETS_DIR}/Salesforce_xlam-function-calling-60k/xlam_function_calling_60k.json",
+        f"{DATASETS_DIR}/NousResearch_hermes-function-calling-v1",
+        f"{DATASETS_DIR}/argilla_apigen-function-calling",
+        f"{DATASETS_DIR}/hiyouga_glaive-function-calling-v2-sharegpt",
+        f"{DATASETS_DIR}/gorilla-llm_gorilla-openfunctions-v2",
     ],
     "streaming": [],  # Runtime feature
     "podcast": [
-        "/mnt/e/data/datasets/spawn99_CornellMovieDialogCorpus",
-        "/mnt/e/data/datasets/nlpdata_dialogre",
+        f"{DATASETS_DIR}/spawn99_CornellMovieDialogCorpus",
+        f"{DATASETS_DIR}/nlpdata_dialogre",
     ],
     "vision-qa": [
-        "/mnt/e/data/datasets/AI4Math_MathVista",
-        "/mnt/e/data/datasets/AI4Math_MathVerse",
+        f"{DATASETS_DIR}/AI4Math_MathVista",
+        f"{DATASETS_DIR}/AI4Math_MathVerse",
     ],
     "video-understanding": [
-        "/mnt/e/data/datasets/VLM2Vec_MSR-VTT",
-        "/mnt/e/data/datasets/qingy2024_VaTeX",
-        "/mnt/e/data/datasets/XiangpengYang_VideoCoF-50k",
+        f"{DATASETS_DIR}/VLM2Vec_MSR-VTT",
+        f"{DATASETS_DIR}/qingy2024_VaTeX",
+        f"{DATASETS_DIR}/XiangpengYang_VideoCoF-50k",
     ],
     "image-generation": [
-        "/mnt/e/data/datasets/LucasFang_Laion-Aesthetics-High-Resolution-GoT",
-        "/mnt/e/data/datasets/LucasFang_OmniEdit-GoT",
+        f"{DATASETS_DIR}/LucasFang_Laion-Aesthetics-High-Resolution-GoT",
+        f"{DATASETS_DIR}/LucasFang_OmniEdit-GoT",
     ],
     "video-generation": [
-        "/mnt/e/data/datasets/fullstack__stargate_s04e01_100topkdiverse_text2vid",
+        f"{DATASETS_DIR}/fullstack__stargate_s04e01_100topkdiverse_text2vid",
     ],
     "remotion-explainer": [
-        "/mnt/e/data/datasets/remotion/remotion_explainer_dataset.jsonl",
+        f"{REMOTION_DATASET_DIR}/remotion_explainer_dataset.jsonl",
     ],
 }
 

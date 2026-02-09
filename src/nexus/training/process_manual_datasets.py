@@ -2,7 +2,7 @@
 """
 process_manual_datasets.py
 
-Process manually downloaded datasets from /mnt/e/data/downloaded
+Process manually downloaded datasets from {DOWNLOADED_DIR}
 and normalize them to the MultimodalSample format.
 
 Usage:
@@ -52,57 +52,57 @@ class MultimodalSample:
 # Dataset Registry
 MANUAL_DATASETS = {
     "mathvista": {
-        "path": "/mnt/e/data/downloaded/AI4Math_MathVista",
+        "path": f"{DOWNLOADED_DIR}/AI4Math_MathVista",
         "modality": "benchmarks",
         "processor": "mathvista"
     },
     "mathverse": {
-        "path": "/mnt/e/data/downloaded/AI4Math_MathVerse",
+        "path": f"{DOWNLOADED_DIR}/AI4Math_MathVerse",
         "modality": "benchmarks",
         "processor": "mathverse"
     },
     "ineqmath": {
-        "path": "/mnt/e/data/downloaded/AI4Math_IneqMath",
+        "path": f"{DOWNLOADED_DIR}/AI4Math_IneqMath",
         "modality": "benchmarks",
         "processor": "ineqmath"
     },
     "mmlu": {
-        "path": "/mnt/e/data/downloaded/cais_mmlu",
+        "path": f"{DOWNLOADED_DIR}/cais_mmlu",
         "modality": "benchmarks",
         "processor": "mmlu"
     },
     "common_voice": {
-        "path": "/mnt/e/data/downloaded/Mozilla_Common-Voice",
+        "path": f"{DOWNLOADED_DIR}/Mozilla_Common-Voice",
         "modality": "audio",
         "processor": "common_voice"
     },
     "msr_vtt": {
-        "path": "/mnt/e/data/downloaded/VLM2Vec_MSR-VTT",
+        "path": f"{DOWNLOADED_DIR}/VLM2Vec_MSR-VTT",
         "modality": "video",
         "processor": "msr_vtt"
     },
     "vatex": {
-        "path": "/mnt/e/data/downloaded/qingy2024_VaTeX",
+        "path": f"{DOWNLOADED_DIR}/qingy2024_VaTeX",
         "modality": "video",
         "processor": "vatex"
     },
     "llava_onevision": {
-        "path": "/mnt/e/data/downloaded/mvp-lab_LLaVA-OneVision-1.5-RL-Data",
+        "path": f"{DOWNLOADED_DIR}/mvp-lab_LLaVA-OneVision-1.5-RL-Data",
         "modality": "vision",
         "processor": "llava_onevision"
     },
     "stackoverflow_quality": {
-        "path": "/mnt/e/data/downloaded/imoore_60k-stack-overflow-questions-with-quality-rateing",
+        "path": f"{DOWNLOADED_DIR}/imoore_60k-stack-overflow-questions-with-quality-rateing",
         "modality": "premium_text",
         "processor": "stackoverflow_quality"
     },
     "stackoverflow_questions": {
-        "path": "/mnt/e/data/downloaded/pacovaldez_stackoverflow-questions",
+        "path": f"{DOWNLOADED_DIR}/pacovaldez_stackoverflow-questions",
         "modality": "premium_text",
         "processor": "stackoverflow_questions"
     },
     "codegenerate3": {
-        "path": "/mnt/e/data/downloaded/samiyasamiya_codegenrate3",
+        "path": f"{DOWNLOADED_DIR}/samiyasamiya_codegenrate3",
         "modality": "premium_text",
         "processor": "codegenerate3"
     }
@@ -110,7 +110,7 @@ MANUAL_DATASETS = {
 
 
 class ManualDatasetProcessor:
-    def __init__(self, output_base: Path = Path("/mnt/e/data/unified_multimodal")):
+    def __init__(self, output_base: Path = Path(UNIFIED_MULTIMODAL_DIR)):
         self.output_base = output_base
         self.output_base.mkdir(parents=True, exist_ok=True)
 
@@ -645,6 +645,7 @@ class ManualDatasetProcessor:
         try:
             import pandas as pd
         except ImportError:
+from nexus.config.paths import DOWNLOADED_DIR, UNIFIED_MULTIMODAL_DIR
             logger.error("pandas is required for StackOverflow Questions processing")
             return 0
         
@@ -744,7 +745,7 @@ def main():
     parser = argparse.ArgumentParser(description="Process manually downloaded datasets")
     parser.add_argument("--dataset", default="all", help="Dataset to process or 'all'")
     parser.add_argument("--sample", type=int, default=5, help="Sample limit (0 = no limit)")
-    parser.add_argument("--output-dir", default="/mnt/e/data/unified_multimodal", help="Output directory")
+    parser.add_argument("--output-dir", default=UNIFIED_MULTIMODAL_DIR, help="Output directory")
     args = parser.parse_args()
     
     processor = ManualDatasetProcessor(Path(args.output_dir))

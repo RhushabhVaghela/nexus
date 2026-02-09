@@ -5,6 +5,7 @@ from pathlib import Path
 
 from nexus.multimodal.model import OmniMultimodalLM
 from nexus.multimodal import get_test_prompts
+from nexus.config.paths import DEFAULT_LLM_MODEL
 
 warnings.filterwarnings("ignore")
 
@@ -14,7 +15,7 @@ def run_benchmark():
 
     # 1. Load Model
     model = OmniMultimodalLM(
-        llm_name="/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4", device_map="auto"
+        llm_name=DEFAULT_LLM_MODEL, device_map="auto"
     )
     model.eval()
 

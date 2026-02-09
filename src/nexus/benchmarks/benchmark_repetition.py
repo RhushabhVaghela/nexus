@@ -40,6 +40,7 @@ class RepetitionBenchmark:
             )
             self.model.eval()
             from transformers import AutoTokenizer
+from nexus.config.paths import DEFAULT_LLM_MODEL
 
             self.tokenizer = AutoTokenizer.from_pretrained(model_path)
         except Exception as e:
@@ -203,7 +204,7 @@ class RepetitionBenchmark:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--model-path", default="/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
+        "--model-path", default=DEFAULT_LLM_MODEL
     )
     parser.add_argument("--iterations", type=int, default=5)
     args = parser.parse_args()

@@ -1,12 +1,13 @@
 import os
 from pathlib import Path
 import datetime
+from nexus.config.paths import OUTPUT_DIR
 
 class CorruptionTracker:
     """
     Logs corrupted file paths to a central log file.
     """
-    def __init__(self, log_path: str = "/mnt/e/data/output/corrupted_files.log"):
+    def __init__(self, log_path: str = f"{OUTPUT_DIR}/corrupted_files.log"):
         self.log_path = Path(log_path)
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
         
