@@ -9,9 +9,9 @@ from unittest.mock import Mock, patch
 from PIL import Image
 import numpy as np
 
-from src.models.video import VideoPipeline, VideoConfig, FrameGenerator
-from src.models.video.frame_generator import FrameGenerationConfig
-from src.models.video.temporal_consistency import (
+from nexus.models.video import VideoPipeline, VideoConfig, FrameGenerator
+from nexus.models.video.frame_generator import FrameGenerationConfig
+from nexus.models.video.temporal_consistency import (
     TemporalConsistencyProcessor, TemporalAttention, MotionEstimator
 )
 

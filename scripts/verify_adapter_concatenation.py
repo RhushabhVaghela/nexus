@@ -6,7 +6,7 @@ import os
 # Add src to path
 sys.path.append(os.path.abspath("src"))
 
-from src.core.student.core import NexusStudentCore, NexusStudentConfig
+from nexus.core.student.core import NexusStudentCore, NexusStudentConfig
 
 def verify_concatenation():
     print("=== Nexus Multi-Teacher Concatenation Verification ===")

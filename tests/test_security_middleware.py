@@ -19,9 +19,9 @@ os.environ["ALLOWED_ORIGINS"] = "http://localhost:3000"
 os.environ["RATE_LIMIT_RPS"] = "10"
 os.environ["RATE_LIMIT_BURST"] = "20"
 
-from src.api.explainer_api import app
-from src.security.auth import Authenticator, Permission
-from src.security.rate_limiter import RateLimiter, RateLimitConfig
+from nexus.api.explainer_api import app
+from nexus.security.auth import Authenticator, Permission
+from nexus.security.rate_limiter import RateLimiter, RateLimitConfig
 
 
 @pytest.fixture
@@ -33,7 +33,7 @@ def client():
 @pytest.fixture
 def auth_client(client):
     """Create authenticated test client."""
-    from src.security.auth import get_authenticator
+    from nexus.security.auth import get_authenticator
 
     auth = get_authenticator()
     token = auth.jwt.generate_token(
@@ -47,7 +47,7 @@ def auth_client(client):
 @pytest.fixture
 def api_key_client(client):
     """Create API key authenticated test client."""
-    from src.security.auth import get_authenticator
+    from nexus.security.auth import get_authenticator
 
     auth = get_authenticator()
     raw_key, api_key = auth.api_keys.generate_key(
@@ -102,7 +102,7 @@ class TestRateLimiting:
 
     def test_rate_limit_exceeded(self, client):
         """Test that rate limiting is enforced."""
-        from src.security.auth import get_authenticator
+        from nexus.security.auth import get_authenticator
 
         # Generate token
         auth = get_authenticator()
@@ -112,7 +112,7 @@ class TestRateLimiting:
         client.headers.update({"Authorization": f"Bearer {token}"})
 
         # Configure rate limiter for testing
-        from src.security.rate_limiter import get_rate_limiter, set_rate_limiter
+        from nexus.security.rate_limiter import get_rate_limiter, set_rate_limiter
 
         test_config = RateLimitConfig(requests_per_second=1, burst_size=2)
         test_limiter = RateLimiter(default_config=test_config)
@@ -134,8 +134,8 @@ class TestRateLimiting:
 
     def test_rate_limit_headers(self, client):
         """Test that rate limit headers are present."""
-        from src.security.auth import get_authenticator
-        from src.api.explainer_api import get_rate_limiter_instance
+        from nexus.security.auth import get_authenticator
+        from nexus.api.explainer_api import get_rate_limiter_instance
 
         # Generate token
         auth = get_authenticator()
@@ -328,7 +328,7 @@ class TestAuthEndpoints:
     def test_generate_api_key(self, client):
         """Test API key generation."""
         # Generate admin token first
-        from src.security.auth import get_authenticator
+        from nexus.security.auth import get_authenticator
 
         auth = get_authenticator()
         admin_token = auth.jwt.generate_token(

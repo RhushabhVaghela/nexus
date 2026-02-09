@@ -1,7 +1,7 @@
 import pytest
 import shutil
 from pathlib import Path
-from src.utils.migrate_to_mode_folders import simplify
+from nexus.utils.migrate_to_mode_folders import simplify
 
 def test_simplify_folders(tmp_path):
     # Setup structure

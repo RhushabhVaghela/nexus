@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 from typing import Optional, Dict, Any, List, Tuple
 
-from src.optimizations.semi_autoregressive import (
+from nexus.optimizations.semi_autoregressive import (
     SARConfig,
     ParallelTokenHead,
     SPACEDecoder,

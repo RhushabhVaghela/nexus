@@ -6,9 +6,9 @@ from unittest.mock import patch, MagicMock
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.core.capability_registry import CapabilityRegistry
-from src.stages.stage_remotion_gen import RemotionGenStage
-from src.stages.base import StageConfig
+from nexus.core.capability_registry import CapabilityRegistry
+from nexus.stages.stage_remotion_gen import RemotionGenStage
+from nexus.stages.base import StageConfig
 
 class TestRemotionCapability:
     """Test Remotion explainer capability and stage."""
@@ -75,7 +75,7 @@ class TestRemotionCapability:
 
     def test_generator_outputs_new_components(self):
         """Verify the generator produces samples for all categories including new ones."""
-        from src.utils.generate_remotion_dataset import generate_sample
+        from nexus.utils.generate_remotion_dataset import generate_sample
         
         # Sample enough times to see all types
         seen_types = set()
@@ -101,7 +101,7 @@ class TestRemotionCapability:
 
     def test_generator_custom_weights(self):
         """Verify the generator respects custom weighting logic."""
-        from src.utils.generate_remotion_dataset import generate_sample, CATEGORIES
+        from nexus.utils.generate_remotion_dataset import generate_sample, CATEGORIES
         
         # Scenario: 100% Story
         # math=0, story=100 -> normalize to 0.0, 1.0 (since function expects normalized if internal, 
@@ -153,6 +153,6 @@ class TestDatasetGenerator:
 
     def test_system_prompt_exists(self):
         """Verify the 3B1B system prompt is defined."""
-        from src.core.capability_registry import REMOTION_EXPLAINER_SYSTEM_PROMPT
+        from nexus.core.capability_registry import REMOTION_EXPLAINER_SYSTEM_PROMPT
         assert "3Blue1Brown" in REMOTION_EXPLAINER_SYSTEM_PROMPT
         assert "NexusLib" in REMOTION_EXPLAINER_SYSTEM_PROMPT

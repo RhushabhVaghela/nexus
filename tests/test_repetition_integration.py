@@ -15,8 +15,8 @@ PROJECT_ROOT = Path(__file__).parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.training.stages.base import StageConfig
-from src.training.stages.stage_reasoning import ReasoningStage
+from nexus.training.stages.base import StageConfig
+from nexus.training.stages.stage_reasoning import ReasoningStage
 # We don't import ModularMultimodalWrapper here because we just test the torch logic
 # or we mock it. The previous test_embedding_repetition_logic was good.
 

@@ -1,6 +1,6 @@
 import torch.nn as nn
 import unittest
-from src.core.utils.universal_inspector import UniversalInspector
+from nexus.core.utils.universal_inspector import UniversalInspector
 
 class MockLLM(nn.Module):
     def __init__(self):

@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch, mock_open
 
-from src.utils.data_mixer import normalize_to_messages, mix_datasets, split_and_save
+from nexus.utils.data_mixer import normalize_to_messages, mix_datasets, split_and_save
 
 class TestDataMixer:
     

@@ -2,7 +2,7 @@ import unittest
 import os
 import sys
 import subprocess
-from src.core.config import NexusConfig
+from nexus.core.config import NexusConfig
 
 # Add scripts to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))

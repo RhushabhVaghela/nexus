@@ -20,9 +20,9 @@ sys.path.insert(0, str(PROJECT_ROOT))
 import torch
 import torch.nn as nn
 
-from src.models.sli.universal_sli_integrator import UniversalSLIIntegrator, SequentialLayerIntegrator
-from src.models.sli.exceptions import UnsupportedArchitectureError
-from src.models.sli.architecture_registry import LlamaFamilyHandler
+from nexus.models.sli.universal_sli_integrator import UniversalSLIIntegrator, SequentialLayerIntegrator
+from nexus.models.sli.exceptions import UnsupportedArchitectureError
+from nexus.models.sli.architecture_registry import LlamaFamilyHandler
 
 
 # =============================================================================

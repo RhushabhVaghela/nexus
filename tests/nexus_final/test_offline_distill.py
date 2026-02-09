@@ -2,7 +2,7 @@ import pytest
 import torch
 import os
 from unittest.mock import MagicMock
-from src.models.distill import NexusTrainer
+from nexus.models.distill import NexusTrainer
 
 def test_offline_distillation_loading(tmp_path):
     # Setup mock student and loaders

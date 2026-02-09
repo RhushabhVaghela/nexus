@@ -8,7 +8,7 @@ import sys
 import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-from src.benchmarks.expanded_eval_suite import (
+from nexus.benchmarks.expanded_eval_suite import (
     ExpandedEvalSuite, MultipleChoiceEvaluator, MathEvaluator,
     CodeEvaluator, SWEBenchEvaluator, BenchmarkSample, get_evaluator
 )
@@ -88,7 +88,7 @@ class TestExpandedEvalSuite:
 
     def test_main_list(self):
         with patch("sys.argv", ["suite.py", "--list"]):
-            from src.benchmarks.expanded_eval_suite import main
+            from nexus.benchmarks.expanded_eval_suite import main
             main()
 
     def test_main_execution(self, tmp_path):
@@ -96,5 +96,5 @@ class TestExpandedEvalSuite:
         with patch("sys.argv", ["suite.py", "--benchmarks", "mmlu", "--limit", "1", "--output", str(out)]), \
              patch("src.nexus.benchmarks.expanded_eval_suite.ExpandedEvalSuite.run_all", return_value={"aggregate": {}, "benchmarks": {}}), \
              patch("src.nexus.benchmarks.expanded_eval_suite.ExpandedEvalSuite.save_results"):
-            from src.benchmarks.expanded_eval_suite import main
+            from nexus.benchmarks.expanded_eval_suite import main
             main()

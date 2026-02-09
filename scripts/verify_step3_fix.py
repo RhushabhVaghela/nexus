@@ -7,7 +7,7 @@ from pathlib import Path
 # Ensure project root is in path
 sys.path.append(os.getcwd())
 
-from src.omni.loader import OmniModelLoader
+from nexus.omni.loader import OmniModelLoader
 
 def test_loading():
     model_path = "/mnt/e/data/models/stepfun-ai_Step3-VL-10B"

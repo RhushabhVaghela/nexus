@@ -1,6 +1,6 @@
 import pytest
 import json
-from src.utils.resume_repetitive_generation import (
+from nexus.utils.resume_repetitive_generation import (
     gen_log_extraction, gen_json_lookup, gen_directory_lookup, gen_table_lookup
 )
 

@@ -6,7 +6,7 @@ import pytest
 import os
 import shutil
 from pathlib import Path
-from src.data.universal_manager import UniversalDatasetManager
+from nexus.data.universal_manager import UniversalDatasetManager
 
 @pytest.fixture
 def mock_data_root(tmp_path):
@@ -67,7 +67,7 @@ class TestUniversalManagerModes:
         dummy_file = Path("code_uncensored_samples.jsonl")
         
         # Import correctly
-        from src.utils.organize_datasets import TRAINING_CATEGORIES
+        from nexus.utils.organize_datasets import TRAINING_CATEGORIES
         
         filename = dummy_file.name.lower()
         keyword_category = None

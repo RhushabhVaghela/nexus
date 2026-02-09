@@ -18,7 +18,7 @@ import threading
 from unittest.mock import Mock, patch, MagicMock
 from typing import List
 
-from src.core.resilience import (
+from nexus.core.resilience import (
     CircuitBreaker,
     CircuitBreakerConfig,
     CircuitBreakerOpen,

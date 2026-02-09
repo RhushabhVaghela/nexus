@@ -159,7 +159,7 @@ class TestMultimodalDatasetGeneration:
     def test_screenshot_generator_sample_structure(self):
         """Test screenshot sample has correct modalities structure."""
         try:
-            from src.mm_generate_screenshot_dataset import build_sample
+            from nexus.mm_generate_screenshot_dataset import build_sample
             from pathlib import Path
             
             # Mock a fake image path
@@ -177,7 +177,7 @@ class TestMultimodalDatasetGeneration:
     def test_diagram_generator_categories(self):
         """Test diagram generator has all diagram types."""
         try:
-            from src.mm_generate_diagram_dataset import DIAGRAM_TYPES
+            from nexus.mm_generate_diagram_dataset import DIAGRAM_TYPES
             
             expected_types = [
                 "system_architecture",
@@ -195,7 +195,7 @@ class TestMultimodalDatasetGeneration:
     def test_audio_meeting_generator_categories(self):
         """Test audio meeting generator has all meeting types."""
         try:
-            from src.mm_generate_audio_meeting_dataset import MEETING_TYPES
+            from nexus.mm_generate_audio_meeting_dataset import MEETING_TYPES
             
             expected_types = [
                 "standup",
@@ -404,7 +404,7 @@ class TestDataMixer:
     def test_normalize_to_messages_alpaca_format(self):
         """Test Alpaca format conversion."""
         try:
-            from src.utils.data_mixer import normalize_to_messages
+            from nexus.utils.data_mixer import normalize_to_messages
             
             alpaca_sample = {
                 "instruction": "Write a hello world",
@@ -422,7 +422,7 @@ class TestDataMixer:
     def test_normalize_to_messages_preserves_modalities(self):
         """Test that modalities block is preserved during normalization."""
         try:
-            from src.utils.data_mixer import normalize_to_messages
+            from nexus.utils.data_mixer import normalize_to_messages
             
             mm_sample = {
                 "messages": [
@@ -446,7 +446,7 @@ class TestDataMixer:
     def test_mix_datasets_ratio(self):
         """Test that mixing respects target ratios."""
         try:
-            from src.utils.data_mixer import mix_datasets
+            from nexus.utils.data_mixer import mix_datasets
             
             real_samples = [{"id": f"real_{i}"} for i in range(100)]
             synthetic_samples = [{"id": f"synth_{i}"} for i in range(100)]
@@ -470,7 +470,7 @@ class TestBenchmarks:
     def test_fullstack_eval_has_evaluators(self):
         """Test FullstackEval has all required evaluators."""
         try:
-            from src.benchmarks.fullstack_eval import FullstackEval
+            from nexus.benchmarks.fullstack_eval import FullstackEval
             benchmark = FullstackEval()
             
             test_cases = benchmark.get_all_cases()
@@ -481,7 +481,7 @@ class TestBenchmarks:
     def test_lovable_benchmark_categories(self):
         """Test LovableBenchmark has expected categories."""
         try:
-            from src.benchmarks.lovable_benchmark import LovableBenchmark
+            from nexus.benchmarks.lovable_benchmark import LovableBenchmark
             benchmark = LovableBenchmark()
             
             # categories = benchmark.get_categories()

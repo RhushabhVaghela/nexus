@@ -8,7 +8,7 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from src.optimization.kv_cache import (
+from nexus.optimization.kv_cache import (
     OptimizedKVCache,
     KVCacheEntry,
     CacheStats,

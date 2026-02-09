@@ -7,9 +7,9 @@ from unittest.mock import patch, MagicMock
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.stages.reasoning_sft import main as sft_main
-from src.stages.reasoning_grpo import main as grpo_main
-from src.stages.agent_finetune import main as agent_main
+from nexus.stages.reasoning_sft import main as sft_main
+from nexus.stages.reasoning_grpo import main as grpo_main
+from nexus.stages.agent_finetune import main as agent_main
 
 # Real Model Path
 REAL_MODEL_PATH = "/mnt/e/data/models/Qwen2.5-0.5B"

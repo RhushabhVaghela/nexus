@@ -93,8 +93,8 @@ class TestPipelineComponentsIntegration:
     
     def test_detect_then_validate_flow(self, text_model_path):
         """Test detection -> validation flow."""
-        from src.multimodal.detect_modalities import detect_modalities
-        from src.core.capability_registry import CapabilityRegistry
+        from nexus.multimodal.detect_modalities import detect_modalities
+        from nexus.core.capability_registry import CapabilityRegistry
         
         # Detect
         result = detect_modalities(text_model_path)
@@ -118,12 +118,12 @@ class TestPipelineComponentsIntegration:
     
     def test_training_controller_integration(self, tmp_path):
         """Test training controller can be instantiated."""
-        from src.training.controller import (
+        from nexus.training.controller import (
             setup_signal_handlers,
             check_pause_state,
             check_and_cooldown,
         )
-        import src.training.controller as tc
+        import nexus.training.controller as tc
         
         # Verify the module works
         tc._paused = False

@@ -21,7 +21,7 @@ from unittest.mock import patch, MagicMock
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.training.training_controller import (
+from nexus.training.training_controller import (
     setup_signal_handlers,
     check_pause_state,
     check_and_cooldown,
@@ -59,7 +59,7 @@ class TestCheckPauseState:
 
     def test_check_pause_state_not_paused(self):
         """Test check_pause_state returns immediately when not paused."""
-        import src.training.controller as tc
+        import nexus.training.controller as tc
 
         # Ensure not paused
         tc._paused = False
@@ -80,7 +80,7 @@ class TestCheckPauseState:
 
     def test_check_pause_state_paused_then_resumed(self):
         """Test check_pause_state blocks when paused."""
-        import src.training.controller as tc
+        import nexus.training.controller as tc
         import threading
 
         tc._paused = True
@@ -225,7 +225,7 @@ class TestTrainingStepHook:
 
     def test_hook_runs_without_error(self, real_text_model):
         """Test hook runs without error."""
-        import src.training.controller as tc
+        import nexus.training.controller as tc
 
         tc._paused = False
         tc._checkpoint_requested = False
@@ -279,7 +279,7 @@ class TestGlobalState:
 
     def test_paused_state_toggleable(self):
         """Test _paused global can be toggled."""
-        import src.training.controller as tc
+        import nexus.training.controller as tc
 
         original = tc._paused
         tc._paused = not original
@@ -289,7 +289,7 @@ class TestGlobalState:
 
     def test_checkpoint_requested_state(self):
         """Test _checkpoint_requested global."""
-        import src.training.controller as tc
+        import nexus.training.controller as tc
 
         tc._checkpoint_requested = True
         assert tc._checkpoint_requested is True

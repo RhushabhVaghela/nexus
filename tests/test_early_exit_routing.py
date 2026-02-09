@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 from typing import Tuple, Optional, Dict, Any
 
-from src.optimizations.early_exit_routing import (
+from nexus.optimizations.early_exit_routing import (
     DynamicRoutingConfig,
     TokenRouter,
     DynamicLayerRouter,

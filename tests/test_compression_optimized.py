@@ -9,7 +9,7 @@ import torch
 import numpy as np
 from typing import Tuple
 
-from src.optimizations.compression_optimized import (
+from nexus.optimizations.compression_optimized import (
     CompressionConfig,
     QuantizedTensor,
     QuantizationCompressor,

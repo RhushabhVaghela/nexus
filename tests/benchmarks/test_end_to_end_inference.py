@@ -26,10 +26,10 @@ from unittest.mock import Mock, patch, MagicMock
 import torch
 import torch.nn as nn
 
-from src.models.sli.prefetch_engine import PrefetchEngine, create_prefetch_engine
-from src.models.sli.activation_cache import ActivationCache, ActivationCacheConfig
-from src.monitoring.metrics_server import MetricsServer
-from src.monitoring.collectors import InferenceMetricsCollector
+from nexus.models.sli.prefetch_engine import PrefetchEngine, create_prefetch_engine
+from nexus.models.sli.activation_cache import ActivationCache, ActivationCacheConfig
+from nexus.monitoring.metrics_server import MetricsServer
+from nexus.monitoring.collectors import InferenceMetricsCollector
 
 
 def benchmark_full_pipeline(

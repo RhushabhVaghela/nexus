@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import MagicMock, patch
-from src.api.explainer_api import app
+from nexus.api.explainer_api import app
 
 client = TestClient(app)
 

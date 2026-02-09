@@ -10,7 +10,7 @@ import sys
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.reasoning.context_extension import (
+from nexus.reasoning.context_extension import (
     ContextExtensionConfig, ScalingType, RoPEScaler,
     ContextExtender, create_context_extender
 )

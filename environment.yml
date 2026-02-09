@@ -7,7 +7,7 @@ channels:
 
 dependencies:
   # Python version
-  - python>=3.10,<3.13
+  - python>=3.9,<3.13
   
   # Core PyTorch
   - pytorch>=2.1.0

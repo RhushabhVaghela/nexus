@@ -10,7 +10,7 @@ import threading
 import queue
 from typing import Tuple
 
-from src.optimizations.async_decompression import (
+from nexus.optimizations.async_decompression import (
     AsyncDecompressionConfig,
     CUDAStreamManager,
     LayerBufferPool,

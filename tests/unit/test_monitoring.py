@@ -18,7 +18,7 @@ from unittest.mock import Mock, patch, MagicMock, call
 from http.server import HTTPServer
 import json
 
-from src.monitoring.metrics_server import (
+from nexus.monitoring.metrics_server import (
     MetricsHandler,
     MetricsServer,
     start_metrics_server,
@@ -27,7 +27,7 @@ from src.monitoring.metrics_server import (
     _global_server,
 )
 
-from src.monitoring.collectors import (
+from nexus.monitoring.collectors import (
     PROMETHEUS_AVAILABLE,
     PSUTIL_AVAILABLE,
     PYNVML_AVAILABLE,
@@ -512,7 +512,7 @@ class TestGetCollector(unittest.TestCase):
     
     def tearDown(self):
         """Clean up collectors."""
-        from src.monitoring.collectors import _collectors
+        from nexus.monitoring.collectors import _collectors
         _collectors.clear()
     
     def test_get_collector_create_new(self):
@@ -540,7 +540,7 @@ class TestRegisterAllCollectors(unittest.TestCase):
     
     def tearDown(self):
         """Clean up collectors."""
-        from src.monitoring.collectors import _collectors
+        from nexus.monitoring.collectors import _collectors
         _collectors.clear()
     
     def test_register_all_collectors(self):

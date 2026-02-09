@@ -19,8 +19,8 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 import torch
 
-from src.models.sli.moe_handler import MoEHandler, MoEConfig
-from src.models.sli.exceptions import MoEConfigurationError
+from nexus.models.sli.moe_handler import MoEHandler, MoEConfig
+from nexus.models.sli.exceptions import MoEConfigurationError
 
 
 # =============================================================================

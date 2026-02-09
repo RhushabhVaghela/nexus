@@ -23,8 +23,8 @@ import sys
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.models.omni.inference import OmniInference, GenerationConfig
-from src.core.training.student_trainer import NexusDistillationTrainer
+from nexus.models.omni.inference import OmniInference, GenerationConfig
+from nexus.core.training.student_trainer import NexusDistillationTrainer
 
 
 @dataclass

@@ -1,4 +1,4 @@
-from src.core.checkpointing.activation_checkpointer import ActivationCheckpointer
+from nexus.core.checkpointing.activation_checkpointer import ActivationCheckpointer
 
 
 def test_checkpointer_saves_and_retrieves():

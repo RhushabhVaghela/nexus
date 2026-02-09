@@ -14,7 +14,7 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../..'))
 
-from src.multimodal.processors import (
+from nexus.multimodal.processors import (
     MultimodalRepetitionProcessor,
     VisionPromptProcessor,
     AudioPromptProcessor,

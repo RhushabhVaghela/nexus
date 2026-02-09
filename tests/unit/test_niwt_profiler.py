@@ -6,7 +6,7 @@ import os
 try:
     import torch
     import numpy as np
-    from src.models.profiler import StreamingPCAProfiler
+    from nexus.models.profiler import StreamingPCAProfiler
 
     DEPS_AVAILABLE = True
 except ImportError:

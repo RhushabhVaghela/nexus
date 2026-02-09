@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 from typing import Tuple, Optional, Dict, Any
 
-from src.optimizations.adaptive_layer_skipping import (
+from nexus.optimizations.adaptive_layer_skipping import (
     LayerSkipConfig,
     LayerSkipRouter,
     SWIFTSkipper,

@@ -2,7 +2,7 @@ import pytest
 import torch
 import torch.nn as nn
 from unittest.mock import MagicMock, patch
-from src.multimodal.model import OmniMultimodalLM, PerceiverResampler, ModularMultimodalWrapper, VisionEncoder, AudioEncoder, VideoDecoder, SpeechDecoder
+from nexus.multimodal.model import OmniMultimodalLM, PerceiverResampler, ModularMultimodalWrapper, VisionEncoder, AudioEncoder, VideoDecoder, SpeechDecoder
 
 class TestMultimodalComponents:
     @patch("src.nexus.multimodal.model.AutoModel.from_pretrained")

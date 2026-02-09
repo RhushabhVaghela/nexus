@@ -17,7 +17,7 @@ import asyncio
 import time
 from unittest.mock import Mock, patch, MagicMock
 
-from src.utils.retry import (
+from nexus.utils.retry import (
     BackoffStrategy,
     RetryConfig,
     RetryExhausted,

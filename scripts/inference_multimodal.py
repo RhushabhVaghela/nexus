@@ -12,11 +12,11 @@ from safetensors.torch import load_file
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.join(BASE_DIR, "src"))
 
-from src.core.student.core import NexusStudentCore, NexusStudentConfig
+from nexus.core.student.core import NexusStudentCore, NexusStudentConfig
 
 # Import centralized memory guard for WSL-aware safety checks
 try:
-    from src.utils.memory_guard import guard as _memory_guard
+    from nexus.utils.memory_guard import guard as _memory_guard
 
     _GUARD_AVAILABLE = True
 except ImportError:

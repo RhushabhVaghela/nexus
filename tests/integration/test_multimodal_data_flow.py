@@ -102,7 +102,7 @@ class TestVisionTextFlow:
     
     def test_vision_text_fusion_alignment(self):
         """Test vision and text are properly aligned."""
-        from src.models.alignment import CrossModalAlignment
+        from nexus.models.alignment import CrossModalAlignment
         
         batch_size = 2
         text_seq_len = 20
@@ -178,7 +178,7 @@ class TestAudioTextFlow:
     
     def test_audio_text_fusion_alignment(self):
         """Test audio and text are properly aligned."""
-        from src.models.alignment import CrossModalAlignment
+        from nexus.models.alignment import CrossModalAlignment
         
         batch_size = 2
         audio_seq_len = 100
@@ -248,7 +248,7 @@ class TestVideoTextFlow:
     
     def test_video_to_text_alignment(self):
         """Test video features align to text space."""
-        from src.models.alignment import CrossModalAlignment
+        from nexus.models.alignment import CrossModalAlignment
         
         batch_size = 2
         num_frames = 8
@@ -273,7 +273,7 @@ class TestAllModalitiesCombined:
     
     def test_all_modality_fusion(self):
         """Test fusion of all modalities together."""
-        from src.models.alignment import CrossModalAlignment
+        from nexus.models.alignment import CrossModalAlignment
         
         batch_size = 2
         embed_dim = 512

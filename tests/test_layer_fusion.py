@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 from typing import Tuple, Optional
 
-from src.optimizations.layer_fusion import (
+from nexus.optimizations.layer_fusion import (
     FusionConfig,
     FusedQKVProjection,
     FlashAttentionKernel,

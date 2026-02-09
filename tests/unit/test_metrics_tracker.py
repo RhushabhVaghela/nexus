@@ -3,7 +3,7 @@ import os
 import csv
 import shutil
 from pathlib import Path
-from src.core.metrics_tracker import MetricsTracker, TrainingMetrics, ValidationMetrics, BenchmarkMetrics, ExecutionDetailMetrics, ProgressTracker
+from nexus.core.metrics_tracker import MetricsTracker, TrainingMetrics, ValidationMetrics, BenchmarkMetrics, ExecutionDetailMetrics, ProgressTracker
 
 @pytest.fixture
 def temp_results_dir(tmp_path):

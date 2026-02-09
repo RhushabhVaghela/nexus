@@ -2,7 +2,7 @@ import pytest
 import torch
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-from src.voice_engine.vibe_modulator import VibeModulator, VibeParams, EmotionID
+from nexus.voice_engine.vibe_modulator import VibeModulator, VibeParams, EmotionID
 
 
 class TestVibeModulator:

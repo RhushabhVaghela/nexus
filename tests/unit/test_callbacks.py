@@ -3,7 +3,7 @@ import os
 import json
 import time
 from unittest.mock import MagicMock, patch
-from src.utils.callbacks import KeyboardPauseCallback
+from nexus.utils.callbacks import KeyboardPauseCallback
 
 @pytest.fixture
 def temp_dirs(tmp_path):

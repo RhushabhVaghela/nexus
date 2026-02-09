@@ -18,7 +18,7 @@ from unittest.mock import Mock, MagicMock, patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../..'))
 
-from src.models.auditor import (
+from nexus.models.auditor import (
     MemorizationClassifier,
     MemorizationAuditor,
     DistillationReport

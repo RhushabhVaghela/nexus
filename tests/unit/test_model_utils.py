@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from src.utils.model_utils import check_modality
+from nexus.utils.model_utils import check_modality
 
 @patch("src.nexus.utils.model_utils.AutoConfig.from_pretrained")
 def test_check_modality_text(mock_config_fn):

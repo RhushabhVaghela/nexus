@@ -3,7 +3,7 @@ Unit tests for quality_metrics.py
 """
 
 import pytest
-from src.utils.quality_metrics import QualityMetrics, QualityScoringPipeline
+from nexus.utils.quality_metrics import QualityMetrics, QualityScoringPipeline
 
 class TestQualityMetrics:
     

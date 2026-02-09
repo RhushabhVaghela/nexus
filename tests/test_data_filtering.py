@@ -7,7 +7,7 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from src.models.data_loader import MemorizationFilter, UniversalDataLoader
+from nexus.models.data_loader import MemorizationFilter, UniversalDataLoader
 
 
 class TestMemorizationFilter:

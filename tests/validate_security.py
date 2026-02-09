@@ -28,17 +28,17 @@ def test_security_modules():
 
     try:
         # Test auth module
-        from src.security.auth import Authenticator, Permission, get_authenticator
+        from nexus.security.auth import Authenticator, Permission, get_authenticator
 
         print("✓ Authentication module imported successfully")
 
         # Test rate limiter module
-        from src.security.rate_limiter import RateLimiter, get_rate_limiter
+        from nexus.security.rate_limiter import RateLimiter, get_rate_limiter
 
         print("✓ Rate limiter module imported successfully")
 
         # Test audit module
-        from src.security.audit import SecurityAuditor, get_security_auditor
+        from nexus.security.audit import SecurityAuditor, get_security_auditor
 
         print("✓ Security audit module imported successfully")
 
@@ -55,7 +55,7 @@ def test_authentication_flow():
     print("AUTHENTICATION FLOW TEST")
     print("=" * 60)
 
-    from src.security.auth import Authenticator, Permission
+    from nexus.security.auth import Authenticator, Permission
 
     # Create authenticator
     auth = Authenticator(secret_key="test-key")
@@ -106,7 +106,7 @@ def test_rate_limiting():
     print("RATE LIMITING TEST")
     print("=" * 60)
 
-    from src.security.rate_limiter import RateLimiter, RateLimitConfig
+    from nexus.security.rate_limiter import RateLimiter, RateLimitConfig
 
     # Create rate limiter with test config
     config = RateLimitConfig(
@@ -143,7 +143,7 @@ def test_input_validation():
     print("INPUT VALIDATION TEST")
     print("=" * 60)
 
-    from src.security.audit import get_security_auditor
+    from nexus.security.audit import get_security_auditor
 
     auditor = get_security_auditor()
     print("✓ Security auditor created")
@@ -191,7 +191,7 @@ def test_security_headers():
     print("SECURITY HEADERS TEST")
     print("=" * 60)
 
-    from src.api.explainer_api import SECURITY_HEADERS
+    from nexus.api.explainer_api import SECURITY_HEADERS
 
     required_headers = {
         "X-Frame-Options": "DENY",
@@ -220,7 +220,7 @@ def test_cors_configuration():
     print("CORS CONFIGURATION TEST")
     print("=" * 60)
 
-    from src.api.explainer_api import ALLOWED_ORIGINS
+    from nexus.api.explainer_api import ALLOWED_ORIGINS
 
     # Check that wildcard is not used
     if "*" in ALLOWED_ORIGINS:
@@ -246,7 +246,7 @@ def test_environment_config():
     print("ENVIRONMENT CONFIGURATION TEST")
     print("=" * 60)
 
-    from src.api.explainer_api import (
+    from nexus.api.explainer_api import (
         ALLOWED_ORIGINS,
         RATE_LIMIT_REQUESTS_PER_SECOND,
         RATE_LIMIT_BURST_SIZE,

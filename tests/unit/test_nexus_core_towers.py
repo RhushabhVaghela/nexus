@@ -15,10 +15,10 @@ import torch.nn as nn
 from unittest.mock import Mock, patch, MagicMock
 
 # Import tower components
-from src.core.towers.base_tower import BaseTower
-from src.core.towers.vision_tower import VisionTower
-from src.core.towers.reasoning_tower import ReasoningTower
-from src.core.towers import registry
+from nexus.core.towers.base_tower import BaseTower
+from nexus.core.towers.vision_tower import VisionTower
+from nexus.core.towers.reasoning_tower import ReasoningTower
+from nexus.core.towers import registry
 
 
 class TestBaseTower:
@@ -264,7 +264,7 @@ class TestTowerIntegration:
     
     def test_tower_with_adapter(self):
         """Test tower working with adapters."""
-        from src.core.adapters.vision_adapter import VisionAdapter
+        from nexus.core.adapters.vision_adapter import VisionAdapter
         
         config = {"hidden_size": 128}
         tower = VisionTower(config, teacher_dim=768, student_dim=512)

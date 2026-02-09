@@ -1,7 +1,7 @@
 import pytest
 import json
 from unittest.mock import patch, MagicMock
-from src.utils.validate_dataset_diversity import validate_diversity
+from nexus.utils.validate_dataset_diversity import validate_diversity
 
 def test_validate_diversity(tmp_path):
     # Create mock dataset

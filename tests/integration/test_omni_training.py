@@ -12,15 +12,15 @@ from dataclasses import dataclass
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.stages.stage_omni import OmniTrainingStage, OmniStageConfig
+from nexus.stages.stage_omni import OmniTrainingStage, OmniStageConfig
 
 class TestOmniStageImport:
     def test_import_stage(self):
-        from src.training.stages.stage_omni import OmniTrainingStage
+        from nexus.training.stages.stage_omni import OmniTrainingStage
         assert OmniTrainingStage is not None
     
     def test_import_config(self):
-        from src.training.stages.stage_omni import OmniStageConfig
+        from nexus.training.stages.stage_omni import OmniStageConfig
         assert OmniStageConfig is not None
 
 class TestOmniStageConfig:
@@ -63,7 +63,7 @@ class TestOmniTrainingIntegration:
 class TestOmniValidationPipeline:
     def test_omni_model_detection_mocked(self):
         """Test validation script detects Omni model via path name."""
-        from src.models.omni.loader import OmniModelLoader
+        from nexus.models.omni.loader import OmniModelLoader
         # Path containing "omni" should return True even if mocked
         # We mock exists to ensure it passes if logic checks existence
         with patch("pathlib.Path.exists", return_value=True), \

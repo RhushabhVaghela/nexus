@@ -21,7 +21,7 @@ import os
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from src.models.sli.sliding_window_buffer import (
+from nexus.models.sli.sliding_window_buffer import (
     SlidingWindowBuffer,
     AdaptiveSlidingWindow,
     SlidingWindowConfig,

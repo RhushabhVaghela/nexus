@@ -15,7 +15,7 @@ except ImportError:
 import torch
 import torch.nn.functional as F
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from src.core.student.core import NexusStudentCore, NexusStudentConfig
+from nexus.core.student.core import NexusStudentCore, NexusStudentConfig
 
 # Default Release Path
 RELEASE_PATH = "nexus-release-v1"
@@ -30,7 +30,7 @@ def load_student(release_path):
 
     # PRE-FLIGHT: Memory safety check before expensive model load
     try:
-        from src.utils.memory_guard import guard as _guard
+        from nexus.utils.memory_guard import guard as _guard
 
         ok, msg = _guard.preflight_check(estimated_ram_gb=6.0, estimated_vram_gb=8.0)
         print(f"[Memory] Pre-flight ({('WSL' if _guard.is_wsl else 'Native')}): {msg}")
@@ -152,7 +152,7 @@ def load_knowledge_engine(
         return None
 
     print(f"Loading Knowledge Engine from {index_path}...")
-    from src.models.knowledge import KnowledgeTower
+    from nexus.models.knowledge import KnowledgeTower
     import faiss
 
     # Initialize Tower

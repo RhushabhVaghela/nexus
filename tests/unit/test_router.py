@@ -5,9 +5,9 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../src'))
 try:
-    from src.core.student.sparse_router import SparseIntentRouter
+    from nexus.core.student.sparse_router import SparseIntentRouter
 except ImportError:
-    from src.core.student.sparse_router import SparseIntentRouter
+    from nexus.core.student.sparse_router import SparseIntentRouter
 
 class TestRouter(unittest.TestCase):
     def setUp(self):

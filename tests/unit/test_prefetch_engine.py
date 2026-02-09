@@ -20,7 +20,7 @@ from concurrent.futures import Future
 import torch
 import torch.nn as nn
 
-from src.models.sli.prefetch_engine import (
+from nexus.models.sli.prefetch_engine import (
     PrefetchPattern,
     PrefetchPriority,
     PrefetchStats,

@@ -1,7 +1,7 @@
 import pytest
 import json
 from unittest.mock import patch, MagicMock
-from src.utils.generate_remotion_dataset import generate_sample, CATEGORIES
+from nexus.utils.generate_remotion_dataset import generate_sample, CATEGORIES
 
 def test_generate_sample_basic():
     # Test without weights

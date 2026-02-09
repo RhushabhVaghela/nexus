@@ -19,7 +19,7 @@ import os
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-from src.utils.cache_manager import (
+from nexus.utils.cache_manager import (
     EvictionPolicy,
     CacheEntry,
     CacheStats,

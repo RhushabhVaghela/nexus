@@ -29,7 +29,7 @@ def _stop_monitors():
     yield
     # Stop any monitor threads that may have been started
     try:
-        from src.utils.memory_guard import guard
+        from nexus.utils.memory_guard import guard
 
         guard.stop_monitor()
     except Exception:
@@ -63,7 +63,7 @@ def _make_guard(**kwargs):
     Create a MemoryGuard for testing with safe defaults.
     Disables enforcement and auto-monitor to avoid OS-level side effects.
     """
-    from src.utils.memory_guard import MemoryGuard
+    from nexus.utils.memory_guard import MemoryGuard
 
     enforce = kwargs.pop("enforce", False)
     auto_monitor = kwargs.pop("auto_monitor", False)
@@ -83,7 +83,7 @@ class TestWSLDetection:
 
     def test_detect_wsl_via_proc_version(self, tmp_path, monkeypatch):
         """WSL detected when /proc/version contains 'microsoft'."""
-        from src.utils.memory_guard import detect_wsl
+        from nexus.utils.memory_guard import detect_wsl
 
         fake_proc = tmp_path / "version"
         fake_proc.write_text("Linux version 5.15.146.1-microsoft-standard-WSL2")
@@ -101,7 +101,7 @@ class TestWSLDetection:
 
     def test_detect_wsl_via_env_var(self, monkeypatch):
         """WSL detected when WSL_DISTRO_NAME env var is set."""
-        from src.utils.memory_guard import detect_wsl
+        from nexus.utils.memory_guard import detect_wsl
 
         monkeypatch.setenv("WSL_DISTRO_NAME", "Ubuntu")
         result = detect_wsl()
@@ -109,7 +109,7 @@ class TestWSLDetection:
 
     def test_detect_native_linux(self, monkeypatch):
         """Not WSL when no indicators are present."""
-        from src.utils.memory_guard import detect_wsl
+        from nexus.utils.memory_guard import detect_wsl
 
         monkeypatch.delenv("WSL_DISTRO_NAME", raising=False)
         monkeypatch.delenv("WSL_INTEROP", raising=False)
@@ -130,7 +130,7 @@ class TestMemoryThresholds:
 
     def test_wsl_thresholds_are_tighter(self):
         """WSL thresholds should be lower than native thresholds."""
-        from src.utils.memory_guard import WSL_THRESHOLDS, NATIVE_THRESHOLDS
+        from nexus.utils.memory_guard import WSL_THRESHOLDS, NATIVE_THRESHOLDS
 
         assert WSL_THRESHOLDS.ram_deadly < NATIVE_THRESHOLDS.ram_deadly
         assert WSL_THRESHOLDS.vram_deadly < NATIVE_THRESHOLDS.vram_deadly
@@ -143,14 +143,14 @@ class TestMemoryThresholds:
 
     def test_thresholds_are_frozen(self):
         """MemoryThresholds should be immutable (frozen dataclass)."""
-        from src.utils.memory_guard import WSL_THRESHOLDS
+        from nexus.utils.memory_guard import WSL_THRESHOLDS
 
         with pytest.raises(AttributeError):
             WSL_THRESHOLDS.ram_deadly = 99.0  # type: ignore[misc]
 
     def test_threshold_ordering(self):
         """Pressure levels should increase: elevated < high < critical < deadly."""
-        from src.utils.memory_guard import WSL_THRESHOLDS, NATIVE_THRESHOLDS
+        from nexus.utils.memory_guard import WSL_THRESHOLDS, NATIVE_THRESHOLDS
 
         for t in (WSL_THRESHOLDS, NATIVE_THRESHOLDS):
             assert t.ram_elevated < t.ram_high < t.ram_critical < t.ram_deadly
@@ -158,7 +158,7 @@ class TestMemoryThresholds:
 
     def test_wsl_faster_polling(self):
         """WSL should poll faster than native."""
-        from src.utils.memory_guard import WSL_THRESHOLDS, NATIVE_THRESHOLDS
+        from nexus.utils.memory_guard import WSL_THRESHOLDS, NATIVE_THRESHOLDS
 
         assert (
             WSL_THRESHOLDS.check_interval_seconds
@@ -178,7 +178,7 @@ class TestPressureClassification:
 
     def test_pressure_enum_ordering(self):
         """Pressure levels should be ordered by severity."""
-        from src.utils.memory_guard import MemoryPressure
+        from nexus.utils.memory_guard import MemoryPressure
 
         levels = list(MemoryPressure)
         assert levels == [
@@ -191,7 +191,7 @@ class TestPressureClassification:
 
     def test_safe_pressure(self):
         """Low memory usage should classify as SAFE."""
-        from src.utils.memory_guard import MemoryPressure, MemorySnapshot
+        from nexus.utils.memory_guard import MemoryPressure, MemorySnapshot
 
         guard = _make_guard()
 
@@ -220,7 +220,7 @@ class TestPressureClassification:
 
     def test_deadly_pressure_ram(self):
         """RAM above deadly threshold should classify as DEADLY."""
-        from src.utils.memory_guard import MemoryPressure, MemorySnapshot
+        from nexus.utils.memory_guard import MemoryPressure, MemorySnapshot
 
         guard = _make_guard()
 
@@ -249,7 +249,7 @@ class TestPressureClassification:
 
     def test_worst_of_ram_vram(self):
         """Pressure should be the WORST of RAM and VRAM, not average."""
-        from src.utils.memory_guard import MemoryPressure, MemorySnapshot
+        from nexus.utils.memory_guard import MemoryPressure, MemorySnapshot
 
         guard = _make_guard()
 
@@ -291,7 +291,7 @@ class TestPreflightCheck:
 
     def test_preflight_pass_with_headroom(self):
         """Preflight should pass when plenty of memory is available."""
-        from src.utils.memory_guard import MemorySnapshot
+        from nexus.utils.memory_guard import MemorySnapshot
 
         guard = _make_guard()
 
@@ -321,7 +321,7 @@ class TestPreflightCheck:
 
     def test_preflight_fail_insufficient_vram(self):
         """Preflight should fail when VRAM is insufficient."""
-        from src.utils.memory_guard import MemorySnapshot
+        from nexus.utils.memory_guard import MemorySnapshot
 
         guard = _make_guard()
 
@@ -350,7 +350,7 @@ class TestPreflightCheck:
 
     def test_preflight_fail_insufficient_ram(self):
         """Preflight should fail when RAM is insufficient."""
-        from src.utils.memory_guard import MemorySnapshot
+        from nexus.utils.memory_guard import MemorySnapshot
 
         guard = _make_guard()
 
@@ -388,7 +388,7 @@ class TestEmergencyCleanup:
 
     def test_cleanup_returns_metrics(self):
         """Emergency cleanup should return before/after metrics dict."""
-        from src.utils.memory_guard import MemoryGuard
+        from nexus.utils.memory_guard import MemoryGuard
 
         guard = _make_guard()
         result = guard.emergency_cleanup(aggressive=False)
@@ -399,7 +399,7 @@ class TestEmergencyCleanup:
 
     def test_aggressive_cleanup_calls_gc(self):
         """Aggressive cleanup should call gc.collect on all generations."""
-        from src.utils.memory_guard import MemoryGuard
+        from nexus.utils.memory_guard import MemoryGuard
 
         guard = _make_guard()
 
@@ -417,7 +417,7 @@ class TestThresholdExport:
 
     def test_get_thresholds_returns_dict(self):
         """get_thresholds() should return a flat dict with known keys."""
-        from src.utils.memory_guard import MemoryGuard
+        from nexus.utils.memory_guard import MemoryGuard
 
         guard = _make_guard()
         thresholds = guard.get_thresholds()
@@ -443,7 +443,7 @@ class TestThresholdExport:
 
     def test_threshold_values_are_numeric(self):
         """All threshold values except is_wsl should be numeric."""
-        from src.utils.memory_guard import MemoryGuard
+        from nexus.utils.memory_guard import MemoryGuard
 
         guard = _make_guard()
         thresholds = guard.get_thresholds()
@@ -458,7 +458,7 @@ class TestThresholdExport:
 
     def test_thresholds_ordering_in_export(self):
         """Exported thresholds should maintain the ordering: elevated < high < critical < deadly."""
-        from src.utils.memory_guard import MemoryGuard
+        from nexus.utils.memory_guard import MemoryGuard
 
         guard = _make_guard()
         t = guard.get_thresholds()
@@ -480,7 +480,7 @@ class TestSnapshot:
 
     def test_snapshot_has_ram_fields(self):
         """Snapshot should always have RAM percentage and free GB."""
-        from src.utils.memory_guard import take_snapshot
+        from nexus.utils.memory_guard import take_snapshot
 
         snap = take_snapshot()
 
@@ -491,7 +491,7 @@ class TestSnapshot:
 
     def test_snapshot_has_swap_field(self):
         """Snapshot should include swap usage."""
-        from src.utils.memory_guard import take_snapshot
+        from nexus.utils.memory_guard import take_snapshot
 
         snap = take_snapshot()
 
@@ -500,7 +500,7 @@ class TestSnapshot:
 
     def test_snapshot_vram_without_gpu(self):
         """On CPU-only systems, VRAM fields should be 0 or benign."""
-        from src.utils.memory_guard import take_snapshot, TORCH_AVAILABLE
+        from nexus.utils.memory_guard import take_snapshot, TORCH_AVAILABLE
 
         snap = take_snapshot()
 
@@ -517,28 +517,28 @@ class TestConvenienceFunctions:
 
     def test_is_safe_returns_bool(self):
         """is_safe() should return a boolean."""
-        from src.utils.memory_guard import is_safe
+        from nexus.utils.memory_guard import is_safe
 
         result = is_safe()
         assert isinstance(result, bool)
 
     def test_get_pressure_returns_enum(self):
         """get_pressure() should return a MemoryPressure enum value."""
-        from src.utils.memory_guard import get_pressure, MemoryPressure
+        from nexus.utils.memory_guard import get_pressure, MemoryPressure
 
         result = get_pressure()
         assert isinstance(result, MemoryPressure)
 
     def test_cleanup_returns_dict(self):
         """cleanup() should return metrics dict."""
-        from src.utils.memory_guard import cleanup
+        from nexus.utils.memory_guard import cleanup
 
         result = cleanup()
         assert isinstance(result, dict)
 
     def test_is_wsl_returns_bool(self):
         """is_wsl() should return a boolean."""
-        from src.utils.memory_guard import is_wsl
+        from nexus.utils.memory_guard import is_wsl
 
         result = is_wsl()
         assert isinstance(result, bool)
@@ -552,20 +552,20 @@ class TestGuardSingleton:
 
     def test_guard_is_initialized(self):
         """Module should export a pre-initialized guard instance."""
-        from src.utils.memory_guard import guard
+        from nexus.utils.memory_guard import guard
 
         assert guard is not None
 
     def test_guard_has_is_wsl_attribute(self):
         """Guard should expose is_wsl as a property/attribute."""
-        from src.utils.memory_guard import guard
+        from nexus.utils.memory_guard import guard
 
         assert hasattr(guard, "is_wsl")
         assert isinstance(guard.is_wsl, bool)
 
     def test_guard_get_pressure(self):
         """Guard should be callable for pressure check."""
-        from src.utils.memory_guard import guard, MemoryPressure
+        from nexus.utils.memory_guard import guard, MemoryPressure
 
         pressure = guard.get_pressure()
         assert isinstance(pressure, MemoryPressure)
@@ -579,7 +579,7 @@ class TestSystemProfile:
 
     def test_get_system_profile(self):
         """get_system_profile() should return a dict with hardware info."""
-        from src.utils.memory_guard import get_system_profile
+        from nexus.utils.memory_guard import get_system_profile
 
         profile = get_system_profile()
         assert isinstance(profile, dict)
@@ -589,7 +589,7 @@ class TestSystemProfile:
 
     def test_system_profile_gpu_count(self):
         """System profile should report GPU count (0 if CPU-only)."""
-        from src.utils.memory_guard import get_system_profile
+        from nexus.utils.memory_guard import get_system_profile
 
         profile = get_system_profile()
         assert "gpu_count" in profile
@@ -605,7 +605,7 @@ class TestEnforceLimits:
 
     def test_enforce_sets_limits_enforced_flag(self, _mock_rlimit):
         """_enforce_limits() should set _limits_enforced to True when it succeeds."""
-        from src.utils.memory_guard import MemoryGuard
+        from nexus.utils.memory_guard import MemoryGuard
 
         guard = MemoryGuard(enforce=True, auto_monitor=False)
         # On Linux/WSL, resource.RLIMIT_AS should succeed, so _limits_enforced=True
@@ -615,7 +615,7 @@ class TestEnforceLimits:
 
     def test_enforce_false_skips_enforcement(self):
         """With enforce=False, no limits should be set."""
-        from src.utils.memory_guard import MemoryGuard
+        from nexus.utils.memory_guard import MemoryGuard
 
         guard = MemoryGuard(enforce=False, auto_monitor=False)
         assert guard._limits_enforced is False
@@ -623,7 +623,7 @@ class TestEnforceLimits:
 
     def test_enforce_sets_process_ram_limit(self, _mock_rlimit):
         """_enforce_limits() should set RLIMIT_AS on Linux/WSL."""
-        from src.utils.memory_guard import MemoryGuard
+        from nexus.utils.memory_guard import MemoryGuard
 
         guard = MemoryGuard(enforce=True, auto_monitor=False)
 
@@ -637,7 +637,7 @@ class TestEnforceLimits:
 
     def test_enforce_cuda_fraction_with_mock(self, _mock_rlimit):
         """_enforce_limits() should call torch.cuda.set_per_process_memory_fraction."""
-        from src.utils.memory_guard import MemoryGuard, TORCH_AVAILABLE
+        from nexus.utils.memory_guard import MemoryGuard, TORCH_AVAILABLE
 
         if not TORCH_AVAILABLE:
             pytest.skip("torch not available")
@@ -659,7 +659,7 @@ class TestEnforceLimits:
 
     def test_enforce_respects_min_4gb_floor(self, _mock_rlimit):
         """RAM limit should never go below 4GB (would break Python)."""
-        from src.utils.memory_guard import MemoryGuard
+        from nexus.utils.memory_guard import MemoryGuard
 
         # We can't easily mock psutil.virtual_memory total to be < 4GB
         # but we verify the logic exists by checking the guard initializes
@@ -675,7 +675,7 @@ class TestSafeAllocate:
 
     def test_safe_allocate_passes_when_safe(self):
         """safe_allocate() should not raise when memory is plentiful."""
-        from src.utils.memory_guard import MemoryGuard, MemorySnapshot
+        from nexus.utils.memory_guard import MemoryGuard, MemorySnapshot
 
         guard = MemoryGuard(enforce=False, auto_monitor=False)
 
@@ -706,7 +706,7 @@ class TestSafeAllocate:
 
     def test_safe_allocate_raises_when_insufficient(self):
         """safe_allocate() should raise MemoryError when allocation would exceed limits."""
-        from src.utils.memory_guard import MemoryGuard, MemorySnapshot
+        from nexus.utils.memory_guard import MemoryGuard, MemorySnapshot
 
         guard = MemoryGuard(enforce=False, auto_monitor=False)
 
@@ -738,7 +738,7 @@ class TestSafeAllocate:
 
     def test_safe_allocate_cleans_up_on_critical_exit(self):
         """safe_allocate() should run cleanup on __exit__ if pressure is CRITICAL+."""
-        from src.utils.memory_guard import MemoryGuard, MemoryPressure, MemorySnapshot
+        from nexus.utils.memory_guard import MemoryGuard, MemoryPressure, MemorySnapshot
 
         guard = MemoryGuard(enforce=False, auto_monitor=False)
 
@@ -791,7 +791,7 @@ class TestWSLIsSafe:
 
     def test_wsl_blocks_at_high_pressure(self):
         """On WSL, is_safe() should return False at HIGH pressure."""
-        from src.utils.memory_guard import (
+        from nexus.utils.memory_guard import (
             MemoryGuard,
             MemoryPressure,
             MemorySnapshot,
@@ -828,7 +828,7 @@ class TestWSLIsSafe:
 
     def test_native_allows_high_pressure(self):
         """On native Linux, is_safe() should return True at HIGH pressure."""
-        from src.utils.memory_guard import (
+        from nexus.utils.memory_guard import (
             MemoryGuard,
             MemoryPressure,
             MemorySnapshot,
@@ -873,7 +873,7 @@ class TestAutoCleanup:
 
     def test_auto_cleanup_registered_with_enforce(self, _mock_rlimit):
         """Enforce mode should register auto-cleanup callbacks."""
-        from src.utils.memory_guard import MemoryGuard, MemoryPressure
+        from nexus.utils.memory_guard import MemoryGuard, MemoryPressure
 
         guard = MemoryGuard(enforce=True, auto_monitor=False)
         # Should have callbacks registered for CRITICAL and DEADLY
@@ -882,7 +882,7 @@ class TestAutoCleanup:
 
     def test_no_auto_cleanup_without_enforce(self):
         """Without enforce, no auto-cleanup callbacks should be registered."""
-        from src.utils.memory_guard import MemoryGuard, MemoryPressure
+        from nexus.utils.memory_guard import MemoryGuard, MemoryPressure
 
         guard = MemoryGuard(enforce=False, auto_monitor=False)
         assert len(guard._callbacks[MemoryPressure.CRITICAL]) == 0
@@ -890,7 +890,7 @@ class TestAutoCleanup:
 
     def test_auto_cleanup_fires_on_critical(self, _mock_rlimit):
         """Auto-cleanup should call emergency_cleanup when CRITICAL pressure fires."""
-        from src.utils.memory_guard import MemoryGuard, MemoryPressure, MemorySnapshot
+        from nexus.utils.memory_guard import MemoryGuard, MemoryPressure, MemorySnapshot
 
         guard = MemoryGuard(enforce=True, auto_monitor=False)
 
@@ -919,7 +919,7 @@ class TestMonitorAutoStart:
 
     def test_auto_monitor_starts_thread(self):
         """With auto_monitor=True, the monitor thread should be started."""
-        from src.utils.memory_guard import MemoryGuard
+        from nexus.utils.memory_guard import MemoryGuard
 
         guard = MemoryGuard(enforce=False, auto_monitor=True)
         try:
@@ -930,14 +930,14 @@ class TestMonitorAutoStart:
 
     def test_auto_monitor_false_no_thread(self):
         """With auto_monitor=False, no monitor thread should start."""
-        from src.utils.memory_guard import MemoryGuard
+        from nexus.utils.memory_guard import MemoryGuard
 
         guard = MemoryGuard(enforce=False, auto_monitor=False)
         assert guard._monitor_thread is None
 
     def test_monitor_is_daemon(self):
         """Monitor thread should be a daemon so it doesn't block process exit."""
-        from src.utils.memory_guard import MemoryGuard
+        from nexus.utils.memory_guard import MemoryGuard
 
         guard = MemoryGuard(enforce=False, auto_monitor=True)
         try:

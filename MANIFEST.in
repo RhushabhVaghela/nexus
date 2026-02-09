@@ -1,0 +1,24 @@
+# Include essential project files
+include LICENSE
+include README.md
+include pyproject.toml
+include requirements.txt
+
+# Include all source code
+recursive-include src/nexus *.py
+recursive-include src/nexus/config *.yaml *.json
+
+# Exclude development artifacts
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude *.egg-info
+global-exclude .git
+global-exclude .github
+global-exclude .mypy_cache
+global-exclude .pytest_cache
+prune tests
+prune benchmarks
+prune docs
+prune scripts
+prune deployment
+prune examples

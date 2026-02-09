@@ -1,10 +1,10 @@
 import pytest
 import torch
 from unittest.mock import MagicMock, patch
-from src.stages.base import BaseStage
-from src.stages.stage_reasoning import ReasoningStage
-from src.stages.stage_podcast import PodcastStage
-from src.stages.stage_omni import OmniTrainingStage
+from nexus.stages.base import BaseStage
+from nexus.stages.stage_reasoning import ReasoningStage
+from nexus.stages.stage_podcast import PodcastStage
+from nexus.stages.stage_omni import OmniTrainingStage
 
 class MockConfig:
     def __init__(self):

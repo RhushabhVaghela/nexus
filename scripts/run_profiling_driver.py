@@ -11,7 +11,7 @@ sys.path.append(os.path.join(os.getcwd(), 'src'))
 sys.path.append(os.path.join(os.getcwd(), 'scripts'))
 
 from niwt_core import NIWTCore
-from src.core.data.sanitizer import UniversalSanitizer
+from nexus.core.data.sanitizer import UniversalSanitizer
 import logging
 
 # Suppress noisy transformers generation warnings (e.g. "top_p is ignored when do_sample=False")
@@ -47,7 +47,7 @@ def main():
     load_dtype = torch.bfloat16 if device == "cuda" else torch.float32
 
     # Load Model using Universal OmniModelLoader
-    from src.omni.loader import OmniModelLoader
+    from nexus.omni.loader import OmniModelLoader
     
     print(f"[Loader] Initializing Universal Loader for {args.teacher_id}...")
     loader = OmniModelLoader(args.model_path)

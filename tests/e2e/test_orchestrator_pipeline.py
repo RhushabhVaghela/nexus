@@ -63,7 +63,7 @@ class TestModalityGateFlow:
     
     def test_detect_modalities_for_text_model(self, text_model_path):
         """Test modality detection returns correct flags."""
-        from src.multimodal.detect_modalities import detect_modalities
+        from nexus.multimodal.detect_modalities import detect_modalities
         
         result = detect_modalities(text_model_path)
         
@@ -74,7 +74,7 @@ class TestModalityGateFlow:
     
     def test_capability_validation_rejects_invalid(self):
         """Test capability validation rejects invalid combinations."""
-        from src.core.capability_registry import CapabilityRegistry
+        from nexus.core.capability_registry import CapabilityRegistry
         
         registry = CapabilityRegistry()
         
@@ -88,7 +88,7 @@ class TestModalityGateFlow:
     
     def test_capability_validation_accepts_valid(self):
         """Test capability validation accepts valid combinations."""
-        from src.core.capability_registry import CapabilityRegistry
+        from nexus.core.capability_registry import CapabilityRegistry
         
         registry = CapabilityRegistry()
         
@@ -128,7 +128,7 @@ class TestPipelineStageSequencing:
     
     def test_training_order_from_registry(self):
         """Test training order is determined correctly."""
-        from src.core.capability_registry import CapabilityRegistry
+        from nexus.core.capability_registry import CapabilityRegistry
         
         registry = CapabilityRegistry()
         all_caps = list(registry._capabilities.keys())
@@ -139,7 +139,7 @@ class TestPipelineStageSequencing:
     
     def test_omni_comes_before_multimodal(self):
         """Test Omni conversion happens before multimodal training."""
-        from src.core.capability_registry import CapabilityRegistry
+        from nexus.core.capability_registry import CapabilityRegistry
         
         registry = CapabilityRegistry()
         all_caps = ["omni", "podcast", "cot"]
@@ -152,7 +152,7 @@ class TestPipelineStageSequencing:
     
     def test_text_capabilities_before_vision(self):
         """Test text capabilities come before vision."""
-        from src.core.capability_registry import CapabilityRegistry
+        from nexus.core.capability_registry import CapabilityRegistry
         
         registry = CapabilityRegistry()
         all_caps = list(registry._capabilities.keys())
@@ -173,8 +173,8 @@ class TestIntegrationWithRealModel:
     
     def test_full_detection_to_validation_flow(self, text_model_path):
         """Test complete flow from detection to validation."""
-        from src.multimodal.detect_modalities import detect_modalities
-        from src.core.capability_registry import CapabilityRegistry
+        from nexus.multimodal.detect_modalities import detect_modalities
+        from nexus.core.capability_registry import CapabilityRegistry
         
         # Step 1: Detect
         detection = detect_modalities(text_model_path)

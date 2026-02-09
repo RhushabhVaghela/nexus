@@ -10,8 +10,8 @@ import json
 import os
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-from src.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig
-from src.core.metrics_tracker import BenchmarkMetrics
+from nexus.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig
+from nexus.core.metrics_tracker import BenchmarkMetrics
 
 class TestBenchmarkResult:
     """Test BenchmarkMetrics dataclass."""
@@ -198,7 +198,7 @@ class TestBenchmarkMethods:
         with patch("sys.argv", ["runner.py", "--model", "/fake", "--runs", "1"]), \
              patch("src.nexus.benchmarks.benchmark_runner.BenchmarkRunner.run_all"), \
              patch("src.nexus.benchmarks.benchmark_runner.BenchmarkRunner.print_summary"):
-            from src.benchmarks.benchmark_runner import main
+            from nexus.benchmarks.benchmark_runner import main
             assert main() == 0
 
     def test_memory_stats(self, mock_runner):

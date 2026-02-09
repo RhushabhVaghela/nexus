@@ -4,7 +4,7 @@ import sys
 # Ensure src is in path
 sys.path.append(os.path.join(os.getcwd(), 'src'))
 
-from src.core.data.sanitizer import UniversalSanitizer
+from nexus.core.data.sanitizer import UniversalSanitizer
 
 def test_google_smol():
     path = "/mnt/e/data/datasets/general/google_smol/aa_en.jsonl"

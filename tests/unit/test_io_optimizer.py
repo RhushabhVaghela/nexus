@@ -23,7 +23,7 @@ import torch
 import torch.nn as nn
 
 # Import the module under test
-from src.models.sli.io_optimizer import (
+from nexus.models.sli.io_optimizer import (
     IOPriority,
     IORequest,
     IOStats,
@@ -685,7 +685,7 @@ class TestGetIOOptimizer:
     def test_get_io_optimizer_creates_instance(self, mock_cache):
         """Test getting optimizer creates instance."""
         # Reset global instance
-        import src.models.sli.io_optimizer as io_module
+        import nexus.models.sli.io_optimizer as io_module
         io_module._io_optimizer = None
 
         optimizer = get_io_optimizer(layer_cache=mock_cache)
@@ -694,7 +694,7 @@ class TestGetIOOptimizer:
 
     def test_get_io_optimizer_returns_existing(self, mock_cache):
         """Test getting optimizer returns existing instance."""
-        import src.models.sli.io_optimizer as io_module
+        import nexus.models.sli.io_optimizer as io_module
         io_module._io_optimizer = None
 
         optimizer1 = get_io_optimizer(layer_cache=mock_cache)
@@ -704,7 +704,7 @@ class TestGetIOOptimizer:
 
     def test_get_io_optimizer_requires_cache_first_time(self):
         """Test first call requires layer_cache."""
-        import src.models.sli.io_optimizer as io_module
+        import nexus.models.sli.io_optimizer as io_module
         io_module._io_optimizer = None
 
         with pytest.raises(ValueError) as exc_info:

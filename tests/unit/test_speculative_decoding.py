@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 import torch
 import torch.nn as nn
-from src.models.speculative_decoding import SpeculativeDecoder
+from nexus.models.speculative_decoding import SpeculativeDecoder
 
 class TestSpeculativeDecoder(unittest.TestCase):
     def setUp(self):

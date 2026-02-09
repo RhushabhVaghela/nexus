@@ -7,8 +7,8 @@ from tqdm import tqdm
 sys.path.append(os.path.join(os.getcwd(), 'src'))
 
 try:
-    from src.core.data.sanitizer import UniversalSanitizer
-    from src.core.towers.registry import DATASET_REGISTRY
+    from nexus.core.data.sanitizer import UniversalSanitizer
+    from nexus.core.towers.registry import DATASET_REGISTRY
 except ImportError:
     print("[Error] Could not import necessary modules. Run from project root.")
     sys.exit(1)

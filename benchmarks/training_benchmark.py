@@ -26,9 +26,9 @@ import shutil
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.core.training.student_trainer import NexusDistillationTrainer
-from src.core.training.loop import TrainingLoop
-from src.core.training.data_loader import create_data_loader
+from nexus.core.training.student_trainer import NexusDistillationTrainer
+from nexus.core.training.loop import TrainingLoop
+from nexus.core.training.data_loader import create_data_loader
 
 
 @dataclass

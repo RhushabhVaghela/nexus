@@ -4,7 +4,7 @@ import shutil
 import json
 import time
 from unittest.mock import MagicMock
-from src.utils.callbacks import KeyboardPauseCallback
+from nexus.utils.callbacks import KeyboardPauseCallback
 
 class TestMonitoring:
     

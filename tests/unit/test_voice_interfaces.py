@@ -1,7 +1,7 @@
 import pytest
 import torch
 from unittest.mock import MagicMock
-from src.voice_engine.interfaces import (
+from nexus.voice_engine.interfaces import (
     UniversalVoicePipeline,
     BaseReasoningEngine,
     BaseVoiceIdentity,

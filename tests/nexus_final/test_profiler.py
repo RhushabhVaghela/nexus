@@ -3,7 +3,7 @@ import torch
 import numpy as np
 import os
 import shutil
-from src.models.profiler import StreamingPCAProfiler
+from nexus.models.profiler import StreamingPCAProfiler
 
 @pytest.fixture
 def profiler_setup(tmp_path):

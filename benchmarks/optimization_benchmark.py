@@ -23,13 +23,13 @@ import sys
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.models.optimization_suite import (
+from nexus.models.optimization_suite import (
     LayerPipeliningOptimizer,
     LayerSkippingOptimizer,
     SemiAutoregressiveGenerator,
     CompressionOptimizer,
 )
-from src.models.omni.inference import OmniInference, GenerationConfig
+from nexus.models.omni.inference import OmniInference, GenerationConfig
 
 
 @dataclass

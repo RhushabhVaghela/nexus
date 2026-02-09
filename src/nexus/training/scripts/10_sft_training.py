@@ -1,0 +1,632 @@
+#!/usr/bin/env python3
+"""
+10_sft_training.py
+Stage 1: Supervised Fine-Tuning (SFT)
+
+ARCHITECTURE-AGNOSTIC: Works with ANY HuggingFace model.
+Configure via config/model_config.yaml
+
+Usage:
+    python 10_sft_training.py [--mode censored|uncensored] [--quick] [--use_streaming]
+"""
+
+import os
+import sys
+import yaml
+import torch
+import logging
+import glob
+from pathlib import Path
+from typing import Dict, Any, Optional
+
+# Initialize logger immediately to avoid NoneType errors on import
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+try:
+    from datasets import Dataset, load_dataset
+    from trl import SFTTrainer
+    from transformers import (
+        AutoModelForCausalLM,
+        AutoTokenizer,
+        TrainingArguments,
+        Trainer,
+    )
+    from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+except ImportError as e:
+    logger.warning(
+        f"Optional imports not available: {e}. Some features may be limited."
+    )
+
+# Globals to be initialized in main()
+CONFIG = {}
+# logger = None  <-- Removed to preserve module-level logger
+PREFERENCE_WEIGHTS = {}
+
+
+def check_env():
+    """Verify environment and adjust config based on GPU."""
+    if torch.cuda.is_available():
+        vram_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
+        if logger:
+            logger.info(
+                f"✅ GPU detected: {torch.cuda.get_device_name(0)} ({vram_gb:.1f}GB VRAM)"
+            )
+    return True
+
+
+# ═══════════════════════════════════════════════════════════════
+# CONFIGURATION LOADING
+# ═══════════════════════════════════════════════════════════════
+
+
+def load_config(config_path: str = "config/model_config.yaml") -> Dict:
+    """Load configuration from YAML file."""
+    if Path(config_path).exists():
+        with open(config_path, "r") as f:
+            return yaml.safe_load(f)
+    else:
+        logger.warning(f"Config file not found: {config_path}, using defaults")
+        return {}
+
+
+# Load config
+yaml_config = load_config()
+
+# Merge with defaults
+CONFIG = {
+    # Model - from YAML or default
+    "model_name": yaml_config.get("base_model", {}).get(
+        "name", "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
+    ),
+    "torch_dtype": yaml_config.get("base_model", {}).get("torch_dtype", "auto"),
+    "trust_remote_code": yaml_config.get("base_model", {}).get(
+        "trust_remote_code", True
+    ),
+    # LoRA
+    "lora_enabled": yaml_config.get("lora", {}).get("enabled", True),
+    "lora_rank": yaml_config.get("lora", {}).get("rank", 64),
+    "lora_alpha": yaml_config.get("lora", {}).get("alpha", 128),
+    "lora_dropout": yaml_config.get("lora", {}).get("dropout", 0.05),
+    "target_modules": yaml_config.get("lora", {}).get(
+        "target_modules",
+        ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+    ),
+    # Training
+    "epochs": yaml_config.get("training", {}).get("num_epochs", 3),
+    "batch_size": yaml_config.get("training", {}).get("per_device_train_batch_size", 2),
+    "grad_accum_steps": yaml_config.get("training", {}).get(
+        "gradient_accumulation_steps", 8
+    ),
+    "learning_rate": yaml_config.get("training", {}).get("learning_rate", 2e-4),
+    "max_seq_length": yaml_config.get("training", {}).get("max_seq_length", 4096),
+    "warmup_ratio": yaml_config.get("training", {}).get("warmup_ratio", 0.03),
+    "gradient_checkpointing": yaml_config.get("training", {}).get(
+        "gradient_checkpointing", True
+    ),
+    "bf16": yaml_config.get("training", {}).get("bf16", True),
+    "logging_steps": yaml_config.get("training", {}).get("logging_steps", 1),
+    "save_steps": yaml_config.get("training", {}).get("save_steps", 5),
+    "eval_steps": yaml_config.get("training", {}).get("eval_steps", 500),
+    # Data
+    "mixed_data_dir": yaml_config.get("data", {}).get(
+        "mixed_data_dir", "/mnt/e/data/mixed-training"
+    ),
+    "synthetic_data_dir": "/mnt/e/data/finetuned-fullstack-dataset",
+    # Output
+    "output_dir": yaml_config.get("output", {}).get("dir", "/mnt/e/models/nexus-prime"),
+    # WandB
+    "wandb_enabled": yaml_config.get("wandb", {}).get("enabled", False),
+    "wandb_project": yaml_config.get("wandb", {}).get("project", "nexus-prime"),
+}
+
+
+# ═══════════════════════════════════════════════════════════════
+# CLI ARGUMENTS & QUICK MODE
+# ═══════════════════════════════════════════════════════════════
+import argparse
+
+parser = argparse.ArgumentParser(description="SFT Training Stage")
+parser.add_argument(
+    "--mode",
+    choices=["censored", "uncensored"],
+    default="censored",
+    help="Training mode (safety vs capability)",
+)
+parser.add_argument(
+    "--quick",
+    action="store_true",
+    help="Enable Quick Validation Mode (Tiny batch, truncated text)",
+)
+parser.add_argument(
+    "--use_streaming", action="store_true", help="Enable Streaming Dataset Mode"
+)
+parser.add_argument(
+    "--long-context",
+    action="store_true",
+    help="Enable RoPE Scaling for Long Context (128k+)",
+)
+args, unknown = parser.parse_known_args()
+
+# Apply CLI flags to CONFIG
+CONFIG["mode"] = args.mode
+if args.long_context:
+    CONFIG["long_context_scaling"] = True
+    logger.info("📐 Long Context RoPE Scaling: ENABLED")
+
+# Override CONFIG for Quick Mode
+if args.quick:
+    logger.warning("⚡ QUICK MODE ENABLED: Overriding params for validation ⚡")
+    CONFIG["batch_size"] = 1
+    CONFIG["max_seq_length"] = 500
+    CONFIG["learning_rate"] = 1e-5
+    CONFIG["epochs"] = 1
+    CONFIG["gradient_checkpointing"] = False  # Faster for tiny checks
+    CONFIG["logging_steps"] = 1
+    CONFIG["steps"] = 10  # Limit steps
+    logger.info(f"   Batch Size: {CONFIG['batch_size']}")
+    logger.info(f"   Max Seq Len: {CONFIG['max_seq_length']}")
+
+# Custom Callback for Metrics Tracking
+from transformers import TrainerCallback
+from nexus.core.metrics_tracker import MetricsTracker, TrainingMetrics
+import time
+
+
+class CSVMetricsCallback(TrainerCallback):
+    """Log training results to CSV using MetricsTracker."""
+
+    def __init__(self):
+        self.tracker = MetricsTracker()
+        self.start_time = time.time()
+
+    def on_train_end(self, args, state, control, **kwargs):
+        duration = time.time() - self.start_time
+        samples = state.global_step * args.per_device_train_batch_size  # approx
+
+        # Calculate loss stats from log history
+        losses = [x["loss"] for x in state.log_history if "loss" in x]
+        final_loss = losses[-1] if losses else 0.0
+        avg_loss = sum(losses) / len(losses) if losses else 0.0
+
+        metrics = TrainingMetrics(
+            capability="SFT",
+            dataset="Mixed (SFT)",
+            base_model=CONFIG["model_name"],
+            samples=samples,
+            steps=state.global_step,
+            epochs=state.num_train_epochs,
+            batch_size=args.per_device_train_batch_size,
+            duration_seconds=duration,
+            samples_per_second=samples / duration if duration > 0 else 0,
+            final_loss=final_loss,
+            avg_loss=avg_loss,
+            success=True,
+        )
+        self.tracker.log_training(metrics)
+        logger.info(f"✅ Training Metrics logged to {self.tracker.training_file}")
+
+
+# ═══════════════════════════════════════════════════════════════
+# GPU DETECTION & VRAM-BASED ADJUSTMENTS
+# ═══════════════════════════════════════════════════════════════
+
+
+def _adjust_config_for_gpu():
+    """Detect GPU and auto-adjust CONFIG based on available VRAM."""
+    if torch.cuda.is_available():
+        vram_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
+        logger.info(
+            f"GPU detected: {torch.cuda.get_device_name(0)} ({vram_gb:.1f}GB VRAM)"
+        )
+
+        # Auto-adjust context based on available VRAM
+        if vram_gb >= 80:  # H100/A100 80GB
+            CONFIG["max_seq_length"] = min(CONFIG["max_seq_length"], 131072)
+            CONFIG["batch_size"] = 4
+            logger.info("High VRAM mode: 128K context, batch=4")
+        elif vram_gb >= 24:  # A10G/RTX 4090
+            CONFIG["max_seq_length"] = min(CONFIG["max_seq_length"], 65536)
+            CONFIG["batch_size"] = 2
+            logger.info("Medium VRAM mode: 64K context, batch=2")
+        elif vram_gb >= 16:  # RTX 5080/4080
+            CONFIG["max_seq_length"] = min(CONFIG["max_seq_length"], 32768)
+            CONFIG["batch_size"] = 1
+            logger.info("Standard mode: 32K context, batch=1")
+        else:  # < 16GB
+            CONFIG["max_seq_length"] = min(CONFIG["max_seq_length"], 8192)
+            CONFIG["batch_size"] = 1
+            logger.info("Low VRAM mode: 8K context, batch=1")
+    else:
+        logger.error("No CUDA GPU detected. Training requires GPU.")
+        raise RuntimeError("No CUDA GPU detected. Training requires GPU.")
+
+
+# ═══════════════════════════════════════════════════════════════
+# IMPORTS (After config to handle missing libs gracefully)
+# ═══════════════════════════════════════════════════════════════
+
+try:
+    from unsloth import FastLanguageModel, is_bfloat16_supported
+
+    UNSLOTH_AVAILABLE = True
+except ImportError:
+    UNSLOTH_AVAILABLE = False
+    logger.warning("Unsloth not available, using standard transformers")
+
+try:
+    from transformers import (
+        AutoModelForCausalLM,
+        AutoTokenizer,
+        TrainingArguments,
+        Trainer,
+    )
+    from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+    from trl import SFTTrainer
+    from datasets import load_dataset, Dataset
+except ImportError as e:
+    logger.error(f"Missing dependency: {e}")
+    logger.error("Please install: pip install transformers peft trl datasets")
+    sys.exit(1)
+
+try:
+    import wandb
+
+    WANDB_AVAILABLE = True
+except ImportError:
+    WANDB_AVAILABLE = False
+
+# ═══════════════════════════════════════════════════════════════
+# DATA FORMATTING
+# ═══════════════════════════════════════════════════════════════
+
+SYSTEM_PROMPTS = {
+    "fullstack": (
+        "You are an expert Fullstack Architect and AI Engineer. "
+        "Build production-grade applications using deep research and reasoned architectural decisions. "
+        "Output your reasoning and actions as structured steps."
+    ),
+    "architecture": (
+        "You are a System Architecture expert. "
+        "Design scalable, maintainable systems with clear reasoning about trade-offs. "
+        "Explain your decisions step by step."
+    ),
+    "qa": (
+        "You are a QA Engineering expert specializing in security and testing. "
+        "Identify vulnerabilities, write tests, and ensure code quality. "
+        "Explain your findings with detailed reasoning."
+    ),
+    "uiux": (
+        "You are a UI/UX Design expert. "
+        "Create beautiful, accessible interfaces with Tailwind CSS and React. "
+        "Explain your design decisions and accessibility considerations."
+    ),
+    "devops": (
+        "You are a DevOps Engineer expert. "
+        "Design infrastructure, CI/CD pipelines, and deployment configurations. "
+        "Explain your choices for scalability and reliability."
+    ),
+    "default": (
+        "You are an advanced AI Assistant. "
+        "Solve tasks step-by-step with clear reasoning. "
+        "Show your thinking process before providing solutions."
+    ),
+}
+
+
+def get_system_prompt(domain: str) -> str:
+    """Get appropriate system prompt for domain."""
+    for key, prompt in SYSTEM_PROMPTS.items():
+        if key in domain.lower():
+            return prompt
+    return SYSTEM_PROMPTS["default"]
+
+
+def format_sample(sample: Dict[str, Any]) -> Dict[str, Any]:
+    """Format sample for training with system prompt injection."""
+    messages = sample.get("messages", [])
+    if not messages:
+        return {"text": ""}
+
+    domain = sample.get("domain", "general")
+    sys_prompt = get_system_prompt(domain)
+
+    # Inject system prompt if not present
+    if messages[0].get("role") != "system":
+        messages = [{"role": "system", "content": sys_prompt}] + messages
+
+    return {"text": messages}
+
+
+# ═══════════════════════════════════════════════════════════════
+# MODEL LOADING (Architecture-Agnostic)
+# ═══════════════════════════════════════════════════════════════
+
+
+def load_model_and_tokenizer():
+    """Load model and tokenizer in architecture-agnostic way."""
+
+    if UNSLOTH_AVAILABLE:
+        logger.info(f"📦 Loading model with Unsloth: {CONFIG['model_name']}")
+        model, tokenizer = FastLanguageModel.from_pretrained(
+            model_name=CONFIG["model_name"],
+            max_seq_length=CONFIG["max_seq_length"],
+            dtype=torch.bfloat16 if is_bfloat16_supported() else torch.float16,
+            load_in_4bit=True,
+            trust_remote_code=CONFIG["trust_remote_code"],
+        )
+
+        if CONFIG["lora_enabled"]:
+            logger.info(f"🔧 Adding LoRA adapters (rank={CONFIG['lora_rank']})...")
+            model = FastLanguageModel.get_peft_model(
+                model,
+                r=CONFIG["lora_rank"],
+                lora_alpha=CONFIG["lora_alpha"],
+                target_modules=CONFIG["target_modules"],
+                lora_dropout=CONFIG["lora_dropout"],
+                bias="none",
+                use_gradient_checkpointing="unsloth"
+                if CONFIG["gradient_checkpointing"]
+                else False,
+                random_state=42,
+            )
+    else:
+        logger.info(f"📦 Loading model with Transformers: {CONFIG['model_name']}")
+        tokenizer = AutoTokenizer.from_pretrained(
+            CONFIG["model_name"], trust_remote_code=CONFIG["trust_remote_code"]
+        )
+
+        model = AutoModelForCausalLM.from_pretrained(
+            CONFIG["model_name"],
+            torch_dtype=torch.bfloat16 if CONFIG["bf16"] else torch.float16,
+            device_map="auto",
+            trust_remote_code=CONFIG["trust_remote_code"],
+            load_in_4bit=True,
+            # RoPE Scaling for Long Context (e.g. Gemini/Claude style)
+            rope_scaling={"type": "dynamic", "factor": 2.0}
+            if CONFIG.get("long_context_scaling")
+            else None,
+        )
+
+        if CONFIG["lora_enabled"]:
+            logger.info(f"🔧 Adding LoRA adapters (rank={CONFIG['lora_rank']})...")
+            model = prepare_model_for_kbit_training(model)
+
+            lora_config = LoraConfig(
+                r=CONFIG["lora_rank"],
+                lora_alpha=CONFIG["lora_alpha"],
+                target_modules=CONFIG["target_modules"],
+                lora_dropout=CONFIG["lora_dropout"],
+                bias="none",
+                task_type="CAUSAL_LM",
+            )
+            model = get_peft_model(model, lora_config)
+
+    # Ensure tokenizer has padding token
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    return model, tokenizer
+
+
+# ═══════════════════════════════════════════════════════════════
+# DATA LOADING
+# ═══════════════════════════════════════════════════════════════
+
+
+def load_datasets(
+    use_streaming: bool = False, streaming_paths: list = None
+) -> Dict[str, Dataset]:
+    """
+    Load train and validation datasets.
+
+    Args:
+        use_streaming: If True, use streaming for 500GB+ datasets
+        streaming_paths: List of paths for streaming (if use_streaming=True)
+
+    Returns:
+        Dict with 'train' and optionally 'test' datasets
+    """
+
+    # STREAMING MODE: For 500GB+ datasets
+    if use_streaming:
+        logger.info("📂 Loading datasets in STREAMING mode (memory-efficient)")
+        try:
+            from nexus.data.streaming_trainer import (
+                StreamingDatasetLoader,
+                StreamingConfig,
+            )
+
+            if not streaming_paths:
+                streaming_paths = ["/mnt/e/data/datasets"]
+
+            config = StreamingConfig(
+                buffer_size=10000,
+                max_samples=None,  # No limit in streaming mode
+            )
+            loader = StreamingDatasetLoader(streaming_paths, config)
+            streaming_dataset = loader.get_streaming_dataset()
+
+            logger.info(f"   Streaming from: {streaming_paths}")
+            logger.info("   ✓ Streaming dataset ready (samples loaded on-demand)")
+
+            return {"train": streaming_dataset}
+
+        except ImportError as e:
+            logger.warning(
+                f"Streaming not available: {e}. Falling back to standard loading."
+            )
+
+    # STANDARD MODE: Load full dataset into memory
+    # Base path for Real Processed Data (from 04_process_real_datasets.py)
+    real_data_base = Path("/mnt/e/data/processed")
+    train_dir = real_data_base / "train"
+    val_dir = real_data_base / "val"
+
+    datasets = {}
+
+    # 1. Train Data
+    if train_dir.exists():
+        files = list(train_dir.glob("*.jsonl"))
+        if files:
+            logger.info(f"📂 Loading REAL TRAIN data from {train_dir}")
+            logger.info(f"   Found {len(files)} files")
+            datasets["train"] = load_dataset(
+                "json", data_files=[str(f) for f in files], split="train"
+            )
+
+    if "train" not in datasets:
+        # 1. Try Premium Mode-Specific Data First (from 03_load_premium_datasets.py)
+        # Assuming path /mnt/e/data/premium/{mode}_*
+        mode = CONFIG.get("mode", "censored")
+        premium_base = Path("/mnt/e/data/premium")
+        if premium_base.exists():
+            matches = list(premium_base.glob(f"{mode}_*"))
+            if matches:
+                # Use the latest/largest one if multiple
+                matches.sort()
+                premium_dir = matches[-1]
+                logger.info(f"📂 Found PREMIUM {mode.upper()} data at {premium_dir}")
+                datasets["train"] = load_dataset(str(premium_dir), split="train")
+
+    if "train" not in datasets:
+        # Fallback to mixed if real not found (for legacy support, but warn)
+        logger.warning("⚠️ No REAL training data found. Checking legacy paths...")
+        mixed_dir = Path(CONFIG["mixed_data_dir"]) / "train"
+        if mixed_dir.exists():
+            files = list(mixed_dir.glob("*.jsonl"))
+            if files:
+                datasets["train"] = load_dataset(
+                    "json", data_files=[str(f) for f in files], split="train"
+                )
+
+    # 2. Eval Data
+    if val_dir.exists():
+        files = list(val_dir.glob("*.jsonl"))
+        if files:
+            logger.info(f"📂 Loading REAL EVAL data from {val_dir}")
+            datasets["test"] = load_dataset(
+                "json", data_files=[str(f) for f in files], split="train"
+            )
+
+    if "train" not in datasets:
+        logger.error("❌ No training data found! Run 'run_pipeline.sh process' first.")
+        sys.exit(1)
+
+    return datasets
+
+
+# ═══════════════════════════════════════════════════════════════
+# TRAINING
+# ═══════════════════════════════════════════════════════════════
+
+
+def main():
+    logger.info("=" * 60)
+    logger.info("🎓 NEXUS PRIME: Supervised Fine-Tuning (SFT)")
+    logger.info("=" * 60)
+    logger.info(f"   Model: {CONFIG['model_name']}")
+    logger.info(f"   LoRA Rank: {CONFIG['lora_rank']}")
+    logger.info(f"   Max Seq Length: {CONFIG['max_seq_length']}")
+    logger.info(f"   Learning Rate: {CONFIG['learning_rate']}")
+    logger.info(f"   Epochs: {CONFIG['epochs']}")
+    logger.info("=" * 60)
+
+    # Enforce 'nexus' conda environment
+    if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
+        sys.exit("\033[0;31m[ERROR] Must be run in 'nexus' conda environment.\033[0m")
+
+    # Initialize WandB
+    if CONFIG["wandb_enabled"] and WANDB_AVAILABLE:
+        wandb.init(project=CONFIG["wandb_project"], name="sft-training")
+
+    # Load model
+    logger.info("\n📦 Loading model...")
+    model, tokenizer = load_model_and_tokenizer()
+    logger.info("✓ Model loaded successfully")
+
+    # Load data
+    logger.info("\n📂 Loading datasets...")
+    datasets = load_datasets(use_streaming=args.use_streaming)
+    train_dataset = datasets["train"]
+    eval_dataset = datasets.get("test")
+
+    logger.info(f"✓ Training samples: {len(train_dataset)}")
+    if eval_dataset:
+        logger.info(f"✓ Evaluation samples: {len(eval_dataset)}")
+
+    # Format dataset
+    logger.info("\n🔄 Formatting data...")
+    train_dataset = train_dataset.map(
+        format_sample, remove_columns=train_dataset.column_names
+    )
+    if eval_dataset:
+        eval_dataset = eval_dataset.map(
+            format_sample, remove_columns=eval_dataset.column_names
+        )
+
+    # Training arguments
+    training_args = TrainingArguments(
+        output_dir=CONFIG["output_dir"],
+        num_train_epochs=CONFIG["epochs"],
+        per_device_train_batch_size=CONFIG["batch_size"],
+        gradient_accumulation_steps=CONFIG["grad_accum_steps"],
+        learning_rate=CONFIG["learning_rate"],
+        warmup_ratio=CONFIG["warmup_ratio"],
+        lr_scheduler_type="cosine",
+        logging_steps=CONFIG["logging_steps"],
+        save_steps=CONFIG["save_steps"],
+        eval_strategy="steps" if eval_dataset else "no",
+        eval_steps=CONFIG["eval_steps"] if eval_dataset else None,
+        bf16=CONFIG["bf16"],
+        optim="adamw_8bit",
+        save_total_limit=3,
+        report_to="wandb" if (CONFIG["wandb_enabled"] and WANDB_AVAILABLE) else "none",
+    )
+
+    # Create trainer
+    logger.info("\n🚀 Starting training...")
+
+    if UNSLOTH_AVAILABLE:
+        trainer = SFTTrainer(
+            model=model,
+            tokenizer=tokenizer,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            args=training_args,
+            max_seq_length=CONFIG["max_seq_length"],
+        )
+    else:
+        trainer = Trainer(
+            model=model,
+            tokenizer=tokenizer,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            args=training_args,
+        )
+
+    # Train
+    trainer.train()
+
+    # Save
+    logger.info("\n💾 Saving model...")
+    trainer.save_model(CONFIG["output_dir"])
+    tokenizer.save_pretrained(CONFIG["output_dir"])
+
+    # Save LoRA adapter separately
+    if CONFIG["lora_enabled"]:
+        lora_dir = Path(CONFIG["output_dir"]) / "lora_adapter"
+        model.save_pretrained(str(lora_dir))
+        logger.info(f"✓ LoRA adapter saved to {lora_dir}")
+
+    logger.info("\n" + "=" * 60)
+    logger.info("✅ Training complete!")
+    logger.info(f"   Model saved to: {CONFIG['output_dir']}")
+    logger.info("=" * 60)
+
+    if CONFIG["wandb_enabled"] and WANDB_AVAILABLE:
+        wandb.finish()
+
+
+if __name__ == "__main__":
+    main()

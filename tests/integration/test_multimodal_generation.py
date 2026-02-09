@@ -9,11 +9,11 @@ from unittest.mock import Mock, patch, MagicMock
 from PIL import Image
 import numpy as np
 
-from src.models.diffusion import ImagePipeline, PipelineConfig
-from src.models.video import VideoPipeline, VideoConfig
-from src.models.diffusion.adapter import DiffusionAdapter
-from src.models.video.frame_generator import FrameGenerator
-from src.models.video.temporal_consistency import TemporalConsistencyProcessor
+from nexus.models.diffusion import ImagePipeline, PipelineConfig
+from nexus.models.video import VideoPipeline, VideoConfig
+from nexus.models.diffusion.adapter import DiffusionAdapter
+from nexus.models.video.frame_generator import FrameGenerator
+from nexus.models.video.temporal_consistency import TemporalConsistencyProcessor
 
 
 @pytest.mark.integration
@@ -151,7 +151,7 @@ def test_frame_generator_with_pipeline():
     mock_images = [Image.new("RGB", (64, 64)) for _ in range(4)]
     mock_pipeline.generate.return_value = {"images": mock_images}
     
-    from src.models.video.frame_generator import FrameGenerationConfig
+    from nexus.models.video.frame_generator import FrameGenerationConfig
     
     config = FrameGenerationConfig(
         num_frames=4,
@@ -247,7 +247,7 @@ def test_end_to_end_multimodal_pipeline():
 @pytest.mark.integration
 def test_registry_with_unknown_model():
     """Test registry auto-detection with unknown models."""
-    from src.core.towers.registry import detect_architecture, register_unknown_model
+    from nexus.core.towers.registry import detect_architecture, register_unknown_model
     
     # Test detection of unknown model types
     assert detect_architecture("some/vision-model") == "vision"

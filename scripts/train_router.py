@@ -9,7 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../src/
 try:
     from router import SparseIntentRouter
 except ImportError:
-    from src.core.student.router import SparseIntentRouter
+    from nexus.core.student.router import SparseIntentRouter
 
 from torch.utils.data import Dataset, DataLoader
 

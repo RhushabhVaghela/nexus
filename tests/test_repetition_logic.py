@@ -4,7 +4,7 @@ Unit tests for PromptRepetitionEngine.
 """
 
 import unittest
-from src.utils.repetition import PromptRepetitionEngine
+from nexus.utils.repetition import PromptRepetitionEngine
 
 class TestRepetitionLogic(unittest.TestCase):
     def setUp(self):

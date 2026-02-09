@@ -15,7 +15,7 @@ import pytest
 import time
 from unittest.mock import patch, MagicMock
 
-from src.security.audit import (
+from nexus.security.audit import (
     SecurityLevel,
     SecurityViolationType,
     SecurityViolation,

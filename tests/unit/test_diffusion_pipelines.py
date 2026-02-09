@@ -9,8 +9,8 @@ from unittest.mock import Mock, patch, MagicMock
 from PIL import Image
 import numpy as np
 
-from src.models.diffusion import ImagePipeline, PipelineConfig, DiffusionPipelineLoader
-from src.models.diffusion.adapter import DiffusionAdapter
+from nexus.models.diffusion import ImagePipeline, PipelineConfig, DiffusionPipelineLoader
+from nexus.models.diffusion.adapter import DiffusionAdapter
 
 
 class TestPipelineConfig:

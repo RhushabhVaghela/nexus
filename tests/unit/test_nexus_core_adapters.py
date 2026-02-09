@@ -13,10 +13,10 @@ import torch
 import torch.nn as nn
 
 # Import adapter components
-from src.core.adapters.base import BaseAdapter
-from src.core.adapters.vision_adapter import VisionAdapter
-from src.core.adapters.audio_adapter import AudioAdapter
-from src.core.adapters.reasoning_adapter import ReasoningAdapter
+from nexus.core.adapters.base import BaseAdapter
+from nexus.core.adapters.vision_adapter import VisionAdapter
+from nexus.core.adapters.audio_adapter import AudioAdapter
+from nexus.core.adapters.reasoning_adapter import ReasoningAdapter
 
 
 class TestBaseAdapter:

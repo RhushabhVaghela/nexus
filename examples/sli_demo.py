@@ -24,8 +24,8 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from src.core.towers.universal_loader import OmniModelLoader
-from src.data.universal_loader import UniversalDataLoader
+from nexus.core.towers.universal_loader import OmniModelLoader
+from nexus.data.universal_loader import UniversalDataLoader
 
 
 def run_sli_demo(model_name: str, sample_text: str = None):

@@ -8,7 +8,7 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from src.training.methods import (
+from nexus.training.methods import (
     TemperatureSchedule, 
     TrainingMethodConfig, 
     TrainingMethod,

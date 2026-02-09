@@ -66,7 +66,7 @@ class TestFullLifecycle(unittest.TestCase):
 
     def test_loss_function_mechanics(self):
         """Verify the Activation Anchoring Loss compiles and runs."""
-        from src.models.loss_functions import ActivationAnchoringLoss
+        from nexus.models.loss_functions import ActivationAnchoringLoss
         import torch
 
         loss_fn = ActivationAnchoringLoss()

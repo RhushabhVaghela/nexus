@@ -8,7 +8,7 @@ import sys
 import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-from src.benchmarks.lovable_benchmark import LovableBenchmark, UIGenCase, UIGenResult
+from nexus.benchmarks.lovable_benchmark import LovableBenchmark, UIGenCase, UIGenResult
 
 class TestLovableBenchmark:
     @pytest.fixture
@@ -88,19 +88,19 @@ class TestLovableBenchmark:
         out = tmp_path / "main_res.json"
         with patch("sys.argv", ["lovable.py", "--eval", "all", "--output", str(out)]), \
              patch("src.nexus.benchmarks.lovable_benchmark.LovableBenchmark.run_all", return_value={"overall_score": 0, "overall_max": 0, "overall_percentage": 0, "categories": {}}):
-            from src.benchmarks.lovable_benchmark import main
+            from nexus.benchmarks.lovable_benchmark import main
             main()
             assert out.exists()
 
     def test_main_list_cases(self):
         with patch("sys.argv", ["lovable.py", "--list-cases"]):
-            from src.benchmarks.lovable_benchmark import main
+            from nexus.benchmarks.lovable_benchmark import main
             main()
 
     def test_main_export_prompts(self, tmp_path):
         out = tmp_path / "exp.json"
         with patch("sys.argv", ["lovable.py", "--export-prompts", str(out)]):
-            from src.benchmarks.lovable_benchmark import main
+            from nexus.benchmarks.lovable_benchmark import main
             main()
             assert out.exists()
 
@@ -108,6 +108,6 @@ class TestLovableBenchmark:
         out = tmp_path / "spec.json"
         with patch("sys.argv", ["lovable.py", "--eval", "screenshot_to_code", "--output", str(out)]), \
              patch("src.nexus.benchmarks.lovable_benchmark.LovableBenchmark.run_category", return_value={"total_score": 0, "max_score": 0, "percentage": 0, "results": []}):
-            from src.benchmarks.lovable_benchmark import main
+            from nexus.benchmarks.lovable_benchmark import main
             main()
             assert out.exists()

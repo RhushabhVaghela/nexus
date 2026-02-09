@@ -2,7 +2,7 @@ import pytest
 import os
 from unittest.mock import MagicMock, patch
 from pathlib import Path
-from src.optimization.remotion_engine import RemotionExplainerEngine
+from nexus.optimization.remotion_engine import RemotionExplainerEngine
 
 class TestRemotionEngine:
     

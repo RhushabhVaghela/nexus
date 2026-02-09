@@ -1,7 +1,7 @@
 import pytest
 import torch
 from unittest.mock import MagicMock, patch
-from src.core.capability_audit import audit_capabilities
+from nexus.core.capability_audit import audit_capabilities
 
 @patch("src.nexus.core.capability_audit.AutoTokenizer.from_pretrained")
 @patch("src.nexus.core.capability_audit.OmniMultimodalLM")

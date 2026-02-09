@@ -12,7 +12,7 @@ import sys
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.reasoning.cot_generator import (
+from nexus.reasoning.cot_generator import (
     CoTGenerator, CoTConfig, ThinkingTrace, ReasoningType
 )
 

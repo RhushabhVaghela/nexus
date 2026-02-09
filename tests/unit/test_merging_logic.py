@@ -61,7 +61,7 @@ class TestMergingLogic(unittest.TestCase):
                 if "src.omni.unify_checkpoints" in sys.modules:
                     del sys.modules["src.omni.unify_checkpoints"]
                     
-                from src.models.omni.unify_checkpoints import merge_checkpoints
+                from nexus.models.omni.unify_checkpoints import merge_checkpoints
                 
                 merge_checkpoints(
                     "base",
@@ -108,7 +108,7 @@ class TestMergingLogic(unittest.TestCase):
                 if "src.omni.unify_checkpoints" in sys.modules:
                     del sys.modules["src.omni.unify_checkpoints"]
                     
-                from src.models.omni.unify_checkpoints import merge_checkpoints
+                from nexus.models.omni.unify_checkpoints import merge_checkpoints
                 
                 merge_checkpoints(
                     "base",

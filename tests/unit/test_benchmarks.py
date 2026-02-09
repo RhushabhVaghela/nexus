@@ -25,7 +25,7 @@ class TestBenchmarkImports:
             pytest.skip("Multimodal module not available")
     
     def test_import_benchmarks_init(self):
-        from src.benchmarks import __init__
+        from nexus.benchmarks import __init__
         assert __init__ is not None
 
 
@@ -33,11 +33,11 @@ class TestBenchmarkNative:
     """Tests for benchmark_native module."""
     
     def test_run_native_benchmark_mocked(self):
-        from src.benchmark_native import run_native_benchmark
+        from nexus.benchmark_native import run_native_benchmark
         assert callable(run_native_benchmark)
     
     def test_benchmark_model_path(self):
-        from src.benchmark_native import MODEL_PATH
+        from nexus.benchmark_native import MODEL_PATH
         assert MODEL_PATH is not None
         assert "Qwen2.5-Omni" in MODEL_PATH
 
@@ -47,7 +47,7 @@ class TestBenchmarkBaseline:
     
     def test_run_benchmark_mocked(self):
         try:
-            from src.benchmark_baseline import run_benchmark
+            from nexus.benchmark_baseline import run_benchmark
             assert callable(run_benchmark)
         except ImportError:
             pytest.skip("Multimodal module not available")
@@ -58,7 +58,7 @@ class TestBenchmarkRunnerMocked:
     
     @patch("src.nexus.models.omni.loader.OmniModelLoader.load")
     def test_runner_setup(self, mock_load):
-        from src.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig
+        from nexus.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig
         mock_model = MagicMock()
         mock_tokenizer = MagicMock()
         mock_load.return_value = (mock_model, mock_tokenizer)
@@ -73,7 +73,7 @@ class TestBenchmarkRunnerMocked:
 
     @patch("src.nexus.models.omni.loader.OmniModelLoader.load")
     def test_generation_benchmark_logic(self, mock_load):
-        from src.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig
+        from nexus.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig
         import torch
         
         mock_model = MagicMock()
@@ -102,7 +102,7 @@ class TestBenchmarkRunnerMocked:
 
     @patch("src.nexus.models.omni.loader.OmniModelLoader.load")
     def test_perplexity_benchmark_logic(self, mock_load):
-        from src.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig
+        from nexus.benchmarks.benchmark_runner import BenchmarkRunner, BenchmarkConfig
         import torch
         
         mock_model = MagicMock()
@@ -131,11 +131,11 @@ class TestExpandedEvalSuite:
     """Tests for expanded evaluation suite."""
     
     def test_import_expanded_eval(self):
-        from src.benchmarks import expanded_eval_suite
+        from nexus.benchmarks import expanded_eval_suite
         assert expanded_eval_suite is not None
     
     def test_has_evaluator_class(self):
-        from src.benchmarks import expanded_eval_suite
+        from nexus.benchmarks import expanded_eval_suite
         assert hasattr(expanded_eval_suite, '__file__')
 
 
@@ -143,7 +143,7 @@ class TestFullstackEval:
     """Tests for fullstack evaluation module."""
     
     def test_import_fullstack_eval(self):
-        from src.benchmarks import fullstack_eval
+        from nexus.benchmarks import fullstack_eval
         assert fullstack_eval is not None
 
 
@@ -151,7 +151,7 @@ class TestLovableBenchmark:
     """Tests for lovable benchmark module."""
     
     def test_import_lovable_benchmark(self):
-        from src.benchmarks import lovable_benchmark
+        from nexus.benchmarks import lovable_benchmark
         assert lovable_benchmark is not None
 
 import torch

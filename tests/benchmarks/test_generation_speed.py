@@ -10,9 +10,9 @@ from unittest.mock import Mock, patch
 from PIL import Image
 import numpy as np
 
-from src.models.diffusion import ImagePipeline, PipelineConfig
-from src.models.video import VideoPipeline, VideoConfig
-from src.models.video.frame_generator import FrameGenerator, FrameGenerationConfig
+from nexus.models.diffusion import ImagePipeline, PipelineConfig
+from nexus.models.video import VideoPipeline, VideoConfig
+from nexus.models.video.frame_generator import FrameGenerator, FrameGenerationConfig
 
 
 class TestImageGenerationBenchmarks:

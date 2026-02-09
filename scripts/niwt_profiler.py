@@ -13,7 +13,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from tqdm import tqdm
 import gc
 
-from src.data.niwt_loader import NIWTDataLoader
+from nexus.data.niwt_loader import NIWTDataLoader
 
 # Setup Logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

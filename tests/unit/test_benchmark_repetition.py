@@ -8,7 +8,7 @@ import sys
 import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-from src.benchmarks.benchmark_repetition import RepetitionBenchmark
+from nexus.benchmarks.benchmark_repetition import RepetitionBenchmark
 
 class TestRepetitionBenchmark:
     @pytest.fixture
@@ -50,7 +50,7 @@ class TestRepetitionBenchmark:
         assert Path("repetition_benchmark_results.json").exists()
 
     def test_main_execution(self):
-        from src.benchmarks.benchmark_repetition import main
+        from nexus.benchmarks.benchmark_repetition import main
         with patch("sys.argv", ["bench.py", "--model-path", "/fake", "--iterations", "1"]), \
              patch("src.nexus.benchmarks.benchmark_repetition.RepetitionBenchmark.run_suite"):
             main()

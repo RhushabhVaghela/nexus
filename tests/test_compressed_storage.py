@@ -20,7 +20,7 @@ import os
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from src.models.sli.compressed_storage import (
+from nexus.models.sli.compressed_storage import (
     CompressedLayerStorage,
     LayerCompressor,
     CompressionConfig,

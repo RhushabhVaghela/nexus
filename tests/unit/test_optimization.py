@@ -6,7 +6,7 @@ import sys
 # Path setup
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
 
-from src.models.optimization_suite import ThermalWatchdog, GradNormMonitor, SynergyMonitor, compute_optimal_batch_size
+from nexus.models.optimization_suite import ThermalWatchdog, GradNormMonitor, SynergyMonitor, compute_optimal_batch_size
 
 class TestOptimizationSuite(unittest.TestCase):
     

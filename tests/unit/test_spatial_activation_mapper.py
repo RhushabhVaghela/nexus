@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.core.mri.spatial_activation_mapper import SpatialActivationMapper
+from nexus.core.mri.spatial_activation_mapper import SpatialActivationMapper
 
 
 def make_identity_layer(hidden_dim: int):

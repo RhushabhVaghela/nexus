@@ -21,7 +21,7 @@ from typing import List, Dict
 import torch
 import torch.nn as nn
 
-from src.models.sli.prefetch_engine import (
+from nexus.models.sli.prefetch_engine import (
     PrefetchEngine,
     create_prefetch_engine,
     PrefetchConfig,
@@ -123,7 +123,7 @@ def benchmark_pattern_recognition(
     Returns:
         Dictionary with pattern detection accuracy and timing
     """
-    from src.models.sli.prefetch_engine import PatternPredictor, LayerAccess
+    from nexus.models.sli.prefetch_engine import PatternPredictor, LayerAccess
     
     predictor = PatternPredictor()
     
@@ -170,7 +170,7 @@ def benchmark_adaptive_lookahead(
     Returns:
         Dictionary with lookahead values over time
     """
-    from src.models.sli.prefetch_engine import PrefetchStats
+    from nexus.models.sli.prefetch_engine import PrefetchStats
     
     config = PrefetchConfig(
         enable_adaptive_lookahead=True,

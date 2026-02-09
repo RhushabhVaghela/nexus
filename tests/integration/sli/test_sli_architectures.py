@@ -20,8 +20,8 @@ sys.path.insert(0, str(PROJECT_ROOT))
 import torch
 import torch.nn as nn
 
-from src.models.sli import UniversalSLIIntegrator, ArchitectureRegistry
-from src.models.sli.architecture_registry import (
+from nexus.models.sli import UniversalSLIIntegrator, ArchitectureRegistry
+from nexus.models.sli.architecture_registry import (
     LlamaFamilyHandler,
     QwenFamilyHandler,
     GPTFamilyHandler,
@@ -145,7 +145,7 @@ class TestArchitectureRegistryIntegration:
     
     def test_registry_singleton_integration(self):
         """Test that registry singleton works correctly."""
-        from src.models.sli.architecture_registry import get_registry
+        from nexus.models.sli.architecture_registry import get_registry
         
         reg1 = get_registry()
         reg2 = get_registry()
@@ -849,7 +849,7 @@ class TestErrorRecovery:
         
         # Mock registry to raise UnsupportedArchitectureError
         mock_registry = MagicMock()
-        from src.models.sli.exceptions import UnsupportedArchitectureError
+        from nexus.models.sli.exceptions import UnsupportedArchitectureError
         mock_registry.detect_family.side_effect = UnsupportedArchitectureError("unknown")
         mock_registry.get_family.return_value = LlamaFamilyHandler()
         mock_get_registry.return_value = mock_registry

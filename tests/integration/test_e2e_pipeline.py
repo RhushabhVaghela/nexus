@@ -64,9 +64,9 @@ class TestEndToEndPipeline:
     def test_pipeline_imports(self):
         """Test that all pipeline components can be imported."""
         try:
-            from src.models.sli import UniversalSLIIntegrator
-            from src.models.distill import NexusDistiller
-            from src.models.distill_knowledge import KnowledgeDistiller
+            from nexus.models.sli import UniversalSLIIntegrator
+            from nexus.models.distill import NexusDistiller
+            from nexus.models.distill_knowledge import KnowledgeDistiller
 
             # Verify imports succeeded by checking classes exist
             assert UniversalSLIIntegrator is not None, (
@@ -81,7 +81,7 @@ class TestEndToEndPipeline:
 
     def test_architecture_registry_bert_family(self):
         """Test that BERT family handler is properly registered."""
-        from src.models.sli.architecture_registry import (
+        from nexus.models.sli.architecture_registry import (
             get_registry,
             BERTFamilyHandler,
         )
@@ -102,7 +102,7 @@ class TestEndToEndPipeline:
 
     def test_architecture_detection_mock_configs(self):
         """Test architecture detection with mocked configs."""
-        from src.models.sli.architecture_registry import get_registry
+        from nexus.models.sli.architecture_registry import get_registry
 
         registry = get_registry()
 
@@ -320,7 +320,7 @@ class TestEndToEndPipeline:
 
     def test_sli_integration_mock(self):
         """Test SLI (Sequential Layer Ingestion) integration with mocks."""
-        from src.models.sli.architecture_registry import get_registry
+        from nexus.models.sli.architecture_registry import get_registry
 
         registry = get_registry()
 

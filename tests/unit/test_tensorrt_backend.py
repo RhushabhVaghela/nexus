@@ -26,7 +26,7 @@ import sys
 sys.modules['tensorrt_llm'] = MagicMock()
 sys.modules['tensorrt_llm.runtime'] = MagicMock()
 
-from src.models.tensorrt.trt_engine import (
+from nexus.models.tensorrt.trt_engine import (
     TRTQuantizationMode,
     TRTBuildConfig,
     TRTEngineConfig,
@@ -35,7 +35,7 @@ from src.models.tensorrt.trt_engine import (
     TRTLLM_AVAILABLE,
 )
 
-from src.models.tensorrt.inference_backend import (
+from nexus.models.tensorrt.inference_backend import (
     BackendError,
     TensorRTConfig,
     GenerationResult,

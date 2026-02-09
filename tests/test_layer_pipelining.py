@@ -10,7 +10,7 @@ import torch.nn as nn
 from typing import Optional, Dict, Any, List, Tuple, Callable
 from dataclasses import dataclass
 
-from src.optimizations.layer_pipelining import (
+from nexus.optimizations.layer_pipelining import (
     PipelineConfig,
     StaleActivationPredictor,
     SpeculativeLayerExecutor,

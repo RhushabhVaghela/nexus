@@ -116,7 +116,7 @@ def sample_batch():
 @pytest.fixture
 def inference_config():
     """Return sample generation configuration."""
-    from src.models.omni.inference import GenerationConfig
+    from nexus.models.omni.inference import GenerationConfig
 
     return GenerationConfig(
         max_new_tokens=100,

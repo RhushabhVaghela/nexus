@@ -17,31 +17,31 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 # Import the module under test
-from src.models.sli.advanced_sli_integrator import (
+from nexus.models.sli.advanced_sli_integrator import (
     AdvancedSLIIntegrator,
     AdvancedSLIConfig,
     LayerInfo,
     AdvancedSLIError,
     create_advanced_integrator,
 )
-from src.models.sli.nvfp4_loader import (
+from nexus.models.sli.nvfp4_loader import (
     NVFP4Config,
     NVFP4Mode,
     NVFP4QuantizationError,
 )
-from src.models.sli.qad_loss import (
+from nexus.models.sli.qad_loss import (
     QADLossConfig,
     QADLossType,
 )
-from src.models.sli.nested_scheduler import (
+from nexus.models.sli.nested_scheduler import (
     NestedUpdateConfig,
     UpdateGroup,
 )
-from src.models.sli.hierarchical_cache import (
+from nexus.models.sli.hierarchical_cache import (
     HierarchicalCacheConfig,
     CacheTier,
 )
-from src.models.sli.exceptions import SLIError
+from nexus.models.sli.exceptions import SLIError
 
 
 # ============================================================================

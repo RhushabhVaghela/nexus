@@ -3,7 +3,7 @@ import os
 import torch
 import torch.nn as nn
 import json
-from src.models.sli_integrator import SequentialLayerIntegrator, load_file
+from nexus.models.sli_integrator import SequentialLayerIntegrator, load_file
 
 class MockResponse:
     def __init__(self, content, headers=None):

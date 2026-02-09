@@ -8,7 +8,7 @@ import torch
 from unittest.mock import Mock, patch, MagicMock
 from pathlib import Path
 
-from src.models.gguf import GGUfLoader, GGUFConfig, GGUFConverter
+from nexus.models.gguf import GGUfLoader, GGUFConfig, GGUFConverter
 
 
 class TestGGUFConfig:
@@ -191,13 +191,13 @@ class TestGGUFBatchLoader:
     
     def test_batch_loader_init(self):
         """Test batch loader initialization."""
-        from src.models.gguf.gguf_loader import GGUFBatchLoader
+        from nexus.models.gguf.gguf_loader import GGUFBatchLoader
         loader = GGUFBatchLoader()
         assert len(loader.models) == 0
     
     def test_load_and_get_model(self):
         """Test loading and retrieving models."""
-        from src.models.gguf.gguf_loader import GGUFBatchLoader
+        from nexus.models.gguf.gguf_loader import GGUFBatchLoader
         
         loader = GGUFBatchLoader()
         mock_model = Mock()
@@ -211,7 +211,7 @@ class TestGGUFBatchLoader:
     
     def test_unload_model(self):
         """Test unloading a specific model."""
-        from src.models.gguf.gguf_loader import GGUFBatchLoader
+        from nexus.models.gguf.gguf_loader import GGUFBatchLoader
         
         loader = GGUFBatchLoader()
         mock_model = Mock()
@@ -225,7 +225,7 @@ class TestGGUFBatchLoader:
     
     def test_unload_all(self):
         """Test unloading all models."""
-        from src.models.gguf.gguf_loader import GGUFBatchLoader
+        from nexus.models.gguf.gguf_loader import GGUFBatchLoader
         
         loader = GGUFBatchLoader()
         mock_model = Mock()

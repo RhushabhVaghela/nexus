@@ -20,7 +20,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch, mock_open
 
 # Import the module under test
-from src.models.sli.nvfp4_loader import (
+from nexus.models.sli.nvfp4_loader import (
     NVFP4StreamingLoader,
     NVFP4Quantizer,
     NVFP4Config,
@@ -32,7 +32,7 @@ from src.models.sli.nvfp4_loader import (
     dequantize_from_nvfp4,
     NVFP4_AVAILABLE,
 )
-from src.models.sli.exceptions import SLIError, WeightLoadingError
+from nexus.models.sli.exceptions import SLIError, WeightLoadingError
 
 
 # ============================================================================

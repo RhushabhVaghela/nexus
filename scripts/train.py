@@ -25,8 +25,8 @@ from torch.optim import AdamW
 from transformers import AutoTokenizer
 
 # Import Core Modules
-from src.core.student.core import NexusStudentCore, NexusStudentConfig
-from src.models.distill import NexusTrainer
+from nexus.core.student.core import NexusStudentCore, NexusStudentConfig
+from nexus.models.distill import NexusTrainer
 from utils.callbacks import KeyboardPauseCallback
 
 
@@ -149,7 +149,7 @@ def main():
         torch.set_float32_matmul_precision("high")
         torch.backends.cudnn.benchmark = True
 
-    from src.core.utils.memory import (
+    from nexus.core.utils.memory import (
         check_memory_headroom,
         get_recommended_batch_size,
     )
@@ -158,7 +158,7 @@ def main():
     # otherwise fall back to check_memory_headroom with WSL-aware defaults
     # (no longer override with tight 1.0GB VRAM — WSL2 needs 2GB headroom)
     try:
-        from src.utils.memory_guard import guard as _guard
+        from nexus.utils.memory_guard import guard as _guard
 
         ok, status = _guard.preflight_check(
             estimated_ram_gb=8.0, estimated_vram_gb=10.0

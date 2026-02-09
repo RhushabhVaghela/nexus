@@ -18,7 +18,7 @@ import torch
 import torch.nn as nn
 
 # Import the module under test
-from src.models.sli.architecture_registry import ArchitectureRegistry, get_registry
+from nexus.models.sli.architecture_registry import ArchitectureRegistry, get_registry
 
 
 class TestArchitectureRegistrySingleton:
@@ -50,7 +50,7 @@ class TestArchitectureRegistrySingleton:
     def test_get_registry_function(self):
         """Test get_registry convenience function."""
         # Reset global registry
-        import src.models.sli.architecture_registry as reg_module
+        import nexus.models.sli.architecture_registry as reg_module
         reg_module._registry = None
 
         registry = get_registry()
