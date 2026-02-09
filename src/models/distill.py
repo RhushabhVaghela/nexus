@@ -12,7 +12,14 @@ from .loss_functions import ActivationAnchoringLoss
 from .auditor import MemorizationAuditor
 from src.core.student.core import NexusStudentCore
 from typing import Dict, Any
-from tqdm import tqdm
+try:
+    from tqdm import tqdm
+    TQDM_AVAILABLE = True
+except ImportError:
+    TQDM_AVAILABLE = False
+
+    def tqdm(iterable=None, **kwargs):
+        return iterable if iterable is not None else iter([])
 
 # --- Memory Guard Integration (WSL-aware) ---
 try:

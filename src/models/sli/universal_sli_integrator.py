@@ -16,7 +16,14 @@ from pathlib import Path
 
 import torch
 import torch.nn as nn
-from tqdm import tqdm
+try:
+    from tqdm import tqdm
+    TQDM_AVAILABLE = True
+except ImportError:
+    TQDM_AVAILABLE = False
+
+    def tqdm(iterable=None, **kwargs):
+        return iterable if iterable is not None else iter([])
 from transformers import AutoConfig, AutoTokenizer
 
 from .architecture_registry import (

@@ -11,7 +11,13 @@ Now WSL2-aware via MemoryGuard with:
 
 import subprocess
 import time
-import psutil
+
+try:
+    import psutil
+
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
 import sys
 import os
 import re
@@ -101,9 +107,13 @@ def monitor_and_run(command, description):
     try:
         while process.poll() is None:
             # 1. Check RAM
-            ram = psutil.virtual_memory()
-            ram_percent = ram.percent
-            ram_free_gb = ram.available / (1024**3)
+            if PSUTIL_AVAILABLE:
+                ram = psutil.virtual_memory()
+                ram_percent = ram.percent
+                ram_free_gb = ram.available / (1024**3)
+            else:
+                ram_percent = 0.0
+                ram_free_gb = 0.0
 
             # 2. Check VRAM
             vram_percents = get_vram_usage()
@@ -111,7 +121,7 @@ def monitor_and_run(command, description):
 
             # 3. Check swap (WSL-specific)
             swap_warning = ""
-            if IS_WSL:
+            if IS_WSL and PSUTIL_AVAILABLE:
                 swap = psutil.swap_memory()
                 if swap.percent > 50:
                     swap_warning = f" | SWAP: {swap.percent:.0f}%⚠️"

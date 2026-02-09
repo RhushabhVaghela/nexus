@@ -15,7 +15,11 @@ import json
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 from dataclasses import dataclass
-from datasets import load_dataset, concatenate_datasets
+try:
+    from datasets import load_dataset, concatenate_datasets
+    DATASETS_AVAILABLE = True
+except ImportError:
+    DATASETS_AVAILABLE = False
 
 from .base import BaseStage, StageConfig
 from src.utils.repetition import PromptRepetitionEngine

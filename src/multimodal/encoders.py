@@ -11,7 +11,11 @@ from dataclasses import dataclass
 import logging
 from abc import ABC, abstractmethod
 import numpy as np
-from PIL import Image
+try:
+    from PIL import Image
+    PIL_AVAILABLE = True
+except ImportError:
+    PIL_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 

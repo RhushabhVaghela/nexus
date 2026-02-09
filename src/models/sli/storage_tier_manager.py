@@ -24,7 +24,11 @@ import heapq
 
 import torch
 import torch.nn as nn
-import psutil
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 

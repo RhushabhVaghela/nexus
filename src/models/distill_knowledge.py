@@ -19,7 +19,19 @@ except ImportError:
 import torch
 import torch.nn as nn
 import json
-import tqdm
+try:
+    import tqdm
+    TQDM_AVAILABLE = True
+except ImportError:
+    TQDM_AVAILABLE = False
+
+    class _TqdmFallback:
+        @staticmethod
+        def tqdm(iterable=None, **kwargs):
+            return iterable if iterable is not None else iter([])
+        def __call__(self, iterable=None, **kwargs):
+            return iterable if iterable is not None else iter([])
+    tqdm = _TqdmFallback()
 from typing import List, Dict, Any, Optional
 from transformers import AutoTokenizer, AutoModel, AutoConfig, BitsAndBytesConfig
 from .knowledge import KnowledgeTower

@@ -3,7 +3,13 @@ import subprocess
 import re
 import logging
 import numpy as np
-from scipy.io import wavfile
+
+try:
+    from scipy.io import wavfile
+
+    SCIPY_AVAILABLE = True
+except ImportError:
+    SCIPY_AVAILABLE = False
 from pathlib import Path
 from typing import Optional, Dict, Any
 
@@ -134,6 +140,11 @@ class RemotionExplainerEngine:
 
     def _save_narration(self, audio_data: Any, filename: str):
         """Save raw audio data to the Remotion public folder."""
+        if not SCIPY_AVAILABLE:
+            raise ImportError(
+                "scipy is required for saving audio narration. "
+                "Install with: pip install scipy"
+            )
         public_path = self.remotion_dir / "public" / filename
         public_path.parent.mkdir(parents=True, exist_ok=True)
 

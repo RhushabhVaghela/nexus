@@ -21,11 +21,50 @@ import uuid
 from typing import Any, Dict, Optional, Tuple
 from datetime import datetime
 
-from fastapi import FastAPI, HTTPException, Request, Security, Header, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
-from starlette.responses import Response
-from starlette.middleware.base import BaseHTTPMiddleware
+try:
+    from fastapi import FastAPI, HTTPException, Request, Security, Header, Depends
+
+    FASTAPI_AVAILABLE = True
+except ImportError:
+    FASTAPI_AVAILABLE = False
+try:
+    from fastapi.middleware.cors import CORSMiddleware
+
+    FASTAPI_AVAILABLE = True
+except ImportError:
+    FASTAPI_AVAILABLE = False
+try:
+    from pydantic import BaseModel, Field
+
+    PYDANTIC_AVAILABLE = True
+except ImportError:
+    PYDANTIC_AVAILABLE = False
+try:
+    from starlette.responses import Response
+
+    STARLETTE_AVAILABLE = True
+except ImportError:
+    STARLETTE_AVAILABLE = False
+try:
+    from starlette.middleware.base import BaseHTTPMiddleware
+
+    STARLETTE_AVAILABLE = True
+except ImportError:
+    STARLETTE_AVAILABLE = False
+
+# Module-level guard: this entire module requires fastapi, pydantic, and starlette
+_missing = []
+if not FASTAPI_AVAILABLE:
+    _missing.append("fastapi")
+if not PYDANTIC_AVAILABLE:
+    _missing.append("pydantic")
+if not STARLETTE_AVAILABLE:
+    _missing.append("starlette")
+if _missing:
+    raise ImportError(
+        f"The explainer_api module requires {', '.join(_missing)}. "
+        f"Install with: pip install {' '.join(_missing)}"
+    )
 
 from src.optimization.remotion_engine import RemotionExplainerEngine
 from src.security.auth import get_authenticator, Authenticator, Permission, JWTClaims

@@ -8,7 +8,13 @@ not just PyTorch-tracked ones).
 """
 
 import torch
-import psutil
+
+try:
+    import psutil
+
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
 import logging
 
 logger = logging.getLogger(__name__)
@@ -76,16 +82,19 @@ def check_memory_headroom(vram_headroom_gb=None, ram_headroom_gb=None):
                 status.append(f"VRAM[{i}] OK: {free_vram:.1f}GB free")
 
     # 2. RAM Check
-    ram = psutil.virtual_memory()
-    free_ram = ram.available / (1024**3)
-    if free_ram < ram_headroom_gb:
-        status.append(f"RAM Low: {free_ram:.1f}GB free (Need {ram_headroom_gb}GB)")
-        success = False
+    if PSUTIL_AVAILABLE:
+        ram = psutil.virtual_memory()
+        free_ram = ram.available / (1024**3)
+        if free_ram < ram_headroom_gb:
+            status.append(f"RAM Low: {free_ram:.1f}GB free (Need {ram_headroom_gb}GB)")
+            success = False
+        else:
+            status.append(f"RAM OK: {free_ram:.1f}GB free")
     else:
-        status.append(f"RAM OK: {free_ram:.1f}GB free")
+        status.append("RAM: psutil not available, skipping RAM check")
 
     # 3. WSL swap warning
-    if GUARD_AVAILABLE and guard.is_wsl:
+    if GUARD_AVAILABLE and guard.is_wsl and PSUTIL_AVAILABLE:
         swap = psutil.swap_memory()
         if swap.percent > 50:
             status.append(f"WSL Swap Warning: {swap.percent:.0f}% used — OOM risk")

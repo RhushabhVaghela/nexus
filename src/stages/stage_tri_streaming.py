@@ -9,7 +9,11 @@ Trains on real-time audio/video/screen capture with speech I/O.
 import torch
 from typing import Dict, Any
 from pathlib import Path
-from datasets import load_dataset
+try:
+    from datasets import load_dataset
+    DATASETS_AVAILABLE = True
+except ImportError:
+    DATASETS_AVAILABLE = False
 
 from .base import BaseStage, StageConfig
 from src.utils.repetition import PromptRepetitionEngine

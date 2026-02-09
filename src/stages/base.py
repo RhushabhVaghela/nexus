@@ -188,7 +188,13 @@ class BaseStage(ABC):
         Dynamically load datasets based on the capability name.
         Looks up paths in ALL_DATASETS and combines them.
         """
-        from datasets import concatenate_datasets
+        try:
+            from datasets import concatenate_datasets
+        except ImportError:
+            raise ImportError(
+                "The 'datasets' library is required for dynamic dataset loading. "
+                "Install with: pip install datasets"
+            )
         from src.core.metrics_tracker import get_capability_datasets
 
         paths = get_capability_datasets(self.config.capability_name)

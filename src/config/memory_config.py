@@ -28,7 +28,12 @@ except ImportError:
     BitsAndBytesConfig = None
     BITSANDBYTES_AVAILABLE = False
 
-import psutil
+try:
+    import psutil
+
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
 import logging
 
 logger = logging.getLogger(__name__)
@@ -50,6 +55,8 @@ def _detect_system_resources():
     """
     # RAM
     try:
+        if not PSUTIL_AVAILABLE:
+            raise RuntimeError("psutil not available")
         ram_gb = round(psutil.virtual_memory().total / (1024**3))
     except Exception:
         ram_gb = 32  # Conservative fallback

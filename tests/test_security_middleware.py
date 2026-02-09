@@ -172,9 +172,45 @@ class TestSecurityHeaders:
 
     def test_cors_restricted_origins(self, client):
         """Test that CORS is properly restricted."""
-        # Check CORS middleware is configured
-        # The actual CORS behavior depends on the browser
-        pass
+        # Allowed origin should receive proper CORS headers
+        allowed_origin = "http://localhost:3000"
+        response = client.options(
+            "/health",
+            headers={
+                "Origin": allowed_origin,
+                "Access-Control-Request-Method": "GET",
+            },
+        )
+        assert response.headers.get("access-control-allow-origin") == allowed_origin
+
+        # Disallowed origin should NOT receive the allow-origin header matching it
+        disallowed_origin = "http://evil.example.com"
+        response_bad = client.options(
+            "/health",
+            headers={
+                "Origin": disallowed_origin,
+                "Access-Control-Request-Method": "GET",
+            },
+        )
+        # CORSMiddleware either omits the header or does not echo the disallowed origin
+        cors_header = response_bad.headers.get("access-control-allow-origin", "")
+        assert cors_header != disallowed_origin, (
+            f"Disallowed origin '{disallowed_origin}' was reflected in CORS header"
+        )
+
+        # Verify only expected methods are allowed
+        response_methods = client.options(
+            "/health",
+            headers={
+                "Origin": allowed_origin,
+                "Access-Control-Request-Method": "GET",
+            },
+        )
+        allowed_methods = response_methods.headers.get(
+            "access-control-allow-methods", ""
+        )
+        # DELETE should not be in the allowed methods
+        assert "DELETE" not in allowed_methods
 
 
 class TestInputValidation:

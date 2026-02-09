@@ -4,9 +4,25 @@ import glob
 import json
 import argparse
 import torch
-import faiss
+
+try:
+    import faiss
+
+    FAISS_AVAILABLE = True
+except ImportError:
+    FAISS_AVAILABLE = False
 import numpy as np
-from tqdm import tqdm
+
+try:
+    from tqdm import tqdm
+
+    TQDM_AVAILABLE = True
+except ImportError:
+    TQDM_AVAILABLE = False
+
+    def tqdm(iterable=None, **kwargs):
+        return iterable if iterable is not None else iter([])
+
 
 # Ensure explicit path
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -67,6 +83,10 @@ def main():
     tower.build_index(documents)
 
     # Save
+    if not FAISS_AVAILABLE:
+        raise ImportError(
+            "faiss is required to save the index. Install with: pip install faiss-cpu"
+        )
     print(f"[IndexBuilder] Saving index to {args.output}...")
     faiss.write_index(tower.index, args.output)
 

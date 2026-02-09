@@ -12,7 +12,13 @@ from typing import Dict, List, Optional, Set, Callable
 from pathlib import Path
 
 import torch
-import requests
+
+try:
+    import requests
+
+    REQUESTS_AVAILABLE = True
+except ImportError:
+    REQUESTS_AVAILABLE = False
 from safetensors.torch import load_file as safetensors_load
 
 from .architecture_registry import ArchitectureFamily
@@ -94,6 +100,11 @@ class UniversalWeightLoader:
 
     def _check_url_exists(self, url: str) -> bool:
         """Check if a URL exists without downloading."""
+        if not REQUESTS_AVAILABLE:
+            raise ImportError(
+                "requests is required for remote weight loading. "
+                "Install with: pip install requests"
+            )
         try:
             response = requests.head(url, allow_redirects=True, timeout=10)
             return response.status_code == 200
@@ -107,6 +118,11 @@ class UniversalWeightLoader:
         Returns:
             Dictionary mapping weight names to shard filenames
         """
+        if not REQUESTS_AVAILABLE:
+            raise ImportError(
+                "requests is required for remote weight loading. "
+                "Install with: pip install requests"
+            )
         # Try index file first
         index_name = f"model{self.format}.index.json"
         index_path = self.cache_dir / index_name
@@ -143,10 +159,12 @@ class UniversalWeightLoader:
 
         Args:
             shard_name: Name of the shard file
-
-        Returns:
-            Path to the cached shard file
         """
+        if not REQUESTS_AVAILABLE:
+            raise ImportError(
+                "requests is required for remote weight loading. "
+                "Install with: pip install requests"
+            )
         shard_path = self.cache_dir / shard_name
 
         if shard_path.exists():

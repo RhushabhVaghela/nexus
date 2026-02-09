@@ -1,7 +1,11 @@
 import os
 import torch
 import time
-import psutil
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
 import pynvml
 
 class HardwareMonitor:

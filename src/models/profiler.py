@@ -6,8 +6,24 @@ import gc
 import json
 import copy
 from typing import List, Dict, Union, Iterable, Tuple
-from tqdm import tqdm
-from sklearn.decomposition import IncrementalPCA
+
+try:
+    from tqdm import tqdm
+
+    TQDM_AVAILABLE = True
+except ImportError:
+    TQDM_AVAILABLE = False
+
+    def tqdm(iterable=None, **kwargs):
+        return iterable if iterable is not None else iter([])
+
+
+try:
+    from sklearn.decomposition import IncrementalPCA
+
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
 
@@ -43,6 +59,11 @@ class StreamingPCAProfiler:
         self.device = device
 
         # Initialize IncrementalPCA for each layer
+        if not SKLEARN_AVAILABLE:
+            raise ImportError(
+                "scikit-learn is required for StreamingPCAProfiler. "
+                "Install with: pip install scikit-learn"
+            )
         self.pcas: Dict[str, IncrementalPCA] = {
             name: IncrementalPCA(n_components=n_components) for name in layer_names
         }

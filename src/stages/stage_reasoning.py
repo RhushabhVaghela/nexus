@@ -8,7 +8,11 @@ Trains on advanced reasoning and math datasets with actual training loop.
 
 import torch
 from typing import Dict, Any
-from datasets import load_dataset, concatenate_datasets
+try:
+    from datasets import load_dataset, concatenate_datasets
+    DATASETS_AVAILABLE = True
+except ImportError:
+    DATASETS_AVAILABLE = False
 
 from .base import BaseStage, StageConfig
 from src.utils.repetition import PromptRepetitionEngine

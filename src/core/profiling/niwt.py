@@ -6,7 +6,14 @@ import time
 import gc
 from typing import List, Dict, Tuple, Optional, Any
 from torch.utils.data import DataLoader, Dataset
-from tqdm import tqdm
+try:
+    from tqdm import tqdm
+    TQDM_AVAILABLE = True
+except ImportError:
+    TQDM_AVAILABLE = False
+
+    def tqdm(iterable=None, **kwargs):
+        return iterable if iterable is not None else iter([])
 from src.core.utils.universal_inspector import UniversalInspector
 
 

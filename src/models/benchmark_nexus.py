@@ -3,7 +3,13 @@ import torch
 import torch.nn as nn
 import os
 import numpy as np
-import psutil
+
+try:
+    import psutil
+
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
 from src.core.profiling.niwt import NIWTCore
 from src.models.profiler import StreamingPCAProfiler
 from src.models.distill import NexusTrainer
@@ -33,8 +39,11 @@ def benchmark_profiling_efficiency():
     print(f"PCA Partial Fit (4096 tokens, 768 dim): {end - start:.4f}s")
 
     # Check Memory Overhead
-    process = psutil.Process(os.getpid())
-    print(f"Memory RSS: {process.memory_info().rss / 1024**2:.2f} MB")
+    if PSUTIL_AVAILABLE:
+        process = psutil.Process(os.getpid())
+        print(f"Memory RSS: {process.memory_info().rss / 1024**2:.2f} MB")
+    else:
+        print("Memory RSS: N/A (psutil not installed)")
 
 
 def benchmark_training_stability():

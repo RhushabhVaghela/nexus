@@ -14,8 +14,28 @@ from collections import defaultdict
 import os
 
 # unsloth will be conditionally imported in check_env
-from datasets import load_dataset
-import tqdm
+try:
+    from datasets import load_dataset
+
+    DATASETS_AVAILABLE = True
+except ImportError:
+    DATASETS_AVAILABLE = False
+try:
+    import tqdm
+
+    TQDM_AVAILABLE = True
+except ImportError:
+    TQDM_AVAILABLE = False
+
+    class _TqdmFallback:
+        @staticmethod
+        def tqdm(iterable=None, **kwargs):
+            return iterable if iterable is not None else iter([])
+
+        def __call__(self, iterable=None, **kwargs):
+            return iterable if iterable is not None else iter([])
+
+    tqdm = _TqdmFallback()
 
 UNSLOTH_AVAILABLE = False
 
@@ -135,6 +155,12 @@ def main():
     logger = logging.getLogger(__name__)
 
     from unsloth import FastLanguageModel
+
+    if not DATASETS_AVAILABLE:
+        raise ImportError(
+            "The 'datasets' library is required for comprehensive evaluation. "
+            "Install with: pip install datasets"
+        )
     from datasets import load_dataset
     import tqdm
 

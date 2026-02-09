@@ -4,7 +4,11 @@ Memory-efficient E-MM1 Dataset Loader
 Streams data without loading entire shards into RAM
 """
 
-import pandas as pd
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
 import torch
 from torch.utils.data import Dataset
 from pathlib import Path

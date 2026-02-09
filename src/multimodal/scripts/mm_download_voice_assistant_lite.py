@@ -16,7 +16,11 @@ import logging
 import argparse
 import numpy as np
 from pathlib import Path
-from tqdm import tqdm
+try:
+    from tqdm import tqdm
+    TQDM_AVAILABLE = True
+except ImportError:
+    TQDM_AVAILABLE = False
 from typing import Dict, Any
 
 # Ensure we can import utils if running from src/

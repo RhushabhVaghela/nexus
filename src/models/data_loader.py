@@ -5,8 +5,22 @@ import argparse
 from typing import List, Dict, Any, Generator, Optional, Callable
 import csv
 import zlib
-import pandas as pd  # Optional, but good for parquet
-from tqdm import tqdm
+
+try:
+    import pandas as pd  # Optional, but good for parquet
+
+    PANDAS_AVAILABLE = True
+except ImportError:
+    pd = None  # type: ignore[assignment]
+    PANDAS_AVAILABLE = False
+try:
+    from tqdm import tqdm
+except ImportError:
+
+    def tqdm(iterable, **kwargs):  # type: ignore[misc]
+        return iterable
+
+
 import logging
 
 logger = logging.getLogger(__name__)

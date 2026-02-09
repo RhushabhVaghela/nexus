@@ -41,7 +41,12 @@ from dataclasses import dataclass, field
 from typing import Optional, Tuple, Dict, Any, Callable, List
 from pathlib import Path
 
-import psutil
+try:
+    import psutil
+
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
 
 try:
     import torch
@@ -183,6 +188,8 @@ def detect_wsl_memory_limit() -> Optional[float]:
     """
     # WSL2 exposes the effective limit through /proc/meminfo
     # The "MemTotal" in WSL2 already reflects the .wslconfig limit
+    if not PSUTIL_AVAILABLE:
+        return None
     try:
         mem = psutil.virtual_memory()
         total_gb = mem.total / (1024**3)
@@ -196,6 +203,8 @@ def detect_swap_usage() -> Tuple[float, float, float]:
     Returns (swap_used_gb, swap_total_gb, swap_percent).
     In WSL2, high swap usage is an early warning of imminent OOM.
     """
+    if not PSUTIL_AVAILABLE:
+        return 0.0, 0.0, 0.0
     try:
         swap = psutil.swap_memory()
         used_gb = swap.used / (1024**3)
@@ -217,12 +226,17 @@ def get_system_profile() -> Dict[str, Any]:
     }
 
     # RAM
-    try:
-        mem = psutil.virtual_memory()
-        profile["ram_total_gb"] = round(mem.total / (1024**3), 2)
-        profile["ram_available_gb"] = round(mem.available / (1024**3), 2)
-        profile["ram_used_percent"] = round(mem.percent, 1)
-    except Exception:
+    if PSUTIL_AVAILABLE:
+        try:
+            mem = psutil.virtual_memory()
+            profile["ram_total_gb"] = round(mem.total / (1024**3), 2)
+            profile["ram_available_gb"] = round(mem.available / (1024**3), 2)
+            profile["ram_used_percent"] = round(mem.percent, 1)
+        except Exception:
+            profile["ram_total_gb"] = 0
+            profile["ram_available_gb"] = 0
+            profile["ram_used_percent"] = 0
+    else:
         profile["ram_total_gb"] = 0
         profile["ram_available_gb"] = 0
         profile["ram_used_percent"] = 0
@@ -307,7 +321,15 @@ class MemorySnapshot:
 
 def take_snapshot() -> MemorySnapshot:
     """Capture current memory state across RAM + all GPUs."""
-    mem = psutil.virtual_memory()
+    if PSUTIL_AVAILABLE:
+        mem = psutil.virtual_memory()
+        ram_total = round(mem.total / (1024**3), 2)
+        ram_avail = round(mem.available / (1024**3), 2)
+        ram_pct = round(mem.percent, 1)
+    else:
+        ram_total = 0.0
+        ram_avail = 0.0
+        ram_pct = 0.0
     swap_used, swap_total, swap_pct = detect_swap_usage()
 
     gpus = []
@@ -331,9 +353,9 @@ def take_snapshot() -> MemorySnapshot:
 
     return MemorySnapshot(
         timestamp=time.time(),
-        ram_total_gb=round(mem.total / (1024**3), 2),
-        ram_available_gb=round(mem.available / (1024**3), 2),
-        ram_used_percent=round(mem.percent, 1),
+        ram_total_gb=ram_total,
+        ram_available_gb=ram_avail,
+        ram_used_percent=ram_pct,
         swap_used_gb=round(swap_used, 2),
         swap_total_gb=round(swap_total, 2),
         swap_percent=round(swap_pct, 1),
@@ -468,46 +490,49 @@ class MemoryGuard:
                 logger.warning(f"Failed to set CUDA memory fraction: {e}")
 
         # ── 2. Process virtual memory cap (Linux/WSL) ──
-        try:
-            import resource
+        if not PSUTIL_AVAILABLE:
+            logger.debug("psutil not available, skipping process memory limit")
+        else:
+            try:
+                import resource
 
-            mem = psutil.virtual_memory()
-            total_ram_bytes = mem.total
-            total_ram_gb = total_ram_bytes / (1024**3)
+                mem = psutil.virtual_memory()
+                total_ram_bytes = mem.total
+                total_ram_gb = total_ram_bytes / (1024**3)
 
-            # Leave min_ram_headroom_gb free for the OS/WSL
-            buffer_bytes = int(self._thresholds.min_ram_headroom_gb * (1024**3))
-            limit_bytes = total_ram_bytes - buffer_bytes
+                # Leave min_ram_headroom_gb free for the OS/WSL
+                buffer_bytes = int(self._thresholds.min_ram_headroom_gb * (1024**3))
+                limit_bytes = total_ram_bytes - buffer_bytes
 
-            # Don't set a limit lower than 4GB (would break Python itself)
-            min_limit = 4 * (1024**3)
-            if limit_bytes < min_limit:
-                logger.warning(
-                    f"RAM too low to enforce limit: {total_ram_gb:.1f}GB total, "
-                    f"{self._thresholds.min_ram_headroom_gb}GB headroom. Skipping."
-                )
-            else:
-                # Set soft limit (hard limit stays at system max)
-                soft, hard = resource.getrlimit(resource.RLIMIT_AS)
-                # Only tighten, never loosen an existing limit
-                if hard == resource.RLIM_INFINITY or limit_bytes < hard:
-                    resource.setrlimit(resource.RLIMIT_AS, (limit_bytes, hard))
-                    enforced_any = True
-                    limit_gb = limit_bytes / (1024**3)
-                    logger.info(
-                        f"Process RAM soft limit set: "
-                        f"{limit_gb:.1f}GB (total {total_ram_gb:.1f}GB - "
-                        f"{self._thresholds.min_ram_headroom_gb:.1f}GB buffer)"
+                # Don't set a limit lower than 4GB (would break Python itself)
+                min_limit = 4 * (1024**3)
+                if limit_bytes < min_limit:
+                    logger.warning(
+                        f"RAM too low to enforce limit: {total_ram_gb:.1f}GB total, "
+                        f"{self._thresholds.min_ram_headroom_gb}GB headroom. Skipping."
                     )
                 else:
-                    logger.info(
-                        f"Existing RLIMIT_AS ({hard / (1024**3):.1f}GB) is "
-                        f"tighter than our limit. Keeping existing."
-                    )
-        except ImportError:
-            logger.debug("resource module not available (not Linux/WSL)")
-        except (ValueError, OSError) as e:
-            logger.warning(f"Failed to set process memory limit: {e}")
+                    # Set soft limit (hard limit stays at system max)
+                    soft, hard = resource.getrlimit(resource.RLIMIT_AS)
+                    # Only tighten, never loosen an existing limit
+                    if hard == resource.RLIM_INFINITY or limit_bytes < hard:
+                        resource.setrlimit(resource.RLIMIT_AS, (limit_bytes, hard))
+                        enforced_any = True
+                        limit_gb = limit_bytes / (1024**3)
+                        logger.info(
+                            f"Process RAM soft limit set: "
+                            f"{limit_gb:.1f}GB (total {total_ram_gb:.1f}GB - "
+                            f"{self._thresholds.min_ram_headroom_gb:.1f}GB buffer)"
+                        )
+                    else:
+                        logger.info(
+                            f"Existing RLIMIT_AS ({hard / (1024**3):.1f}GB) is "
+                            f"tighter than our limit. Keeping existing."
+                        )
+            except ImportError:
+                logger.debug("resource module not available (not Linux/WSL)")
+            except (ValueError, OSError) as e:
+                logger.warning(f"Failed to set process memory limit: {e}")
 
         self._limits_enforced = enforced_any
 

@@ -18,7 +18,14 @@ import zipfile
 from pathlib import Path
 from typing import Dict, List, Optional
 from dataclasses import dataclass, asdict
-from tqdm import tqdm
+try:
+    from tqdm import tqdm
+    TQDM_AVAILABLE = True
+except ImportError:
+    TQDM_AVAILABLE = False
+
+    def tqdm(iterable=None, **kwargs):
+        return iterable if iterable is not None else iter([])
 import argparse
 import logging
 

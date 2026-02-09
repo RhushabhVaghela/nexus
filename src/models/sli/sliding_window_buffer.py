@@ -27,7 +27,13 @@ from contextlib import nullcontext
 
 import torch
 import torch.nn as nn
-import psutil
+
+try:
+    import psutil
+
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -244,6 +250,19 @@ class SlidingWindowBuffer:
         include non-PyTorch allocations (unlike memory_allocated() which
         only tracks PyTorch tensors).
         """
+        if not PSUTIL_AVAILABLE:
+            # Fallback: only check VRAM if psutil unavailable
+            vram_percent = 0.0
+            gpu_memory_used = 0
+            if torch.cuda.is_available():
+                for i in range(torch.cuda.device_count()):
+                    free, total = torch.cuda.mem_get_info(i)
+                    used = total - free
+                    gpu_memory_used += used
+                    device_percent = (used / total * 100) if total > 0 else 0
+                    vram_percent = max(vram_percent, device_percent)
+            return vram_percent, gpu_memory_used
+
         process = psutil.Process(os.getpid())
         memory_info = process.memory_info()
 
@@ -443,8 +462,12 @@ class SlidingWindowBuffer:
             return int(self.config.max_memory_gb * 1e9)
 
         # Default: use 50% of available system memory
-        system_memory = psutil.virtual_memory()
-        return int(system_memory.available * 0.5)
+        if PSUTIL_AVAILABLE:
+            system_memory = psutil.virtual_memory()
+            return int(system_memory.available * 0.5)
+        else:
+            # Fallback: assume 8GB available
+            return int(8 * 1e9 * 0.5)
 
     def initialize_window(
         self, model_id: str, start_layer: int = 0, total_layers: Optional[int] = None

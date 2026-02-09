@@ -23,7 +23,14 @@ import json
 
 import torch
 import torch.nn as nn
-from tqdm import tqdm
+try:
+    from tqdm import tqdm
+    TQDM_AVAILABLE = True
+except ImportError:
+    TQDM_AVAILABLE = False
+
+    def tqdm(iterable=None, **kwargs):
+        return iterable if iterable is not None else iter([])
 
 from .nvfp4_loader import (
     NVFP4StreamingLoader,

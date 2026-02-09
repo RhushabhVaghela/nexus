@@ -15,7 +15,11 @@ Usage:
 
 import os
 import sys
-import pytest
+try:
+    import pytest
+    PYTEST_AVAILABLE = True
+except ImportError:
+    PYTEST_AVAILABLE = False
 from pathlib import Path
 
 # Add parent directories to path

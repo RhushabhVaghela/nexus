@@ -10,7 +10,11 @@ import torch
 import torch.nn as nn
 from typing import Dict, Any
 from pathlib import Path
-from datasets import load_dataset
+try:
+    from datasets import load_dataset
+    DATASETS_AVAILABLE = True
+except ImportError:
+    DATASETS_AVAILABLE = False
 
 from .base import BaseStage, StageConfig
 from src.utils.repetition import PromptRepetitionEngine
