@@ -26,8 +26,8 @@ try:
 except ImportError:
     pass
 
-sys.path.insert(0, str(Path(__file__).parent))
-from utils.logging_config import setup_logger, log_header, log_completion
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from nexus.utils.logging_config import setup_logger, log_header, log_completion
 
 DATASETS_AVAILABLE = False
 def check_env():

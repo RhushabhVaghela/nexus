@@ -15,6 +15,12 @@ import random
 import itertools
 from typing import Dict, Any, List
 from nexus.utils.logging_config import setup_logger, log_header, log_completion
+from nexus.config.paths import (
+    DEFAULT_AUDIO_ENCODER,
+    DEFAULT_LLM_MODEL,
+    DEFAULT_VISION_ENCODER,
+    MODELS_DIR,
+)
 
 # Utility imports will be moved to main
 
@@ -311,7 +317,6 @@ class DynamicDataCollator:
 def main():
     global parser, logger
     import argparse
-from nexus.config.paths import DEFAULT_AUDIO_ENCODER, DEFAULT_LLM_MODEL, DEFAULT_VISION_ENCODER, MODELS_DIR
 
     parser = argparse.ArgumentParser()
 

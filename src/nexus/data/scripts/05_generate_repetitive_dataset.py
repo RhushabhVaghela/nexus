@@ -24,9 +24,15 @@ import math
 from pathlib import Path
 from typing import Dict, Tuple, Set
 
-sys.path.insert(0, str(Path(__file__).parent))
-from utils.logging_config import setup_logger, log_progress, log_header, log_completion
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from nexus.utils.logging_config import (
+    setup_logger,
+    log_progress,
+    log_header,
+    log_completion,
+)
 from nexus.config.paths import REPETITIVE_PROMPT_DIR
+
 
 def check_env():
     """Verify environment dependencies."""
@@ -35,9 +41,11 @@ def check_env():
         return False
     return True
 
+
 # logger will be initialized in main()
 logger = None
 CONFIG = {}
+
 
 # ═══════════════════════════════════════════════════════════════
 # DEDUPLICATION
@@ -67,145 +75,207 @@ class DeduplicatedGenerator:
 # ═══════════════════════════════════════════════════════════════
 GENERATOR_WEIGHTS = {
     # Math (10 types)
-    "basic_arithmetic": 4_000_000, "percentage_calc": 4_000_000,
-    "unit_conversion": 4_000_000, "geometry": 4_000_000,
-    "statistics": 4_000_000, "algebra": 4_000_000,
-    "compound_interest": 4_000_000, "distance_calc": 4_000_000,
-    "time_calc": 4_000_000, "currency_convert": 4_000_000,
-    
+    "basic_arithmetic": 4_000_000,
+    "percentage_calc": 4_000_000,
+    "unit_conversion": 4_000_000,
+    "geometry": 4_000_000,
+    "statistics": 4_000_000,
+    "algebra": 4_000_000,
+    "compound_interest": 4_000_000,
+    "distance_calc": 4_000_000,
+    "time_calc": 4_000_000,
+    "currency_convert": 4_000_000,
     # Science (10 types)
-    "chemistry": 4_000_000, "physics": 4_000_000,
-    "biology": 4_000_000, "astronomy": 4_000_000,
-    "periodic_table": 4_000_000, "scientific_notation": 4_000_000,
-    "energy_calc": 4_000_000, "density_calc": 4_000_000,
-    "ph_calc": 4_000_000, "speed_calc": 4_000_000,
-    
+    "chemistry": 4_000_000,
+    "physics": 4_000_000,
+    "biology": 4_000_000,
+    "astronomy": 4_000_000,
+    "periodic_table": 4_000_000,
+    "scientific_notation": 4_000_000,
+    "energy_calc": 4_000_000,
+    "density_calc": 4_000_000,
+    "ph_calc": 4_000_000,
+    "speed_calc": 4_000_000,
     # Geography & History (10 types)
-    "capital_cities": 4_000_000, "population": 4_000_000,
-    "historical_events": 4_000_000, "time_zones": 4_000_000,
-    "country_facts": 4_000_000, "language_facts": 4_000_000,
-    "currency_info": 4_000_000, "coordinates": 4_000_000,
-    "area_calc": 4_000_000, "historical_dates": 4_000_000,
-    
+    "capital_cities": 4_000_000,
+    "population": 4_000_000,
+    "historical_events": 4_000_000,
+    "time_zones": 4_000_000,
+    "country_facts": 4_000_000,
+    "language_facts": 4_000_000,
+    "currency_info": 4_000_000,
+    "coordinates": 4_000_000,
+    "area_calc": 4_000_000,
+    "historical_dates": 4_000_000,
     # Technology (10 types)
-    "file_size_convert": 4_000_000, "bandwidth_calc": 4_000_000,
-    "storage_calc": 4_000_000, "programming_basics": 4_000_000,
-    "algorithm_complexity": 4_000_000, "data_structures": 4_000_000,
-    "networking": 4_000_000, "encoding": 4_000_000,
-    "hash_functions": 4_000_000, "binary_operations": 4_000_000,
-    
+    "file_size_convert": 4_000_000,
+    "bandwidth_calc": 4_000_000,
+    "storage_calc": 4_000_000,
+    "programming_basics": 4_000_000,
+    "algorithm_complexity": 4_000_000,
+    "data_structures": 4_000_000,
+    "networking": 4_000_000,
+    "encoding": 4_000_000,
+    "hash_functions": 4_000_000,
+    "binary_operations": 4_000_000,
     # Business & Daily Life (10 types)
-    "bmi_calc": 4_000_000, "calorie_burn": 4_000_000,
-    "tip_calc": 4_000_000, "tax_calc": 4_000_000,
-    "budget_calc": 4_000_000, "recipe_scale": 4_000_000,
-    "temp_conversion": 4_000_000, "sports_stats": 4_000_000,
-    "age_calc": 4_000_000, "date_diff": 4_000_000,
+    "bmi_calc": 4_000_000,
+    "calorie_burn": 4_000_000,
+    "tip_calc": 4_000_000,
+    "tax_calc": 4_000_000,
+    "budget_calc": 4_000_000,
+    "recipe_scale": 4_000_000,
+    "temp_conversion": 4_000_000,
+    "sports_stats": 4_000_000,
+    "age_calc": 4_000_000,
+    "date_diff": 4_000_000,
 }
 # --- Fullstack / Software Engineering Focused (new) ---
 
-GENERATOR_WEIGHTS.update({
-    # Architecture & high-level reasoning
-    "fs_arch_monolith_vs_microservices": 4_000_000,
-    "fs_arch_layered": 4_000_000,
-    "fs_arch_clean_hexagonal": 4_000_000,
-    "fs_arch_event_driven": 4_000_000,
-    "fs_arch_scalability_patterns": 4_000_000,
-    "fs_arch_observability": 4_000_000,
-
-    # Backend / API
-    "fs_api_rest_crud": 4_000_000,
-    "fs_api_rest_errors": 4_000_000,
-    "fs_api_pagination": 4_000_000,
-    "fs_api_graphql_schema": 4_000_000,
-    "fs_api_async_jobs": 4_000_000,
-    "fs_api_validation_schemas": 4_000_000,
-    "fs_api_file_uploads": 4_000_000,
-    "fs_api_rate_limiting": 4_000_000,
-
-    # Database / schema
-    "fs_db_schema_design": 4_000_000,
-    "fs_db_relations": 4_000_000,
-    "fs_db_migrations": 4_000_000,
-    "fs_db_indexes": 4_000_000,
-    "fs_db_multi_tenancy": 4_000_000,
-    "fs_db_transactions": 4_000_000,
-
-    # Frontend / UI
-    "fs_ui_crud_forms": 4_000_000,
-    "fs_ui_data_tables": 4_000_000,
-    "fs_ui_state_management": 4_000_000,
-    "fs_ui_routing": 4_000_000,
-    "fs_ui_accessibility": 4_000_000,
-    "fs_ui_design_systems": 4_000_000,
-    "fs_ui_client_fetching": 4_000_000,
-
-    # Auth & security
-    "fs_auth_session_vs_jwt": 4_000_000,
-    "fs_auth_rbac_abac": 4_000_000,
-    "fs_auth_input_sanitization": 4_000_000,
-    "fs_auth_password_flows": 4_000_000,
-    "fs_auth_oauth_oidc": 4_000_000,
-    "fs_auth_audit_logging": 4_000_000,
-
-    # DevOps / deployment
-    "fs_devops_dockerization": 4_000_000,
-    "fs_devops_compose_k8s": 4_000_000,
-    "fs_devops_ci_cd": 4_000_000,
-    "fs_devops_env_config": 4_000_000,
-    "fs_devops_monitoring": 4_000_000,
-    "fs_devops_zero_downtime": 4_000_000,
-
-    # Testing / quality
-    "fs_test_unit": 4_000_000,
-    "fs_test_integration": 4_000_000,
-    "fs_test_e2e": 4_000_000,
-    "fs_test_fixtures": 4_000_000,
-    "fs_test_performance": 4_000_000,
-    "fs_test_quality_guidelines": 4_000_000,
-
-    # Refactoring & maintenance
-    "fs_refactor_extract_function": 4_000_000,
-    "fs_refactor_extract_module": 4_000_000,
-    "fs_refactor_rename": 4_000_000,
-    "fs_refactor_reduce_duplication": 4_000_000,
-    "fs_refactor_api_cleanup": 4_000_000,
-
-    # Project scaffolding
-    "fs_proj_readme": 4_000_000,
-    "fs_proj_folder_structure": 4_000_000,
-    "fs_proj_coding_guidelines": 4_000_000,
-    "fs_proj_onboarding_docs": 4_000_000,
-    "fs_proj_release_process": 4_000_000,
-
-    # TIER 1: HIGH PRIORITY NEW CATEGORIES
-    "fs_api_websockets": 4_000_000,
-    "fs_error_handling_patterns": 4_000_000,
-    "fs_tracing_observability": 4_000_000,
-    "fs_caching_strategies": 4_000_000,
-    "fs_message_queues": 4_000_000,
-
-    # TIER 2: MEDIUM PRIORITY NEW CATEGORIES
-    "fs_search_indexing": 4_000_000,
-    "fs_data_validation_pipelines": 4_000_000,
-    "fs_rate_limiting_throttling": 4_000_000,
-    "fs_monitoring_alerting": 4_000_000,
-    "fs_feature_flags_ab_testing": 4_000_000,
-
-    # TIER 3: ADDITIONAL CATEGORIES
-    "fs_backwards_compatibility": 4_000_000,
-    "fs_capacity_planning": 4_000_000,
-})
+GENERATOR_WEIGHTS.update(
+    {
+        # Architecture & high-level reasoning
+        "fs_arch_monolith_vs_microservices": 4_000_000,
+        "fs_arch_layered": 4_000_000,
+        "fs_arch_clean_hexagonal": 4_000_000,
+        "fs_arch_event_driven": 4_000_000,
+        "fs_arch_scalability_patterns": 4_000_000,
+        "fs_arch_observability": 4_000_000,
+        # Backend / API
+        "fs_api_rest_crud": 4_000_000,
+        "fs_api_rest_errors": 4_000_000,
+        "fs_api_pagination": 4_000_000,
+        "fs_api_graphql_schema": 4_000_000,
+        "fs_api_async_jobs": 4_000_000,
+        "fs_api_validation_schemas": 4_000_000,
+        "fs_api_file_uploads": 4_000_000,
+        "fs_api_rate_limiting": 4_000_000,
+        # Database / schema
+        "fs_db_schema_design": 4_000_000,
+        "fs_db_relations": 4_000_000,
+        "fs_db_migrations": 4_000_000,
+        "fs_db_indexes": 4_000_000,
+        "fs_db_multi_tenancy": 4_000_000,
+        "fs_db_transactions": 4_000_000,
+        # Frontend / UI
+        "fs_ui_crud_forms": 4_000_000,
+        "fs_ui_data_tables": 4_000_000,
+        "fs_ui_state_management": 4_000_000,
+        "fs_ui_routing": 4_000_000,
+        "fs_ui_accessibility": 4_000_000,
+        "fs_ui_design_systems": 4_000_000,
+        "fs_ui_client_fetching": 4_000_000,
+        # Auth & security
+        "fs_auth_session_vs_jwt": 4_000_000,
+        "fs_auth_rbac_abac": 4_000_000,
+        "fs_auth_input_sanitization": 4_000_000,
+        "fs_auth_password_flows": 4_000_000,
+        "fs_auth_oauth_oidc": 4_000_000,
+        "fs_auth_audit_logging": 4_000_000,
+        # DevOps / deployment
+        "fs_devops_dockerization": 4_000_000,
+        "fs_devops_compose_k8s": 4_000_000,
+        "fs_devops_ci_cd": 4_000_000,
+        "fs_devops_env_config": 4_000_000,
+        "fs_devops_monitoring": 4_000_000,
+        "fs_devops_zero_downtime": 4_000_000,
+        # Testing / quality
+        "fs_test_unit": 4_000_000,
+        "fs_test_integration": 4_000_000,
+        "fs_test_e2e": 4_000_000,
+        "fs_test_fixtures": 4_000_000,
+        "fs_test_performance": 4_000_000,
+        "fs_test_quality_guidelines": 4_000_000,
+        # Refactoring & maintenance
+        "fs_refactor_extract_function": 4_000_000,
+        "fs_refactor_extract_module": 4_000_000,
+        "fs_refactor_rename": 4_000_000,
+        "fs_refactor_reduce_duplication": 4_000_000,
+        "fs_refactor_api_cleanup": 4_000_000,
+        # Project scaffolding
+        "fs_proj_readme": 4_000_000,
+        "fs_proj_folder_structure": 4_000_000,
+        "fs_proj_coding_guidelines": 4_000_000,
+        "fs_proj_onboarding_docs": 4_000_000,
+        "fs_proj_release_process": 4_000_000,
+        # TIER 1: HIGH PRIORITY NEW CATEGORIES
+        "fs_api_websockets": 4_000_000,
+        "fs_error_handling_patterns": 4_000_000,
+        "fs_tracing_observability": 4_000_000,
+        "fs_caching_strategies": 4_000_000,
+        "fs_message_queues": 4_000_000,
+        # TIER 2: MEDIUM PRIORITY NEW CATEGORIES
+        "fs_search_indexing": 4_000_000,
+        "fs_data_validation_pipelines": 4_000_000,
+        "fs_rate_limiting_throttling": 4_000_000,
+        "fs_monitoring_alerting": 4_000_000,
+        "fs_feature_flags_ab_testing": 4_000_000,
+        # TIER 3: ADDITIONAL CATEGORIES
+        "fs_backwards_compatibility": 4_000_000,
+        "fs_capacity_planning": 4_000_000,
+    }
+)
 
 
 # Data pools
-COUNTRIES = ["USA", "Canada", "UK", "France", "Germany", "Japan", "China", "India", "Brazil", "Australia"]
-CITIES = ["New York", "London", "Paris", "Tokyo", "Beijing", "Mumbai", "Sydney", "Toronto", "Berlin", "Rome"]
-ELEMENTS = ["Hydrogen", "Helium", "Carbon", "Nitrogen", "Oxygen", "Sodium", "Iron", "Copper", "Zinc", "Gold"]
-PLANETS = ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"]
+COUNTRIES = [
+    "USA",
+    "Canada",
+    "UK",
+    "France",
+    "Germany",
+    "Japan",
+    "China",
+    "India",
+    "Brazil",
+    "Australia",
+]
+CITIES = [
+    "New York",
+    "London",
+    "Paris",
+    "Tokyo",
+    "Beijing",
+    "Mumbai",
+    "Sydney",
+    "Toronto",
+    "Berlin",
+    "Rome",
+]
+ELEMENTS = [
+    "Hydrogen",
+    "Helium",
+    "Carbon",
+    "Nitrogen",
+    "Oxygen",
+    "Sodium",
+    "Iron",
+    "Copper",
+    "Zinc",
+    "Gold",
+]
+PLANETS = [
+    "Mercury",
+    "Venus",
+    "Earth",
+    "Mars",
+    "Jupiter",
+    "Saturn",
+    "Uranus",
+    "Neptune",
+]
 
-def rnum(a, b): return random.randint(a, b)
-def rfloat(a, b): return round(random.uniform(a, b), 2)
-def rstr(n): return ''.join(random.choices(string.ascii_lowercase + string.digits, k=n))
+
+def rnum(a, b):
+    return random.randint(a, b)
+
+
+def rfloat(a, b):
+    return round(random.uniform(a, b), 2)
+
+
+def rstr(n):
+    return "".join(random.choices(string.ascii_lowercase + string.digits, k=n))
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -215,7 +285,7 @@ class PromptRepetitionEngine:
     def __init__(self):
         self.deduplicator = DeduplicatedGenerator()
         self.category_counters = {k: 0 for k in GENERATOR_WEIGHTS.keys()}
-        
+
     def apply_repetition(self, query: str, context: str, style: str) -> str:
         """
         4 repetition variants from arXiv 2512.14982:
@@ -225,7 +295,7 @@ class PromptRepetitionEngine:
         4. 3x (triple with markers)
         """
         full_query = f"{context}\n{query}" if context else query
-        
+
         if style == "baseline":
             return full_query
         elif style == "2x":
@@ -235,276 +305,485 @@ class PromptRepetitionEngine:
         elif style == "3x":
             return f"{full_query} Let me repeat that: {full_query} Let me repeat that one more time: {full_query}"
         return full_query
-    
+
     # ═══ MATH GENERATORS ═══
     def gen_basic_arithmetic(self) -> Tuple[str, str, str]:
         a, b = rnum(1, 1000), rnum(1, 1000)
         op = random.choice(["+", "-", "*"])
         # SAFETY FIX: Use dictionary mapping instead of eval
-        ops = {'+': lambda x, y: x + y, '-': lambda x, y: x - y, '*': lambda x, y: x * y}
+        ops = {
+            "+": lambda x, y: x + y,
+            "-": lambda x, y: x - y,
+            "*": lambda x, y: x * y,
+        }
         result = ops[op](a, b)
-        return f"Calculate {a} {op} {b}", f"Numbers: {a}, {b}\nOperation: {op}", str(result)
-    
+        return (
+            f"Calculate {a} {op} {b}",
+            f"Numbers: {a}, {b}\nOperation: {op}",
+            str(result),
+        )
+
     def gen_percentage(self) -> Tuple[str, str, str]:
         total, pct = rnum(100, 10000), rnum(5, 95)
         result = round(total * pct / 100, 2)
-        return f"What is {pct}% of {total}?", f"Total: {total}\nPercentage: {pct}%", str(result)
-    
+        return (
+            f"What is {pct}% of {total}?",
+            f"Total: {total}\nPercentage: {pct}%",
+            str(result),
+        )
+
     def gen_unit_conversion(self) -> Tuple[str, str, str]:
         km = rnum(1, 500)
         miles = round(km * 0.621371, 2)
-        return f"Convert {km} kilometers to miles", f"Distance: {km} km", f"{miles} miles"
-    
+        return (
+            f"Convert {km} kilometers to miles",
+            f"Distance: {km} km",
+            f"{miles} miles",
+        )
+
     def gen_geometry(self) -> Tuple[str, str, str]:
         r = rnum(1, 50)
-        area = round(math.pi * r ** 2, 2)
+        area = round(math.pi * r**2, 2)
         return f"Area of circle with radius {r}?", f"Radius: {r}", f"{area} sq units"
-    
+
     def gen_statistics(self) -> Tuple[str, str, str]:
         nums = [rnum(10, 100) for _ in range(5)]
         mean = round(sum(nums) / len(nums), 2)
         return f"Mean of {nums}?", f"Numbers: {nums}", str(mean)
-    
+
     def gen_algebra(self) -> Tuple[str, str, str]:
         a, b = rnum(1, 20), rnum(1, 50)
         x = rnum(1, 10)
         result = a * x + b
-        return f"If {a}x + {b} = {result}, find x", f"Equation: {a}x + {b} = {result}", f"x = {x}"
-    
+        return (
+            f"If {a}x + {b} = {result}, find x",
+            f"Equation: {a}x + {b} = {result}",
+            f"x = {x}",
+        )
+
     def gen_compound_interest(self) -> Tuple[str, str, str]:
         principal, rate, years = rnum(1000, 100000), rnum(2, 12), rnum(1, 30)
-        amount = round(principal * (1 + rate/100) ** years, 2)
-        return f"${principal} at {rate}% for {years} years?", f"P: ${principal}\nR: {rate}%\nT: {years}y", f"${amount}"
-    
+        amount = round(principal * (1 + rate / 100) ** years, 2)
+        return (
+            f"${principal} at {rate}% for {years} years?",
+            f"P: ${principal}\nR: {rate}%\nT: {years}y",
+            f"${amount}",
+        )
+
     def gen_distance(self) -> Tuple[str, str, str]:
         speed, time = rnum(30, 150), rnum(1, 10)
         distance = speed * time
-        return f"Distance at {speed} km/h for {time} hours?", f"Speed: {speed} km/h\nTime: {time}h", f"{distance} km"
-    
+        return (
+            f"Distance at {speed} km/h for {time} hours?",
+            f"Speed: {speed} km/h\nTime: {time}h",
+            f"{distance} km",
+        )
+
     def gen_time(self) -> Tuple[str, str, str]:
         h1, m1 = rnum(0, 23), rnum(0, 59)
         h2, m2 = rnum(0, 23), rnum(0, 59)
         diff_min = abs((h2 * 60 + m2) - (h1 * 60 + m1))
         h, m = diff_min // 60, diff_min % 60
-        return f"Time from {h1:02d}:{m1:02d} to {h2:02d}:{m2:02d}?", f"Start: {h1:02d}:{m1:02d}\nEnd: {h2:02d}:{m2:02d}", f"{h}h {m}m"
-    
+        return (
+            f"Time from {h1:02d}:{m1:02d} to {h2:02d}:{m2:02d}?",
+            f"Start: {h1:02d}:{m1:02d}\nEnd: {h2:02d}:{m2:02d}",
+            f"{h}h {m}m",
+        )
+
     def gen_currency(self) -> Tuple[str, str, str]:
         amount, rate = rnum(100, 10000), rfloat(0.5, 2.0)
         result = round(amount * rate, 2)
-        return f"Convert ${amount} at rate {rate}?", f"Amount: ${amount}\nRate: {rate}", f"${result}"
-    
+        return (
+            f"Convert ${amount} at rate {rate}?",
+            f"Amount: ${amount}\nRate: {rate}",
+            f"${result}",
+        )
+
     # ═══ SCIENCE GENERATORS ═══
     def gen_chemistry(self) -> Tuple[str, str, str]:
         elem = random.choice(ELEMENTS)
-        symbols = {"Hydrogen": "H", "Helium": "He", "Carbon": "C", "Nitrogen": "N", "Oxygen": "O", 
-                   "Sodium": "Na", "Iron": "Fe", "Copper": "Cu", "Zinc": "Zn", "Gold": "Au"}
-        return f"Chemical symbol for {elem}?", f"Element: {elem}", symbols.get(elem, "X")
-    
+        symbols = {
+            "Hydrogen": "H",
+            "Helium": "He",
+            "Carbon": "C",
+            "Nitrogen": "N",
+            "Oxygen": "O",
+            "Sodium": "Na",
+            "Iron": "Fe",
+            "Copper": "Cu",
+            "Zinc": "Zn",
+            "Gold": "Au",
+        }
+        return (
+            f"Chemical symbol for {elem}?",
+            f"Element: {elem}",
+            symbols.get(elem, "X"),
+        )
+
     def gen_physics(self) -> Tuple[str, str, str]:
         m, a = rnum(1, 100), rnum(1, 20)
         force = m * a
-        return f"Force on {m}kg mass with {a} m/s² acceleration?", f"Mass: {m}kg\nAccel: {a} m/s²", f"{force} N"
-    
+        return (
+            f"Force on {m}kg mass with {a} m/s² acceleration?",
+            f"Mass: {m}kg\nAccel: {a} m/s²",
+            f"{force} N",
+        )
+
     def gen_biology(self) -> Tuple[str, str, str]:
-        organelles = ["Mitochondria", "Nucleus", "Ribosome", "Chloroplast", "Golgi Apparatus"]
-        functions = {"Mitochondria": "Energy production", "Nucleus": "Genetic control", "Ribosome": "Protein synthesis", 
-                     "Chloroplast": "Photosynthesis", "Golgi Apparatus": "Protein processing"}
+        organelles = [
+            "Mitochondria",
+            "Nucleus",
+            "Ribosome",
+            "Chloroplast",
+            "Golgi Apparatus",
+        ]
+        functions = {
+            "Mitochondria": "Energy production",
+            "Nucleus": "Genetic control",
+            "Ribosome": "Protein synthesis",
+            "Chloroplast": "Photosynthesis",
+            "Golgi Apparatus": "Protein processing",
+        }
         org = random.choice(organelles)
         return f"Function of {org}?", f"Organelle: {org}", functions[org]
-    
+
     def gen_astronomy(self) -> Tuple[str, str, str]:
         planet = random.choice(PLANETS)
-        positions = {"Mercury": 1, "Venus": 2, "Earth": 3, "Mars": 4, "Jupiter": 5, "Saturn": 6, "Uranus": 7, "Neptune": 8}
-        return f"Position of {planet} from Sun?", f"Planet: {planet}", f"{positions[planet]}th"
-    
+        positions = {
+            "Mercury": 1,
+            "Venus": 2,
+            "Earth": 3,
+            "Mars": 4,
+            "Jupiter": 5,
+            "Saturn": 6,
+            "Uranus": 7,
+            "Neptune": 8,
+        }
+        return (
+            f"Position of {planet} from Sun?",
+            f"Planet: {planet}",
+            f"{positions[planet]}th",
+        )
+
     def gen_periodic_table(self) -> Tuple[str, str, str]:
         elem = random.choice(ELEMENTS)
-        atomic_nums = {"Hydrogen": 1, "Helium": 2, "Carbon": 6, "Nitrogen": 7, "Oxygen": 8, 
-                       "Sodium": 11, "Iron": 26, "Copper": 29, "Zinc": 30, "Gold": 79}
-        return f"Atomic number of {elem}?", f"Element: {elem}", str(atomic_nums.get(elem, 0))
-    
+        atomic_nums = {
+            "Hydrogen": 1,
+            "Helium": 2,
+            "Carbon": 6,
+            "Nitrogen": 7,
+            "Oxygen": 8,
+            "Sodium": 11,
+            "Iron": 26,
+            "Copper": 29,
+            "Zinc": 30,
+            "Gold": 79,
+        }
+        return (
+            f"Atomic number of {elem}?",
+            f"Element: {elem}",
+            str(atomic_nums.get(elem, 0)),
+        )
+
     def gen_scientific_notation(self) -> Tuple[str, str, str]:
         num = rnum(1000, 999999)
         exp = len(str(num)) - 1
-        mantissa = num / (10 ** exp)
-        return f"Scientific notation for {num}?", f"Number: {num}", f"{mantissa:.2f} × 10^{exp}"
-    
+        mantissa = num / (10**exp)
+        return (
+            f"Scientific notation for {num}?",
+            f"Number: {num}",
+            f"{mantissa:.2f} × 10^{exp}",
+        )
+
     def gen_energy(self) -> Tuple[str, str, str]:
         m, v = rnum(1, 100), rnum(1, 50)
-        ke = 0.5 * m * v ** 2
-        return f"Kinetic energy: {m}kg at {v} m/s?", f"Mass: {m}kg\nVelocity: {v} m/s", f"{ke} J"
-    
+        ke = 0.5 * m * v**2
+        return (
+            f"Kinetic energy: {m}kg at {v} m/s?",
+            f"Mass: {m}kg\nVelocity: {v} m/s",
+            f"{ke} J",
+        )
+
     def gen_density(self) -> Tuple[str, str, str]:
         mass, volume = rnum(10, 500), rnum(5, 100)
         density = round(mass / volume, 2)
-        return f"Density: {mass}g in {volume}cm³?", f"Mass: {mass}g\nVolume: {volume}cm³", f"{density} g/cm³"
-    
+        return (
+            f"Density: {mass}g in {volume}cm³?",
+            f"Mass: {mass}g\nVolume: {volume}cm³",
+            f"{density} g/cm³",
+        )
+
     def gen_ph(self) -> Tuple[str, str, str]:
         ph = round(random.uniform(0, 14), 1)
         nature = "Acidic" if ph < 7 else ("Neutral" if ph == 7 else "Basic")
         return f"Nature of solution with pH {ph}?", f"pH: {ph}", nature
-    
+
     def gen_speed(self) -> Tuple[str, str, str]:
         distance, time = rnum(10, 500), rnum(1, 10)
         speed = round(distance / time, 2)
-        return f"Speed: {distance}m in {time}s?", f"Distance: {distance}m\nTime: {time}s", f"{speed} m/s"
-    
+        return (
+            f"Speed: {distance}m in {time}s?",
+            f"Distance: {distance}m\nTime: {time}s",
+            f"{speed} m/s",
+        )
+
     # ═══ GEOGRAPHY & HISTORY ═══
     def gen_capital(self) -> Tuple[str, str, str]:
-        capitals = {"USA": "Washington DC", "UK": "London", "France": "Paris", "Germany": "Berlin", "Japan": "Tokyo"}
+        capitals = {
+            "USA": "Washington DC",
+            "UK": "London",
+            "France": "Paris",
+            "Germany": "Berlin",
+            "Japan": "Tokyo",
+        }
         country = random.choice(list(capitals.keys()))
         return f"Capital of {country}?", f"Country: {country}", capitals[country]
-    
+
     def gen_population(self) -> Tuple[str, str, str]:
         city = random.choice(CITIES)
         pop = rnum(1, 40) * 1_000_000
-        return f"Approximate population of {city}?", f"City: {city}", f"~{pop//1_000_000}M"
-    
+        return (
+            f"Approximate population of {city}?",
+            f"City: {city}",
+            f"~{pop // 1_000_000}M",
+        )
+
     def gen_historical_event(self) -> Tuple[str, str, str]:
-        events = {"World War I": 1914, "Moon Landing": 1969, "Fall of Berlin Wall": 1989, "French Revolution": 1789}
+        events = {
+            "World War I": 1914,
+            "Moon Landing": 1969,
+            "Fall of Berlin Wall": 1989,
+            "French Revolution": 1789,
+        }
         event = random.choice(list(events.keys()))
         return f"Year of {event}?", f"Event: {event}", str(events[event])
-    
+
     def gen_timezone(self) -> Tuple[str, str, str]:
         zones = {"New York": -5, "London": 0, "Tokyo": 9, "Sydney": 10}
         city1, city2 = random.sample(list(zones.keys()), 2)
         diff = zones[city2] - zones[city1]
-        return f"Time difference: {city1} to {city2}?", f"{city1} to {city2}", f"{diff:+d} hours"
-    
+        return (
+            f"Time difference: {city1} to {city2}?",
+            f"{city1} to {city2}",
+            f"{diff:+d} hours",
+        )
+
     def gen_country_fact(self) -> Tuple[str, str, str]:
-        facts = {"USA": "English", "France": "French", "Germany": "German", "Japan": "Japanese"}
+        facts = {
+            "USA": "English",
+            "France": "French",
+            "Germany": "German",
+            "Japan": "Japanese",
+        }
         country = random.choice(list(facts.keys()))
         return f"Official language of {country}?", f"Country: {country}", facts[country]
-    
+
     def gen_language(self) -> Tuple[str, str, str]:
-        speakers = {"English": "1.5B", "Spanish": "500M", "French": "280M", "Chinese": "1.3B"}
+        speakers = {
+            "English": "1.5B",
+            "Spanish": "500M",
+            "French": "280M",
+            "Chinese": "1.3B",
+        }
         lang = random.choice(list(speakers.keys()))
         return f"Speakers of {lang}?", f"Language: {lang}", speakers[lang]
-    
+
     def gen_currency_info(self) -> Tuple[str, str, str]:
         currencies = {"USA": "USD", "UK": "GBP", "Japan": "JPY", "India": "INR"}
         country = random.choice(list(currencies.keys()))
         return f"Currency of {country}?", f"Country: {country}", currencies[country]
-    
+
     def gen_coordinates(self) -> Tuple[str, str, str]:
-        lat, lon = round(random.uniform(-90, 90), 2), round(random.uniform(-180, 180), 2)
+        lat, lon = (
+            round(random.uniform(-90, 90), 2),
+            round(random.uniform(-180, 180), 2),
+        )
         hemisphere = ("N" if lat >= 0 else "S", "E" if lon >= 0 else "W")
-        return f"Hemisphere for ({lat}, {lon})?", f"Lat: {lat}\nLon: {lon}", f"{hemisphere[0]}, {hemisphere[1]}"
-    
+        return (
+            f"Hemisphere for ({lat}, {lon})?",
+            f"Lat: {lat}\nLon: {lon}",
+            f"{hemisphere[0]}, {hemisphere[1]}",
+        )
+
     def gen_area(self) -> Tuple[str, str, str]:
         length, width = rnum(10, 100), rnum(10, 100)
         area = length * width
-        return f"Area: {length}m × {width}m?", f"L: {length}m\nW: {width}m", f"{area} m²"
-    
+        return (
+            f"Area: {length}m × {width}m?",
+            f"L: {length}m\nW: {width}m",
+            f"{area} m²",
+        )
+
     def gen_historical_date(self) -> Tuple[str, str, str]:
         events = {"Internet": 1991, "DNA Discovery": 1953, "Penicillin": 1928}
         event = random.choice(list(events.keys()))
         return f"Year of {event} discovery?", f"Discovery: {event}", str(events[event])
-    
+
     # ═══ TECHNOLOGY ═══
     def gen_file_size(self) -> Tuple[str, str, str]:
         mb = rnum(1, 10000)
         gb = round(mb / 1024, 2)
         return f"Convert {mb} MB to GB?", f"Size: {mb} MB", f"{gb} GB"
-    
+
     def gen_bandwidth(self) -> Tuple[str, str, str]:
         mbps, file_mb = rnum(10, 1000), rnum(100, 5000)
         seconds = round(file_mb * 8 / mbps, 1)
-        return f"Download time: {file_mb}MB at {mbps} Mbps?", f"File: {file_mb}MB\nSpeed: {mbps} Mbps", f"{seconds}s"
-    
+        return (
+            f"Download time: {file_mb}MB at {mbps} Mbps?",
+            f"File: {file_mb}MB\nSpeed: {mbps} Mbps",
+            f"{seconds}s",
+        )
+
     def gen_storage(self) -> Tuple[str, str, str]:
         total, used = rnum(256, 2000), rnum(50, 1500)
         free = max(0, total - used)
-        return f"Free space: {total}GB total, {used}GB used?", f"Total: {total}GB\nUsed: {used}GB", f"{free}GB"
-    
+        return (
+            f"Free space: {total}GB total, {used}GB used?",
+            f"Total: {total}GB\nUsed: {used}GB",
+            f"{free}GB",
+        )
+
     def gen_programming(self) -> Tuple[str, str, str]:
-        data_types = {"int": "Integer", "str": "String", "list": "Array", "dict": "Object"}
+        data_types = {
+            "int": "Integer",
+            "str": "String",
+            "list": "Array",
+            "dict": "Object",
+        }
         dtype = random.choice(list(data_types.keys()))
         return f"Python type {dtype} represents?", f"Type: {dtype}", data_types[dtype]
-    
+
     def gen_algorithm_complexity(self) -> Tuple[str, str, str]:
-        algos = {"Binary Search": "O(log n)", "Merge Sort": "O(n log n)", "Linear Search": "O(n)"}
+        algos = {
+            "Binary Search": "O(log n)",
+            "Merge Sort": "O(n log n)",
+            "Linear Search": "O(n)",
+        }
         algo = random.choice(list(algos.keys()))
         return f"Time complexity of {algo}?", f"Algorithm: {algo}", algos[algo]
-    
+
     def gen_data_structures(self) -> Tuple[str, str, str]:
         structures = {"Stack": "LIFO", "Queue": "FIFO", "Heap": "Priority Queue"}
         struct = random.choice(list(structures.keys()))
-        return f"Ordering principle of {struct}?", f"Structure: {struct}", structures[struct]
-    
+        return (
+            f"Ordering principle of {struct}?",
+            f"Structure: {struct}",
+            structures[struct],
+        )
+
     def gen_networking(self) -> Tuple[str, str, str]:
         ports = {"HTTP": 80, "HTTPS": 443, "SSH": 22, "FTP": 21}
         protocol = random.choice(list(ports.keys()))
-        return f"Default port for {protocol}?", f"Protocol: {protocol}", str(ports[protocol])
-    
+        return (
+            f"Default port for {protocol}?",
+            f"Protocol: {protocol}",
+            str(ports[protocol]),
+        )
+
     def gen_encoding(self) -> Tuple[str, str, str]:
         text = rstr(4)
         encoded = text.encode().hex()
         return f"Hex encoding of '{text}'?", f"Text: {text}", encoded
-    
+
     def gen_hash(self) -> Tuple[str, str, str]:
         text = rstr(8)
         hashed = hashlib.md5(text.encode()).hexdigest()[:8]
         return f"MD5 hash (first 8 chars) of '{text}'?", f"Input: {text}", hashed
-    
+
     def gen_binary(self) -> Tuple[str, str, str]:
         num = rnum(0, 255)
         binary = bin(num)[2:].zfill(8)
         return f"Binary of {num}?", f"Number: {num}", binary
-    
+
     # ═══ BUSINESS & DAILY LIFE ═══
     def gen_bmi(self) -> Tuple[str, str, str]:
         weight, height = rnum(50, 120), rfloat(1.5, 2.0)
-        bmi = round(weight / (height ** 2), 1)
-        return f"BMI: {weight}kg, {height}m tall?", f"Weight: {weight}kg\nHeight: {height}m", str(bmi)
-    
+        bmi = round(weight / (height**2), 1)
+        return (
+            f"BMI: {weight}kg, {height}m tall?",
+            f"Weight: {weight}kg\nHeight: {height}m",
+            str(bmi),
+        )
+
     def gen_calorie(self) -> Tuple[str, str, str]:
         activity = random.choice(["Running", "Swimming", "Cycling", "Walking"])
         rates = {"Running": 10, "Swimming": 8, "Cycling": 7, "Walking": 4}
         mins = rnum(15, 120)
         burned = rates[activity] * mins
-        return f"Calories burned: {activity} for {mins} mins?", f"Activity: {activity}\nDuration: {mins}min", f"{burned} cal"
-    
+        return (
+            f"Calories burned: {activity} for {mins} mins?",
+            f"Activity: {activity}\nDuration: {mins}min",
+            f"{burned} cal",
+        )
+
     def gen_tip(self) -> Tuple[str, str, str]:
         bill, tip_pct = rnum(20, 500), random.choice([15, 18, 20, 22, 25])
         tip = round(bill * tip_pct / 100, 2)
-        return f"{tip_pct}% tip on ${bill}?", f"Bill: ${bill}\nTip: {tip_pct}%", f"${tip}"
-    
+        return (
+            f"{tip_pct}% tip on ${bill}?",
+            f"Bill: ${bill}\nTip: {tip_pct}%",
+            f"${tip}",
+        )
+
     def gen_tax(self) -> Tuple[str, str, str]:
         amount, tax_rate = rnum(100, 10000), rnum(5, 25)
         tax = round(amount * tax_rate / 100, 2)
-        return f"Tax on ${amount} at {tax_rate}%?", f"Amount: ${amount}\nRate: {tax_rate}%", f"${tax}"
-    
+        return (
+            f"Tax on ${amount} at {tax_rate}%?",
+            f"Amount: ${amount}\nRate: {tax_rate}%",
+            f"${tax}",
+        )
+
     def gen_budget(self) -> Tuple[str, str, str]:
         income, expenses = rnum(3000, 10000), rnum(1000, 8000)
         savings = max(0, income - expenses)
-        return f"Savings: ${income} income, ${expenses} expenses?", f"Income: ${income}\nExpenses: ${expenses}", f"${savings}"
-    
+        return (
+            f"Savings: ${income} income, ${expenses} expenses?",
+            f"Income: ${income}\nExpenses: ${expenses}",
+            f"${savings}",
+        )
+
     def gen_recipe(self) -> Tuple[str, str, str]:
         original, from_serv, to_serv = rnum(1, 5), rnum(4, 8), rnum(8, 24)
         scaled = round(original * to_serv / from_serv, 2)
-        return f"Scale {original} cups from {from_serv} to {to_serv} servings?", f"Original: {original}\nFrom: {from_serv}\nTo: {to_serv}", f"{scaled} cups"
-    
+        return (
+            f"Scale {original} cups from {from_serv} to {to_serv} servings?",
+            f"Original: {original}\nFrom: {from_serv}\nTo: {to_serv}",
+            f"{scaled} cups",
+        )
+
     def gen_temp(self) -> Tuple[str, str, str]:
         celsius = rnum(0, 250)
-        fahrenheit = round(celsius * 9/5 + 32, 1)
-        return f"Convert {celsius}°C to Fahrenheit?", f"Temperature: {celsius}°C", f"{fahrenheit}°F"
-    
+        fahrenheit = round(celsius * 9 / 5 + 32, 1)
+        return (
+            f"Convert {celsius}°C to Fahrenheit?",
+            f"Temperature: {celsius}°C",
+            f"{fahrenheit}°F",
+        )
+
     def gen_sports(self) -> Tuple[str, str, str]:
         wins, losses = rnum(20, 100), rnum(10, 80)
         pct = round(wins / (wins + losses) * 100, 1)
-        return f"Win percentage: {wins} wins, {losses} losses?", f"W: {wins}\nL: {losses}", f"{pct}%"
-    
+        return (
+            f"Win percentage: {wins} wins, {losses} losses?",
+            f"W: {wins}\nL: {losses}",
+            f"{pct}%",
+        )
+
     def gen_age(self) -> Tuple[str, str, str]:
         birth_year = rnum(1950, 2020)
         age = 2026 - birth_year
-        return f"Age in 2026 if born in {birth_year}?", f"Birth Year: {birth_year}", f"{age} years"
-    
+        return (
+            f"Age in 2026 if born in {birth_year}?",
+            f"Birth Year: {birth_year}",
+            f"{age} years",
+        )
+
     def gen_date_diff(self) -> Tuple[str, str, str]:
         days = rnum(1, 365)
         weeks = days // 7
         return f"How many weeks in {days} days?", f"Days: {days}", f"{weeks} weeks"
-    
+
     # ═══════════════════════════════════════════════════════════════
     # FULLSTACK: ARCHITECTURE
     # ═══════════════════════════════════════════════════════════════
@@ -925,7 +1204,7 @@ class PromptRepetitionEngine:
         return q, ctx, a
 
     def gen_fs_auth_oauth_oidc(self) -> Tuple[str, str, str]:
-        q = "Explain high-level OAuth/OIDC login (\"Sign in with Google\")."
+        q = 'Explain high-level OAuth/OIDC login ("Sign in with Google").'
         ctx = "Skip low-level protocol details."
         a = (
             "User clicks 'Sign in with Google'.\n"
@@ -1441,43 +1720,68 @@ class PromptRepetitionEngine:
         )
         return q, ctx, a
 
-
     def generate_trajectory(self) -> Dict:
         """Generate a single trajectory with prompt repetition."""
-        available = [c for c, t in GENERATOR_WEIGHTS.items() if self.category_counters[c] < t]
+        available = [
+            c for c, t in GENERATOR_WEIGHTS.items() if self.category_counters[c] < t
+        ]
         if not available:
             return None
-        
+
         category = random.choice(available)
-        
+
         # Map to generator
         gen_map = {
-            "basic_arithmetic": self.gen_basic_arithmetic, "percentage_calc": self.gen_percentage,
-            "unit_conversion": self.gen_unit_conversion, "geometry": self.gen_geometry,
-            "statistics": self.gen_statistics, "algebra": self.gen_algebra,
-            "compound_interest": self.gen_compound_interest, "distance_calc": self.gen_distance,
-            "time_calc": self.gen_time, "currency_convert": self.gen_currency,
-            "chemistry": self.gen_chemistry, "physics": self.gen_physics,
-            "biology": self.gen_biology, "astronomy": self.gen_astronomy,
-            "periodic_table": self.gen_periodic_table, "scientific_notation": self.gen_scientific_notation,
-            "energy_calc": self.gen_energy, "density_calc": self.gen_density,
-            "ph_calc": self.gen_ph, "speed_calc": self.gen_speed,
-            "capital_cities": self.gen_capital, "population": self.gen_population,
-            "historical_events": self.gen_historical_event, "time_zones": self.gen_timezone,
-            "country_facts": self.gen_country_fact, "language_facts": self.gen_language,
-            "currency_info": self.gen_currency_info, "coordinates": self.gen_coordinates,
-            "area_calc": self.gen_area, "historical_dates": self.gen_historical_date,
-            "file_size_convert": self.gen_file_size, "bandwidth_calc": self.gen_bandwidth,
-            "storage_calc": self.gen_storage, "programming_basics": self.gen_programming,
-            "algorithm_complexity": self.gen_algorithm_complexity, "data_structures": self.gen_data_structures,
-            "networking": self.gen_networking, "encoding": self.gen_encoding,
-            "hash_functions": self.gen_hash, "binary_operations": self.gen_binary,
-            "bmi_calc": self.gen_bmi, "calorie_burn": self.gen_calorie,
-            "tip_calc": self.gen_tip, "tax_calc": self.gen_tax,
-            "budget_calc": self.gen_budget, "recipe_scale": self.gen_recipe,
-            "temp_conversion": self.gen_temp, "sports_stats": self.gen_sports,
-            "age_calc": self.gen_age, "date_diff": self.gen_date_diff,
-
+            "basic_arithmetic": self.gen_basic_arithmetic,
+            "percentage_calc": self.gen_percentage,
+            "unit_conversion": self.gen_unit_conversion,
+            "geometry": self.gen_geometry,
+            "statistics": self.gen_statistics,
+            "algebra": self.gen_algebra,
+            "compound_interest": self.gen_compound_interest,
+            "distance_calc": self.gen_distance,
+            "time_calc": self.gen_time,
+            "currency_convert": self.gen_currency,
+            "chemistry": self.gen_chemistry,
+            "physics": self.gen_physics,
+            "biology": self.gen_biology,
+            "astronomy": self.gen_astronomy,
+            "periodic_table": self.gen_periodic_table,
+            "scientific_notation": self.gen_scientific_notation,
+            "energy_calc": self.gen_energy,
+            "density_calc": self.gen_density,
+            "ph_calc": self.gen_ph,
+            "speed_calc": self.gen_speed,
+            "capital_cities": self.gen_capital,
+            "population": self.gen_population,
+            "historical_events": self.gen_historical_event,
+            "time_zones": self.gen_timezone,
+            "country_facts": self.gen_country_fact,
+            "language_facts": self.gen_language,
+            "currency_info": self.gen_currency_info,
+            "coordinates": self.gen_coordinates,
+            "area_calc": self.gen_area,
+            "historical_dates": self.gen_historical_date,
+            "file_size_convert": self.gen_file_size,
+            "bandwidth_calc": self.gen_bandwidth,
+            "storage_calc": self.gen_storage,
+            "programming_basics": self.gen_programming,
+            "algorithm_complexity": self.gen_algorithm_complexity,
+            "data_structures": self.gen_data_structures,
+            "networking": self.gen_networking,
+            "encoding": self.gen_encoding,
+            "hash_functions": self.gen_hash,
+            "binary_operations": self.gen_binary,
+            "bmi_calc": self.gen_bmi,
+            "calorie_burn": self.gen_calorie,
+            "tip_calc": self.gen_tip,
+            "tax_calc": self.gen_tax,
+            "budget_calc": self.gen_budget,
+            "recipe_scale": self.gen_recipe,
+            "temp_conversion": self.gen_temp,
+            "sports_stats": self.gen_sports,
+            "age_calc": self.gen_age,
+            "date_diff": self.gen_date_diff,
             # Fullstack architecture
             "fs_arch_monolith_vs_microservices": self.gen_fs_arch_monolith_vs_microservices,
             "fs_arch_layered": self.gen_fs_arch_layered,
@@ -1485,7 +1789,6 @@ class PromptRepetitionEngine:
             "fs_arch_event_driven": self.gen_fs_arch_event_driven,
             "fs_arch_scalability_patterns": self.gen_fs_arch_scalability_patterns,
             "fs_arch_observability": self.gen_fs_arch_observability,
-
             # Fullstack backend/API
             "fs_api_rest_crud": self.gen_fs_api_rest_crud,
             "fs_api_rest_errors": self.gen_fs_api_rest_errors,
@@ -1495,7 +1798,6 @@ class PromptRepetitionEngine:
             "fs_api_validation_schemas": self.gen_fs_api_validation_schemas,
             "fs_api_file_uploads": self.gen_fs_api_file_uploads,
             "fs_api_rate_limiting": self.gen_fs_api_rate_limiting,
-
             # Fullstack DB
             "fs_db_schema_design": self.gen_fs_db_schema_design,
             "fs_db_relations": self.gen_fs_db_relations,
@@ -1503,7 +1805,6 @@ class PromptRepetitionEngine:
             "fs_db_indexes": self.gen_fs_db_indexes,
             "fs_db_multi_tenancy": self.gen_fs_db_multi_tenancy,
             "fs_db_transactions": self.gen_fs_db_transactions,
-
             # Fullstack UI
             "fs_ui_crud_forms": self.gen_fs_ui_crud_forms,
             "fs_ui_data_tables": self.gen_fs_ui_data_tables,
@@ -1512,7 +1813,6 @@ class PromptRepetitionEngine:
             "fs_ui_accessibility": self.gen_fs_ui_accessibility,
             "fs_ui_design_systems": self.gen_fs_ui_design_systems,
             "fs_ui_client_fetching": self.gen_fs_ui_client_fetching,
-
             # Fullstack auth
             "fs_auth_session_vs_jwt": self.gen_fs_auth_session_vs_jwt,
             "fs_auth_rbac_abac": self.gen_fs_auth_rbac_abac,
@@ -1520,7 +1820,6 @@ class PromptRepetitionEngine:
             "fs_auth_password_flows": self.gen_fs_auth_password_flows,
             "fs_auth_oauth_oidc": self.gen_fs_auth_oauth_oidc,
             "fs_auth_audit_logging": self.gen_fs_auth_audit_logging,
-
             # Fullstack devops
             "fs_devops_dockerization": self.gen_fs_devops_dockerization,
             "fs_devops_compose_k8s": self.gen_fs_devops_compose_k8s,
@@ -1528,7 +1827,6 @@ class PromptRepetitionEngine:
             "fs_devops_env_config": self.gen_fs_devops_env_config,
             "fs_devops_monitoring": self.gen_fs_devops_monitoring,
             "fs_devops_zero_downtime": self.gen_fs_devops_zero_downtime,
-
             # Fullstack testing
             "fs_test_unit": self.gen_fs_test_unit,
             "fs_test_integration": self.gen_fs_test_integration,
@@ -1536,52 +1834,51 @@ class PromptRepetitionEngine:
             "fs_test_fixtures": self.gen_fs_test_fixtures,
             "fs_test_performance": self.gen_fs_test_performance,
             "fs_test_quality_guidelines": self.gen_fs_test_quality_guidelines,
-
             # Fullstack refactoring
             "fs_refactor_extract_function": self.gen_fs_refactor_extract_function,
             "fs_refactor_extract_module": self.gen_fs_refactor_extract_module,
             "fs_refactor_rename": self.gen_fs_refactor_rename,
             "fs_refactor_reduce_duplication": self.gen_fs_refactor_reduce_duplication,
             "fs_refactor_api_cleanup": self.gen_fs_refactor_api_cleanup,
-
             # Fullstack project scaffolding
             "fs_proj_readme": self.gen_fs_proj_readme,
             "fs_proj_folder_structure": self.gen_fs_proj_folder_structure,
             "fs_proj_coding_guidelines": self.gen_fs_proj_coding_guidelines,
             "fs_proj_onboarding_docs": self.gen_fs_proj_onboarding_docs,
             "fs_proj_release_process": self.gen_fs_proj_release_process,
-
             # Fullstack TIER 1 - High Priority
             "fs_api_websockets": self.gen_fs_api_websockets,
             "fs_error_handling_patterns": self.gen_fs_error_handling_patterns,
             "fs_tracing_observability": self.gen_fs_tracing_observability,
             "fs_caching_strategies": self.gen_fs_caching_strategies,
             "fs_message_queues": self.gen_fs_message_queues,
-
             # Fullstack TIER 2 - Medium Priority
             "fs_search_indexing": self.gen_fs_search_indexing,
             "fs_data_validation_pipelines": self.gen_fs_data_validation_pipelines,
             "fs_rate_limiting_throttling": self.gen_fs_rate_limiting_throttling,
             "fs_monitoring_alerting": self.gen_fs_monitoring_alerting,
             "fs_feature_flags_ab_testing": self.gen_fs_feature_flags_ab_testing,
-
             # Fullstack TIER 3 - Additional
             "fs_backwards_compatibility": self.gen_fs_backwards_compatibility,
             "fs_capacity_planning": self.gen_fs_capacity_planning,
-            }
-        
+        }
+
         query, context, answer = gen_map[category]()
-        
+
         # Apply repetition (equal distribution)
         style = random.choice(["baseline", "2x", "verbose", "3x"])
         repeated_prompt = self.apply_repetition(query, context, style)
-        
-        domain = "fullstack_engineering" if category.startswith("fs_") else "factual_knowledge"
+
+        domain = (
+            "fullstack_engineering"
+            if category.startswith("fs_")
+            else "factual_knowledge"
+        )
 
         sample = {
             "messages": [
                 {"role": "user", "content": repeated_prompt},
-                {"role": "assistant", "content": answer}
+                {"role": "assistant", "content": answer},
             ],
             "domain": domain,
             "category": category,
@@ -1589,10 +1886,9 @@ class PromptRepetitionEngine:
             "id": f"rep_{category}_{rstr(8)}",
         }
 
-        
         if self.deduplicator.is_duplicate(sample):
             return None
-        
+
         self.category_counters[category] += 1
         return sample
 
@@ -1610,58 +1906,71 @@ CONFIG = {
     "test_ratio": 0.025,
 }
 
+
 def main():
     global logger
-    
+
     if not check_env():
-         sys.exit(1)
-         
+        sys.exit(1)
+
     logger = setup_logger(__name__, "logs/gen_repetitive.log")
 
-    log_header(logger, "PROMPT REPETITION DATASET (arXiv 2512.14982)", {
-        "Target": CONFIG["target_samples"],
-        "Categories": len(GENERATOR_WEIGHTS),
-        "Output": CONFIG["output_dir"]
-    })
-    
+    log_header(
+        logger,
+        "PROMPT REPETITION DATASET (arXiv 2512.14982)",
+        {
+            "Target": CONFIG["target_samples"],
+            "Categories": len(GENERATOR_WEIGHTS),
+            "Output": CONFIG["output_dir"],
+        },
+    )
+
     base_dir = Path(CONFIG["output_dir"])
     for split in ["train", "val", "test"]:
         (base_dir / split).mkdir(parents=True, exist_ok=True)
-    
+
     engine = PromptRepetitionEngine()
     samples = []
     count = 0
     batch_num = 0
-    
+
     for i in range(CONFIG["target_samples"]):
         sample = engine.generate_trajectory()
         if sample:
             samples.append(sample)
             count += 1
-            
+
             if len(samples) >= CONFIG["samples_per_file"]:
                 r = random.random()
-                split = "train" if r < CONFIG["train_ratio"] else ("val" if r < CONFIG["train_ratio"] + CONFIG["val_ratio"] else "test")
-                
+                split = (
+                    "train"
+                    if r < CONFIG["train_ratio"]
+                    else (
+                        "val"
+                        if r < CONFIG["train_ratio"] + CONFIG["val_ratio"]
+                        else "test"
+                    )
+                )
+
                 out_file = base_dir / split / f"part_{batch_num:04d}.jsonl"
-                with open(out_file, 'w') as f:
+                with open(out_file, "w") as f:
                     for s in samples:
                         f.write(json.dumps(s) + "\n")
-                
+
                 logger.info(f"Wrote {len(samples)} to {out_file}")
                 samples = []
                 batch_num += 1
-        
+
         if count % 100_000 == 0 and count > 0:
             log_progress(logger, count, CONFIG["target_samples"])
-    
+
     # Write remaining
     if samples:
         out_file = base_dir / "train" / f"part_{batch_num:04d}.jsonl"
-        with open(out_file, 'w') as f:
+        with open(out_file, "w") as f:
             for s in samples:
                 f.write(json.dumps(s) + "\n")
-    
+
     log_completion(logger, "Repetitive Prompting Dataset", {"Total": count})
 
 

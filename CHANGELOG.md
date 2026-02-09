@@ -469,7 +469,7 @@ Please report security vulnerabilities to:
 
 | Version | Issue | Severity | CVE |
 |---------|-------|----------|-----|
-| 1.1.0 | Memorization audit placeholder | Critical | TBD |
+| 6.0.1 | Memorization audit placeholder | Critical | TBD |
 
 ---
 
@@ -487,4 +487,4 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) file for
 
 ---
 
-**Full Changelog**: [v1.0.0...v1.1.0](https://github.com/nexus-project/nexus/compare/v1.0.0...v1.1.0)
+**Full Changelog**: [v6.0.0...v6.1.0](https://github.com/nexus-project/nexus/compare/v6.0.0...v6.1.0)

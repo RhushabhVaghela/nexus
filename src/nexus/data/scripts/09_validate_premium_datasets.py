@@ -20,8 +20,8 @@ from pathlib import Path
 from typing import Dict, Set
 from collections import defaultdict
 
-sys.path.insert(0, str(Path(__file__).parent))
-from utils.logging_config import setup_logger, log_header, log_completion
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from nexus.utils.logging_config import setup_logger, log_header, log_completion
 
 def check_env():
     """Verify environment dependencies."""
