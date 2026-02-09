@@ -1,8 +1,8 @@
-
 import unittest
 import sys
 import importlib.util
 from pathlib import Path
+
 
 # Load Modules using importlib since names have numbers
 def load_module(name, relative_path):
@@ -15,38 +15,42 @@ def load_module(name, relative_path):
     spec.loader.exec_module(mod)
     return mod
 
+
 # Helper for mocking sys.path inside modules
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
 # Load Generators
-mod_05 = load_module("mod_05", "05_generate_repetitive_dataset.py")
-mod_06 = load_module("mod_06", "06_generate_preference_dataset.py")
+mod_05 = load_module("mod_05", "nexus/data/scripts/05_generate_repetitive_dataset.py")
+mod_06 = load_module("mod_06", "nexus/data/scripts/06_generate_preference_dataset.py")
+
 
 class TestGenerators(unittest.TestCase):
-
     def test_05_repetitive_engine(self):
         """Test PromptRepetitionEngine from 05_generate_repetitive_dataset.py"""
         engine = mod_05.PromptRepetitionEngine()
         # Mocking the generator call
         engine.category_counters = {k: 0 for k in mod_05.GENERATOR_WEIGHTS.keys()}
         sample = engine.generate_trajectory()
-        
+
         if sample:
             self.assertIn("messages", sample)
             self.assertIn("category", sample)
             self.assertIn("domain", sample)
-            self.assertIn(sample["domain"], ["factual_knowledge", "fullstack_engineering"])
+            self.assertIn(
+                sample["domain"], ["factual_knowledge", "fullstack_engineering"]
+            )
 
     def test_06_preference_engine(self):
         """Test PreferencePairEngine from 06_generate_preference_dataset.py"""
         engine = mod_06.PreferencePairEngine()
         sample = engine.generate_preference_pair()
-        
+
         if sample:
             self.assertIn("prompt", sample)
             self.assertIn("chosen", sample)
             self.assertIn("rejected", sample)
             self.assertIn("training_mode", sample)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

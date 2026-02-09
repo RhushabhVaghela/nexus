@@ -64,7 +64,7 @@ class GlobalIndexMap:
                         count += 1
                 return count
             return 0
-        except:
+        except Exception:
             return 0
 
     def _build_map(self, fast_mode: bool = False):
@@ -522,7 +522,7 @@ class UniversalDataLoader:
                         if SchemaNormalizer
                         else sample
                     )
-                except:
+                except (json.JSONDecodeError, UnicodeDecodeError, ValueError):
                     return {"id": file_name, "content": "Binary or non-JSON data"}
 
         except Exception as e:

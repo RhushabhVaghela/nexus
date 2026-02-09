@@ -59,7 +59,7 @@ def parse_json_response(response: str) -> List[Dict[str, Any]]:
         # cleanup markdown code blocks if model adds them
         cleaned = response.replace("```json", "").replace("```", "").strip()
         return json.loads(cleaned)
-    except:
+    except (json.JSONDecodeError, ValueError):
         return []
 
 
@@ -303,7 +303,7 @@ def main():
                             }
                         )
                         count_loaded += 1
-                    except:
+                    except (json.JSONDecodeError, ValueError):
                         pass
 
         logger.info(f"✓ Loaded {len(questions)} questions (Mix of GSM8K + Replica)")
@@ -333,7 +333,7 @@ def main():
                 start_idx = progress.get("last_index", 0)
                 high_quality_samples = progress.get("samples", [])
                 logger.info(f"🔄 Resuming from question {start_idx}")
-        except:
+        except (json.JSONDecodeError, IOError, OSError, KeyError):
             pass
 
     grade_dist = defaultdict(int)

@@ -12,6 +12,7 @@ __all__ = [
     "ExplainerResponse",
     "ErrorResponse",
     "HealthResponse",
+    "app",
 ]
 
 _LAZY_IMPORTS: dict[str, tuple[str, str]] = {
@@ -19,6 +20,7 @@ _LAZY_IMPORTS: dict[str, tuple[str, str]] = {
     "ExplainerResponse": (".explainer_api", "ExplainerResponse"),
     "ErrorResponse": (".explainer_api", "ErrorResponse"),
     "HealthResponse": (".explainer_api", "HealthResponse"),
+    "app": (".explainer_api", "app"),
 }
 
 

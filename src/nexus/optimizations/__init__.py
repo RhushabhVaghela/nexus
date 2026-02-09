@@ -126,5 +126,3 @@ __all__ = [
     "ChimeraWrapper",
     "ChimeraTrainer",
 ]
-
-__version__ = "1.1.0"

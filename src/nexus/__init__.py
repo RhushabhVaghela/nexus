@@ -8,16 +8,11 @@ Nexus delivers state-of-the-art performance across text, vision, audio, and vide
 """
 
 __version__ = "6.1.0"
-__author__ = "Nexus Team"
+__author__ = "Rhushabh Vaghela"
 __license__ = "MIT"
 
 # Version info
-VERSION_INFO = {
-    "major": 6,
-    "minor": 1,
-    "patch": 0,
-    "release": "stable"
-}
+VERSION_INFO = {"major": 6, "minor": 1, "patch": 0, "release": "stable"}
 
 # Core exports
 __all__ = [

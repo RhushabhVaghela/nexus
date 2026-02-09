@@ -28,7 +28,7 @@ from unittest.mock import Mock, MagicMock, patch, call
 from dataclasses import dataclass
 from typing import List, Dict
 
-from models.sli.nested_learning import (
+from nexus.models.sli.nested_learning import (
     NestedStrategy,
     NestedLearningConfig,
     LayerHierarchy,

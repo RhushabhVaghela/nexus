@@ -153,7 +153,8 @@ class TestGPUHang:
         # Run in thread to allow timeout detection
         result = [None]
         thread = threading.Thread(
-            target=lambda: result.__setitem__(0, slow_operation())
+            target=lambda: result.__setitem__(0, slow_operation()),
+            daemon=True,
         )
         thread.start()
         thread.join(timeout=timeout_threshold)
@@ -183,7 +184,10 @@ class TestGPUHang:
         # Run operations concurrently
         results = [None, None]
         threads = [
-            threading.Thread(target=lambda i=i: results.__setitem__(i, async_gpu_op(i)))
+            threading.Thread(
+                target=lambda i=i: results.__setitem__(i, async_gpu_op(i)),
+                daemon=True,
+            )
             for i in range(2)
         ]
 

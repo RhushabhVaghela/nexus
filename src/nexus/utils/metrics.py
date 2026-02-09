@@ -648,7 +648,7 @@ class SystemMetrics:
                     labels = {"mount": partition.mountpoint}
                     self.disk_used.labels(**labels).set(usage.used)
                     self.disk_total.labels(**labels).set(usage.total)
-                except:
+                except OSError:
                     pass
 
             # GPU

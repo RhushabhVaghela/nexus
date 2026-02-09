@@ -12,14 +12,17 @@ from .loss_functions import ActivationAnchoringLoss
 from .auditor import MemorizationAuditor
 from nexus.core.student.core import NexusStudentCore
 from typing import Dict, Any
+
 try:
     from tqdm import tqdm
+
     TQDM_AVAILABLE = True
 except ImportError:
     TQDM_AVAILABLE = False
 
     def tqdm(iterable=None, **kwargs):
         return iterable if iterable is not None else iter([])
+
 
 # --- Memory Guard Integration (WSL-aware) ---
 try:
@@ -54,6 +57,45 @@ class NexusTrainer:
         device: str = "cuda",
         config: Dict = {},
     ):
+        """
+        Initialise the NexusTrainer.
+
+        Args:
+            student (NexusStudentCore): The student model to train.
+            adapters (dict[str, nn.Module]): Named adapter modules that
+                project teacher hidden states into the student's latent
+                space (e.g. ``{"reasoning": adapter_module, ...}``).
+            train_loader (DataLoader): Training data loader.  Each batch
+                must contain ``input_ids``, ``teacher_logits``, ``labels``,
+                and either ``teacher_features`` or a ``batch_idx`` key for
+                offline (SSD-backed) distillation.
+            val_loader (DataLoader): Validation data loader (``input_ids``
+                and ``labels`` required).
+            optimizer (torch.optim.Optimizer): Optimiser instance bound to
+                the student and adapter parameters.
+            device (str): Target device — ``"cuda"`` (default) or ``"cpu"``.
+            config (dict): Training hyper-parameters.  Recognised keys:
+
+                * ``alpha`` (float) — base activation-anchoring weight.
+                * ``alpha_ce``, ``alpha_hidden``, ``critical_weight`` —
+                  sub-weights for :class:`ActivationAnchoringLoss`.
+                * ``max_grad_norm`` (float) — gradient clipping threshold.
+                * ``loss_spike_threshold`` (float) — rollback trigger
+                  multiplier relative to previous loss.
+                * ``checkpoint_dir`` (str) — directory for checkpoint files.
+                * ``warmup_epochs`` (int) — number of epochs for the alpha
+                  curriculum ramp-up.
+                * ``gradient_accumulation_steps`` (int) — micro-batch
+                  accumulation count before an optimiser step.
+                * ``beta_entropy`` (float) — coefficient for the router
+                  entropy diversity loss.
+                * ``offline_distillation`` (bool) — load teacher activations
+                  from disk instead of computing them on-the-fly.
+                * ``activation_cache_dir`` (str) — path to cached teacher
+                  activations (required when *offline_distillation* is
+                  ``True``).
+                * ``critical_layers`` (list[int]) — layer indices to anchor.
+        """
         self.student = student
         self.adapters = adapters
         self.train_loader = train_loader
@@ -96,6 +138,21 @@ class NexusTrainer:
         signal.signal(signal.SIGUSR2, self.handle_signal)  # Immediate Checkpoint
 
     def handle_signal(self, signum, frame):
+        """
+        Unix signal handler for graceful training control.
+
+        Registered signals and their behaviour:
+
+        * **SIGINT / SIGTERM** — save an ``interrupted`` checkpoint and exit.
+        * **SIGUSR1** — save a ``paused`` checkpoint (the caller is
+          responsible for resuming the process afterwards).
+        * **SIGUSR2** — save an immediate checkpoint tagged with the
+          current ``global_step``.
+
+        Args:
+            signum (int): Signal number received from the OS.
+            frame: Current stack frame (unused).
+        """
         if signum in [signal.SIGINT, signal.SIGTERM]:
             print(
                 f"\n[Trainer] Signal {signum} received. Saving checkpoint and exiting..."
@@ -114,6 +171,27 @@ class NexusTrainer:
             self.save_checkpoint(f"manual_step_{self.global_step}")
 
     def save_checkpoint(self, tag="latest"):
+        """
+        Persist the full training state to disk.
+
+        The checkpoint includes student weights, all adapter state dicts,
+        the optimiser state, the current ``global_step``, ``prev_loss``, and
+        ``best_val_loss``.  A copy is always written to
+        ``checkpoint_latest.pt`` so that the model exporter can locate the
+        most recent state.
+
+        When :mod:`nexus.utils.memory_guard` is available, the save is
+        wrapped in a ``safe_allocate`` context to avoid OOM during
+        serialisation.
+
+        Args:
+            tag (str): Descriptive suffix for the checkpoint filename
+                (e.g. ``"best"``, ``"epoch_3"``, ``"interrupted"``).
+                Defaults to ``"latest"``.
+
+        Returns:
+            str: Absolute path to the saved checkpoint file.
+        """
         path = os.path.join(self.checkpoint_dir, f"checkpoint_{tag}.pt")
         ctx = (
             guard.safe_allocate(
@@ -147,6 +225,22 @@ class NexusTrainer:
         return path
 
     def load_checkpoint(self, tag="latest"):
+        """
+        Restore training state from a previously saved checkpoint.
+
+        Loads the student model, all adapter state dicts, the optimiser
+        state, ``global_step``, ``prev_loss``, and ``best_val_loss`` from
+        the checkpoint identified by *tag*.
+
+        Args:
+            tag (str): The checkpoint tag to load (e.g. ``"best"``,
+                ``"latest"``, ``"recovery_safe"``).  Defaults to
+                ``"latest"``.
+
+        Returns:
+            bool: *True* if the checkpoint was found and loaded
+            successfully, *False* otherwise.
+        """
         path = os.path.join(self.checkpoint_dir, f"checkpoint_{tag}.pt")
         if os.path.exists(path):
             print(f"[Recovery] Rolling back to {tag}...")
@@ -178,6 +272,30 @@ class NexusTrainer:
         return self.base_alpha
 
     def train(self, epochs: int):
+        """
+        Run the full multi-epoch distillation training loop.
+
+        The loop implements the following per-epoch workflow:
+
+        1. Compute the curriculum-scheduled ``alpha`` via :meth:`get_alpha`.
+        2. Iterate over *train_loader*, calling :meth:`training_step` for
+           each batch.
+        3. Every 100 global steps, run :meth:`evaluate` and save a ``best``
+           checkpoint when validation loss improves.  If validation loss
+           diverges beyond 5% of the best, roll back and increase the
+           critical-anchor weight.
+        4. Every 500 global steps, run :meth:`run_memorization_audit`.
+        5. After each batch, call :meth:`check_thermal_status`.
+        6. On OOM, perform pressure-aware recovery (save-and-abort at
+           *DEADLY*, aggressive cleanup at *CRITICAL*, cache-clear
+           otherwise).
+        7. After each epoch, save an ``epoch_<N>`` checkpoint.
+
+        A ``recovery_safe`` checkpoint is saved once before training begins.
+
+        Args:
+            epochs (int): Number of full passes over the training data.
+        """
         self.student.train()
         for adapter in self.adapters.values():
             adapter.train()
@@ -496,6 +614,16 @@ class NexusTrainer:
         return {"loss": f"{total_loss.item():.4f}", "gnorm": f"{grad_norm:.2f}"}
 
     def evaluate(self):
+        """
+        Run the validation loop and return the mean loss.
+
+        The student model is temporarily set to ``eval()`` mode and all
+        validation batches are processed under ``torch.no_grad()``.
+        Training mode is restored before returning.
+
+        Returns:
+            float: Mean validation loss across all batches.
+        """
         self.student.eval()
         total_val_loss = 0
         steps = 0

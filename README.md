@@ -1,6 +1,11 @@
-# Nexus: Universal Modular AI
+# Nexus-Distill: Universal Modular AI Knowledge Distillation
 
-![Nexus Badge](https://img.shields.io/badge/Status-Stage_6_Release-success) ![License](https://img.shields.io/badge/License-MIT-blue) ![Universal SLI](https://img.shields.io/badge/Universal_SLI-16_Families-orange) ![Research](https://img.shields.io/badge/Research_Use_Only-Lab_Experimental-red)
+[![PyPI version](https://img.shields.io/pypi/v/nexus-distill.svg)](https://pypi.org/project/nexus-distill/)
+[![Python Versions](https://img.shields.io/pypi/pyversions/nexus-distill.svg)](https://pypi.org/project/nexus-distill/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Status](https://img.shields.io/badge/Status-Stage_6_Release-success)](https://github.com/nexus-team/nexus-distill)
+[![Universal SLI](https://img.shields.io/badge/Universal_SLI-17_Families-orange)](https://github.com/nexus-team/nexus-distill/blob/main/docs/SLI_UNIVERSAL_GUIDE.md)
+[![Research](https://img.shields.io/badge/Research_Use_Only-Lab_Experimental-red)](https://github.com/nexus-team/nexus-distill)
 
 > **Research Project**: Nexus is an experimental research codebase for exploring Sequential Layer Ingestion (SLI) techniques. See [Performance Notes](#performance-expectations) for realistic expectations.
 
@@ -8,7 +13,7 @@
 
 > **High-Efficiency Distillation:** Nexus achieves 60-75% capability retention depending on task complexity, providing a practical balance between efficiency and performance without requiring teacher weights at runtime.
 
-> **Universal SLI:** Process 16 architecture families (~60-70 model variants) including GPT, T5, Mamba, MoE models, and more—on consumer hardware! Encoder-only models (BERT family) have limited support for embedding extraction only.
+> **Universal SLI:** Process 17 architecture families (~60-70 model variants) including GPT, T5, Mamba, MoE, CLIP, Whisper, and more—on consumer hardware! Encoder-only models (BERT family) have limited support for embedding extraction only.
 
 ---
 
@@ -24,7 +29,7 @@ Nexus provides a tier-based capability manifest so consumers can understand the 
 
 ## 🆕 Universal SLI (Sequential Layer Ingestion)
 
-Nexus now features **Universal SLI**—process massive models (100B - 1T+ parameters) from **11 architecture families (~30-40 model variants)** on consumer GPUs!
+Nexus now features **Universal SLI**—process massive models (100B - 1T+ parameters) from **17 architecture families (~60-70 model variants)** on consumer GPUs!
 
 ### Supported Architecture Families
 
@@ -42,13 +47,18 @@ Nexus now features **Universal SLI**—process massive models (100B - 1T+ parame
 | **BLOOM** | 5 | BLOOM, BLOOMZ | Full support |
 | **OPT** | 6 | OPT, OPT-IML | Full support |
 | **ChatGLM** | 8 | ChatGLM2, ChatGLM3, GLM-4 | Trust remote code |
+| **Cohere** | — | Command R, Command R+ | Full support |
+| **CLIP** | — | CLIP ViT-B/32, CLIP ViT-L/14 | Vision encoder |
+| **SAM** | — | SAM ViT-B, SAM ViT-H | Vision segmentation |
+| **Whisper** | — | Whisper small, medium, large-v3 | Audio transcription |
+| **Audio Encoder** | — | Custom audio encoders | Audio embedding |
 
-> **Note**: While we previously claimed "135+ models," the actual implementation supports **11 distinct architecture families** covering approximately **30-40 model variants**. Encoder-only models (BERT family) have limited SLI support for embedding extraction only.
+> **Note**: The architecture registry contains **17 distinct families** covering approximately **60-70 model variants**. Encoder-only models (BERT family) have limited SLI support for embedding extraction only.
 
 ### Quick Example
 
 ```python
-from src.nexus.models.sli import UniversalSLIIntegrator
+from nexus.models.sli import UniversalSLIIntegrator
 
 # Works with ANY supported architecture!
 
@@ -77,16 +87,16 @@ result = integrator.run_sli(dataset)
 - ✅ **Automatic Architecture Detection**—No manual configuration needed
 - ✅ **MoE Support**—Native handling of Mixture of Experts
 - ✅ **Multi-Format Weights**—SafeTensors, .bin, .pt, .pth
-- ✅ **16 Architecture Families**—From BERT to Qwen3 (~60-70 model variants)
+- ✅ **17 Architecture Families**—From BERT to Whisper (~60-70 model variants)
 - ✅ **Memory Efficient**—Process massive models on consumer GPUs
 - ✅ **Performance Optimizations**—Smart prefetching, activation caching
 - ✅ **Resilience Patterns**—Circuit breakers, retry logic, bulkhead isolation
 
-📚 [Universal SLI Guide](docs/SLI_UNIVERSAL_GUIDE.md) | 🔄 [Migration Guide](docs/MIGRATION_GUIDE.md) | 📖 [Technical Manual](docs/NEXUS_V6_TECHNICAL_MANUAL.md)
+📚 [Universal SLI Guide](https://github.com/nexus-team/nexus-distill/blob/main/docs/SLI_UNIVERSAL_GUIDE.md) | 🔄 [Migration Guide](https://github.com/nexus-team/nexus-distill/blob/main/docs/MIGRATION_GUIDE.md) | 📖 [Technical Manual](https://github.com/nexus-team/nexus-distill/blob/main/docs/NEXUS_V6_TECHNICAL_MANUAL.md)
 
 ---
 
-## 🚀 Advanced SLI (New in v1.2.0)
+## 🚀 Advanced SLI (New in v6.1.0)
 
 **Advanced SLI** combines three cutting-edge technologies for unprecedented performance:
 
@@ -107,7 +117,7 @@ result = integrator.run_sli(dataset)
 ### Quick Example
 
 ```python
-from nexus.core.sli import create_advanced_integrator
+from nexus.models.sli import create_advanced_integrator
 
 # Choose your preset: fast, balanced, or quality
 integrator = create_advanced_integrator(mode="balanced", device="cuda")
@@ -139,9 +149,9 @@ loss = integrator.compute_distillation_loss(
 
 ### Documentation
 
-- [Advanced SLI Guide](docs/ADVANCED_SLI.md) - Complete integration guide with 600+ lines
-- [NVFP4-QAD Guide](docs/NVFP4_QAD.md) - Quantization and distillation details (500+ lines)
-- [Nested Learning Guide](docs/NESTED_LEARNING_SLI.md) - Multi-time-scale training (500+ lines)
+- [Advanced SLI Guide](https://github.com/nexus-team/nexus-distill/blob/main/docs/ADVANCED_SLI.md) - Complete integration guide with 600+ lines
+- [NVFP4-QAD Guide](https://github.com/nexus-team/nexus-distill/blob/main/docs/NVFP4_QAD.md) - Quantization and distillation details (500+ lines)
+- [Nested Learning Guide](https://github.com/nexus-team/nexus-distill/blob/main/docs/NESTED_LEARNING_SLI.md) - Multi-time-scale training (500+ lines)
 
 ### Requirements
 
@@ -182,22 +192,22 @@ pip install transformer-engine[pytorch]
 - High-throughput workloads
 - Latency-critical deployments
 
-See [docs/PERFORMANCE_OPTIMIZATIONS.md](docs/PERFORMANCE_OPTIMIZATIONS.md) for detailed benchmarks and optimization strategies.
+See [docs/PERFORMANCE_OPTIMIZATIONS.md](https://github.com/nexus-team/nexus-distill/blob/main/docs/PERFORMANCE_OPTIMIZATIONS.md) for detailed benchmarks and optimization strategies.
 
-### Previous v6.1 Features
+### Additional v6.1.0 Features
 
 - 🎯 **Multimodal Training Support** - Unified embedding injection for vision, audio, video, and text with cross-modal fusion architecture
 - 🎬 **Video Generation** - Stable Video Diffusion integration with memory-efficient VAE optimizations
 - 🗣️ **Text-to-Speech** - Coqui TTS integration with voice cloning and streaming synthesis
 - 🤖 **Multi-Agent Orchestration** - AI-powered software development with 5 specialized agents
 - 📊 **3,246+ Comprehensive Tests** - Full test coverage with performance benchmarks
-- 🆕 **Universal SLI** - 16 architecture family support with automatic detection
+- 🆕 **Universal SLI** - 17 architecture family support with automatic detection
 
-## ⚡ Performance Optimizations (v6.2)
+## ⚡ Performance Optimizations (v6.1.0)
 
 ### 8 Research-Backed Optimization Solutions
 
-Nexus v6.2 introduces **8 cutting-edge optimization solutions** targeting the three main LLM inference bottlenecks:
+Nexus v6.1.0 includes **8 cutting-edge optimization solutions** targeting the three main LLM inference bottlenecks:
 
 | Blocker | Solutions | Speedup |
 |---------|-----------|---------|
@@ -221,28 +231,31 @@ Nexus v6.2 introduces **8 cutting-edge optimization solutions** targeting the th
 ### Quick Start
 
 ```python
-from nexus.optimizations import OptimizationPipeline
-from nexus.inference import OptimizedInferenceEngine
-
-# Load optimization pipeline with all 8 solutions
-pipeline = OptimizationPipeline.from_config("configs/optimization_config.yaml")
-
-# Initialize optimized inference engine
-engine = OptimizedInferenceEngine(
-    model_path="meta-llama/Llama-3.1-8B",
-    optimizations=pipeline,
-    device="cuda"
+from nexus.optimizations import (
+    LayerPipeliningOptimizer,
+    AdaptiveLayerSkipper,
+    LayerFusionOptimizer,
+    EarlyExitRouter,
 )
 
-# Generate with realistic expectations
-output = engine.generate(
-    "Explain quantum computing",
-    max_new_tokens=200,
-    temperature=0.7
+# Layer pipelining for multi-GPU inference
+pipeliner = LayerPipeliningOptimizer(num_stages=4, device="cuda")
+
+# Adaptive layer skipping for variable-complexity inputs
+skipper = AdaptiveLayerSkipper(
+    num_layers=32,
+    skip_threshold=0.1,   # Skip layers with low contribution
+    min_layers=8,         # Always run at least 8 layers
 )
 
-print(f"Tokens/second: {engine.metrics.tokens_per_second:.1f}")
-# Expect 2-16 tokens/second depending on optimization level
+# Layer fusion to reduce kernel overhead
+fuser = LayerFusionOptimizer()
+
+# Early exit for fast termination on easy inputs
+router = EarlyExitRouter(
+    num_layers=32,
+    confidence_threshold=0.95,
+)
 ```
 
 ### Progressive Optimization
@@ -265,13 +278,13 @@ for opt in optimizations:
     # Validate accuracy remains >97%
 ```
 
-📚 [Optimization Guide](docs/OPTIMIZATION_GUIDE.md) | [Performance Guide](docs/PERFORMANCE_OPTIMIZATIONS.md) | [Architecture Matrix](docs/ARCHITECTURE_COMPATIBILITY_MATRIX.md)
+📚 [Optimization Guide](https://github.com/nexus-team/nexus-distill/blob/main/docs/OPTIMIZATION_GUIDE.md) | [Performance Guide](https://github.com/nexus-team/nexus-distill/blob/main/docs/PERFORMANCE_OPTIMIZATIONS.md) | [Architecture Matrix](https://github.com/nexus-team/nexus-distill/blob/main/docs/ARCHITECTURE_COMPATIBILITY_MATRIX.md)
 
 ---
 
 ## 🌌 Universal Architecture Support
 
-Nexus now features a **Universal Model Loader** powered by a residency-matched registry of **16 architecture families** (~60-70 model variants).
+Nexus now features a **Universal Model Loader** powered by a residency-matched registry of **17 architecture families** (~60-70 model variants).
 
 - **Any-to-Any Support**: Natively handles Qwen3-TTS, MiniCPM-V, Llama-3.2-Vision, GPT-2, T5, Mamba, MoE models, and more.
 - **Robust Metadata Discovery**: Automatic extraction of hidden dims, vocab, and modality-specific configurations.
@@ -281,7 +294,7 @@ Nexus now features a **Universal Model Loader** powered by a residency-matched r
 ### Example: Processing Different Architectures
 
 ```python
-from src.nexus.models.sli import UniversalSLIIntegrator
+from nexus.models.sli import UniversalSLIIntegrator
 
 # GPT-2 (GPT family)
 integrator = UniversalSLIIntegrator("gpt2")
@@ -309,9 +322,33 @@ result = integrator.run_sli(dataset)
 
 ## 📦 Installation & Usage
 
-- **Usage & Verification Guide**: [Full Manual](docs/NEXUS_USAGE_GUIDE.md) - Covers Live Monitoring, Inference, Benchmarking, and RAG.
-- **Master Plan**: [Implementation Roadmap](implementation_roadmap.md)
-- **Universal SLI Guide**: [Complete Documentation](docs/SLI_UNIVERSAL_GUIDE.md)
+### Install from PyPI
+
+```bash
+# Core installation
+pip install nexus-distill
+
+# With development tools
+pip install nexus-distill[dev]
+
+# With documentation build support
+pip install nexus-distill[docs]
+
+# With NVIDIA FP4 quantization (Ampere+ GPUs)
+pip install nexus-distill[nvfp4]
+```
+
+### Install from Source
+
+```bash
+git clone https://github.com/nexus-team/nexus-distill.git
+cd nexus-distill
+pip install -e ".[dev]"
+```
+
+- **Usage & Verification Guide**: [Full Manual](https://github.com/nexus-team/nexus-distill/blob/main/docs/NEXUS_USAGE_GUIDE.md) - Covers Live Monitoring, Inference, Benchmarking, and RAG.
+- **Master Plan**: [Implementation Roadmap](https://github.com/nexus-team/nexus-distill/blob/main/implementation_roadmap.md)
+- **Universal SLI Guide**: [Complete Documentation](https://github.com/nexus-team/nexus-distill/blob/main/docs/SLI_UNIVERSAL_GUIDE.md)
 
 ### 1. Development Implementation
 
@@ -347,8 +384,8 @@ The Unified CLI (`scripts/nexus.sh`) consolidates all previous scripts into one 
 - ✅ Unified command interface
 - ✅ Color-coded output
 
-See [docs/UNIFIED_CLI.md](docs/UNIFIED_CLI.md) for complete command reference.
-See [examples/README.md](examples/README.md) for usage examples.
+See [docs/UNIFIED_CLI.md](https://github.com/nexus-team/nexus-distill/blob/main/docs/UNIFIED_CLI.md) for complete command reference.
+See [examples/README.md](https://github.com/nexus-team/nexus-distill/blob/main/examples/README.md) for usage examples.
 
 ### 2. Available Options
 
@@ -367,7 +404,7 @@ The pipeline will automatically:
 2. **Profile Teachers (NIWT)**: Analyze activation patterns.
 3. **Extract Knowledge**:
     - **Smart Download**: Automatically fetches missing datasets from Hugging Face.
-    - **SLI (Massive)**: Uses "Sequential Layer Ingestion" for Teacher Models that exceed available VRAM (Memory-Aware Trigger). Supports **11 architecture families**!
+    - **SLI (Massive)**: Uses "Sequential Layer Ingestion" for Teacher Models that exceed available VRAM (Memory-Aware Trigger). Supports **17 architecture families**!
 4. **Train Student**: Perform multi-objective distillation with Activation Anchoring.
 5. **Train Router**: Optimize the Sparse Intent Router.
 
@@ -375,8 +412,10 @@ The pipeline will automatically:
 
 ## 🧠 The Ecosystem (Teacher Registry)
 
-Nexus is trained on the distilled knowledge of specialized models defined in `src.nexus.models.registry`:
+Nexus is trained on the distilled knowledge of specialized models defined in `nexus.core.towers.registry`:
 
+| Domain | Example Teachers | Capabilities | Loading |
+|--------|-----------------|--------------|---------|
 | **Logic & Reasoning** | Massive Reasoner (e.g. DeepSeek-70B) | Deep Reasoning capabilities | **SLI (Sequential)** |
 | **Agentic** | Agent-Specialists | Long-horizon Planning | Standard |
 | **Vision** | Visual-Transformers | Visual QA & Reasoning | Standard |
@@ -392,7 +431,7 @@ Nexus uses a **Sparse Intent Router** to dynamically activate the relevant sub-m
 - **The Librarian**: SSD-backed Vector Memory for infinite context lookup during training.
 - **NIWT Profiler**: Neural Information-Weighted Tower for identifying critical teacher circuits.
 - **Router**: Lightweight MLP for intent classification (Entropy-Regularized).
-- **Universal SLI**: Process 16 architecture families (~60-70 model variants) via sequential layer ingestion.
+- **Universal SLI**: Process 17 architecture families (~60-70 model variants) via sequential layer ingestion.
 
 ## 📜 License
 

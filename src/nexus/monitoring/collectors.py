@@ -403,7 +403,7 @@ class SystemMetricsCollector(MetricsCollector):
                 pynvml.nvmlInit()
                 self._gpu_initialized = True
                 self._gpu_count = pynvml.nvmlDeviceGetCount()
-            except:
+            except Exception:
                 logger.warning("Failed to initialize NVML for GPU metrics")
 
     def register_metrics(self):

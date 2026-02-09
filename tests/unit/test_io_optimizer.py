@@ -66,7 +66,7 @@ class TestIORequest:
             layer_index=0,
             priority=IOPriority.HIGH,
             timeout=30.0,
-            max_retries=5
+            max_retries=5,
         )
 
         assert request.layer_id == "model_layer_0"
@@ -80,11 +80,7 @@ class TestIORequest:
 
     def test_request_defaults(self):
         """Test IO request with default values."""
-        request = IORequest(
-            layer_id="test",
-            model_id="model",
-            layer_index=0
-        )
+        request = IORequest(layer_id="test", model_id="model", layer_index=0)
 
         assert request.priority == IOPriority.NORMAL
         assert request.callback is None
@@ -155,13 +151,15 @@ class TestAsyncLayerPrefetcher:
     @pytest.fixture
     def prefetcher(self, mock_cache):
         """Create a prefetcher with mock cache."""
-        return AsyncLayerPrefetcher(
+        p = AsyncLayerPrefetcher(
             layer_cache=mock_cache,
             max_concurrent_downloads=2,
             prefetch_lookahead=2,
             enable_parallel_downloads=True,
-            io_thread_count=2
+            io_thread_count=2,
         )
+        yield p
+        p.shutdown()
 
     def test_initialization(self, mock_cache, prefetcher):
         """Test prefetcher initialization."""
@@ -174,10 +172,12 @@ class TestAsyncLayerPrefetcher:
     def test_initialization_defaults(self, mock_cache):
         """Test prefetcher with default parameters."""
         prefetcher = AsyncLayerPrefetcher(layer_cache=mock_cache)
-
-        assert prefetcher.max_concurrent_downloads == 4
-        assert prefetcher.prefetch_lookahead == 2
-        assert prefetcher.enable_parallel_downloads is True
+        try:
+            assert prefetcher.max_concurrent_downloads == 4
+            assert prefetcher.prefetch_lookahead == 2
+            assert prefetcher.enable_parallel_downloads is True
+        finally:
+            prefetcher.shutdown()
 
     def test_submit_request(self, prefetcher):
         """Test submitting an I/O request."""
@@ -185,7 +185,7 @@ class TestAsyncLayerPrefetcher:
             layer_id="test_layer",
             model_id="test/model",
             layer_index=0,
-            priority=IOPriority.HIGH
+            priority=IOPriority.HIGH,
         )
 
         future = prefetcher.submit_request(request)
@@ -197,11 +197,7 @@ class TestAsyncLayerPrefetcher:
         """Test submitting request when shut down raises error."""
         prefetcher._shutdown = True
 
-        request = IORequest(
-            layer_id="test_layer",
-            model_id="test/model",
-            layer_index=0
-        )
+        request = IORequest(layer_id="test_layer", model_id="test/model", layer_index=0)
 
         with pytest.raises(RuntimeError) as exc_info:
             prefetcher.submit_request(request)
@@ -254,9 +250,7 @@ class TestAsyncLayerPrefetcher:
     def test_get_layer_async(self, prefetcher):
         """Test async layer retrieval."""
         future = prefetcher.get_layer_async(
-            "test/model",
-            layer_index=5,
-            priority=IOPriority.HIGH
+            "test/model", layer_index=5, priority=IOPriority.HIGH
         )
 
         assert isinstance(future, Future)
@@ -287,21 +281,17 @@ class TestAsyncLayerPrefetcher:
         """Test getting prefetcher statistics."""
         # Submit some requests
         for i in range(3):
-            request = IORequest(
-                layer_id=f"layer_{i}",
-                model_id="test",
-                layer_index=i
-            )
+            request = IORequest(layer_id=f"layer_{i}", model_id="test", layer_index=i)
             prefetcher.submit_request(request)
 
         stats = prefetcher.get_stats()
 
-        assert 'total_requests' in stats
-        assert 'completed_requests' in stats
-        assert 'failed_requests' in stats
-        assert 'avg_latency_ms' in stats
-        assert 'prefetch_hits' in stats
-        assert stats['total_requests'] >= 3
+        assert "total_requests" in stats
+        assert "completed_requests" in stats
+        assert "failed_requests" in stats
+        assert "avg_latency_ms" in stats
+        assert "prefetch_hits" in stats
+        assert stats["total_requests"] >= 3
 
 
 class TestComputeIOOverlap:
@@ -319,10 +309,7 @@ class TestComputeIOOverlap:
     @pytest.fixture
     def overlap(self, mock_prefetcher):
         """Create compute overlap manager."""
-        return ComputeIOOverlap(
-            prefetcher=mock_prefetcher,
-            pipeline_depth=2
-        )
+        return ComputeIOOverlap(prefetcher=mock_prefetcher, pipeline_depth=2)
 
     def test_initialization(self, mock_prefetcher, overlap):
         """Test initialization."""
@@ -385,9 +372,7 @@ class TestSSDWearLeveling:
     def wear_leveler(self, tmp_path):
         """Create a wear leveler."""
         return SSDWearLeveling(
-            cache_dir=tmp_path,
-            num_zones=4,
-            max_writes_per_zone=1000
+            cache_dir=tmp_path, num_zones=4, max_writes_per_zone=1000
         )
 
     def test_initialization(self, tmp_path, wear_leveler):
@@ -463,11 +448,11 @@ class TestSSDWearLeveling:
 
         stats = wear_leveler.get_stats()
 
-        assert 'zone_write_counts' in stats
-        assert 'total_writes' in stats
-        assert 'write_balance' in stats
-        assert stats['total_writes'] == 10
-        assert len(stats['zone_write_counts']) == 4
+        assert "zone_write_counts" in stats
+        assert "total_writes" in stats
+        assert "write_balance" in stats
+        assert stats["total_writes"] == 10
+        assert len(stats["zone_write_counts"]) == 4
 
 
 class TestParallelDownloader:
@@ -477,9 +462,7 @@ class TestParallelDownloader:
     def downloader(self):
         """Create a parallel downloader."""
         return ParallelDownloader(
-            max_connections=4,
-            connection_timeout=30.0,
-            chunk_size=8192
+            max_connections=4, connection_timeout=30.0, chunk_size=8192
         )
 
     def test_initialization(self, downloader):
@@ -500,10 +483,10 @@ class TestParallelDownloader:
         """Test initial stats."""
         stats = downloader.get_stats()
 
-        assert stats['total_downloads'] == 0
-        assert stats['active_downloads'] == 0
-        assert stats['failed_downloads'] == 0
-        assert stats['bytes_downloaded'] == 0
+        assert stats["total_downloads"] == 0
+        assert stats["active_downloads"] == 0
+        assert stats["failed_downloads"] == 0
+        assert stats["bytes_downloaded"] == 0
 
     @pytest.mark.asyncio
     async def test_download_layer_async(self, downloader, tmp_path):
@@ -511,8 +494,7 @@ class TestParallelDownloader:
         output_path = tmp_path / "test_layer.bin"
 
         result = await downloader.download_layer_async(
-            url="http://example.com/layer.bin",
-            output_path=output_path
+            url="http://example.com/layer.bin", output_path=output_path
         )
 
         # Result is boolean - in real implementation would download
@@ -554,15 +536,17 @@ class TestIOOptimizer:
     @pytest.fixture
     def optimizer(self, mock_cache, tmp_path):
         """Create an I/O optimizer."""
-        return IOOptimizer(
+        opt = IOOptimizer(
             layer_cache=mock_cache,
             enable_prefetch=True,
             enable_parallel_download=True,
             enable_wear_leveling=True,
             max_concurrent_downloads=4,
             prefetch_lookahead=2,
-            cache_dir=tmp_path
+            cache_dir=tmp_path,
         )
+        yield opt
+        opt.shutdown()
 
     def test_initialization_all_enabled(self, mock_cache, tmp_path, optimizer):
         """Test initialization with all features enabled."""
@@ -576,22 +560,21 @@ class TestIOOptimizer:
     def test_initialization_prefetch_disabled(self, mock_cache, tmp_path):
         """Test initialization with prefetch disabled."""
         optimizer = IOOptimizer(
-            layer_cache=mock_cache,
-            enable_prefetch=False,
-            cache_dir=tmp_path
+            layer_cache=mock_cache, enable_prefetch=False, cache_dir=tmp_path
         )
-
-        assert optimizer.prefetcher is None
-        assert optimizer.compute_overlap is None
+        try:
+            assert optimizer.prefetcher is None
+            assert optimizer.compute_overlap is None
+        finally:
+            optimizer.shutdown()
 
     def test_initialization_wear_leveling_disabled(self, mock_cache):
         """Test initialization with wear leveling disabled."""
-        optimizer = IOOptimizer(
-            layer_cache=mock_cache,
-            enable_wear_leveling=False
-        )
-
-        assert optimizer.wear_leveling is None
+        optimizer = IOOptimizer(layer_cache=mock_cache, enable_wear_leveling=False)
+        try:
+            assert optimizer.wear_leveling is None
+        finally:
+            optimizer.shutdown()
 
     def test_enable_disable(self, mock_cache, tmp_path, optimizer):
         """Test enable and disable methods."""
@@ -623,9 +606,7 @@ class TestIOOptimizer:
         mock_cache.get_layer.return_value = layer
 
         result = optimizer.get_layer_with_prefetch(
-            "test/model",
-            layer_index=5,
-            total_layers=10
+            "test/model", layer_index=5, total_layers=10
         )
 
         assert result is layer
@@ -635,9 +616,7 @@ class TestIOOptimizer:
         mock_cache.get_layer.return_value = None
 
         result = optimizer.get_layer_with_prefetch(
-            "test/model",
-            layer_index=5,
-            total_layers=10
+            "test/model", layer_index=5, total_layers=10
         )
 
         assert result is None
@@ -659,11 +638,11 @@ class TestIOOptimizer:
         """Test getting optimizer statistics."""
         stats = optimizer.get_stats()
 
-        assert 'enabled' in stats
-        assert stats['enabled'] is True
-        assert 'prefetcher' in stats
-        assert 'wear_leveling' in stats
-        assert 'downloader' in stats
+        assert "enabled" in stats
+        assert stats["enabled"] is True
+        assert "prefetcher" in stats
+        assert "wear_leveling" in stats
+        assert "downloader" in stats
 
     def test_shutdown(self, mock_cache, tmp_path, optimizer):
         """Test shutdown."""
@@ -686,31 +665,43 @@ class TestGetIOOptimizer:
         """Test getting optimizer creates instance."""
         # Reset global instance
         import nexus.models.sli.io_optimizer as io_module
+
         io_module._io_optimizer = None
 
         optimizer = get_io_optimizer(layer_cache=mock_cache)
-
-        assert isinstance(optimizer, IOOptimizer)
+        try:
+            assert isinstance(optimizer, IOOptimizer)
+        finally:
+            optimizer.shutdown()
+            io_module._io_optimizer = None
 
     def test_get_io_optimizer_returns_existing(self, mock_cache):
         """Test getting optimizer returns existing instance."""
         import nexus.models.sli.io_optimizer as io_module
+
         io_module._io_optimizer = None
 
         optimizer1 = get_io_optimizer(layer_cache=mock_cache)
-        optimizer2 = get_io_optimizer()
-
-        assert optimizer1 is optimizer2
+        try:
+            optimizer2 = get_io_optimizer()
+            assert optimizer1 is optimizer2
+        finally:
+            optimizer1.shutdown()
+            io_module._io_optimizer = None
 
     def test_get_io_optimizer_requires_cache_first_time(self):
         """Test first call requires layer_cache."""
         import nexus.models.sli.io_optimizer as io_module
+
+        old = io_module._io_optimizer
         io_module._io_optimizer = None
+        try:
+            with pytest.raises(ValueError) as exc_info:
+                get_io_optimizer()
 
-        with pytest.raises(ValueError) as exc_info:
-            get_io_optimizer()
-
-        assert "layer_cache required" in str(exc_info.value)
+            assert "layer_cache required" in str(exc_info.value)
+        finally:
+            io_module._io_optimizer = old
 
 
 class TestIOOptimizerEdgeCases:
@@ -735,10 +726,7 @@ class TestIOOptimizerEdgeCases:
     def test_io_request_negative_timeout(self):
         """Test IO request with negative timeout."""
         request = IORequest(
-            layer_id="test",
-            model_id="model",
-            layer_index=0,
-            timeout=-1.0
+            layer_id="test", model_id="model", layer_index=0, timeout=-1.0
         )
 
         assert request.timeout == -1.0
@@ -746,41 +734,33 @@ class TestIOOptimizerEdgeCases:
     def test_io_request_zero_retries(self):
         """Test IO request with zero retries."""
         request = IORequest(
-            layer_id="test",
-            model_id="model",
-            layer_index=0,
-            max_retries=0
+            layer_id="test", model_id="model", layer_index=0, max_retries=0
         )
 
         assert request.max_retries == 0
 
     def test_wear_leveling_single_zone(self, tmp_path):
         """Test wear leveling with single zone."""
-        wear_leveler = SSDWearLeveling(
-            cache_dir=tmp_path,
-            num_zones=1
-        )
+        wear_leveler = SSDWearLeveling(cache_dir=tmp_path, num_zones=1)
 
         zone = wear_leveler.get_write_zone()
         assert zone == wear_leveler._zones[0]
 
     def test_compute_overlap_zero_pipeline_depth(self, mock_prefetcher):
         """Test compute overlap with zero pipeline depth."""
-        overlap = ComputeIOOverlap(
-            prefetcher=mock_prefetcher,
-            pipeline_depth=0
-        )
+        overlap = ComputeIOOverlap(prefetcher=mock_prefetcher, pipeline_depth=0)
 
         assert overlap.pipeline_depth == 0
 
     def test_prefetcher_zero_workers(self, mock_cache):
         """Test prefetcher with zero workers."""
         prefetcher = AsyncLayerPrefetcher(
-            layer_cache=mock_cache,
-            max_concurrent_downloads=0
+            layer_cache=mock_cache, max_concurrent_downloads=0
         )
-
-        assert len(prefetcher._workers) == 0
+        try:
+            assert len(prefetcher._workers) == 0
+        finally:
+            prefetcher.shutdown()
 
     def test_parallel_downloader_zero_connections(self):
         """Test parallel downloader with zero connections."""

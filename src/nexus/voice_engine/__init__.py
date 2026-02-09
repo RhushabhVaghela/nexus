@@ -41,5 +41,3 @@ __all__ = [
     "AudioSegment",
     "BrainOutput",
 ]
-
-__version__ = "1.0.0"

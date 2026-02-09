@@ -1,3 +1,4 @@
+import os
 import torch
 import warnings
 
@@ -19,11 +20,17 @@ from pathlib import Path
 # Suppress warnings
 warnings.filterwarnings("ignore")
 
-MODEL_PATH = "/mnt/e/data/models/Qwen2.5-Omni-7B-GPTQ-Int4"
-AUDIO_PATH = (
-    "/mnt/e/data/datasets/Mozilla_Common-Voice/cv-invalid/cv-invalid/sample-015622.mp3"
+from nexus.config.paths import DEFAULT_LLM_MODEL, COMMON_VOICE_DIR, DATA_ROOT
+
+MODEL_PATH = os.environ.get("NEXUS_BENCHMARK_MODEL", DEFAULT_LLM_MODEL)
+AUDIO_PATH = os.environ.get(
+    "NEXUS_BENCHMARK_AUDIO",
+    os.path.join(COMMON_VOICE_DIR, "cv-invalid", "cv-invalid", "sample-015622.mp3"),
 )
-IMAGE_PATH = "/home/rhushabh/.gemini/antigravity/brain/f4c98929-5553-4cda-ae47-4a9aaae1d01d/uploaded_image_0_1768862917726.png"
+IMAGE_PATH = os.environ.get(
+    "NEXUS_BENCHMARK_IMAGE",
+    os.path.join(DATA_ROOT, "benchmark_assets", "sample_image.png"),
+)
 
 
 def run_native_benchmark():

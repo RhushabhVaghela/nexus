@@ -11,8 +11,6 @@ Sub-packages:
     - utils: Memory estimation utilities
 """
 
-__version__ = "1.0.0"
-
 # Lazy imports to avoid heavy torch/CUDA loading at import time
 _LAZY_IMPORTS = {
     # SLI

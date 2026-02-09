@@ -1,4 +1,10 @@
-# Nexus Model Benchmarks Package
+"""
+Nexus Benchmarks — evaluation suites for measuring student model quality.
+
+Provides configurable benchmark runners, fullstack evaluation,
+repetition-detection benchmarks, and a RULER long-context benchmark suite.
+"""
+
 from .fullstack_eval import FullstackEval
 from .lovable_benchmark import LovableBenchmark
 from .expanded_eval_suite import ExpandedEvalSuite, BENCHMARK_REGISTRY

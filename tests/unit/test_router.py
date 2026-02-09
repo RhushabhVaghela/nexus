@@ -2,12 +2,22 @@ import unittest
 import torch
 import sys
 import os
+import importlib.util
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '../../src'))
-try:
-    from nexus.core.student.sparse_router import SparseIntentRouter
-except ImportError:
-    from nexus.core.student.sparse_router import SparseIntentRouter
+sys.path.append(os.path.join(os.path.dirname(__file__), "../../src"))
+
+# Import router directly to avoid nexus.core.student.__init__ triggering
+# transformers imports that fail due to torchao/torch version mismatch
+_router_path = os.path.join(
+    os.path.dirname(__file__), "../../src/nexus/core/student/router.py"
+)
+_spec = importlib.util.spec_from_file_location(
+    "nexus.core.student.router", _router_path
+)
+_router_mod = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_router_mod)
+SparseIntentRouter = _router_mod.SparseIntentRouter
+
 
 class TestRouter(unittest.TestCase):
     def setUp(self):
@@ -20,28 +30,29 @@ class TestRouter(unittest.TestCase):
         batch_size = 4
         x = torch.randn(batch_size, self.input_dim)
         scores, indices = self.router(x)
-        
-        self.assertEqual(scores.shape, (batch_size, 1)) # Top-1 by default
+
+        self.assertEqual(scores.shape, (batch_size, 1))  # Top-1 by default
         self.assertEqual(indices.shape, (batch_size, 1))
 
     def test_heuristic_override(self):
         """Verify that heuristic keyword forces specific tower."""
         x = torch.randn(1, self.input_dim)
-        
+
         # Force 'vision' (index 1 in our list)
         scores, indices = self.router(x, heuristic_override="vision")
-        
-        self.assertEqual(indices.item(), 1) # Must pick index 1
-        
+
+        self.assertEqual(indices.item(), 1)  # Must pick index 1
+
     def test_keyword_detection(self):
         """Verify text parser."""
         prompt = "Can you describe this image?"
         tag = self.router.get_routing_map(prompt)
         self.assertEqual(tag, "vision")
-        
+
         prompt = "Write a python script to solve this"
         tag = self.router.get_routing_map(prompt)
         self.assertEqual(tag, "reasoning")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

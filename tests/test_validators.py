@@ -1,8 +1,8 @@
-
 import unittest
 import sys
 import importlib.util
 from pathlib import Path
+
 
 def load_module(name, relative_path):
     root = Path(__file__).parent.parent / "src"
@@ -14,10 +14,11 @@ def load_module(name, relative_path):
     spec.loader.exec_module(mod)
     return mod
 
-mod_07 = load_module("mod_07", "07_validate_all_datasets.py")
+
+mod_07 = load_module("mod_07", "nexus/data/scripts/07_validate_all_datasets.py")
+
 
 class TestValidators(unittest.TestCase):
-
     def setUp(self):
         # Initialize CONFIG for the module
         mod_07.CONFIG = {
@@ -32,13 +33,13 @@ class TestValidators(unittest.TestCase):
         sample = {
             "messages": [
                 {"role": "user", "content": "A"},
-                {"role": "assistant", "content": "B"}
+                {"role": "assistant", "content": "B"},
             ]
         }
         self.assertTrue(self.validator.validate_schema(sample))
 
     def test_schema_invalid(self):
-        sample = {"messages": []} # Too few
+        sample = {"messages": []}  # Too few
         self.assertFalse(self.validator.validate_schema(sample))
         self.assertEqual(self.validator.stats["too_few_messages"], 1)
 
@@ -47,10 +48,11 @@ class TestValidators(unittest.TestCase):
         sample = {
             "messages": [
                 {"role": "user", "content": "A" * 30},
-                {"role": "assistant", "content": "B" * 30}
+                {"role": "assistant", "content": "B" * 30},
             ]
         }
         self.assertTrue(self.validator.validate_content(sample))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

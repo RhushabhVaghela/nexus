@@ -28,9 +28,8 @@ sys.modules["transformers"] = mock_transformers
 sys.modules["datasets"] = mock_datasets
 sys.modules["pydantic"] = mock_pydantic
 
-from core.orchestration.pipeline_orchestrator import (
+from nexus.core.orchestration.pipeline_orchestrator import (
     PipelineConfig,
-    PipelineStage,
     CheckpointManager,
     PipelineResult,
     PipelineProgress,

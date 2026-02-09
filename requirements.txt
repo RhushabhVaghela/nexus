@@ -1,54 +1,85 @@
+# =============================================================================
+# Nexus Requirements
+# =============================================================================
+# This file mirrors pyproject.toml dependencies for environments where
+# pip install -e "." is not practical (Docker layers, CI caching, etc.).
+# Canonical source of truth: pyproject.toml
+# =============================================================================
+
 # Core ML
 torch>=2.1.0
-torchvision
-torchaudio
 transformers>=4.39.0
 accelerate>=0.27.0
 peft>=0.10.0
 trl>=0.8.0
 bitsandbytes>=0.43.0
-
-# Data Processing
 datasets>=2.18.0
+
+# Data / Science
+numpy>=1.24.0,<2.0
 pandas
 scikit-learn
-tqdm
+scipy
+faiss-cpu
+
+# API / Web
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.0.0
+
+# CLI
+rich>=13.0.0
+
+# Config / Serialization
+pyyaml>=6.0
 sentencepiece
 protobuf
-scipy
 
-# Multimodal - Vision
-diffusers>=0.26.0
+# Media (lightweight)
 pillow
 
-# Multimodal - Audio
-# Note: audiocraft requires ffmpeg installed given strict dependency issues
-# pip install git+https://github.com/facebookresearch/audiocraft.git
-audiocraft>=1.3.0
-av>=11.0.0
-
-# Text-to-Speech
-TTS>=0.22.0
-soundfile>=0.12.1
-pydub>=0.25.1
-
 # Utilities
-ipykernel
-jupyter
-faiss-cpu
+tqdm
 psutil
 
-# Production Hardening
-prometheus-client>=0.19.0
-opentelemetry-api>=1.21.0
-opentelemetry-sdk>=1.21.0
-opentelemetry-exporter-jaeger>=1.21.0
-redis>=5.0.0
+# ---------------------------------------------------------------------------
+# Optional: Audio (install with: pip install nexus-distill[audio])
+# ---------------------------------------------------------------------------
+# torchvision
+# torchaudio
+# audiocraft>=1.3.0
+# TTS>=0.22.0
+# soundfile>=0.12.1
+# pydub>=0.25.1
+# av>=11.0.0
 
-# Optional for enhanced monitoring
-pynvml>=11.5.0
+# ---------------------------------------------------------------------------
+# Optional: Video (install with: pip install nexus-distill[video])
+# ---------------------------------------------------------------------------
+# torchvision
+# diffusers>=0.26.0
+# av>=11.0.0
 
-# TTS dependencies (for tts_engine.py)
-# Note: TTS is already included above
-# Additional optional TTS backends:
-# gtts>=2.5.0  # Uncomment for Google TTS fallback
+# ---------------------------------------------------------------------------
+# Optional: Monitoring (install with: pip install nexus-distill[monitoring])
+# ---------------------------------------------------------------------------
+# prometheus-client>=0.19.0
+# opentelemetry-api>=1.21.0
+# opentelemetry-sdk>=1.21.0
+# opentelemetry-exporter-jaeger>=1.21.0
+# redis>=5.0.0
+# pynvml>=11.5.0
+
+# ---------------------------------------------------------------------------
+# Optional: Dev (install with: pip install nexus-distill[dev])
+# ---------------------------------------------------------------------------
+# pytest>=7.0.0
+# pytest-cov>=4.0.0
+# pytest-xdist>=3.0.0
+# black>=23.0.0
+# isort>=5.12.0
+# flake8>=6.0.0
+# mypy>=1.0.0
+# pre-commit>=3.0.0
+# ipykernel
+# jupyter

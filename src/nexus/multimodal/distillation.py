@@ -33,7 +33,7 @@ def safe_load_from_disk(path):
     # Fallback to real lib if available
     try:
         return load_from_disk(str(path))
-    except:
+    except Exception:
         return []
 
 
