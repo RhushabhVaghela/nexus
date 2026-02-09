@@ -30,9 +30,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Import training method config
-sys.path.insert(0, str(Path(__file__).parent.parent))
 from nexus.training.training_methods import TrainingMethod, get_training_config
-
 
 def check_env():
     """Verify environment dependencies."""
@@ -49,7 +47,6 @@ def check_env():
         logger.warning("⚠️ No CUDA GPU detected. DPO requires GPU.")
         return False
     return True
-
 
 try:
     from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -78,7 +75,6 @@ CONFIG = {
 
 # Get DPO-specific config from training_methods
 dpo_config = get_training_config(TrainingMethod.DPO)
-
 
 def load_preference_dataset():
     """Load preference dataset with chosen/rejected pairs."""
@@ -133,7 +129,6 @@ def load_preference_dataset():
     logger.info(f"Loaded {len(dataset)} preference pairs from {pref_path}")
     return {"train": dataset}
 
-
 def load_model_for_dpo():
     """Load model with optional LoRA for DPO training."""
     logger.info(f"Loading model: {CONFIG['checkpoint']}")
@@ -169,7 +164,6 @@ def load_model_for_dpo():
 
     logger.info("Model loaded with LoRA adapters")
     return model, tokenizer
-
 
 def main():
     if not check_env():
@@ -240,7 +234,6 @@ from nexus.config.paths import DEFAULT_STUDENT_MODEL, DPO_OUTPUT_DIR, PROCESSED_
     logger.info("✅ DPO TRAINING COMPLETE!")
     logger.info(f"Model saved to: {CONFIG['output_dir']}/final")
     logger.info("=" * 60)
-
 
 if __name__ == "__main__":
     main()

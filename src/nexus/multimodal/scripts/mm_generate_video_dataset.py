@@ -21,7 +21,6 @@ import random
 from pathlib import Path
 from typing import Dict, List, Optional
 
-sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger, log_header, log_completion
 
 logger = setup_logger(__name__, "logs/mm_generate_video.log")
@@ -227,7 +226,6 @@ ANSWER_TEMPLATES = {
     ),
 }
 
-
 def list_video_files(video_dir: Path) -> List[Path]:
     """List all video files in directory."""
     exts = {".mp4", ".webm", ".mov", ".avi", ".mkv", ".m4v"}
@@ -236,7 +234,6 @@ def list_video_files(video_dir: Path) -> List[Path]:
         if p.is_file() and p.suffix.lower() in exts:
             files.append(p)
     return sorted(files)
-
 
 def get_video_metadata(video_path: Path) -> Dict:
     """Extract basic video metadata (duration, resolution if available)."""
@@ -259,7 +256,6 @@ from nexus.config.paths import MM_RAW_VIDEOS_DIR, MULTIMODAL_FULLSTACK_DIR
     except Exception:
         return {"duration_seconds": 0, "resolution": "unknown", "fps": 0, "frame_count": 0}
 
-
 def get_sidecar_transcript(video_path: Path) -> Optional[str]:
     """Check for a .srt or .vtt subtitle file."""
     for ext in [".srt", ".vtt", ".txt"]:
@@ -270,7 +266,6 @@ def get_sidecar_transcript(video_path: Path) -> Optional[str]:
             except Exception:
                 pass
     return None
-
 
 def build_sample(video_path: Path, idx: int) -> Dict:
     """Build one multimodal sample for a video."""
@@ -318,7 +313,6 @@ def build_sample(video_path: Path, idx: int) -> Dict:
         sample["transcript_preview"] = transcript[:1000] + "..." if len(transcript) > 1000 else transcript
     
     return sample
-
 
 def main():
     random.seed(CONFIG["seed"])
@@ -371,7 +365,6 @@ def main():
         "Multimodal Video Understanding Dataset",
         {"Total samples": total, "Output": str(output_dir)},
     )
-
 
 if __name__ == "__main__":
     main()

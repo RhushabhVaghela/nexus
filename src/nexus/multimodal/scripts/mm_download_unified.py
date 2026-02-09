@@ -35,9 +35,6 @@ except ImportError:
     def tqdm(iterable=None, **kwargs):
         return iterable if iterable is not None else iter([])
 
-
-sys.path.insert(0, str(Path(__file__).parent))
-
 # Import specific dependencies
 try:
     from kaggle.api.kaggle_api_extended import KaggleApi
@@ -65,7 +62,6 @@ except ImportError:
 from utils.logging_config import setup_logger, log_header, log_completion
 
 logger = setup_logger(__name__, "logs/mm_download_unified.log")
-
 
 # ═══════════════════════════════════════════════════════════════
 # DATASET REGISTRY
@@ -220,7 +216,6 @@ DATASET_REGISTRY = {
 # Values for WebSight are updated further up in the structure (requires separate replacement if needed)
 # ...
 
-
 @dataclass
 class MultimodalSample:
     """Normalized multimodal sample structure."""
@@ -235,11 +230,9 @@ class MultimodalSample:
     def to_dict(self) -> Dict:
         return asdict(self)
 
-
 # ═══════════════════════════════════════════════════════════════
 # DOWNLOAD MANAGERS
 # ═══════════════════════════════════════════════════════════════
-
 
 class DatasetManager:
     def __init__(self, base_dir: Path):
@@ -630,7 +623,6 @@ from nexus.config.paths import COMMON_VOICE_DIR, DATASETS_DIR, UNIFIED_MULTIMODA
 
         return None
 
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--modality", default="all")
@@ -660,7 +652,6 @@ def main():
             total += count
 
     print(f"\n✅ Unified Download Complete. Total samples: {total}")
-
 
 if __name__ == "__main__":
     main()

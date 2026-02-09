@@ -22,7 +22,6 @@ import string
 from pathlib import Path
 from typing import Dict, Tuple, Set, List
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from nexus.utils.logging_config import (
     setup_logger,
     log_progress,
@@ -35,14 +34,12 @@ from nexus.config.paths import PREFERENCE_PAIRS_DIR
 # TRAINING MODE SELECTION
 # ═══════════════════════════════════════════════════════════════
 
-
 def get_training_mode():
     """Parse --mode argument (censored or uncensored)"""
     for arg in sys.argv:
         if arg.startswith("--mode="):
             return arg.split("=")[1].lower()
     return "censored"  # Globals to be initialized in main()
-
 
 TRAINING_MODE = get_training_mode()
 CONFIG = {}
@@ -157,7 +154,6 @@ else:  # UNCENSORED
 # DEDUPLICATION
 # ═══════════════════════════════════════════════════════════════
 
-
 class DeduplicatedGenerator:
     def __init__(self):
         self.seen_hashes: Set[str] = set()
@@ -175,19 +171,15 @@ class DeduplicatedGenerator:
         self.seen_hashes.add(h)
         return False
 
-
 def rnum(a, b):
     return random.randint(a, b)
-
 
 def rstr(n):
     return "".join(random.choices(string.ascii_lowercase + string.digits, k=n))
 
-
 # ═══════════════════════════════════════════════════════════════
 # PREFERENCE PAIR ENGINE
 # ═══════════════════════════════════════════════════════════════
-
 
 class PreferencePairEngine:
     def __init__(self):
@@ -688,7 +680,6 @@ import pytest
 from unittest.mock import Mock, patch
 from app.services.auth import register_user
 from app.exceptions import ValidationError, DuplicateUserError
-
 
 class TestRegisterUser:
     @pytest.fixture
@@ -1226,7 +1217,6 @@ Force push when there are conflicts."""
         self.category_counters[category] += 1
         return sample
 
-
 # ═══════════════════════════════════════════════════════════════
 # MAIN
 # ═══════════════════════════════════════════════════════════════
@@ -1244,7 +1234,6 @@ CONFIG = {
     "mode": "censored",
     "num_workers": multiprocessing.cpu_count(),
 }
-
 
 def main():
     global TRAINING_MODE, logger, PREFERENCE_WEIGHTS
@@ -1349,7 +1338,6 @@ def main():
             "Output": str(base_dir),
         },
     )
-
 
 if __name__ == "__main__":
     main()

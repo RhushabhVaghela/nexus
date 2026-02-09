@@ -24,7 +24,6 @@ except ImportError:
 from typing import Dict, Any
 
 # Ensure we can import utils if running from src/
-sys.path.insert(0, str(Path(__file__).parent))
 
 try:
     from datasets import load_dataset, Audio

@@ -27,11 +27,9 @@ try:
 except ImportError:
     HF_AVAILABLE = False
 
-sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger, log_header, log_completion
 
 logger = setup_logger(__name__, "logs/mm_download_video.log")
-
 
 # ═══════════════════════════════════════════════════════════════
 # DATASET CONFIGURATIONS - REAL HUGGINGFACE DATASETS
@@ -128,7 +126,6 @@ VIDEO_TASKS = {
     },
 }
 
-
 @dataclass
 class VideoSample:
     """Normalized video sample."""
@@ -138,7 +135,6 @@ class VideoSample:
     task_type: str
     source_dataset: str
     metadata: Dict
-
 
 def normalize_finevideo(sample: Dict, idx: int) -> Optional[VideoSample]:
     """Normalize FineVideo sample."""
@@ -160,7 +156,6 @@ def normalize_finevideo(sample: Dict, idx: int) -> Optional[VideoSample]:
     except Exception:
         return None
 
-
 def normalize_video_mme(sample: Dict, idx: int) -> Optional[VideoSample]:
     """Normalize Video-MME sample."""
     try:
@@ -181,7 +176,6 @@ def normalize_video_mme(sample: Dict, idx: int) -> Optional[VideoSample]:
     except Exception:
         return None
 
-
 def normalize_activitynet(sample: Dict, idx: int) -> Optional[VideoSample]:
     """Normalize ActivityNet-QA sample."""
     try:
@@ -198,7 +192,6 @@ def normalize_activitynet(sample: Dict, idx: int) -> Optional[VideoSample]:
     except Exception:
         return None
 
-
 def normalize_webvid(sample: Dict, idx: int) -> Optional[VideoSample]:
     """Normalize WebVid sample."""
     try:
@@ -213,7 +206,6 @@ def normalize_webvid(sample: Dict, idx: int) -> Optional[VideoSample]:
     except Exception:
         return None
 
-
 NORMALIZERS = {
     "finevideo": normalize_finevideo,
     "video_mme": normalize_video_mme,
@@ -222,7 +214,6 @@ NORMALIZERS = {
     "webvid_10m": normalize_webvid,
     "msrvtt": normalize_webvid,
 }
-
 
 def sample_to_messages(vs: VideoSample) -> Dict:
     """Convert VideoSample to OpenAI messages format."""
@@ -263,7 +254,6 @@ from nexus.config.paths import MULTIMODAL_FULLSTACK_DIR
         },
         "metadata": vs.metadata,
     }
-
 
 def download_and_process_dataset(
     dataset_name: str,
@@ -320,7 +310,6 @@ def download_and_process_dataset(
     
     logger.info(f"Wrote {total} samples to {output_path}")
     return total
-
 
 def main():
     parser = argparse.ArgumentParser(description="Download video understanding datasets")
@@ -384,7 +373,6 @@ def main():
             "Output": str(output_dir),
         },
     )
-
 
 if __name__ == "__main__":
     main()

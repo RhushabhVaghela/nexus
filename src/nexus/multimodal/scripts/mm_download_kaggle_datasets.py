@@ -35,9 +35,6 @@ except ImportError:
     def tqdm(iterable=None, **kwargs):
         return iterable if iterable is not None else iter([])
 
-
-sys.path.insert(0, str(Path(__file__).parent))
-
 try:
     from kaggle.api.kaggle_api_extended import KaggleApi
 
@@ -57,7 +54,6 @@ from utils.logging_config import setup_logger, log_header, log_completion
 from nexus.config.paths import DATA_ROOT
 
 logger = setup_logger(__name__, "logs/mm_download_kaggle.log")
-
 
 # ═══════════════════════════════════════════════════════════════
 # KAGGLE DATASET REGISTRY
@@ -183,7 +179,6 @@ KAGGLE_DATASETS = {
     },
 }
 
-
 @dataclass
 class MultimodalSample:
     """Normalized multimodal sample structure."""
@@ -198,11 +193,9 @@ class MultimodalSample:
     def to_dict(self) -> Dict:
         return asdict(self)
 
-
 # ═══════════════════════════════════════════════════════════════
 # KAGGLE API WRAPPER
 # ═══════════════════════════════════════════════════════════════
-
 
 class KaggleDownloader:
     """Wrapper for Kaggle API operations."""
@@ -254,11 +247,9 @@ class KaggleDownloader:
             logger.warning(f"Failed to list files for {kaggle_id}: {e}")
             return []
 
-
 # ═══════════════════════════════════════════════════════════════
 # DATASET PROCESSORS
 # ═══════════════════════════════════════════════════════════════
-
 
 def process_text_dataset(
     data_dir: Path,
@@ -373,7 +364,6 @@ def process_text_dataset(
     logger.info(f"✅ Text-{dataset_name}: {count} samples saved to {output_dir}")
     return count
 
-
 def process_vision_dataset(
     data_dir: Path,
     output_dir: Path,
@@ -449,7 +439,6 @@ def process_vision_dataset(
 
     logger.info(f"✅ Vision-{dataset_name}: {count} samples saved to {output_dir}")
     return count
-
 
 def process_audio_dataset(
     data_dir: Path,
@@ -546,7 +535,6 @@ def process_audio_dataset(
 
     logger.info(f"✅ Audio-{dataset_name}: {count} samples saved to {output_dir}")
     return count
-
 
 def process_benchmark_dataset(
     data_dir: Path,
@@ -720,11 +708,9 @@ def process_benchmark_dataset(
     logger.info(f"✅ Benchmark-{dataset_name}: {count} samples saved to {output_dir}")
     return count
 
-
 # ═══════════════════════════════════════════════════════════════
 # MAIN
 # ═══════════════════════════════════════════════════════════════
-
 
 def main():
     parser = argparse.ArgumentParser(
@@ -859,7 +845,6 @@ def main():
 
     print(f"\n🎉 Total samples processed: {total_samples}")
     print(f"📁 Output directory: {args.output_dir}")
-
 
 if __name__ == "__main__":
     main()

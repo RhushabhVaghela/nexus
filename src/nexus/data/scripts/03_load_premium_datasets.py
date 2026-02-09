@@ -26,7 +26,6 @@ try:
 except ImportError:
     pass
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from nexus.utils.logging_config import setup_logger, log_header, log_completion
 
 DATASETS_AVAILABLE = False
@@ -96,7 +95,6 @@ DATASET_CONFIGS = {
     "unalignment/toxic-dpo-v0.1": {"split": "train"},
     "teknium/OpenHermes-2.5": {"split": "train"},
 }
-
 
 # ═══════════════════════════════════════════════════════════════
 # NORMALIZER
@@ -299,7 +297,6 @@ class PremiumDatasetLoader:
         
         logger.info(f"Saved {len(dataset):,} samples + metadata.json")
 
-
 # ═══════════════════════════════════════════════════════════════
 # BREAKDOWN DISPLAY
 # ═══════════════════════════════════════════════════════════════
@@ -344,7 +341,6 @@ def show_breakdown(mode: str, target_samples: int):
     print("\n" + "="*70)
     print(f"{'TOTAL':50} {target_samples:>10,} (100.0%)")
     print("="*70)
-
 
 # ═══════════════════════════════════════════════════════════════
 # MAIN
@@ -414,7 +410,6 @@ def main():
         "Total samples": len(dataset),
         "Output": output_dir
     })
-
 
 if __name__ == "__main__":
     main()

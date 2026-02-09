@@ -13,11 +13,9 @@ from pathlib import Path
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 
 from nexus.streaming import OmniInference, GenerationConfig
 from nexus.core.metrics_tracker import MetricsTracker, BenchmarkMetrics
-
 
 def benchmark_omni_inference():
     print("Benchmarking OmniInference (Mocked Weights)...")
@@ -89,7 +87,6 @@ def benchmark_omni_inference():
                     success=True,
                 )
             )
-
 
 if __name__ == "__main__":
     benchmark_omni_inference()

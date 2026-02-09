@@ -25,10 +25,8 @@ from collections import defaultdict
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor
 
-sys.path.insert(0, str(Path(__file__).parent))
 from nexus.utils.logging_config import setup_logger, log_header, log_completion
 from nexus.config.paths import DATA_ROOT
-
 
 def check_env():
     """Verify environment dependencies."""
@@ -37,7 +35,6 @@ def check_env():
         return False
     return True
 
-
 # Globals to be initialized in main()
 CONFIG = None
 logger = logging.getLogger(__name__)
@@ -45,7 +42,6 @@ logger = logging.getLogger(__name__)
 # ═══════════════════════════════════════════════════════════════
 # VALIDATORS
 # ═══════════════════════════════════════════════════════════════
-
 
 class DatasetValidator:
     """Universal dataset validator."""
@@ -209,11 +205,9 @@ class DatasetValidator:
 
         return ok
 
-
 # ═══════════════════════════════════════════════════════════════
 # FILE PROCESSORS
 # ═══════════════════════════════════════════════════════════════
-
 
 def validate_jsonl_file(input_file: Path, output_file: Path) -> Dict:
     """Validate a single JSONL file."""
@@ -248,7 +242,6 @@ def validate_jsonl_file(input_file: Path, output_file: Path) -> Dict:
         "output": str(output_file),
         "summary": validator.get_summary(),
     }
-
 
 def validate_directory(data_dir: Path) -> Dict:
     """Validate all JSONL files in a directory."""
@@ -287,11 +280,9 @@ def validate_directory(data_dir: Path) -> Dict:
         else "0%",
     }
 
-
 # ═══════════════════════════════════════════════════════════════
 # BENCHMARK VALIDATOR
 # ═══════════════════════════════════════════════════════════════
-
 
 def validate_benchmarks() -> Dict:
     """Validate benchmark datasets."""
@@ -302,11 +293,9 @@ def validate_benchmarks() -> Dict:
 
     return validate_directory(benchmark_dir)
 
-
 # ═══════════════════════════════════════════════════════════════
 # MAIN
 # ═══════════════════════════════════════════════════════════════
-
 
 def main():
     if not check_env():
@@ -381,7 +370,6 @@ def main():
         )
 
     log_completion(logger, "Dataset Validation", {"status": "complete"})
-
 
 if __name__ == "__main__":
     main()

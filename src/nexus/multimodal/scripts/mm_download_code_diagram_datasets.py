@@ -31,12 +31,10 @@ try:
 except ImportError:
     HF_AVAILABLE = False
 
-sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger, log_header, log_completion
 from nexus.config.paths import MULTIMODAL_FULLSTACK_DIR
 
 logger = setup_logger(__name__, "logs/mm_download_code_diagram.log")
-
 
 # ═══════════════════════════════════════════════════════════════
 # REAL HUGGINGFACE DATASETS FOR CODE-DIAGRAM PAIRS
@@ -164,7 +162,6 @@ erDiagram
 ```""",
 }
 
-
 @dataclass
 class CodeDiagramSample:
     """Normalized code-diagram sample."""
@@ -176,7 +173,6 @@ class CodeDiagramSample:
     diagram_format: str  # plantuml, mermaid, or image_path
     source_dataset: str
     metadata: Dict
-
 
 def extract_classes_from_code(code: str, lang: str = "python") -> List[Dict]:
     """Extract class information for generating class diagrams."""
@@ -205,7 +201,6 @@ def extract_classes_from_code(code: str, lang: str = "python") -> List[Dict]:
                     current_class["attributes"].append(attr)
     
     return classes
-
 
 def generate_class_diagram(classes: List[Dict], format: str = "mermaid") -> str:
     """Generate class diagram from extracted classes."""
@@ -240,7 +235,6 @@ def generate_class_diagram(classes: List[Dict], format: str = "mermaid") -> str:
                         lines.append(f"{parent} <|-- {cls['name']}")
         return "\n".join(lines)
 
-
 def extract_sql_tables(sql: str) -> List[Dict]:
     """Extract table information for ER diagrams."""
     tables = []
@@ -266,7 +260,6 @@ def extract_sql_tables(sql: str) -> List[Dict]:
     
     return tables
 
-
 def generate_er_diagram(tables: List[Dict], format: str = "mermaid") -> str:
     """Generate ER diagram from SQL tables."""
     if format == "mermaid":
@@ -280,7 +273,6 @@ def generate_er_diagram(tables: List[Dict], format: str = "mermaid") -> str:
                 lines.append(f"    {table['name']} ||--o{{ {fk} : references")
         return "\n".join(lines)
     return ""
-
 
 def normalize_code_sample(sample: Dict, idx: int, source: str) -> Optional[CodeDiagramSample]:
     """Normalize a code sample and generate diagram."""
@@ -336,7 +328,6 @@ def normalize_code_sample(sample: Dict, idx: int, source: str) -> Optional[CodeD
     except Exception:
         return None
 
-
 def sample_to_messages(sample: CodeDiagramSample, direction: str = "code_to_diagram") -> Dict:
     """Convert CodeDiagramSample to messages format."""
     task_key = f"code_to_{sample.diagram_type.replace('_diagram', '')}" if "diagram" in sample.diagram_type else "code_to_flowchart"
@@ -371,7 +362,6 @@ def sample_to_messages(sample: CodeDiagramSample, direction: str = "code_to_diag
         },
         "diagram_format": sample.diagram_format,
     }
-
 
 def download_and_process_dataset(
     dataset_name: str,
@@ -429,7 +419,6 @@ def download_and_process_dataset(
     logger.info(f"Wrote {total} samples to {output_path}")
     return total
 
-
 def main():
     parser = argparse.ArgumentParser(description="Download code-to-diagram datasets")
     parser.add_argument("--datasets", nargs="+", 
@@ -483,7 +472,6 @@ def main():
             "Output": str(output_dir),
         },
     )
-
 
 if __name__ == "__main__":
     main()

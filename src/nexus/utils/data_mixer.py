@@ -25,8 +25,6 @@ from typing import Dict, List, Optional, Tuple
 from collections import defaultdict
 import argparse
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 from utils.logging_config import setup_logger, log_header
 from nexus.config.paths import (
     ARCHITECTURE_REASONING_DIR,
@@ -203,7 +201,6 @@ def load_jsonl_files(directories: List[str], max_samples: Optional[int] = None) 
                 logger.warning(f"Error reading {file_path}: {e}")
 
     return samples
-
 
 def load_json_files(directories: List[str], max_samples: Optional[int] = None) -> List[Dict]:
     """Load JSON files (single array format)."""
@@ -423,7 +420,6 @@ def main():
         val_ratio=0.025,
         samples_per_file=CONFIG["samples_per_file"],
     )
-
 
 if __name__ == "__main__":
     main()

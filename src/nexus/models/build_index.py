@@ -23,13 +23,10 @@ except ImportError:
     def tqdm(iterable=None, **kwargs):
         return iterable if iterable is not None else iter([])
 
-
 # Ensure explicit path
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.append(os.path.join(BASE_DIR, "src"))
 
 from nexus.models.knowledge import KnowledgeTower
-
 
 def main():
     parser = argparse.ArgumentParser()
@@ -96,7 +93,6 @@ def main():
         json.dump(documents, f)
 
     print("[IndexBuilder] Complete.")
-
 
 if __name__ == "__main__":
     main()

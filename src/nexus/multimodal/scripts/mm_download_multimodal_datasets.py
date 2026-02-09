@@ -36,7 +36,6 @@ except ImportError:
         return iterable if iterable is not None else iter([])
 
 # Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent))
 
 try:
     from datasets import load_dataset
@@ -142,7 +141,6 @@ DEFAULT_CONFIG = {
 
 logger = setup_logger(__name__, "logs/mm_download.log")
 
-
 # ═══════════════════════════════════════════════════════════════
 # DATA CLASSES
 # ═══════════════════════════════════════════════════════════════
@@ -159,7 +157,6 @@ class MultimodalSample:
     
     def to_dict(self) -> Dict:
         return asdict(self)
-
 
 # ═══════════════════════════════════════════════════════════════
 # VISION FETCHER
@@ -257,7 +254,6 @@ def fetch_vision_dataset(
     
     logger.info(f"✅ Vision-{dataset_name}: {count} samples saved to {output_dir}")
     return count
-
 
 # ═══════════════════════════════════════════════════════════════
 # AUDIO FETCHER
@@ -393,7 +389,6 @@ def fetch_audio_dataset(
     logger.info(f"✅ Audio-{language}: {count} samples saved to {output_dir}")
     return count
 
-
 # ═══════════════════════════════════════════════════════════════
 # VIDEO FETCHER
 # ═══════════════════════════════════════════════════════════════
@@ -494,7 +489,6 @@ def fetch_video_dataset(
     logger.info(f"✅ Video-{dataset_name}: {count} samples saved to {output_dir}")
     return count
 
-
 def _extract_keyframes(sample: Dict, frames_dir: Path, sample_id: str, num_frames: int) -> List[str]:
     """Extract keyframes from video sample."""
     frame_paths = []
@@ -541,7 +535,6 @@ from nexus.config.paths import MULTIMODAL_DIR
         logger.warning("cv2 not available, skipping frame extraction")
     
     return frame_paths
-
 
 # ═══════════════════════════════════════════════════════════════
 
@@ -656,7 +649,6 @@ def fetch_benchmark_dataset(
     logger.info(f"✅ Benchmark-{dataset_name}: {count} samples saved to {output_dir}")
     return count
 
-
 # ═══════════════════════════════════════════════════════════════
 # MAIN
 # ═══════════════════════════════════════════════════════════════
@@ -672,7 +664,6 @@ def load_config(config_path: Optional[str] = None) -> Dict:
             logger.warning(f"Failed to load config from {config_path}: {e}")
     
     return DEFAULT_CONFIG
-
 
 def main():
     parser = argparse.ArgumentParser(
@@ -776,7 +767,6 @@ def main():
     logger.info(f"🎉 Total samples downloaded: {total_samples}")
     logger.info(f"📁 Output directory: {base_dir}")
     logger.info(f"{'='*60}")
-
 
 if __name__ == "__main__":
     main()

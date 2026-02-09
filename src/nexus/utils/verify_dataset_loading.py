@@ -4,7 +4,6 @@ from pathlib import Path
 import json
 
 # Ensure src is in path
-sys.path.append(str(Path(__file__).parent))
 
 # Dynamic import logic handles the class loading
 OmniDataset = None
@@ -18,7 +17,6 @@ logger = None
 # Let's rely on the mock imports inside 24_multimodal_training.py handling missing deps,
 # BUT `verify_dataset_loading_import` doesn't exist.
 # I will define a lightweight version of the test that attempts to import from the file.
-
 
 def test_dataset_loading():
     print("🧪 TESTING DATASET LOADING & SAMPLING")
@@ -68,7 +66,6 @@ from nexus.config.paths import DATASETS_DIR
 
     print("\n-----------------------------------")
     print("Done.")
-
 
 if __name__ == "__main__":
     test_dataset_loading()

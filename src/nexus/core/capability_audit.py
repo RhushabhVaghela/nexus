@@ -5,7 +5,6 @@ import json
 from pathlib import Path
 
 # Add src to path
-sys.path.append(str(Path(__file__).parent))
 
 from multimodal.model import OmniMultimodalLM
 from multimodal.reasoning import ReasoningWrapper, ReasoningLevel

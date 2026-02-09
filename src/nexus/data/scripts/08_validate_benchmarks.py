@@ -19,10 +19,8 @@ import json
 from pathlib import Path
 from typing import Dict, List
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from nexus.utils.logging_config import setup_logger, log_header, log_completion
 from nexus.config.paths import DATA_ROOT
-
 
 def check_env():
     """Verify environment dependencies."""
@@ -31,11 +29,9 @@ def check_env():
         return False
     return True
 
-
 # Globals to be initialized in main()
 CONFIG = None
 logger = None
-
 
 class BenchmarkValidator:
     """Validates specific benchmark formats."""
@@ -135,7 +131,6 @@ class BenchmarkValidator:
 
         return is_valid
 
-
 def detect_benchmark_type(filename: str, sample: Dict) -> str:
     """Detect benchmark type from filename or content."""
     filename_lower = filename.lower()
@@ -160,7 +155,6 @@ def detect_benchmark_type(filename: str, sample: Dict) -> str:
         return "gsm8k"
 
     return "unknown"
-
 
 def validate_benchmark_file(input_file: Path, output_dir: Path) -> Dict:
     """Validate a benchmark file."""
@@ -202,11 +196,9 @@ def validate_benchmark_file(input_file: Path, output_dir: Path) -> Dict:
         "stats": validator.stats,
     }
 
-
 # ═══════════════════════════════════════════════════════════════
 # MAIN
 # ═══════════════════════════════════════════════════════════════
-
 
 def main():
     if not check_env():
@@ -253,7 +245,6 @@ def main():
         "Benchmark Validation",
         {"files_processed": len(jsonl_files), "total_valid_samples": total_valid},
     )
-
 
 if __name__ == "__main__":
     main()

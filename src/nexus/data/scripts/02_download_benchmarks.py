@@ -32,7 +32,6 @@ from typing import Dict, Any
 
 import sys
 # Add project root to path
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from nexus.utils.logging_config import setup_logger, log_benchmark_progress
 
 logger = setup_logger(__name__, 'logs/benchmark_download.log')

@@ -123,7 +123,6 @@ def main():
     args = parser.parse_args()
     
     # Ensure src is in path for imports
-    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
     
     run_sequential_training(args.base_model, args.stages, args.output_dir, args.sample_size)
 

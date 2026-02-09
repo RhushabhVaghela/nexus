@@ -24,7 +24,6 @@ import math
 from pathlib import Path
 from typing import Dict, Tuple, Set
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from nexus.utils.logging_config import (
     setup_logger,
     log_progress,
@@ -33,7 +32,6 @@ from nexus.utils.logging_config import (
 )
 from nexus.config.paths import REPETITIVE_PROMPT_DIR
 
-
 def check_env():
     """Verify environment dependencies."""
     if os.environ.get("CONDA_DEFAULT_ENV") != "nexus":
@@ -41,11 +39,9 @@ def check_env():
         return False
     return True
 
-
 # logger will be initialized in main()
 logger = None
 CONFIG = {}
-
 
 # ═══════════════════════════════════════════════════════════════
 # DEDUPLICATION
@@ -68,7 +64,6 @@ class DeduplicatedGenerator:
             return True
         self.seen_hashes.add(h)
         return False
-
 
 # ═══════════════════════════════════════════════════════════════
 # GENERATOR CATEGORIES (50 types - 4M samples each)
@@ -216,7 +211,6 @@ GENERATOR_WEIGHTS.update(
     }
 )
 
-
 # Data pools
 COUNTRIES = [
     "USA",
@@ -265,18 +259,14 @@ PLANETS = [
     "Neptune",
 ]
 
-
 def rnum(a, b):
     return random.randint(a, b)
-
 
 def rfloat(a, b):
     return round(random.uniform(a, b), 2)
 
-
 def rstr(n):
     return "".join(random.choices(string.ascii_lowercase + string.digits, k=n))
-
 
 # ═══════════════════════════════════════════════════════════════
 # REPETITIVE PROMPTING ENGINE (arXiv 2512.14982)
@@ -1892,7 +1882,6 @@ class PromptRepetitionEngine:
         self.category_counters[category] += 1
         return sample
 
-
 # ═══════════════════════════════════════════════════════════════
 # MAIN
 # ═══════════════════════════════════════════════════════════════
@@ -1905,7 +1894,6 @@ CONFIG = {
     "val_ratio": 0.025,
     "test_ratio": 0.025,
 }
-
 
 def main():
     global logger
@@ -1972,7 +1960,6 @@ def main():
                 f.write(json.dumps(s) + "\n")
 
     log_completion(logger, "Repetitive Prompting Dataset", {"Total": count})
-
 
 if __name__ == "__main__":
     main()

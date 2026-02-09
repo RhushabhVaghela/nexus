@@ -8,13 +8,11 @@ from typing import List, Dict, Any, Optional
 import multiprocessing
 
 # Add project root to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from nexus.data.universal_loader import UniversalDataLoader
 from nexus.multimodal.decoders import OmniDecoder
 from nexus.utils.corruption_tracker import tracker as corruption_tracker
 from nexus.config.paths import DATA_ROOT
-
 
 class AssetVerifier:
     def __init__(self, data_dir: str, parallel: int = 4):
@@ -136,7 +134,6 @@ class AssetVerifier:
                 f"{entry['name'][:40]:<40} | {entry.get('format', 'N/A'):<15} | {entry['status']:<10} | {entry.get('samples', 0)}/5"
             )
         print("=" * 80)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

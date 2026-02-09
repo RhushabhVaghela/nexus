@@ -23,7 +23,6 @@ from nexus.utils.repetition import PromptRepetitionEngine
 
 logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
 
 # Import Universal Data Management
 try:
@@ -31,7 +30,6 @@ try:
 except ImportError as e:
     logger.warning(f"UniversalDatasetManager not available: {e}")
     UniversalDatasetManager = None
-
 
 @dataclass
 class ReasoningGRPOConfig:
@@ -64,7 +62,6 @@ class ReasoningGRPOConfig:
     # Repetition Config (arXiv:2512.14982)
     repetition_factor: int = 1
     repetition_style: str = "baseline"
-
 
 class GRPODataset(Dataset):
     def __init__(self, config: ReasoningGRPOConfig, tokenizer: Any):
@@ -185,7 +182,6 @@ class GRPODataset(Dataset):
             problem.get("answer", problem.get("solution", problem.get("reference", "")))
         )
         return {"prompt": prompt, "reference": reference}
-
 
 class GRPOTrainer:
     def __init__(self, config: ReasoningGRPOConfig):
@@ -385,7 +381,6 @@ class GRPOTrainer:
             json.dump({"step": str(name), "reward": reward}, f)
         logger.info(f"Saved checkpoint to {save_path}")
 
-
 def main():
     parser = argparse.ArgumentParser(description="Reasoning GRPO Training")
     parser.add_argument("--model", required=True)
@@ -452,7 +447,6 @@ def main():
     trainer = GRPOTrainer(config)
     trainer.setup()
     trainer.train()
-
 
 if __name__ == "__main__":
     main()

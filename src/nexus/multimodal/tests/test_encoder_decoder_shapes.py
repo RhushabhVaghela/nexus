@@ -23,8 +23,6 @@ except ImportError:
 from pathlib import Path
 
 # Add parent directories to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 import torch
 import torch.nn as nn
@@ -41,7 +39,6 @@ try:
 except ImportError:
     HAS_MODEL = False
     print("Warning: Could not import model components. Running mock tests.")
-
 
 # ═══════════════════════════════════════════════════════════════
 # TEST CONFIGURATION
@@ -73,7 +70,6 @@ CONFIG = {
 VISION_NUM_PATCHES = (CONFIG["vision"]["input_size"] // CONFIG["vision"]["patch_size"]) ** 2
 AUDIO_NUM_FRAMES = int(CONFIG["audio"]["sample_rate"] * CONFIG["audio"]["max_seconds"] / 160)  # 160 = hop_length
 
-
 # ═══════════════════════════════════════════════════════════════
 # MOCK COMPONENTS (for testing without GPU/models)
 # ═══════════════════════════════════════════════════════════════
@@ -92,7 +88,6 @@ class MockVisionEncoder(nn.Module):
         num_patches = VISION_NUM_PATCHES + 1  # +1 for CLS token
         return torch.randn(batch, num_patches, self.output_dim)
 
-
 class MockAudioEncoder(nn.Module):
     """Mock audio encoder that produces expected tensor shapes."""
     
@@ -107,7 +102,6 @@ class MockAudioEncoder(nn.Module):
         time_steps = audio_features.shape[2] // 2
         return torch.randn(batch, time_steps, self.output_dim)
 
-
 class MockPerceiverResampler(nn.Module):
     """Mock Perceiver Resampler that produces expected tensor shapes."""
     
@@ -121,7 +115,6 @@ class MockPerceiverResampler(nn.Module):
         # output: [B, num_latents, dim]
         batch = x.shape[0]
         return torch.randn(batch, self.num_latents, self.dim)
-
 
 # ═══════════════════════════════════════════════════════════════
 # VISION PIPELINE TESTS
@@ -204,7 +197,6 @@ class TestVisionPipeline:
         
         print(f"\n✅ Vision Pipeline: [{batch}, 3, 512, 512] → [{batch}, {CONFIG['num_latents']}, {CONFIG['llm_dim']}]")
 
-
 # ═══════════════════════════════════════════════════════════════
 # AUDIO PIPELINE TESTS
 # ═══════════════════════════════════════════════════════════════
@@ -286,7 +278,6 @@ class TestAudioPipeline:
         assert x.shape == (batch, CONFIG["num_latents"], CONFIG["llm_dim"])
         
         print(f"\n✅ Audio Pipeline: [{batch}, 80, 3000] → [{batch}, {CONFIG['num_latents']}, {CONFIG['llm_dim']}]")
-
 
 # ═══════════════════════════════════════════════════════════════
 # COMBINED FORWARD PASS TESTS
@@ -398,7 +389,6 @@ class TestCombinedForward:
         
         print(f"\n✅ Sequence lengths: Vision={vision_only}, Audio={audio_only}, Full={full_multimodal}")
 
-
 # ═══════════════════════════════════════════════════════════════
 # PERCEIVER RESAMPLER SPECIFIC TESTS
 # ═══════════════════════════════════════════════════════════════
@@ -445,7 +435,6 @@ class TestPerceiverResampler:
         assert output.shape[1] == CONFIG["num_latents"]
         print(f"\n✅ Compression ratio: {input_len} → {CONFIG['num_latents']} = {compression_ratio:.1f}x")
 
-
 # ═══════════════════════════════════════════════════════════════
 # SHAPE SUMMARY
 # ═══════════════════════════════════════════════════════════════
@@ -487,7 +476,6 @@ COMBINED FORWARD PASS:
   Full Multimodal:    [{batch}, {2*num_latents + text_len}, {llm_dim}]
 """)
     print("=" * 70)
-
 
 # ═══════════════════════════════════════════════════════════════
 # MAIN

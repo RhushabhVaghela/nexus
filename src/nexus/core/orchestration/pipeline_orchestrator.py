@@ -53,7 +53,6 @@ from threading import Lock
 
 # Add project root to path for imports
 PROJECT_ROOT = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
 
 # Import with try/except to handle missing dependencies gracefully
 try:
@@ -75,7 +74,6 @@ except (ImportError, ModuleNotFoundError):
 
     PYDANTIC_AVAILABLE = False
 
-
 class FailureMode(Enum):
     """
     Failure modes for pipeline execution.
@@ -89,7 +87,6 @@ class FailureMode(Enum):
     STOP = "stop"
     CONTINUE = "continue"
     ROLLBACK = "rollback"
-
 
 class StageStatus(Enum):
     """
@@ -110,7 +107,6 @@ class StageStatus(Enum):
     FAILED = "failed"
     SKIPPED = "skipped"
     ROLLBACK = "rollback"
-
 
 @dataclass
 class PipelineConfig:
@@ -273,7 +269,6 @@ class PipelineConfig:
             rollback_stages=data.get("rollback_stages", 1),
         )
 
-
 @dataclass
 class CheckpointInfo:
     """
@@ -316,7 +311,6 @@ class CheckpointInfo:
             step=data["step"],
             metadata=data.get("metadata", {}),
         )
-
 
 @dataclass
 class PipelineError:
@@ -369,7 +363,6 @@ class PipelineError:
             stack_trace=traceback.format_exc(),
             recoverable=recoverable,
         )
-
 
 @dataclass
 class PipelineProgress:
@@ -446,7 +439,6 @@ class PipelineProgress:
             "stage_start_time": self.stage_start_time,
         }
 
-
 @dataclass
 class PipelineResult:
     """
@@ -513,7 +505,6 @@ class PipelineResult:
             if len(self.errors) > 5:
                 lines.append(f"  ... and {len(self.errors) - 5} more errors")
         return "\n".join(lines)
-
 
 class CheckpointManager:
     """
@@ -875,7 +866,6 @@ class CheckpointManager:
                 return f"{size_bytes:.2f} {unit}"
             size_bytes /= 1024.0
         return f"{size_bytes:.2f} PB"
-
 
 class PipelineOrchestrator:
     """

@@ -29,11 +29,9 @@ except ImportError:
 import argparse
 import logging
 
-sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger
 
 logger = setup_logger(__name__, "logs/process_manual_datasets.log")
-
 
 @dataclass
 class MultimodalSample:
@@ -47,7 +45,6 @@ class MultimodalSample:
 
     def to_dict(self):
         return asdict(self)
-
 
 # Dataset Registry
 MANUAL_DATASETS = {
@@ -107,7 +104,6 @@ MANUAL_DATASETS = {
         "processor": "codegenerate3"
     }
 }
-
 
 class ManualDatasetProcessor:
     def __init__(self, output_base: Path = Path(UNIFIED_MULTIMODAL_DIR)):
@@ -740,7 +736,6 @@ from nexus.config.paths import DOWNLOADED_DIR, UNIFIED_MULTIMODAL_DIR
             logger.warning(f"Processor not implemented: {processor_name}")
             return 0
 
-
 def main():
     parser = argparse.ArgumentParser(description="Process manually downloaded datasets")
     parser.add_argument("--dataset", default="all", help="Dataset to process or 'all'")
@@ -760,7 +755,6 @@ def main():
     else:
         count = processor.process_dataset(args.dataset, args.sample)
         logger.info(f"✅ Processed {count} samples from {args.dataset}")
-
 
 if __name__ == "__main__":
     main()

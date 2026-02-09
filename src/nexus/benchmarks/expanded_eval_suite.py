@@ -35,11 +35,9 @@ try:
 except ImportError:
     HF_AVAILABLE = False
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.logging_config import setup_logger, log_header, log_completion
 
 logger = setup_logger(__name__, "logs/expanded_eval_suite.log")
-
 
 # ═══════════════════════════════════════════════════════════════
 # BENCHMARK CONFIGURATIONS - REAL DATASETS
@@ -206,7 +204,6 @@ BENCHMARK_REGISTRY = {
     },
 }
 
-
 @dataclass
 class EvalResult:
     """Single evaluation result."""
@@ -217,7 +214,6 @@ class EvalResult:
     correct: int
     details: Dict = field(default_factory=dict)
 
-
 @dataclass
 class BenchmarkSample:
     """Normalized benchmark sample."""
@@ -227,7 +223,6 @@ class BenchmarkSample:
     correct_answer: str
     subject: str
     benchmark: str
-
 
 # ═══════════════════════════════════════════════════════════════
 # EVALUATORS
@@ -275,7 +270,6 @@ class BaseEvaluator(ABC):
             num_samples=total,
             correct=correct,
         )
-
 
 class MultipleChoiceEvaluator(BaseEvaluator):
     """Evaluator for multiple choice benchmarks."""
@@ -355,7 +349,6 @@ class MultipleChoiceEvaluator(BaseEvaluator):
         # Direct match with correct answer
         return output_clean == correct_clean
 
-
 class MathEvaluator(BaseEvaluator):
     """Evaluator for math benchmarks."""
     
@@ -415,7 +408,6 @@ class MathEvaluator(BaseEvaluator):
             pass
         
         return sample.correct_answer in model_output
-
 
 class CodeEvaluator(BaseEvaluator):
     """Evaluator for code generation benchmarks."""
@@ -479,7 +471,6 @@ class CodeEvaluator(BaseEvaluator):
         except Exception:
             return False
 
-
 class SWEBenchEvaluator(BaseEvaluator):
     """Evaluator for SWE-Bench."""
     
@@ -518,7 +509,6 @@ class SWEBenchEvaluator(BaseEvaluator):
         # For now, check if output looks like a valid patch
         return "diff" in model_output.lower() or "@@" in model_output
 
-
 # ═══════════════════════════════════════════════════════════════
 # EVALUATOR FACTORY
 # ═══════════════════════════════════════════════════════════════
@@ -538,7 +528,6 @@ def get_evaluator(benchmark_name: str, model_fn: Optional[Callable] = None) -> B
         return SWEBenchEvaluator(benchmark_name, model_fn)
     else:
         return MultipleChoiceEvaluator(benchmark_name, model_fn)
-
 
 # ═══════════════════════════════════════════════════════════════
 # MAIN EVALUATION SUITE
@@ -628,7 +617,6 @@ class ExpandedEvalSuite:
             json.dump(summary, f, indent=2)
         logger.info(f"Results saved to {output_path}")
 
-
 def main():
     parser = argparse.ArgumentParser(description="Run expanded evaluation suite")
     parser.add_argument("--benchmarks", nargs="+", default=None,
@@ -692,7 +680,6 @@ def main():
     logger.info(f"   Benchmarks run: {len(summary['benchmarks'])}")
     logger.info(f"   Output: {args.output}")
     logger.info("=" * 60)
-
 
 if __name__ == "__main__":
     main()

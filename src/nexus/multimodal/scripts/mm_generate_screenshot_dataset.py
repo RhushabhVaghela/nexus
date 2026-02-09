@@ -23,7 +23,6 @@ import random
 from pathlib import Path
 from typing import Dict, List
 
-sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger, log_header, log_completion  # type: ignore
 from nexus.config.paths import MM_RAW_DIR, MULTIMODAL_FULLSTACK_DIR
 
@@ -49,7 +48,6 @@ ANSWER_TEMPLATES = [
     "Describe what part of the UI indicates failure (e.g., red banner, console output). Then give a practical, step-by-step fix in the context of a fullstack app.",
 ]
 
-
 def list_images(image_dir: Path) -> List[Path]:
     exts = {".png", ".jpg", ".jpeg", ".webp"}
     files: List[Path] = []
@@ -57,7 +55,6 @@ def list_images(image_dir: Path) -> List[Path]:
         if p.is_file() and p.suffix.lower() in exts:
             files.append(p)
     return sorted(files)
-
 
 def build_sample(image_path: Path, idx: int) -> Dict:
     """Build one multimodal sample for a screenshot."""
@@ -97,7 +94,6 @@ def build_sample(image_path: Path, idx: int) -> Dict:
         },
     }
     return sample
-
 
 def main():
     random.seed(CONFIG["seed"])
@@ -149,7 +145,6 @@ def main():
         "Multimodal Screenshot Dataset",
         {"Total samples": total, "Output": str(output_dir)},
     )
-
 
 if __name__ == "__main__":
     main()

@@ -28,9 +28,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
 from nexus.training.training_methods import TrainingMethod, get_training_config
-
 
 def check_env():
     """Verify environment dependencies."""
@@ -47,7 +45,6 @@ def check_env():
         logger.warning("⚠️ No CUDA GPU detected. ORPO requires GPU.")
         return False
     return True
-
 
 try:
     from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -74,7 +71,6 @@ CONFIG = {
 }
 
 orpo_config = get_training_config(TrainingMethod.ORPO)
-
 
 def load_preference_dataset():
     """Load preference dataset with chosen/rejected pairs."""
@@ -129,7 +125,6 @@ from nexus.config.paths import DEFAULT_STUDENT_MODEL, ORPO_OUTPUT_DIR, PROCESSED
         * 50
     )
 
-
 def load_model():
     """Load model with LoRA for ORPO training."""
     logger.info(f"Loading: {CONFIG['checkpoint']}")
@@ -160,7 +155,6 @@ def load_model():
     model = get_peft_model(model, lora_config)
 
     return model, tokenizer
-
 
 def main():
     if not check_env():
@@ -206,7 +200,6 @@ def main():
     logger.info("=" * 60)
     logger.info("✅ ORPO TRAINING COMPLETE!")
     logger.info("=" * 60)
-
 
 if __name__ == "__main__":
     main()

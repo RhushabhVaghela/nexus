@@ -20,7 +20,6 @@ from pathlib import Path
 from typing import Dict, Set
 from collections import defaultdict
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from nexus.utils.logging_config import setup_logger, log_header, log_completion
 
 def check_env():
@@ -49,7 +48,6 @@ EXPECTED_UNCENSORED = [
     "OpenAssistant/oasst2", "LDJnr/Pure-Dove", "teknium/no-robots-uncensored",
     "cognitivecomputations/dolphin", "unalignment/toxic-dpo-v0.1", "teknium/OpenHermes-2.5"
 ]
-
 
 # ═══════════════════════════════════════════════════════════════
 # VALIDATOR
@@ -168,7 +166,6 @@ class PremiumDatasetValidator:
             "source_distribution": dict(self.source_counts),
         }
 
-
 # ═══════════════════════════════════════════════════════════════
 # MAIN
 # ═══════════════════════════════════════════════════════════════
@@ -248,7 +245,6 @@ from nexus.config.paths import PREMIUM_DIR
         logger.info("\nSource distribution:")
         for source, count in sorted(summary["source_distribution"].items()):
             logger.info(f"  {source}: {count:,}")
-
 
 if __name__ == "__main__":
     main()

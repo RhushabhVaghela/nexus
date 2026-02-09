@@ -25,13 +25,11 @@ import torch
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
 
 from nexus.stages.base import BaseStage, StageConfig
 from nexus.utils.repetition import PromptRepetitionEngine
 
 logger = logging.getLogger(__name__)
-
 
 @dataclass
 class OmniStageConfig(StageConfig):
@@ -53,7 +51,6 @@ class OmniStageConfig(StageConfig):
     use_gradient_checkpointing: bool = True
     use_flash_attention: bool = True
     mixed_precision: str = "fp16"  # "fp16", "bf16", or "fp32"
-
 
 class OmniTrainingStage(BaseStage):
     """
@@ -283,7 +280,6 @@ from nexus.config.paths import TRAINED_OUTPUT_DIR
 
         return results
 
-
 def main():
     parser = argparse.ArgumentParser(description="Omni Training Stage")
     parser.add_argument("--base-model", required=True, help="Path to Omni model")
@@ -340,7 +336,6 @@ def main():
         print(f"  {k}: {v}")
 
     return 0 if results["success"] else 1
-
 
 if __name__ == "__main__":
     exit(main())

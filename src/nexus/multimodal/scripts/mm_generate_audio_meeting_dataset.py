@@ -22,7 +22,6 @@ import random
 from pathlib import Path
 from typing import Dict, List, Optional
 
-sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger, log_header, log_completion
 from nexus.config.paths import MM_RAW_DIR, MULTIMODAL_FULLSTACK_DIR
 
@@ -208,7 +207,6 @@ ANSWER_TEMPLATES = {
     ),
 }
 
-
 def list_audio_files(audio_dir: Path) -> List[Path]:
     exts = {".wav", ".mp3", ".m4a", ".flac", ".ogg", ".webm"}
     files: List[Path] = []
@@ -216,7 +214,6 @@ def list_audio_files(audio_dir: Path) -> List[Path]:
         if p.is_file() and p.suffix.lower() in exts:
             files.append(p)
     return sorted(files)
-
 
 def get_transcript_sidecar(audio_path: Path) -> Optional[str]:
     """Check for a .txt sidecar transcript file."""
@@ -227,7 +224,6 @@ def get_transcript_sidecar(audio_path: Path) -> Optional[str]:
         except Exception:
             return None
     return None
-
 
 def build_sample(audio_path: Path, idx: int) -> Dict:
     """Build one multimodal sample for an audio meeting."""
@@ -274,7 +270,6 @@ def build_sample(audio_path: Path, idx: int) -> Dict:
         sample["transcript_preview"] = transcript[:500] + "..." if len(transcript) > 500 else transcript
     
     return sample
-
 
 def main():
     random.seed(CONFIG["seed"])
@@ -326,7 +321,6 @@ def main():
         "Multimodal Audio Meeting Dataset",
         {"Total samples": total, "Output": str(output_dir)},
     )
-
 
 if __name__ == "__main__":
     main()

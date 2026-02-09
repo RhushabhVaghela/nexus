@@ -28,12 +28,10 @@ import torch
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
 
 # Import unified tracker
 from nexus.core.metrics_tracker import MetricsTracker, BenchmarkMetrics, ALL_DATASETS
 from nexus.models.omni.loader import OmniModelLoader as OmniLoader
-
 
 @dataclass
 class BenchmarkConfig:
@@ -45,7 +43,6 @@ class BenchmarkConfig:
     benchmark_runs: int = 5
     max_new_tokens: int = 100
     batch_sizes: List[int] = field(default_factory=lambda: [1, 2, 4])
-
 
 class BenchmarkRunner:
     """
@@ -409,7 +406,6 @@ class BenchmarkRunner:
         )
         print("=" * 60)
 
-
 def main():
     import argparse
 from nexus.config.paths import DEFAULT_STUDENT_MODEL
@@ -437,7 +433,6 @@ from nexus.config.paths import DEFAULT_STUDENT_MODEL
     runner.print_summary()
 
     return 0
-
 
 if __name__ == "__main__":
     exit(main())

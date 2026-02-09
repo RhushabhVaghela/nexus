@@ -22,14 +22,12 @@ from nexus.utils.repetition import PromptRepetitionEngine
 
 logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
 
 # Import Universal Data Management
 try:
     from nexus.data.universal_manager import UniversalDatasetManager
 except ImportError:
     logger.warning("UniversalDatasetManager not found, falling back to basic loading if needed (but strongly recommended to fix python path)")
-
 
 @dataclass
 class ReasoningSFTConfig:
@@ -69,7 +67,6 @@ class ReasoningSFTConfig:
     # Repetition Config (arXiv:2512.14982)
     repetition_factor: int = 1
     repetition_style: str = "baseline"
-
 
 class ReasoningDataset(Dataset):
     def __init__(self, config: ReasoningSFTConfig, tokenizer: Any):
@@ -176,7 +173,6 @@ class ReasoningDataset(Dataset):
             
         return "\n\n".join(formatted)
 
-
 class ReasoningSFTTrainer:
     def __init__(self, config: ReasoningSFTConfig):
         self.config = config
@@ -239,7 +235,6 @@ class ReasoningSFTTrainer:
         trainer.save_model(self.config.output_dir)
         self.tokenizer.save_pretrained(self.config.output_dir)
         logger.info(f"Training complete. Model saved to {self.config.output_dir}")
-
 
 def main():
     parser = argparse.ArgumentParser(description="Reasoning SFT Training")
@@ -306,7 +301,6 @@ from nexus.config.paths import DATA_ROOT
     trainer = ReasoningSFTTrainer(config)
     trainer.setup()
     trainer.train()
-
 
 if __name__ == "__main__":
     main()

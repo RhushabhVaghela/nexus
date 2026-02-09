@@ -22,7 +22,6 @@ from typing import List, Dict, Any, Optional, Tuple
 import torch
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
 
 from nexus.benchmarks.ruler_tasks import (
     TaskConfig, TaskSample, RULERTask, TaskCategory,
@@ -31,7 +30,6 @@ from nexus.benchmarks.ruler_tasks import (
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 
 @dataclass
 class RULERConfig:
@@ -47,7 +45,6 @@ class RULERConfig:
     temperature: float = 0.0  # Greedy for consistency
     seed: int = 42
 
-
 @dataclass
 class TaskResult:
     """Results for a single task at a specific context length."""
@@ -58,7 +55,6 @@ class TaskResult:
     samples_evaluated: int
     correct_count: int
     category: str
-
 
 @dataclass
 class RULERResult:
@@ -85,7 +81,6 @@ class RULERResult:
                 for r in self.task_results
             ]
         }
-
 
 class RULERBenchmark:
     """
@@ -329,7 +324,6 @@ Answer (be brief and precise):"""
         print(f"(Longest context with >{self.config.accuracy_threshold:.0%} accuracy)")
         print("="*70)
 
-
 def run_ruler_benchmark(
     model_path: str,
     context_lengths: List[int] = None,
@@ -355,7 +349,6 @@ def run_ruler_benchmark(
         logger.info(f"Results saved to {output_path}")
     
     return result
-
 
 def main():
     parser = argparse.ArgumentParser(description="RULER Benchmark for LLM Context Length")
@@ -402,7 +395,6 @@ def main():
         with open(args.output, 'w') as f:
             json.dump(result.to_dict(), f, indent=2)
         logger.info(f"Results saved to {args.output}")
-
 
 if __name__ == "__main__":
     main()

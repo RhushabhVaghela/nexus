@@ -25,10 +25,8 @@ from concurrent.futures import ProcessPoolExecutor
 import multiprocessing
 import random
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from nexus.utils.logging_config import setup_logger, log_header, log_completion
 from nexus.config.paths import DATA_ROOT, PROCESSED_DIR
-
 
 def check_env():
     """Verify environment dependencies."""
@@ -36,7 +34,6 @@ def check_env():
         print("[ERROR] Must be run in 'nexus' conda environment.")
         return False
     return True
-
 
 # Globals to be initialized in main()
 CONFIG = None
@@ -114,7 +111,6 @@ CATEGORY_MAPPINGS = {
 # ═══════════════════════════════════════════════════════════════
 # MESSAGE FORMAT CONVERTERS
 # ═══════════════════════════════════════════════════════════════
-
 
 class RealDataProcessor:
     """Processes real datasets into messages format."""
@@ -428,11 +424,9 @@ class RealDataProcessor:
 
         logger.info(f"Wrote {len(samples)} samples to {output_file}")
 
-
 # ═══════════════════════════════════════════════════════════════
 # MAIN
 # ═══════════════════════════════════════════════════════════════
-
 
 def main():
     if not check_env():
@@ -492,7 +486,6 @@ def main():
             "Duplicates": processor.stats["duplicates"],
         },
     )
-
 
 if __name__ == "__main__":
     main()

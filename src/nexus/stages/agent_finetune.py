@@ -19,14 +19,12 @@ from nexus.utils.repetition import PromptRepetitionEngine
 
 logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
 
 try:
     from nexus.data.universal_manager import UniversalDatasetManager
 except ImportError as e:
     logger.warning(f"UniversalDatasetManager not available: {e}")
     UniversalDatasetManager = None
-
 
 @dataclass
 class AgentFinetuneConfig:
@@ -80,7 +78,6 @@ class AgentFinetuneConfig:
     # Repetition Config (arXiv:2512.14982)
     repetition_factor: int = 1
     repetition_style: str = "baseline"
-
 
 class AgentDataset:
     def __init__(self, config: AgentFinetuneConfig, tokenizer: Any):
@@ -206,7 +203,6 @@ class AgentDataset:
 
         return "\n\n".join(formatted)
 
-
 class AgentFinetuner:
     def __init__(self, config: AgentFinetuneConfig):
         self.config = config
@@ -293,7 +289,6 @@ class AgentFinetuner:
         self.tokenizer.save_pretrained(self.config.output_dir)
         logger.info(f"Model saved to {self.config.output_dir}")
 
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True)
@@ -357,7 +352,6 @@ def main():
     finetuner.setup()
     dataset = AgentDataset(config, finetuner.tokenizer)
     finetuner.train(dataset)
-
 
 if __name__ == "__main__":
     main()

@@ -27,9 +27,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
 from nexus.training.training_methods import TrainingMethod, get_training_config
-
 
 def check_env():
     """Verify environment dependencies."""
@@ -50,7 +48,6 @@ def check_env():
         logger.warning("⚠️ No CUDA GPU detected. PPO requires GPU.")
         return False
     return True
-
 
 try:
     from transformers import (
@@ -82,7 +79,6 @@ CONFIG = {
 }
 
 ppo_config = get_training_config(TrainingMethod.PPO)
-
 
 def load_prompts():
     """Load prompts for PPO training."""
@@ -149,7 +145,6 @@ from nexus.config.paths import DEFAULT_STUDENT_MODEL, PPO_OUTPUT_DIR, PROCESSED_
         * 100
     )
 
-
 def rule_based_reward(responses):
     """Rule-based reward function when no reward model is available."""
     rewards = []
@@ -178,7 +173,6 @@ def rule_based_reward(responses):
         rewards.append(max(0.0, min(1.0, score)))
 
     return rewards
-
 
 def main():
     if not check_env():
@@ -279,7 +273,6 @@ def main():
     logger.info("=" * 60)
     logger.info("✅ PPO TRAINING COMPLETE!")
     logger.info("=" * 60)
-
 
 if __name__ == "__main__":
     main()

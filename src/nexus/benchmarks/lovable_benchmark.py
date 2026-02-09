@@ -25,8 +25,6 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, asdict
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 try:
     from utils.logging_config import setup_logger
     logger = setup_logger(__name__, "logs/lovable_benchmark.log")
@@ -34,7 +32,6 @@ except ImportError:
     import logging
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
-
 
 # ═══════════════════════════════════════════════════════════════
 # DATA CLASSES
@@ -52,7 +49,6 @@ class UIGenCase:
     rubric: Dict[str, int]
     difficulty: str
 
-
 @dataclass
 class UIGenResult:
     """Result of UI generation evaluation."""
@@ -62,7 +58,6 @@ class UIGenResult:
     files_generated: List[str]
     requirements_met: Dict[str, bool]
     response_preview: str
-
 
 # ═══════════════════════════════════════════════════════════════
 # SCREENSHOT TO CODE BENCHMARK
@@ -170,7 +165,6 @@ Include TypeScript interfaces for Product type. Use CSS Grid or Flexbox.""",
     ),
 ]
 
-
 # ═══════════════════════════════════════════════════════════════
 # FEATURE COMPLETION BENCHMARK
 # ═══════════════════════════════════════════════════════════════
@@ -263,7 +257,6 @@ Requirements:
     ),
 ]
 
-
 # ═══════════════════════════════════════════════════════════════
 # MULTI-FILE GENERATION BENCHMARK
 # ═══════════════════════════════════════════════════════════════
@@ -350,7 +343,6 @@ Requirements:
     ),
 ]
 
-
 # ═══════════════════════════════════════════════════════════════
 # COMPONENT CONSISTENCY BENCHMARK
 # ═══════════════════════════════════════════════════════════════
@@ -405,7 +397,6 @@ Requirements:
         difficulty="medium",
     ),
 ]
-
 
 # ═══════════════════════════════════════════════════════════════
 # EVALUATOR
@@ -578,7 +569,6 @@ class LovableBenchmark:
             json.dump(prompts, f, indent=2)
         logger.info(f"Prompts exported to {output_path}")
 
-
 # ═══════════════════════════════════════════════════════════════
 # MAIN
 # ═══════════════════════════════════════════════════════════════
@@ -648,7 +638,6 @@ def main():
         print("\nCategory Breakdown:")
         for cat, cat_result in results["categories"].items():
             print(f"  {cat}: {cat_result['total_score']}/{cat_result['max_score']} ({cat_result['percentage']}%)")
-
 
 if __name__ == "__main__":
     main()

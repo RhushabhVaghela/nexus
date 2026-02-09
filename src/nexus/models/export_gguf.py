@@ -10,7 +10,6 @@ import sys
 from pathlib import Path
 
 # Add project root to path
-sys.path.insert(0, str(Path(__file__).parent))
 from utils.logging_config import setup_logger, log_header, log_completion
 
 logger = setup_logger(__name__, "logs/export_gguf.log")
