@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.2.0] - 2026-02-01
+> **Note on version numbering**: This project was renumbered from the legacy 1.x series to v6.x to reflect the Stage 6 release. The entries below labeled 6.0.0 and 6.0.1 correspond to the original 1.0.0 and 1.1.0 releases respectively.
+
+## [6.1.0] - 2026-02-01
 
 ### Added
 
@@ -153,7 +155,7 @@ Three new comprehensive guides:
 
 ---
 
-## [1.1.0] - 2026-02-01
+## [6.0.1] - 2026-02-01 *(formerly 1.1.0)*
 
 ### Added
 
@@ -303,7 +305,7 @@ Three new comprehensive guides:
 
 #### Documentation Corrections
 
-- **"135+ models" → "11 architecture families"**
+- **"135+ models" → "17 architecture families"**
   - Previous claim was misleading and unverified
   - New claim accurately reflects supported families
   - See: [Architecture Compatibility Matrix](docs/ARCHITECTURE_COMPATIBILITY_MATRIX.md)
@@ -340,7 +342,7 @@ Three new comprehensive guides:
 
 ---
 
-## [1.0.0] - 2025-12-01
+## [6.0.0] - 2025-12-01 *(formerly 1.0.0)*
 
 ### Added
 
