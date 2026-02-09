@@ -24,7 +24,7 @@ def benchmark_omni_inference():
 
     # Mocking loader to avoid loading 7B model
     with patch(
-        "src.nexus.models.sli.io_optimizer.OmniLoader.load_for_inference"
+        "nexus.models.sli.io_optimizer.OmniLoader.load_for_inference"
     ) as mock_load:
         mock_model = MagicMock()
         mock_model.device = "cpu"

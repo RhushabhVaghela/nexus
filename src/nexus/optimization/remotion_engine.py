@@ -29,8 +29,12 @@ class RemotionExplainerEngine:
         self,
         model_path: str,
         remotion_dir: str = "remotion",
-        data_root: str = "/mnt/e/data",
+        data_root: str = None,
     ):
+        if data_root is None:
+            from nexus.config.paths import DATA_ROOT
+
+            data_root = DATA_ROOT
         self.remotion_dir = Path(remotion_dir)
         self.asset_manager = AssetManager(
             data_root=data_root, remotion_public=str(self.remotion_dir / "public")
@@ -113,7 +117,10 @@ class RemotionExplainerEngine:
             # 6. Render
             logger.info(f"Rendering {output_name}...")
             env = os.environ.copy()
-            env["PATH"] = f"/home/rhushabh/miniconda3/bin:{env['PATH']}"
+            # Add conda/mamba bin to PATH if available (auto-detect)
+            conda_prefix = os.environ.get("CONDA_PREFIX", "")
+            if conda_prefix:
+                env["PATH"] = f"{conda_prefix}/bin:{env['PATH']}"
 
             cmd = [
                 "npx",

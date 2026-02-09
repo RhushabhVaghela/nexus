@@ -23,10 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   
 **Key Classes:**
 
-- [`NVFP4StreamingLoader`](src/nexus_final/sli/nvfp4_loader.py) - Main loader with quantization
-- [`NVFP4Quantizer`](src/nexus_final/sli/nvfp4_loader.py) - Low-level quantization operations
-- [`NVFP4Config`](src/nexus_final/sli/nvfp4_loader.py) - Quantization configuration
-- [`QuantizedTensor`](src/nexus_final/sli/nvfp4_loader.py) - Container for quantized data
+- [`NVFP4StreamingLoader`](src/nexus/models/sli/nvfp4_loader.py) - Main loader with quantization
+- [`NVFP4Quantizer`](src/nexus/models/sli/nvfp4_loader.py) - Low-level quantization operations
+- [`NVFP4Config`](src/nexus/models/sli/nvfp4_loader.py) - Quantization configuration
+- [`QuantizedTensor`](src/nexus/models/sli/nvfp4_loader.py) - Container for quantized data
 
 **Documentation:** [NVFP4-QAD Guide](docs/NVFP4_QAD.md)
 
@@ -40,10 +40,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   
 **Key Classes:**
 
-- [`QADDistillationLoss`](src/nexus_final/sli/qad_loss.py) - Main distillation loss
-- [`QADLossConfig`](src/nexus_final/sli/qad_loss.py) - Loss configuration
-- [`PerLayerQADLoss`](src/nexus_final/sli/qad_loss.py) - Layer-wise distillation
-- [`QADLossStats`](src/nexus_final/sli/qad_loss.py) - Loss statistics tracking
+- [`QADDistillationLoss`](src/nexus/models/sli/qad_loss.py) - Main distillation loss
+- [`QADLossConfig`](src/nexus/models/sli/qad_loss.py) - Loss configuration
+- [`PerLayerQADLoss`](src/nexus/models/sli/qad_loss.py) - Layer-wise distillation
+- [`QADLossStats`](src/nexus/models/sli/qad_loss.py) - Loss statistics tracking
 
 **Documentation:** [NVFP4-QAD Guide](docs/NVFP4_QAD.md)
 
@@ -57,10 +57,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   
 **Key Classes:**
 
-- [`NestedUpdateScheduler`](src/nexus_final/sli/nested_scheduler.py) - Main scheduler
-- [`NestedUpdateConfig`](src/nexus_final/sli/nested_scheduler.py) - Scheduler configuration
-- [`UpdateGroup`](src/nexus_final/sli/nested_scheduler.py) - Update frequency enum
-- [`UpdateStats`](src/nexus_final/sli/nested_scheduler.py) - Update statistics
+- [`NestedUpdateScheduler`](src/nexus/models/sli/nested_scheduler.py) - Main scheduler
+- [`NestedUpdateConfig`](src/nexus/models/sli/nested_scheduler.py) - Scheduler configuration
+- [`UpdateGroup`](src/nexus/models/sli/nested_scheduler.py) - Update frequency enum
+- [`UpdateStats`](src/nexus/models/sli/nested_scheduler.py) - Update statistics
 
 **Documentation:** [Nested Learning Guide](docs/NESTED_LEARNING_SLI.md)
 
@@ -77,10 +77,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   
 **Key Classes:**
 
-- [`HierarchicalLayerCache`](src/nexus_final/sli/hierarchical_cache.py) - Main cache
-- [`HierarchicalCacheConfig`](src/nexus_final/sli/hierarchical_cache.py) - Cache configuration
-- [`HierarchicalCacheEntry`](src/nexus_final/sli/hierarchical_cache.py) - Cache entry metadata
-- [`CacheTier`](src/nexus_final/sli/hierarchical_cache.py) - Cache tier enum
+- [`HierarchicalLayerCache`](src/nexus/models/sli/hierarchical_cache.py) - Main cache
+- [`HierarchicalCacheConfig`](src/nexus/models/sli/hierarchical_cache.py) - Cache configuration
+- [`HierarchicalCacheEntry`](src/nexus/models/sli/hierarchical_cache.py) - Cache entry metadata
+- [`CacheTier`](src/nexus/models/sli/hierarchical_cache.py) - Cache tier enum
 
 **Documentation:** [Nested Learning Guide](docs/NESTED_LEARNING_SLI.md)
 
@@ -93,10 +93,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   
 **Key Classes:**
 
-- [`AdvancedSLIIntegrator`](src/nexus_final/sli/advanced_sli_integrator.py) - Main integrator
-- [`AdvancedSLIConfig`](src/nexus_final/sli/advanced_sli_integrator.py) - Integration configuration
-- [`LayerInfo`](src/nexus_final/sli/advanced_sli_integrator.py) - Layer metadata
-- [`create_advanced_integrator()`](src/nexus_final/sli/advanced_sli_integrator.py) - Factory function
+- [`AdvancedSLIIntegrator`](src/nexus/models/sli/advanced_sli_integrator.py) - Main integrator
+- [`AdvancedSLIConfig`](src/nexus/models/sli/advanced_sli_integrator.py) - Integration configuration
+- [`LayerInfo`](src/nexus/models/sli/advanced_sli_integrator.py) - Layer metadata
+- [`create_advanced_integrator()`](src/nexus/models/sli/advanced_sli_integrator.py) - Factory function
 
 **Documentation:** [Advanced SLI Guide](docs/ADVANCED_SLI.md)
 
@@ -171,10 +171,10 @@ Three new comprehensive guides:
 
 **Key Classes:**
 
-- [`LayerCache`](src/nexus_final/sli/layer_cache.py) - Main cache implementation
-- [`CacheEntry`](src/nexus_final/sli/layer_cache.py) - Individual cache entry
-- [`CacheStats`](src/nexus_final/sli/layer_cache.py) - Statistics tracking
-- [`LayerCacheManager`](src/nexus_final/sli/layer_cache.py) - Singleton manager
+- [`LayerCache`](src/nexus/models/sli/layer_cache.py) - Main cache implementation
+- [`CacheEntry`](src/nexus/models/sli/layer_cache.py) - Individual cache entry
+- [`CacheStats`](src/nexus/models/sli/layer_cache.py) - Statistics tracking
+- [`LayerCacheManager`](src/nexus/models/sli/layer_cache.py) - Singleton manager
 
 **Documentation:** [Layer Caching Guide](docs/LAYER_CACHING.md)
 
@@ -193,10 +193,10 @@ Three new comprehensive guides:
 
 **Key Classes:**
 
-- [`QuantizationConfig`](src/nexus_final/sli/quantization.py) - Configuration dataclass
-- [`LayerQuantizer`](src/nexus_final/sli/quantization.py) - Main quantizer
-- [`AdaptiveQuantizer`](src/nexus_final/sli/quantization.py) - Per-layer precision
-- [`QuantizationRegistry`](src/nexus_final/sli/quantization.py) - Config registry
+- [`QuantizationConfig`](src/nexus/models/sli/quantization.py) - Configuration dataclass
+- [`LayerQuantizer`](src/nexus/models/sli/quantization.py) - Main quantizer
+- [`AdaptiveQuantizer`](src/nexus/models/sli/quantization.py) - Per-layer precision
+- [`QuantizationRegistry`](src/nexus/models/sli/quantization.py) - Config registry
 
 **Documentation:** [Quantization Guide](docs/QUANTIZATION.md)
 
@@ -213,11 +213,11 @@ Three new comprehensive guides:
 
 **Key Classes:**
 
-- [`AsyncLayerPrefetcher`](src/nexus_final/sli/io_optimizer.py) - Async prefetching
-- [`ComputeIOOverlap`](src/nexus_final/sli/io_optimizer.py) - Pipeline overlap
-- [`SSDWearLeveling`](src/nexus_final/sli/io_optimizer.py) - Storage optimization
-- [`ParallelDownloader`](src/nexus_final/sli/io_optimizer.py) - Parallel downloads
-- [`IOOptimizer`](src/nexus_final/sli/io_optimizer.py) - Main optimizer
+- [`AsyncLayerPrefetcher`](src/nexus/models/sli/io_optimizer.py) - Async prefetching
+- [`ComputeIOOverlap`](src/nexus/models/sli/io_optimizer.py) - Pipeline overlap
+- [`SSDWearLeveling`](src/nexus/models/sli/io_optimizer.py) - Storage optimization
+- [`ParallelDownloader`](src/nexus/models/sli/io_optimizer.py) - Parallel downloads
+- [`IOOptimizer`](src/nexus/models/sli/io_optimizer.py) - Main optimizer
 
 **Documentation:** [I/O Optimization Guide](docs/IO_OPTIMIZATION.md)
 
@@ -235,7 +235,7 @@ Three new comprehensive guides:
 
 **Key Class:**
 
-- [`BERTFamilyHandler`](src/nexus_final/sli/architecture_registry.py) - Encoder handler
+- [`BERTFamilyHandler`](src/nexus/models/sli/architecture_registry.py) - Encoder handler
 
 **Documentation:** [Encoder Support](docs/ENCODER_SUPPORT.md)
 
@@ -251,10 +251,10 @@ Three new comprehensive guides:
 
 **Key Methods:**
 
-- [`ArchitectureRegistry.register_custom_layer()`](src/nexus_final/sli/architecture_registry.py)
-- [`ArchitectureRegistry.get_layer_factory()`](src/nexus_final/sli/architecture_registry.py)
-- [`ArchitectureRegistry.unregister_custom_layer()`](src/nexus_final/sli/architecture_registry.py)
-- [`ArchitectureRegistry.list_custom_layers()`](src/nexus_final/sli/architecture_registry.py)
+- [`ArchitectureRegistry.register_custom_layer()`](src/nexus/models/sli/architecture_registry.py)
+- [`ArchitectureRegistry.get_layer_factory()`](src/nexus/models/sli/architecture_registry.py)
+- [`ArchitectureRegistry.unregister_custom_layer()`](src/nexus/models/sli/architecture_registry.py)
+- [`ArchitectureRegistry.list_custom_layers()`](src/nexus/models/sli/architecture_registry.py)
 
 **Documentation:** [Custom Layers](docs/CUSTOM_LAYERS.md)
 
@@ -394,7 +394,7 @@ None. All changes are backward compatible.
 processor = UniversalSLIProcessor(model_name="model")
 
 # New recommended way with quantization
-from src.nexus_final.sli.quantization import get_int8_config
+from nexus.models.sli.quantization import get_int8_config
 
 processor = UniversalSLIProcessor(
     model_name="model",
@@ -406,7 +406,7 @@ processor = UniversalSLIProcessor(
 
 ```python
 # Old way (basic caching)
-from src.nexus_final.sli.universal_sli import UniversalSLIProcessor
+from nexus.models.sli import UniversalSLIProcessor
 
 processor = UniversalSLIProcessor(
     model_name="model",
@@ -414,7 +414,7 @@ processor = UniversalSLIProcessor(
 )
 
 # New way (LRU + memory cache + persistence)
-from src.nexus_final.sli.layer_cache import LayerCache
+from nexus.models.sli.layer_cache import LayerCache
 
 cache = LayerCache(
     cache_dir="/cache",
@@ -428,7 +428,7 @@ cache = LayerCache(
 
 ```python
 # Register custom layers
-from src.nexus_final.sli.architecture_registry import get_registry
+from nexus.models.sli.architecture_registry import get_registry
 
 registry = get_registry()
 registry.register_custom_layer("my_layer", MyLayerClass)

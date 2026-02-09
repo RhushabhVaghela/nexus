@@ -5,6 +5,7 @@ import sys
 import tempfile
 import shutil
 import json
+import importlib.util
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -15,13 +16,33 @@ import unittest.mock as mock
 sys.modules["multimodal.model"] = mock.Mock()
 sys.modules["multimodal"] = mock.Mock()
 
-# Mock transformers to avoid torchao/torch version mismatch crash
-if "transformers" not in sys.modules:
-    _mock_transformers = mock.MagicMock()
-    sys.modules["transformers"] = _mock_transformers
+# Import the module directly via file path to avoid triggering the full
+# transformers import chain (which fails due to torchao/torch version mismatch).
+# We mock transformers temporarily, load the module, then restore.
+_saved_transformers = sys.modules.get("transformers")
+_saved_transformers_integrations = sys.modules.get("transformers.integrations")
+_needs_restore = "transformers" not in sys.modules
+
+if _needs_restore:
+    sys.modules["transformers"] = mock.MagicMock()
     sys.modules["transformers.integrations"] = mock.MagicMock()
 
 import importlib
+
+OmniDataset = importlib.import_module(
+    "nexus.training.scripts.24_multimodal_training"
+).OmniDataset
+
+# Restore transformers modules to avoid polluting other tests
+if _needs_restore:
+    if _saved_transformers is not None:
+        sys.modules["transformers"] = _saved_transformers
+    else:
+        del sys.modules["transformers"]
+    if _saved_transformers_integrations is not None:
+        sys.modules["transformers.integrations"] = _saved_transformers_integrations
+    elif "transformers.integrations" in sys.modules:
+        del sys.modules["transformers.integrations"]
 
 OmniDataset = importlib.import_module(
     "nexus.training.scripts.24_multimodal_training"
