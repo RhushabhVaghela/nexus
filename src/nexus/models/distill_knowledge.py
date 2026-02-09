@@ -101,8 +101,6 @@ class KnowledgeDistiller:
 
         # Datatype logic: Use BF16 for Blackwell/Ada hardware
         model_dtype = torch.bfloat16 if device == "cuda" else torch.float32
-        if device == "cpu":
-            pass
 
         # Load Model using Universal OmniModelLoader
         from nexus.models.omni.loader import OmniModelLoader

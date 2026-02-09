@@ -61,8 +61,17 @@ try:
     from trl import PPOConfig, PPOTrainer, AutoModelForCausalLMWithValueHead
     from peft import LoraConfig, get_peft_model
     from datasets import load_dataset, Dataset
-except ImportError:
-    pass
+
+    _TRL_AVAILABLE = True
+except ImportError as e:
+    import warnings
+
+    warnings.warn(
+        f"PPO training dependencies not available: {e}. "
+        "Install with: pip install trl peft datasets transformers",
+        stacklevel=2,
+    )
+    _TRL_AVAILABLE = False
 
 CONFIG = {
     "model_checkpoint": DEFAULT_STUDENT_MODEL,

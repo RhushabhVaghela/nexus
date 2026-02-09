@@ -64,10 +64,11 @@ except (ImportError, ModuleNotFoundError):
     # Create minimal pydantic-like classes for environments without pydantic
     class BaseModel:
         def __init__(self, **kwargs):
-            pass
+            for key, value in kwargs.items():
+                setattr(self, key, value)
 
         def model_dump(self) -> Dict[str, Any]:
-            return {}
+            return {k: v for k, v in self.__dict__.items() if not k.startswith("_")}
 
     class ValidationError(Exception):
         pass

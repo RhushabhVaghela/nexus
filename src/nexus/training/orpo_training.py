@@ -54,8 +54,17 @@ try:
     from trl import ORPOConfig, ORPOTrainer
     from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
     from datasets import load_dataset, Dataset
-except ImportError:
-    pass
+
+    _TRL_AVAILABLE = True
+except ImportError as e:
+    import warnings
+
+    warnings.warn(
+        f"ORPO training dependencies not available: {e}. "
+        "Install with: pip install trl peft datasets transformers",
+        stacklevel=2,
+    )
+    _TRL_AVAILABLE = False
 
 CONFIG = {
     "checkpoint": DEFAULT_STUDENT_MODEL,

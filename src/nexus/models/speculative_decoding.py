@@ -150,8 +150,17 @@ class SpeculativeDecoder:
                 # All accepted and no rejection handling occurred
                 output_ids = torch.cat([output_ids, draft_tokens], dim=1)
             elif draft_tokens is not None and accepted_count < self.k:
-                # Should not happen with current logic if we set draft_tokens=None on rejection
-                pass
+                # Partial acceptance: append only the accepted prefix tokens
+                logger.warning(
+                    "Speculative decoding: partial acceptance (%d/%d) "
+                    "with draft_tokens not cleared — appending accepted prefix.",
+                    accepted_count,
+                    self.k,
+                )
+                if accepted_count > 0:
+                    output_ids = torch.cat(
+                        [output_ids, draft_tokens[:, :accepted_count]], dim=1
+                    )
 
             generated_count += accepted_count
 

@@ -19,6 +19,8 @@ from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, asdict, field
 import logging
 
+from nexus.config.paths import DATASETS_DIR, REMOTION_DATASET_DIR
+
 try:
     from tqdm import tqdm
 except ImportError:

@@ -29,6 +29,7 @@ from nexus.utils.logging_config import (
     log_header,
     log_completion,
 )
+from nexus.config.paths import PREFERENCE_PAIRS_DIR
 
 # ═══════════════════════════════════════════════════════════════
 # TRAINING MODE SELECTION
