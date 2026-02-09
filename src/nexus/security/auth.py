@@ -7,6 +7,7 @@ token generation for Nexus API endpoints.
 
 import hashlib
 import hmac
+import logging
 import secrets
 import time
 from dataclasses import dataclass
@@ -22,9 +23,23 @@ try:
     JWT_AVAILABLE = True
 except ImportError:
     jwt = None
-    ExpiredSignatureError = Exception
-    InvalidTokenError = Exception
     JWT_AVAILABLE = False
+
+    # Sentinel exception classes so except clauses don't catch unrelated errors
+    class ExpiredSignatureError(Exception):  # noqa: N818
+        """Placeholder when PyJWT is not installed."""
+        pass
+
+    class InvalidTokenError(Exception):  # noqa: N818
+        """Placeholder when PyJWT is not installed."""
+        pass
+
+logger = logging.getLogger(__name__)
+
+    class InvalidTokenError(Exception):  # noqa: N818
+        """Placeholder when PyJWT is not installed."""
+
+        pass
 
 
 class Permission(Enum):
@@ -313,6 +328,10 @@ class JWTTokenManager:
         Returns:
             JWTClaims if valid, None otherwise
         """
+        if not JWT_AVAILABLE:
+            logger.warning("PyJWT is not installed — cannot validate tokens")
+            return None
+
         try:
             payload = jwt.decode(token, self._secret, algorithms=[self._algorithm])
 
@@ -355,6 +374,10 @@ class JWTTokenManager:
         Returns:
             True if revoked successfully
         """
+        if not JWT_AVAILABLE:
+            logger.warning("PyJWT is not installed — cannot revoke token by value")
+            return False
+
         try:
             payload = jwt.decode(
                 token,

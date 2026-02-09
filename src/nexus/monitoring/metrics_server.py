@@ -6,11 +6,13 @@ Provides HTTP endpoint for Prometheus scraping and metrics export.
 Author: Nexus Team
 """
 
+import time
 import threading
 import logging
 from typing import Optional, Dict, Any
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
+import json
 
 try:
     from prometheus_client import (
@@ -41,6 +43,7 @@ class MetricsHandler(BaseHTTPRequestHandler):
     """HTTP handler for Prometheus metrics endpoint."""
 
     registry: Optional[CollectorRegistry] = None
+    _server_start_time: Optional[float] = None
 
     def do_GET(self):
         """Handle GET requests."""
@@ -60,6 +63,10 @@ class MetricsHandler(BaseHTTPRequestHandler):
         """Handle metrics endpoint."""
         try:
             if self.registry is None:
+                logger.warning(
+                    "No Prometheus registry configured — returning empty metrics. "
+                    "Pass a registry with registered collectors to MetricsServer()."
+                )
                 self.registry = CollectorRegistry()
 
             output = generate_latest(self.registry)
@@ -75,8 +82,22 @@ class MetricsHandler(BaseHTTPRequestHandler):
             self._handle_error(str(e))
 
     def _handle_health(self):
-        """Handle health check endpoint."""
-        response = b'{"status": "healthy"}'
+        """Handle health check endpoint with actual system info."""
+        health = {
+            "status": "healthy",
+            "prometheus_available": PROMETHEUS_AVAILABLE,
+            "registry_configured": self.registry is not None,
+        }
+        if self._server_start_time is not None:
+            health["uptime_seconds"] = round(time.time() - self._server_start_time, 1)
+        if self.registry is not None and PROMETHEUS_AVAILABLE:
+            try:
+                # Count registered collectors as a basic liveness signal
+                health["collector_count"] = len(list(self.registry.collect()))
+            except Exception:
+                health["collector_count"] = -1
+
+        response = json.dumps(health).encode()
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(response)))
@@ -154,6 +175,7 @@ class MetricsServer:
 
         # Set registry on handler class
         MetricsHandler.registry = self.registry
+        MetricsHandler._server_start_time = time.time()
 
         logger.info(f"MetricsServer initialized (host={host}, port={port})")
 

@@ -22,7 +22,15 @@ from typing import Any, Dict, Optional, Tuple
 from datetime import datetime
 
 try:
-    from fastapi import FastAPI, HTTPException, Request, Security, Header, Depends
+    from fastapi import (
+        FastAPI,
+        HTTPException,
+        Request,
+        Security,
+        Header,
+        Depends,
+        Query,
+    )
 
     FASTAPI_AVAILABLE = True
 except ImportError:
@@ -30,9 +38,9 @@ except ImportError:
 try:
     from fastapi.middleware.cors import CORSMiddleware
 
-    FASTAPI_AVAILABLE = True
+    CORS_AVAILABLE = True
 except ImportError:
-    FASTAPI_AVAILABLE = False
+    CORS_AVAILABLE = False
 try:
     from pydantic import BaseModel, Field
 
@@ -48,9 +56,9 @@ except ImportError:
 try:
     from starlette.middleware.base import BaseHTTPMiddleware
 
-    STARLETTE_AVAILABLE = True
+    BASE_MIDDLEWARE_AVAILABLE = True
 except ImportError:
-    STARLETTE_AVAILABLE = False
+    BASE_MIDDLEWARE_AVAILABLE = False
 
 # Module-level guard: this entire module requires fastapi, pydantic, and starlette
 _missing = []
@@ -60,6 +68,10 @@ if not PYDANTIC_AVAILABLE:
     _missing.append("pydantic")
 if not STARLETTE_AVAILABLE:
     _missing.append("starlette")
+if not CORS_AVAILABLE:
+    _missing.append("fastapi (CORS middleware)")
+if not BASE_MIDDLEWARE_AVAILABLE:
+    _missing.append("starlette (BaseHTTPMiddleware)")
 if _missing:
     raise ImportError(
         f"The explainer_api module requires {', '.join(_missing)}. "
@@ -205,6 +217,33 @@ class HealthResponse(BaseModel):
     status: str
     engine_ready: bool
     version: str = "1.0.0"
+
+
+class TokenRequest(BaseModel):
+    """Request model for JWT token generation."""
+
+    user_id: str = Field(
+        ..., min_length=1, max_length=256, description="Unique user identifier"
+    )
+    permissions: list = Field(
+        default=["inference"],
+        description="List of permission scopes (read, write, admin, inference, training)",
+    )
+
+
+class APIKeyRequest(BaseModel):
+    """Request model for API key generation."""
+
+    name: str = Field(
+        default="Default Key",
+        min_length=1,
+        max_length=256,
+        description="Human-readable name for the key",
+    )
+    permissions: list = Field(
+        default=["inference"],
+        description="List of permission scopes",
+    )
 
 
 # ============================================================================
@@ -399,7 +438,7 @@ async def verify_authentication(
 
 async def check_rate_limit(
     auth_context: Dict[str, Any] = Depends(verify_authentication),
-    request: Request = None,
+    request: Request = None,  # noqa: FastAPI injects; None fallback for testing only
 ) -> Dict[str, Any]:
     """
     Check rate limit for the request.
@@ -465,11 +504,34 @@ def audit_input(prompt: str, request_id: str) -> SecurityReport:
     """
     auditor = get_security_auditor_instance()
 
-    report = auditor.audit_input(
-        text=prompt,
-        context="explainer_api.generate",
-        metadata={"request_id": request_id, "timestamp": datetime.utcnow().isoformat()},
-    )
+    try:
+        report = auditor.audit_input(
+            text=prompt,
+            context="explainer_api.generate",
+            metadata={
+                "request_id": request_id,
+                "timestamp": datetime.utcnow().isoformat(),
+            },
+        )
+    except SecurityException as exc:
+        # SecurityAuditor raises SecurityException when block_on_violation=True
+        violation = exc.violation if hasattr(exc, "violation") else None
+        violation_type = violation.type.value if violation else "unknown"
+        logger.warning(
+            {
+                "event": "security_violation",
+                "request_id": request_id,
+                "violations": [violation_type],
+            }
+        )
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "Security violation detected",
+                "violations": [violation_type],
+                "request_id": request_id,
+            },
+        )
 
     if not report.passed:
         violation_types = [v.type.value for v in report.violations]
@@ -594,7 +656,8 @@ async def generate_explanation(
                     }
                 )
                 raise HTTPException(
-                    status_code=500, detail=f"Failed to initialize model: {str(e)}"
+                    status_code=500,
+                    detail="Failed to initialize model. Check server logs for details.",
                 )
 
         # Generate video
@@ -638,7 +701,10 @@ async def generate_explanation(
                 "error_type": type(e).__name__,
             }
         )
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail="An internal error occurred. Check server logs for details.",
+        )
 
 
 @app.get(
@@ -676,7 +742,8 @@ async def health_check() -> HealthResponse:
     description="Retrieve security audit log entries (requires authentication)",
 )
 async def get_audit_log(
-    auth_context: Dict[str, Any] = Depends(verify_authentication), limit: int = 100
+    auth_context: Dict[str, Any] = Depends(verify_authentication),
+    limit: int = Query(default=100, ge=1, le=1000, description="Max entries to return"),
 ) -> Dict[str, Any]:
     """
     Get security audit log.
@@ -740,28 +807,18 @@ async def get_rate_limit_stats(
     summary="Generate JWT Token",
     description="Generate a JWT token for API authentication",
 )
-async def generate_token(request: Request, payload: Dict[str, Any]) -> Dict[str, Any]:
+async def generate_token(request: Request, payload: TokenRequest) -> Dict[str, Any]:
     """
     Generate a JWT token.
 
     This is a utility endpoint for development/testing.
     In production, tokens should be generated through a proper auth service.
-
-    Required fields:
-    - user_id: Unique user identifier
-    - permissions: List of permission scopes
     """
-    user_id = payload.get("user_id")
-    permissions = payload.get("permissions", ["inference"])
-
-    if not user_id:
-        raise HTTPException(status_code=400, detail="user_id is required")
-
     auth = get_authenticator_instance()
 
     # Convert permission strings to Permission enums
     permission_enums = []
-    for perm in permissions:
+    for perm in payload.permissions:
         try:
             permission_enums.append(Permission(perm))
         except ValueError:
@@ -769,13 +826,17 @@ async def generate_token(request: Request, payload: Dict[str, Any]) -> Dict[str,
 
     # Generate token
     token = auth.jwt.generate_token(
-        user_id=user_id,
+        user_id=payload.user_id,
         permissions=permission_enums,
         expires_in=None,  # Uses default (24 hours)
     )
 
     logger.info(
-        {"event": "token_generated", "user_id": user_id, "permissions": permissions}
+        {
+            "event": "token_generated",
+            "user_id": payload.user_id,
+            "permissions": payload.permissions,
+        }
     )
 
     return {
@@ -795,24 +856,17 @@ async def generate_token(request: Request, payload: Dict[str, Any]) -> Dict[str,
     summary="Generate API Key",
     description="Generate an API key for authentication",
 )
-async def generate_api_key(request: Request, payload: Dict[str, Any]) -> Dict[str, Any]:
+async def generate_api_key(request: Request, payload: APIKeyRequest) -> Dict[str, Any]:
     """
     Generate an API key.
 
     This is a utility endpoint for development/testing.
-
-    Required fields:
-    - name: Human-readable name for the key
-    - permissions: List of permission scopes
     """
-    name = payload.get("name", "Default Key")
-    permissions = payload.get("permissions", ["inference"])
-
     auth = get_authenticator_instance()
 
     # Convert permission strings to Permission enums
     permission_enums = []
-    for perm in permissions:
+    for perm in payload.permissions:
         try:
             permission_enums.append(Permission(perm))
         except ValueError:
@@ -820,10 +874,15 @@ async def generate_api_key(request: Request, payload: Dict[str, Any]) -> Dict[st
 
     # Generate API key
     raw_key, api_key = auth.api_keys.generate_key(
-        name=name, permissions=permission_enums, expires_in_days=365, rate_limit=1000
+        name=payload.name,
+        permissions=permission_enums,
+        expires_in_days=365,
+        rate_limit=1000,
     )
 
-    logger.info({"event": "api_key_generated", "key_id": api_key.key_id, "name": name})
+    logger.info(
+        {"event": "api_key_generated", "key_id": api_key.key_id, "name": payload.name}
+    )
 
     return {
         "api_key": raw_key,
@@ -844,7 +903,7 @@ if __name__ == "__main__":
 
     # Run with uvicorn
     uvicorn.run(
-        "src.api.explainer_api:app",
+        "nexus.api.explainer_api:app",
         host="0.0.0.0",
         port=8000,
         reload=False,

@@ -42,7 +42,7 @@ def main(args: Optional[List[str]] = None) -> int:
     diffusion_parser.add_argument(
         "--model", "-m", default="sdxl-base", help="Model preset or ID"
     )
-    diffusion_parser.add_argument("--prompt", "-p", required=True, help="Text prompt")
+    diffusion_parser.add_argument("--prompt", "-p", default=None, help="Text prompt")
     diffusion_parser.add_argument(
         "--negative-prompt", "-n", default="", help="Negative prompt"
     )
@@ -72,7 +72,7 @@ def main(args: Optional[List[str]] = None) -> int:
     video_parser = subparsers.add_parser("video", help="Video generation commands")
     video_parser.add_argument("action", choices=["generate", "img2vid", "list-models"])
     video_parser.add_argument("--model", "-m", default="ltx-video", help="Model ID")
-    video_parser.add_argument("--prompt", "-p", required=True, help="Text prompt")
+    video_parser.add_argument("--prompt", "-p", default=None, help="Text prompt")
     video_parser.add_argument(
         "--output", "-o", default="output.mp4", help="Output path"
     )
@@ -147,213 +147,261 @@ def main(args: Optional[List[str]] = None) -> int:
 
 def handle_diffusion_command(args):
     """Handle diffusion subcommand."""
-    from nexus.models.diffusion import DiffusionPipelineLoader
+    try:
+        from nexus.models.diffusion import DiffusionPipelineLoader
 
-    if args.action == "list-presets":
-        presets = DiffusionPipelineLoader.list_presets()
-        print("Available presets:")
-        for preset in presets:
-            info = DiffusionPipelineLoader.get_preset_info(preset)
-            print(f"  {preset}: {info.get('model_id', 'N/A')}")
-        return 0
+        if args.action == "list-presets":
+            presets = DiffusionPipelineLoader.list_presets()
+            print("Available presets:")
+            for preset in presets:
+                info = DiffusionPipelineLoader.get_preset_info(preset)
+                print(f"  {preset}: {info.get('model_id', 'N/A')}")
+            return 0
 
-    print(f"Loading model: {args.model}")
-    loader = DiffusionPipelineLoader()
-
-    if args.quantize:
-        pipeline = loader.load_quantized(args.model, quantization=args.quantize)
-    else:
-        pipeline = loader.load(args.model)
-
-    if args.action == "generate":
-        result = pipeline.generate(
-            prompt=args.prompt,
-            negative_prompt=args.negative_prompt,
-            height=args.height,
-            width=args.width,
-            num_inference_steps=args.steps,
-            seed=args.seed,
-        )
-        result["images"][0].save(args.output)
-        print(f"✓ Generated: {args.output}")
-
-    elif args.action == "img2img":
-        if not args.input:
-            print("Error: --input required for img2img")
+        # Actions that require --prompt
+        if not args.prompt:
+            print("Error: --prompt is required for this action")
             return 1
-        from PIL import Image
 
-        input_image = Image.open(args.input)
-        result = pipeline.generate_variations(
-            image=input_image,
-            prompt=args.prompt,
-            strength=args.strength,
-            seed=args.seed,
-        )
-        result["images"][0].save(args.output)
-        print(f"✓ Generated: {args.output}")
+        print(f"Loading model: {args.model}")
+        loader = DiffusionPipelineLoader()
 
-    elif args.action == "inpaint":
-        if not args.input or not args.mask:
-            print("Error: --input and --mask required for inpainting")
-            return 1
-        from PIL import Image
+        if args.quantize:
+            pipeline = loader.load_quantized(args.model, quantization=args.quantize)
+        else:
+            pipeline = loader.load(args.model)
 
-        image = Image.open(args.input)
-        mask = Image.open(args.mask)
-        result = pipeline.inpaint(
-            image=image, mask=mask, prompt=args.prompt, seed=args.seed
-        )
-        result["images"][0].save(args.output)
-        print(f"✓ Generated: {args.output}")
-
-    pipeline.unload()
-    return 0
-
-
-def handle_video_command(args):
-    """Handle video subcommand."""
-    from nexus.models.video import VideoPipeline, VideoConfig
-
-    if args.action == "list-models":
-        models = VideoPipeline.MODEL_TYPE_MAP.keys()
-        print("Supported video models:")
-        for model in models:
-            print(f"  {model}")
-        return 0
-
-    print(f"Loading video model: {args.model}")
-    config = VideoConfig(
-        model_id=args.model,
-        num_frames=args.frames,
-        fps=args.fps,
-        height=args.height,
-        width=args.width,
-    )
-
-    with VideoPipeline(config) as pipeline:
         if args.action == "generate":
             result = pipeline.generate(
                 prompt=args.prompt,
-                num_frames=args.frames,
+                negative_prompt=args.negative_prompt,
+                height=args.height,
+                width=args.width,
                 num_inference_steps=args.steps,
                 seed=args.seed,
             )
-        elif args.action == "img2vid":
+            result["images"][0].save(args.output)
+            print(f"✓ Generated: {args.output}")
+
+        elif args.action == "img2img":
             if not args.input:
-                print("Error: --input required for img2vid")
+                print("Error: --input required for img2img")
                 return 1
             from PIL import Image
 
             input_image = Image.open(args.input)
-            result = pipeline.generate_from_image(
+            result = pipeline.generate_variations(
                 image=input_image,
                 prompt=args.prompt,
-                num_frames=args.frames,
+                strength=args.strength,
                 seed=args.seed,
             )
+            result["images"][0].save(args.output)
+            print(f"✓ Generated: {args.output}")
 
-        print(f"Generated {len(result['frames'])} frames")
-        for i, frame in enumerate(result["frames"]):
-            frame.save(f"frame_{i:04d}.png")
-        print(f"✓ Frames saved to frame_*.png")
+        elif args.action == "inpaint":
+            if not args.input or not args.mask:
+                print("Error: --input and --mask required for inpainting")
+                return 1
+            from PIL import Image
 
-    return 0
+            image = Image.open(args.input)
+            mask = Image.open(args.mask)
+            result = pipeline.inpaint(
+                image=image, mask=mask, prompt=args.prompt, seed=args.seed
+            )
+            result["images"][0].save(args.output)
+            print(f"✓ Generated: {args.output}")
+
+        pipeline.unload()
+        return 0
+
+    except ImportError as e:
+        print(f"Error: Missing dependency - {e}")
+        print("Install with: pip install nexus[diffusion]")
+        return 1
+    except Exception as e:
+        print(f"Error: {e}")
+        return 1
+
+
+def handle_video_command(args):
+    """Handle video subcommand."""
+    try:
+        from nexus.models.video import VideoPipeline, VideoConfig
+
+        if args.action == "list-models":
+            models = VideoPipeline.MODEL_TYPE_MAP.keys()
+            print("Supported video models:")
+            for model in models:
+                print(f"  {model}")
+            return 0
+
+        # Actions that require --prompt
+        if not args.prompt:
+            print("Error: --prompt is required for this action")
+            return 1
+
+        print(f"Loading video model: {args.model}")
+        config = VideoConfig(
+            model_id=args.model,
+            num_frames=args.frames,
+            fps=args.fps,
+            height=args.height,
+            width=args.width,
+        )
+
+        with VideoPipeline(config) as pipeline:
+            if args.action == "generate":
+                result = pipeline.generate(
+                    prompt=args.prompt,
+                    num_frames=args.frames,
+                    num_inference_steps=args.steps,
+                    seed=args.seed,
+                )
+            elif args.action == "img2vid":
+                if not args.input:
+                    print("Error: --input required for img2vid")
+                    return 1
+                from PIL import Image
+
+                input_image = Image.open(args.input)
+                result = pipeline.generate_from_image(
+                    image=input_image,
+                    prompt=args.prompt,
+                    num_frames=args.frames,
+                    seed=args.seed,
+                )
+            else:
+                print(f"Error: Unknown action '{args.action}'")
+                return 1
+
+            print(f"Generated {len(result['frames'])} frames")
+            for i, frame in enumerate(result["frames"]):
+                frame.save(f"frame_{i:04d}.png")
+            print("✓ Frames saved to frame_*.png")
+
+        return 0
+
+    except ImportError as e:
+        print(f"Error: Missing dependency - {e}")
+        print("Install with: pip install nexus[video]")
+        return 1
+    except Exception as e:
+        print(f"Error: {e}")
+        return 1
 
 
 def handle_gguf_command(args):
     """Handle GGUF subcommand."""
-    from nexus.models.gguf import GGUfLoader, GGUFConfig, GGUFConverter
+    try:
+        from nexus.models.gguf import GGUfLoader, GGUFConfig, GGUFConverter
 
-    if args.action == "info":
-        converter = GGUFConverter()
-        metadata = converter.get_gguf_metadata(args.model)
-        print(f"Model: {args.model}")
-        print("Metadata:")
-        for key, value in metadata.items():
-            print(f"  {key}: {value}")
+        if args.action == "info":
+            converter = GGUFConverter()
+            metadata = converter.get_gguf_metadata(args.model)
+            print(f"Model: {args.model}")
+            print("Metadata:")
+            for key, value in metadata.items():
+                print(f"  {key}: {value}")
+            return 0
+
+        elif args.action == "validate":
+            converter = GGUFConverter()
+            report = converter.validate_gguf(args.model)
+            print(f"Valid: {report['valid']}")
+            if report["error"]:
+                print(f"Error: {report['error']}")
+            print(f"Tensors: {report['tensor_count']}")
+            print(f"Size: {report['file_size']} bytes")
+            return 0
+
+        elif args.action == "convert":
+            if not args.source:
+                print("Error: --source required for conversion")
+                return 1
+            converter = GGUFConverter()
+            output = converter.pytorch_to_gguf(
+                args.source, args.model, quantization=args.quantization
+            )
+            print(f"✓ Would create: {output}")
+            return 0
+
+        elif args.action == "run":
+            if not args.prompt:
+                print("Error: --prompt required")
+                return 1
+
+            config = GGUFConfig(
+                model_path=args.model,
+                n_ctx=args.ctx,
+                n_gpu_layers=args.gpu_layers,
+                n_threads=args.threads,
+                temperature=args.temperature,
+            )
+
+            with GGUfLoader(config) as model:
+                if args.chat:
+                    messages = [{"role": "user", "content": args.prompt}]
+                    result = model.chat(messages, max_tokens=args.max_tokens)
+                    print(result["content"])
+                else:
+                    result = model.generate(args.prompt, max_tokens=args.max_tokens)
+                    print(result["text"])
+
         return 0
 
-    elif args.action == "validate":
-        converter = GGUFConverter()
-        report = converter.validate_gguf(args.model)
-        print(f"Valid: {report['valid']}")
-        if report["error"]:
-            print(f"Error: {report['error']}")
-        print(f"Tensors: {report['tensor_count']}")
-        print(f"Size: {report['file_size']} bytes")
-        return 0
-
-    elif args.action == "convert":
-        if not args.source:
-            print("Error: --source required for conversion")
-            return 1
-        converter = GGUFConverter()
-        output = converter.pytorch_to_gguf(
-            args.source, args.model, quantization=args.quantization
-        )
-        print(f"✓ Would create: {output}")
-        return 0
-
-    elif args.action == "run":
-        if not args.prompt:
-            print("Error: --prompt required")
-            return 1
-
-        config = GGUFConfig(
-            model_path=args.model,
-            n_ctx=args.ctx,
-            n_gpu_layers=args.gpu_layers,
-            n_threads=args.threads,
-            temperature=args.temperature,
-        )
-
-        with GGUfLoader(config) as model:
-            if args.chat:
-                messages = [{"role": "user", "content": args.prompt}]
-                result = model.chat(messages, max_tokens=args.max_tokens)
-                print(result["content"])
-            else:
-                result = model.generate(args.prompt, max_tokens=args.max_tokens)
-                print(result["text"])
-
-    return 0
+    except ImportError as e:
+        print(f"Error: Missing dependency - {e}")
+        print("Install with: pip install nexus[gguf]")
+        return 1
+    except Exception as e:
+        print(f"Error: {e}")
+        return 1
 
 
 def handle_registry_command(args):
     """Handle registry subcommand."""
-    from nexus.core.towers import registry
+    try:
+        from nexus.core.towers import registry
 
-    if args.action == "list":
-        models = registry.TEACHER_REGISTRY
-        print("Registered models:")
-        for key, info in models.items():
-            if args.type and info.get("type") != args.type:
-                continue
-            if args.tag and args.tag not in info.get("tags", []):
-                continue
-            print(
-                f"  {key}: {info.get('model', 'N/A')} ({info.get('type', 'unknown')})"
-            )
-        return 0
+        if args.action == "list":
+            models = registry.TEACHER_REGISTRY
+            print("Registered models:")
+            for key, info in models.items():
+                if args.type and info.get("type") != args.type:
+                    continue
+                if args.tag and args.tag not in info.get("tags", []):
+                    continue
+                print(
+                    f"  {key}: {info.get('model', 'N/A')} ({info.get('type', 'unknown')})"
+                )
+            return 0
 
-    elif args.action == "info":
-        if not args.model:
-            print("Error: --model required")
-            return 1
-        info = registry.get_model_info(args.model)
-        print(f"Model: {args.model}")
-        for key, value in info.items():
-            print(f"  {key}: {value}")
-        return 0
+        elif args.action == "info":
+            if not args.model:
+                print("Error: --model required")
+                return 1
+            info = registry.get_model_info(args.model)
+            print(f"Model: {args.model}")
+            for key, value in info.items():
+                print(f"  {key}: {value}")
+            return 0
 
-    elif args.action == "detect":
-        if not args.architecture:
-            print("Error: --architecture required")
-            return 1
-        detected = registry.detect_architecture(args.architecture)
-        print(f"Detected type for '{args.architecture}': {detected}")
-        return 0
+        elif args.action == "detect":
+            if not args.architecture:
+                print("Error: --architecture required")
+                return 1
+            detected = registry.detect_architecture(args.architecture)
+            print(f"Detected type for '{args.architecture}': {detected}")
+            return 0
+
+    except ImportError as e:
+        print(f"Error: Missing dependency - {e}")
+        return 1
+    except Exception as e:
+        print(f"Error: {e}")
+        return 1
 
 
 if __name__ == "__main__":
