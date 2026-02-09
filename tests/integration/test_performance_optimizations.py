@@ -21,14 +21,14 @@ import torch
 import torch.nn as nn
 
 # Test imports
-from nexus.models.sli.prefetch_engine import (
+from src.models.sli.prefetch_engine import (
     PrefetchEngine, PrefetchStats, create_prefetch_engine
 )
-from nexus.models.sli.activation_cache import (
+from src.models.sli.activation_cache import (
     ActivationCache, ActivationCacheConfig, get_activation_cache
 )
-from nexus.monitoring.metrics_server import MetricsServer
-from nexus.monitoring.collectors import (
+from src.monitoring.metrics_server import MetricsServer
+from src.monitoring.collectors import (
     InferenceMetricsCollector, CacheMetricsCollector, register_all_collectors
 )
 

@@ -16,7 +16,7 @@ Requirements:
 import torch
 import argparse
 from transformers import AutoTokenizer, AutoModelForCausalLM
-from nexus.models.knowledge import KnowledgeTower
+from src.models.knowledge import KnowledgeTower
 
 def main():
     parser = argparse.ArgumentParser(description="Nexus Librarian RAG Demo")

@@ -432,7 +432,7 @@ def load_datasets(
     if use_streaming:
         logger.info("📂 Loading datasets in STREAMING mode (memory-efficient)")
         try:
-            from src.nexus.data.streaming_trainer import (
+            from src.data.streaming_trainer import (
                 StreamingDatasetLoader,
                 StreamingConfig,
             )

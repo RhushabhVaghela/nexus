@@ -12,7 +12,7 @@ from tqdm import tqdm
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.join(BASE_DIR, "src"))
 
-from nexus.models.knowledge import KnowledgeTower
+from src.models.knowledge import KnowledgeTower
 
 
 def main():

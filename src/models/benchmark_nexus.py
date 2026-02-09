@@ -4,9 +4,9 @@ import torch.nn as nn
 import os
 import numpy as np
 import psutil
-from nexus.core.profiling.niwt import NIWTCore
-from nexus.models.profiler import StreamingPCAProfiler
-from nexus.models.distill import NexusTrainer
+from src.core.profiling.niwt import NIWTCore
+from src.models.profiler import StreamingPCAProfiler
+from src.models.distill import NexusTrainer
 
 
 def benchmark_profiling_efficiency():

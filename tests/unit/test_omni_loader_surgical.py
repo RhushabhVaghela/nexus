@@ -5,7 +5,7 @@ from pathlib import Path
 import json
 import logging
 from unittest.mock import MagicMock, patch
-import src.nexus.models.omni.loader as loader_mod
+import src.models.omni.loader as loader_mod
 from src.models.omni.loader import OmniModelLoader, load_omni_model, OmniModelConfig
 from transformers import PreTrainedModel, PretrainedConfig
 

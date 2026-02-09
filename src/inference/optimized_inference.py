@@ -12,7 +12,7 @@ Integrates all 8 research-backed optimizations for achieving 100+ tokens/second:
 8. Low-Rank Attention (Sparse attention)
 
 Usage:
-    from nexus.inference.optimized_inference import OptimizedInference
+    from src.inference.optimized_inference import OptimizedInference
     
     inference = OptimizedInference(model, config)
     output = inference.generate(input_ids, max_new_tokens=100)
@@ -30,7 +30,7 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 # Import all optimization modules
-from nexus.optimizations import (
+from src.optimizations import (
     LayerPipeliningOptimizer,
     AdaptiveLayerSkipper,
     SemiAutoregressiveDecoder,
@@ -144,7 +144,7 @@ class OptimizationRegistry:
         # Async Decompression
         if self.config.enable_async_decompression:
             try:
-                from nexus.optimizations.async_decompression import AsyncDecompressionConfig
+                from src.optimizations.async_decompression import AsyncDecompressionConfig
                 self.optimizations['async_decompression'] = AsyncDecompressor(
                     config=AsyncDecompressionConfig()
                 )
@@ -163,7 +163,7 @@ class OptimizationRegistry:
         # Layer Fusion
         if self.config.enable_layer_fusion:
             try:
-                from nexus.optimizations.layer_fusion import FusionConfig
+                from src.optimizations.layer_fusion import FusionConfig
                 fusion_optimizer = LayerFusionOptimizer(config=FusionConfig())
                 self.optimizations['layer_fusion'] = fusion_optimizer
                 logger.info("✓ Layer fusion initialized")
@@ -188,7 +188,7 @@ class OptimizationRegistry:
         # Sparse Attention
         if self.config.enable_sparse_attention:
             try:
-                from nexus.optimizations.low_rank_attention import SparseAttentionConfig
+                from src.optimizations.low_rank_attention import SparseAttentionConfig
                 self.optimizations['sparse_attention'] = SparseAttentionOptimizer(
                     config=SparseAttentionConfig()
                 )

@@ -5,7 +5,7 @@ import json
 import numpy as np
 from tqdm import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from nexus.core.config import NexusConfig
+from src.core.config import NexusConfig
 from scripts.niwt_batch_profiler import get_nf4_config, ReasoningDataset
 from torch.utils.data import DataLoader
 

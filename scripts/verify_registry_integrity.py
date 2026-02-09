@@ -4,7 +4,7 @@ import sys
 # Ensure src is in path to import registry
 sys.path.append(os.path.join(os.getcwd(), 'src'))
 
-from nexus.core.towers.registry import TEACHER_REGISTRY, DATASET_REGISTRY
+from src.core.towers.registry import TEACHER_REGISTRY, DATASET_REGISTRY
 
 def check_registry(registry, name):
     print(f"\nEvaluating {name} Registry...")

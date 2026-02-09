@@ -123,7 +123,7 @@ class TestPipelineComponentsIntegration:
             check_pause_state,
             check_and_cooldown,
         )
-        import src.nexus.training.controller as tc
+        import src.training.controller as tc
         
         # Verify the module works
         tc._paused = False

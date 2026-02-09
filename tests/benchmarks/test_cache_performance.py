@@ -21,7 +21,7 @@ import statistics
 from typing import Dict, List, Tuple
 import torch
 
-from nexus.models.sli.activation_cache import (
+from src.models.sli.activation_cache import (
     ActivationCache,
     ActivationCacheConfig,
     CacheInvalidationStrategy,

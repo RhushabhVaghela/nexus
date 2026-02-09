@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 try:
     from datasets import Dataset
-    from src.nexus.multimodal.model import OmniMultimodalLM
+    from src.multimodal.model import OmniMultimodalLM
 except ImportError as e:
     logger.warning(
         f"Optional imports not available: {e}. Some features may be limited."

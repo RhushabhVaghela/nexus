@@ -17,7 +17,14 @@ from dataclasses import dataclass
 
 import numpy as np
 import torch
-import torchaudio
+
+try:
+    import torchaudio
+
+    TORCHAUDIO_AVAILABLE = True
+except ImportError:
+    torchaudio = None
+    TORCHAUDIO_AVAILABLE = False
 
 # TTS Model imports (Coqui TTS)
 try:
@@ -378,10 +385,14 @@ class TTSEngine:
         wav_buffer = io.BytesIO()
         if SOUNDFILE_AVAILABLE:
             sf.write(wav_buffer, audio_array, sample_rate, format="WAV")
-        else:
+        elif TORCHAUDIO_AVAILABLE:
             # Fallback using torchaudio
             tensor = torch.from_numpy(audio_array).unsqueeze(0)
             torchaudio.save(wav_buffer, tensor, sample_rate, format="wav")
+        else:
+            raise ImportError(
+                "Either soundfile or torchaudio is required for audio conversion"
+            )
 
         wav_buffer.seek(0)
 
@@ -399,9 +410,13 @@ class TTSEngine:
             if isinstance(output.audio_array, np.ndarray):
                 if SOUNDFILE_AVAILABLE:
                     sf.write(str(cache_path), output.audio_array, output.sample_rate)
-                else:
+                elif TORCHAUDIO_AVAILABLE:
                     tensor = torch.from_numpy(output.audio_array).unsqueeze(0)
                     torchaudio.save(str(cache_path), tensor, output.sample_rate)
+                else:
+                    warnings.warn(
+                        "Neither soundfile nor torchaudio available for caching"
+                    )
         except Exception as e:
             warnings.warn(f"Failed to save cache: {e}")
 
@@ -639,9 +654,13 @@ class TTSStreamer:
             # WAV format
             if SOUNDFILE_AVAILABLE:
                 sf.write(str(output_path), output.audio_array, output.sample_rate)
-            else:
+            elif TORCHAUDIO_AVAILABLE:
                 tensor = torch.from_numpy(output.audio_array).unsqueeze(0)
                 torchaudio.save(str(output_path), tensor, output.sample_rate)
+            else:
+                raise ImportError(
+                    "Either soundfile or torchaudio is required to save audio"
+                )
 
         print(f"💾 Audio saved: {output_path} ({output.duration_ms:.0f}ms)")
         return str(output_path)

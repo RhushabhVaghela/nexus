@@ -21,7 +21,7 @@ import os
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from nexus.models.sli.io_optimizer import (
+from src.models.sli.io_optimizer import (
     IOOptimizer,
     EnhancedPrefetchBuffer,
     AccessPattern,

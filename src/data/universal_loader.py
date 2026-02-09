@@ -17,8 +17,8 @@ import multiprocessing
 
 # Nexus Utilities
 try:
-    from src.nexus.utils.corruption_tracker import tracker as corruption_tracker
-    from src.nexus.utils.schema_normalizer import SchemaNormalizer
+    from src.utils.corruption_tracker import tracker as corruption_tracker
+    from src.utils.schema_normalizer import SchemaNormalizer
 except ImportError:
     corruption_tracker = None
     SchemaNormalizer = None

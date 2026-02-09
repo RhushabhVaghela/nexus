@@ -31,8 +31,8 @@ import sys
 sys.modules['tensorrt_llm'] = MagicMock()
 sys.modules['tensorrt_llm.runtime'] = MagicMock()
 
-from nexus.models.tensorrt.trt_engine import TRTEngineConfig, TRTBuildConfig, TRTQuantizationMode
-from nexus.models.tensorrt.inference_backend import TensorRTConfig, TensorRTBackend
+from src.models.tensorrt.trt_engine import TRTEngineConfig, TRTBuildConfig, TRTQuantizationMode
+from src.models.tensorrt.inference_backend import TensorRTConfig, TensorRTBackend
 
 
 def benchmark_inference_latency(

@@ -6,9 +6,9 @@ import os
 from typing import Dict, List
 
 # Nexus Imports
-from nexus.core.student.core import NexusStudentCore
-from nexus.core.adapters.reasoning_adapter import ReasoningAdapter
-from nexus.core.adapters.vision_adapter import VisionAdapter
+from src.core.student.core import NexusStudentCore
+from src.core.adapters.reasoning_adapter import ReasoningAdapter
+from src.core.adapters.vision_adapter import VisionAdapter
 
 class NexusDistillationTrainer:
     def __init__(

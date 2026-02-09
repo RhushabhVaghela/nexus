@@ -942,8 +942,15 @@ class MemoryGuard:
         self._monitor_thread = threading.Thread(
             target=_monitor_loop, daemon=True, name="memory-guard"
         )
-        self._monitor_thread.start()
-        logger.info("Memory guard background monitor started")
+        try:
+            self._monitor_thread.start()
+            logger.info("Memory guard background monitor started")
+        except RuntimeError:
+            # Thread creation can fail in constrained environments
+            self._monitor_thread = None
+            logger.warning(
+                "Memory guard: could not start monitor thread (thread limit reached)"
+            )
 
     def stop_monitor(self):
         """Stop the background monitoring thread."""

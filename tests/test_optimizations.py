@@ -22,7 +22,7 @@ import tempfile
 import os
 
 # Import all optimization modules
-from nexus.optimizations import (
+from src.optimizations import (
     LayerPipeliningOptimizer,
     AdaptiveLayerSkipper,
     SemiAutoregressiveDecoder,
@@ -33,51 +33,51 @@ from nexus.optimizations import (
     SparseAttentionOptimizer,
 )
 
-from nexus.optimizations.layer_pipelining import (
+from src.optimizations.layer_pipelining import (
     StaleActivationPredictor,
     SpeculativeLayerExecutor,
     PipelineConfig,
 )
 
-from nexus.optimizations.adaptive_layer_skipping import (
+from src.optimizations.adaptive_layer_skipping import (
     LayerSkipRouter,
     SWIFTSkipper,
     LayerSkipConfig,
 )
 
-from nexus.optimizations.semi_autoregressive import (
+from src.optimizations.semi_autoregressive import (
     SPACEDecoder,
     ParallelTokenHead,
     SARConfig,
 )
 
-from nexus.optimizations.async_decompression import (
+from src.optimizations.async_decompression import (
     AsyncDecompressionConfig,
     CUDAStreamManager,
     LayerBufferPool,
 )
 
-from nexus.optimizations.compression_optimized import (
+from src.optimizations.compression_optimized import (
     CompressionConfig,
     QuantizationCompressor,
     ZSTDQuantizedCompressor,
     QuantizedTensor,
 )
 
-from nexus.optimizations.layer_fusion import (
+from src.optimizations.layer_fusion import (
     FusionConfig,
     FusedAttentionFFN,
     FusedQKVProjection,
     FlashAttentionKernel,
 )
 
-from nexus.optimizations.early_exit_routing import (
+from src.optimizations.early_exit_routing import (
     DynamicRoutingConfig,
     TokenRouter,
     DynamicLayerRouter,
 )
 
-from nexus.optimizations.low_rank_attention import (
+from src.optimizations.low_rank_attention import (
     SparseAttentionConfig,
     LowRankAttention,
     SparseAttentionPattern,
@@ -581,7 +581,7 @@ class TestOptimizationIntegration:
     def test_all_optimizations_importable(self):
         """Test that all optimization modules can be imported."""
         # Import all optimization classes to verify they're available
-        from nexus.optimizations import (
+        from src.optimizations import (
             LayerPipeliningOptimizer,
             AdaptiveLayerSkipper,
             SemiAutoregressiveDecoder,

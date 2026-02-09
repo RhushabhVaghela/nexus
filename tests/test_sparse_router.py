@@ -4,7 +4,7 @@ import sys
 
 sys.path.append("/mnt/d/Research Experiments/nexus/src")
 
-from nexus.core.student.sparse_router import SparseIntentRouter, HardModalityRouter
+from src.core.student.sparse_router import SparseIntentRouter, HardModalityRouter
 
 class TestSparseRouter(unittest.TestCase):
     def test_forward_pass(self):

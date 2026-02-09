@@ -11,7 +11,7 @@ sys.path.append(os.path.join(os.getcwd(), 'src'))
 sys.path.append(os.path.join(os.getcwd(), 'scripts'))
 
 from niwt_core import NIWTCore
-from nexus.core.data.sanitizer import UniversalSanitizer
+from src.core.data.sanitizer import UniversalSanitizer
 import logging
 
 # Suppress noisy transformers generation warnings (e.g. "top_p is ignored when do_sample=False")

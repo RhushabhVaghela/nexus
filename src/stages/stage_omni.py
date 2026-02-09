@@ -27,8 +27,8 @@ import torch
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.nexus.stages.base import BaseStage, StageConfig
-from src.nexus.utils.repetition import PromptRepetitionEngine
+from src.stages.base import BaseStage, StageConfig
+from src.utils.repetition import PromptRepetitionEngine
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ class OmniTrainingStage(BaseStage):
 
     def setup(self):
         """Setup Omni model and tokenizer."""
-        from src.nexus.models.sli.io_optimizer import OmniLoader
+        from src.models.sli.io_optimizer import OmniLoader
 
         logger.info(f"Setting up Omni training stage")
         logger.info(f"Base model: {self.config.base_model_path}")
@@ -124,7 +124,7 @@ class OmniTrainingStage(BaseStage):
             self.logger.info("Using dynamic dataset discovery for Omni stage")
             return self.load_dynamic_datasets()
 
-        from src.nexus.data.universal_loader import load_dataset_universal
+        from src.data.universal_loader import load_dataset_universal
 
         logger.info(f"Loading data from {data_path}")
         result = load_dataset_universal(data_path, sample_size=self.config.sample_size)

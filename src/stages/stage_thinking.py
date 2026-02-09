@@ -11,7 +11,7 @@ from typing import Dict, Any
 from datasets import load_dataset
 
 from .base import BaseStage, StageConfig
-from src.nexus.utils.repetition import PromptRepetitionEngine
+from src.utils.repetition import PromptRepetitionEngine
 
 
 class ThinkingStage(BaseStage):

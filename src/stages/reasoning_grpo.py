@@ -19,7 +19,7 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 
-from src.nexus.utils.repetition import PromptRepetitionEngine
+from src.utils.repetition import PromptRepetitionEngine
 
 logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -421,7 +421,7 @@ def main():
     args = parser.parse_args()
 
     if args.check_modality:
-        from src.nexus.utils.model_utils import check_modality
+        from src.utils.model_utils import check_modality
 
         if not check_modality(args.model, "text"):
             sys.exit(1)

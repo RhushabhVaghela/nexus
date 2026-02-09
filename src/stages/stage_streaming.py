@@ -6,7 +6,7 @@ Token streaming output training stage.
 
 from typing import Dict, Any
 from .base import TextCapabilityStage, StageConfig
-from src.nexus.utils.repetition import PromptRepetitionEngine
+from src.utils.repetition import PromptRepetitionEngine
 
 
 class StreamingStage(TextCapabilityStage):

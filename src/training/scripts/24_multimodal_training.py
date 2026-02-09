@@ -30,9 +30,9 @@ def check_env():
     """Verify environment dependencies."""
     global OmniMultimodalLM, OmniDecoder, UniversalDataLoader
     try:
-        from src.nexus.multimodal.model import OmniMultimodalLM as _OmniMultimodalLM
-        from src.nexus.multimodal.decoders import OmniDecoder as _OmniDecoder
-        from src.nexus.data.universal_loader import (
+        from src.multimodal.model import OmniMultimodalLM as _OmniMultimodalLM
+        from src.multimodal.decoders import OmniDecoder as _OmniDecoder
+        from src.data.universal_loader import (
             UniversalDataLoader as _UniversalDataLoader,
         )
 
@@ -120,7 +120,7 @@ class OmniDataset(torch.utils.data.IterableDataset):
                 )
 
         if self.repetition_factor > 1:
-            from src.nexus.utils.repetition import PromptRepetitionEngine
+            from src.utils.repetition import PromptRepetitionEngine
 
             self.repetition_engine = PromptRepetitionEngine(
                 self.repetition_factor, self.repetition_style
@@ -237,7 +237,7 @@ class DynamicDataCollator:
         self.report_key = schema["report_key"]
         self.persona_key = schema["persona_key"]
         self.text_key = schema["text_key"]
-        from src.nexus.multimodal.decoders import OmniDecoder
+        from src.multimodal.decoders import OmniDecoder
 
         self.decoder = OmniDecoder()
 

@@ -32,7 +32,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 # Import unified tracker
 from src.core.metrics_tracker import MetricsTracker, BenchmarkMetrics, ALL_DATASETS
-from src.nexus.models.omni.loader import OmniModelLoader as OmniLoader
+from src.models.omni.loader import OmniModelLoader as OmniLoader
 
 
 @dataclass
@@ -211,7 +211,7 @@ class BenchmarkRunner:
 
         # Try to load a few samples from configured datasets
         try:
-            from src.nexus.data.universal_loader import load_dataset_universal
+            from src.data.universal_loader import load_dataset_universal
 
             # Iterate through ALL categories and ALL paths
             # We shuffle categories to get a good mix

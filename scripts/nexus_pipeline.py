@@ -20,15 +20,15 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.join(BASE_DIR, 'src')) # Ensure src is in path
 
 try:
-    from nexus.core.utils.memory import should_use_sli
+    from src.core.utils.memory import should_use_sli
 except ImportError:
     print("[Warning] Could not import memory utils. SLI check will default to False.")
     def should_use_sli(config): return False
 
 try:
-    from nexus.core.towers.registry import TEACHER_REGISTRY, DATASET_REGISTRY
+    from src.core.towers.registry import TEACHER_REGISTRY, DATASET_REGISTRY
 except ImportError:
-    print("[Warning] Could not import registry from nexus.core.towers.registry. Using empty defaults.")
+    print("[Warning] Could not import registry from src.core.towers.registry. Using empty defaults.")
     TEACHER_REGISTRY = {}
     DATASET_REGISTRY = {}
 
@@ -887,7 +887,7 @@ class NexusPipeline:
 
         print("Nexus Automation Pipeline Initialized.")
         print(f"[Config] Base Path: {BASE_DIR}")
-        print(f"[Config] Registry: Loaded from nexus.core.towers.registry")
+        print(f"[Config] Registry: Loaded from src.core.towers.registry")
         print(f"[Config] Memory: {MEMORY_DIR}")
         print(f"Current State: {self.state['current_stage']}")
         

@@ -10,7 +10,7 @@ from contextlib import nullcontext
 from torch.utils.data import DataLoader
 from .loss_functions import ActivationAnchoringLoss
 from .auditor import MemorizationAuditor
-from nexus.core.student.core import NexusStudentCore
+from src.core.student.core import NexusStudentCore
 from typing import Dict, Any
 from tqdm import tqdm
 

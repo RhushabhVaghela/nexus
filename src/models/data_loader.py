@@ -17,7 +17,7 @@ try:
 except ImportError as e:
     logger.debug(f"Failed to import progress from relative path: {e}")
     try:
-        from src.nexus.utils.progress import DataLoadingProgress, progress_iter
+        from src.utils.progress import DataLoadingProgress, progress_iter
     except ImportError as e:
         logger.warning(f"Failed to import progress module: {e}")
         DataLoadingProgress = None
@@ -504,7 +504,7 @@ class UniversalDataLoader:
 
         # 7. Ultimate Fallback: Universal Heuristic Sanitizer
         try:
-            from nexus.core.data.sanitizer import UniversalSanitizer
+            from src.core.data.sanitizer import UniversalSanitizer
 
             sanitizer = UniversalSanitizer()
             clean_text = sanitizer.sanitize(sample)

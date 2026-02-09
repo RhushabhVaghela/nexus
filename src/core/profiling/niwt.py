@@ -7,7 +7,7 @@ import gc
 from typing import List, Dict, Tuple, Optional, Any
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
-from nexus.core.utils.universal_inspector import UniversalInspector
+from src.core.utils.universal_inspector import UniversalInspector
 
 
 class ThermalProtection:
@@ -270,7 +270,7 @@ class NIWTCore:
             )
 
         # Import QAD loss for distillation
-        from nexus.models.sli.qad_loss import QADDistillationLoss, QADLossConfig
+        from src.models.sli.qad_loss import QADDistillationLoss, QADLossConfig
 
         # Setup loss function
         qad_config = QADLossConfig(

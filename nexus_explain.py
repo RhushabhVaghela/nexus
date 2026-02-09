@@ -5,7 +5,7 @@ Entry point for generating explanations via CLI.
 """
 import sys
 import argparse
-from src.nexus.optimization.remotion_engine import RemotionExplainerEngine, OmniInference
+from src.optimization.remotion_engine import RemotionExplainerEngine, OmniInference
 
 def main():
     parser = argparse.ArgumentParser(description="Nexus Explainer CLI")

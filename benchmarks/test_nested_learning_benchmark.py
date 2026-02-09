@@ -29,13 +29,13 @@ from collections import OrderedDict
 # Ensure src is in path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from nexus.models.sli.nested_scheduler import (
+from src.models.sli.nested_scheduler import (
     NestedUpdateScheduler,
     NestedUpdateConfig,
     UpdateGroup,
     get_nested_scheduler,
 )
-from nexus.models.sli.hierarchical_cache import (
+from src.models.sli.hierarchical_cache import (
     HierarchicalLayerCache,
     HierarchicalCacheConfig,
     CacheTier,

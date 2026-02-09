@@ -11,7 +11,7 @@ import torch.nn as nn
 from typing import Optional, Dict, Any, List, Tuple
 import logging
 
-from nexus.core.adapters.base import BaseAdapter
+from src.core.adapters.base import BaseAdapter
 from .image_pipeline import ImagePipeline, PipelineConfig
 
 logger = logging.getLogger(__name__)

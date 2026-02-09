@@ -7,9 +7,9 @@ from scipy.io import wavfile
 from pathlib import Path
 from typing import Optional, Dict, Any
 
-from src.nexus.models.omni.inference import OmniInference, GenerationConfig
+from src.models.omni.inference import OmniInference, GenerationConfig
 from src.core.capability_registry import REMOTION_EXPLAINER_SYSTEM_PROMPT
-from src.nexus.utils.asset_manager import AssetManager
+from src.utils.asset_manager import AssetManager
 
 logger = logging.getLogger(__name__)
 

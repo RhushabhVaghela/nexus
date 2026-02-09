@@ -50,7 +50,7 @@ class TestArchitectureRegistrySingleton:
     def test_get_registry_function(self):
         """Test get_registry convenience function."""
         # Reset global registry
-        import src.nexus.models.sli.architecture_registry as reg_module
+        import src.models.sli.architecture_registry as reg_module
         reg_module._registry = None
 
         registry = get_registry()

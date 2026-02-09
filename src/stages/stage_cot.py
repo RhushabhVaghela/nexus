@@ -9,10 +9,18 @@ Trains the model on step-by-step reasoning datasets.
 import torch
 from pathlib import Path
 from typing import Dict, Any, List
-from datasets import load_dataset, concatenate_datasets
+
+try:
+    from datasets import load_dataset, concatenate_datasets
+
+    DATASETS_AVAILABLE = True
+except ImportError:
+    DATASETS_AVAILABLE = False
+    load_dataset = None
+    concatenate_datasets = None
 
 from .base import TextCapabilityStage, StageConfig
-from src.nexus.utils.repetition import PromptRepetitionEngine
+from src.utils.repetition import PromptRepetitionEngine
 
 
 class CoTStage(TextCapabilityStage):

@@ -8,7 +8,7 @@ from transformers import TrainingArguments, Trainer
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 
 from .base import TextCapabilityStage, StageConfig
-from src.nexus.utils.repetition import PromptRepetitionEngine
+from src.utils.repetition import PromptRepetitionEngine
 
 class RemotionGenStage(TextCapabilityStage):
     """Remotion explanatory video generation training with LoRA support."""

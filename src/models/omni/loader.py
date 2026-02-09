@@ -54,7 +54,7 @@ try:
     from ..utils.cache_manager import get_model_cache, ModelCache
 except ImportError:
     try:
-        from src.nexus.utils.cache_manager import get_model_cache, ModelCache
+        from src.utils.cache_manager import get_model_cache, ModelCache
     except ImportError:
         get_model_cache = None
         ModelCache = None

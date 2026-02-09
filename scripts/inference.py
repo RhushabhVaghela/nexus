@@ -15,7 +15,7 @@ except ImportError:
 import torch
 import torch.nn.functional as F
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from nexus.core.student.core import NexusStudentCore, NexusStudentConfig
+from src.core.student.core import NexusStudentCore, NexusStudentConfig
 
 # Default Release Path
 RELEASE_PATH = "nexus-release-v1"
@@ -152,7 +152,7 @@ def load_knowledge_engine(
         return None
 
     print(f"Loading Knowledge Engine from {index_path}...")
-    from nexus.models.knowledge import KnowledgeTower
+    from src.models.knowledge import KnowledgeTower
     import faiss
 
     # Initialize Tower

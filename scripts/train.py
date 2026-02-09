@@ -25,8 +25,8 @@ from torch.optim import AdamW
 from transformers import AutoTokenizer
 
 # Import Core Modules
-from nexus.core.student.core import NexusStudentCore, NexusStudentConfig
-from nexus.models.distill import NexusTrainer
+from src.core.student.core import NexusStudentCore, NexusStudentConfig
+from src.models.distill import NexusTrainer
 from utils.callbacks import KeyboardPauseCallback
 
 
@@ -149,7 +149,7 @@ def main():
         torch.set_float32_matmul_precision("high")
         torch.backends.cudnn.benchmark = True
 
-    from nexus.core.utils.memory import (
+    from src.core.utils.memory import (
         check_memory_headroom,
         get_recommended_batch_size,
     )

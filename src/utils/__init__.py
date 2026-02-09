@@ -10,7 +10,7 @@ This package provides essential utilities for production deployments:
 - Structured Logging: JSON logging with rotation and compression
 
 Example:
-    from nexus.utils import (
+    from src.utils import (
         CircuitBreaker,
         retry_with_backoff,
         get_metrics_manager,

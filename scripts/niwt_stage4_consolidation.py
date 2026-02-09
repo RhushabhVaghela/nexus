@@ -1,7 +1,7 @@
 import argparse
 import json
 import torch
-from nexus.core.towers.reasoning_tower import ReasoningTower
+from src.core.towers.reasoning_tower import ReasoningTower
 # Assuming we have a factory or config to choose the right tower type
 
 def consolidate_model(spectral_config_path, output_dir):

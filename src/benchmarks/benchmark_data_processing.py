@@ -9,7 +9,7 @@ import json
 import random
 from typing import List, Dict, Any
 from pathlib import Path
-from src.nexus.utils.schema_normalizer import SchemaNormalizer
+from src.utils.schema_normalizer import SchemaNormalizer
 from src.core.metrics_tracker import MetricsTracker, BenchmarkMetrics
 
 

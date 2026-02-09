@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from datasets import load_dataset, concatenate_datasets
 
 from .base import BaseStage, StageConfig
-from src.nexus.utils.repetition import PromptRepetitionEngine
+from src.utils.repetition import PromptRepetitionEngine
 
 
 @dataclass

@@ -105,7 +105,7 @@ class CompletionGenerator:
         
         # Try to load from nexus registry
         try:
-            from nexus.core.towers.registry import TEACHER_REGISTRY
+            from src.core.towers.registry import TEACHER_REGISTRY
             models.extend(TEACHER_REGISTRY.keys())
         except Exception:
             pass

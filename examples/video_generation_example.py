@@ -14,10 +14,10 @@ from PIL import Image, ImageDraw
 import numpy as np
 import argparse
 
-from nexus.models.video import VideoPipeline, VideoConfig
-from nexus.models.video.frame_generator import FrameGenerator, FrameGenerationConfig
-from nexus.models.video.temporal_consistency import TemporalConsistencyProcessor
-from nexus.models.diffusion import ImagePipeline, PipelineConfig
+from src.models.video import VideoPipeline, VideoConfig
+from src.models.video.frame_generator import FrameGenerator, FrameGenerationConfig
+from src.models.video.temporal_consistency import TemporalConsistencyProcessor
+from src.models.diffusion import ImagePipeline, PipelineConfig
 
 
 def example_text_to_video():

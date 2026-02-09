@@ -110,7 +110,7 @@ def main(args: Optional[List[str]] = None) -> int:
 
 def handle_diffusion_command(args):
     """Handle diffusion subcommand."""
-    from nexus.models.diffusion import DiffusionPipelineLoader
+    from src.models.diffusion import DiffusionPipelineLoader
     
     if args.action == 'list-presets':
         presets = DiffusionPipelineLoader.list_presets()
@@ -177,7 +177,7 @@ def handle_diffusion_command(args):
 
 def handle_video_command(args):
     """Handle video subcommand."""
-    from nexus.models.video import VideoPipeline, VideoConfig
+    from src.models.video import VideoPipeline, VideoConfig
     
     if args.action == 'list-models':
         models = VideoPipeline.MODEL_TYPE_MAP.keys()
@@ -226,7 +226,7 @@ def handle_video_command(args):
 
 def handle_gguf_command(args):
     """Handle GGUF subcommand."""
-    from nexus.models.gguf import GGUfLoader, GGUFConfig, GGUFConverter
+    from src.models.gguf import GGUfLoader, GGUFConfig, GGUFConverter
     
     if args.action == 'info':
         converter = GGUFConverter()
@@ -287,7 +287,7 @@ def handle_gguf_command(args):
 
 def handle_registry_command(args):
     """Handle registry subcommand."""
-    from nexus.core.towers import registry
+    from src.core.towers import registry
     
     if args.action == 'list':
         models = registry.TEACHER_REGISTRY

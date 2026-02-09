@@ -14,7 +14,7 @@ import torch
 from PIL import Image
 import argparse
 
-from nexus.models.diffusion import ImagePipeline, PipelineConfig, DiffusionPipelineLoader
+from src.models.diffusion import ImagePipeline, PipelineConfig, DiffusionPipelineLoader
 
 
 def example_text_to_image():

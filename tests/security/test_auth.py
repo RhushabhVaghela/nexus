@@ -13,7 +13,7 @@ import jwt
 # Import the auth module
 import sys
 sys.path.insert(0, 'src')
-from nexus.security.auth import (
+from src.security.auth import (
     APIKeyManager, JWTTokenManager, Authenticator,
     Permission, APIKey, JWTClaims, require_auth
 )
@@ -415,7 +415,7 @@ class TestRateLimitKey:
     
     def test_jwt_rate_limit_key(self):
         """Test rate limit key from JWT context."""
-        from nexus.security.auth import rate_limit_key
+        from src.security.auth import rate_limit_key
         
         context = {
             "type": "jwt",
@@ -427,7 +427,7 @@ class TestRateLimitKey:
     
     def test_api_key_rate_limit_key(self):
         """Test rate limit key from API key context."""
-        from nexus.security.auth import rate_limit_key
+        from src.security.auth import rate_limit_key
         
         context = {
             "type": "api_key",

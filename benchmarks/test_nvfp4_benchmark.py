@@ -29,7 +29,7 @@ from typing import Dict, List, Tuple, Any
 # Ensure src is in path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from nexus.models.sli.nvfp4_loader import (
+from src.models.sli.nvfp4_loader import (
     NVFP4StreamingLoader,
     NVFP4Config,
     NVFP4Mode,
